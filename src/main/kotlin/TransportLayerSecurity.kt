@@ -1,0 +1,43 @@
+package bread_experts_group
+
+import java.io.File
+import java.io.FileInputStream
+import java.nio.file.Path
+import java.security.KeyStore
+import javax.net.ssl.KeyManagerFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLServerSocket
+import javax.net.ssl.SSLServerSocketFactory
+import javax.net.ssl.SSLSocket
+import javax.net.ssl.SSLSocketFactory
+
+fun getKeyStoreFromPath(path: String, password: String): KeyStore = getKeyStoreFromPath(Path.of(path), password)
+fun getKeyStoreFromPath(path: Path, password: String): KeyStore = getKeyStoreFromPath(path.toFile(), password)
+fun getKeyStoreFromPath(path: File, password: String): KeyStore {
+	val keyStore = KeyStore.getInstance("PKCS12")
+	FileInputStream(path).use { keyStore.load(it, password.toCharArray()) }
+	return keyStore
+}
+
+fun KeyStore.getManagerFactoryX509(password: String): KeyManagerFactory = KeyManagerFactory
+	.getInstance("SunX509")
+	.also { it.init(this, password.toCharArray()) }
+
+fun KeyManagerFactory.getTLSContext() = SSLContext
+	.getInstance("TLS")
+	.also { it.init(this.keyManagers, null, null) }
+
+fun SSLContext.getServerSocket() = ((this.serverSocketFactory as SSLServerSocketFactory).createServerSocket() as SSLServerSocket)
+fun SSLContext.getSocket() = ((this.socketFactory as SSLSocketFactory).createSocket() as SSLSocket)
+
+fun getTLSContext(keystorePath: File, password: String): SSLContext {
+	val keystore = getKeyStoreFromPath(keystorePath, password)
+	val managerFactory = keystore.getManagerFactoryX509(password)
+	return managerFactory.getTLSContext()
+}
+
+fun getSSLServerSocket(keystorePath: File, password: String): SSLServerSocket = getTLSContext(keystorePath, password)
+	.getServerSocket()
+
+fun getSSLSocket(keystorePath: File, password: String): SSLSocket = getTLSContext(keystorePath, password)
+	.getSocket()
