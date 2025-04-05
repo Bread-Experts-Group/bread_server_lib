@@ -37,6 +37,7 @@ publishing {
 	publications {
 		create<MavenPublication>("mavenKotlin") {
 			artifactId = "$artifactId-code"
+			from(components["kotlin"])
 			pom {
 				name = "Bread Server Library"
 				description = "Distribution of software for Bread Experts Group operated servers."

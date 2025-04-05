@@ -1,6 +1,7 @@
 package bread_experts_group.http
 
 enum class HTTPMethod {
+	HEAD,
 	GET,
 	PUT;
 
