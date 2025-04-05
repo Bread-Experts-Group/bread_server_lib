@@ -26,6 +26,11 @@ typealias Args = Pair<SingleArgs, MultipleArgs>
 
 fun readArgs(
 	args: Array<String>,
+	vararg flags: Flag<*>
+) = readArgs(args, flags.toList())
+
+fun readArgs(
+	args: Array<String>,
 	flags: List<Flag<*>>
 ): Args {
 	val singleArgs = mutableMapOf<String, Any>()
