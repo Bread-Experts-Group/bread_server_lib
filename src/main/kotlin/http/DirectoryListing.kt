@@ -13,7 +13,7 @@ fun truncateSI(n: Long, decimals: Int = 2): String {
 	val intIdx = siIntervals.indexOf(siIntervals.firstOrNull { it > n } ?: siIntervals.last())
 	val interval = siIntervals[intIdx - 1]
 	return String.format(
-		"%.${decimals}f ${siKeys[intIdx]}",
+		"%.${decimals}f ${siKeys[intIdx - 2]}",
 		if (interval > 0) (n.toDouble() / interval) else n
 	)
 }
