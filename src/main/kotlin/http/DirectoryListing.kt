@@ -7,13 +7,20 @@ import java.time.ZoneId
 import kotlin.collections.forEach
 import kotlin.collections.sortByDescending
 
+val siKeys = listOf("k", "M", "G", "T", "P", "E")
+val siIntervals = listOf(1000.0, 1e+6, 1e+9, 1e+12, 1e+15, 1e+18).map { it.toLong() }
+fun truncateSI(n: Long): String {
+	val interval = siIntervals.firstOrNull { it > n } ?: siIntervals.last()
+	return "${n.toDouble() / interval} ${siKeys[siIntervals.indexOf(interval)]}"
+}
+
 fun truncateSizeHTML(size: Long): String =
 	if (size < 1000) "$size B"
-	else "<span class=\"tooltip\" title=\"$size B\">Truncate TODO</span>"
+	else "<span class=\"tooltip\" title=\"$size B\">${truncateSI(size)}B</span>"
 
 fun getHTML(store: File, file: File, css: String): String = buildString {
 	append("<!doctype html><html><head><style>")
-	append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css},")
+	append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
 	append(".tooltip{text-decoration:dotted}</style></head><body><table style=\"width:100%\">")
 	append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
 	val files = file.listFiles()
