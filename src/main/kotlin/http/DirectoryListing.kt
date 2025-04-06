@@ -8,10 +8,14 @@ import kotlin.collections.forEach
 import kotlin.collections.sortByDescending
 
 val siKeys = listOf("k", "M", "G", "T", "P", "E")
-val siIntervals = listOf(1000.0, 1e+6, 1e+9, 1e+12, 1e+15, 1e+18).map { it.toLong() }
-fun truncateSI(n: Long): String {
-	val interval = siIntervals.firstOrNull { it > n } ?: siIntervals.last()
-	return "${n.toDouble() / interval} ${siKeys[siIntervals.indexOf(interval)]}"
+val siIntervals = listOf(0.0, 1000.0, 1e+6, 1e+9, 1e+12, 1e+15, 1e+18).map { it.toLong() }
+fun truncateSI(n: Long, decimals: Int = 2): String {
+	val intIdx = siIntervals.indexOf(siIntervals.firstOrNull { it > n } ?: siIntervals.last())
+	val interval = siIntervals[intIdx - 1]
+	return String.format(
+		"%.${decimals}f ${siKeys[siIntervals.indexOf(interval)]}",
+		if (interval > 0) (n.toDouble() / interval) else n
+	)
 }
 
 fun truncateSizeHTML(size: Long): String =
