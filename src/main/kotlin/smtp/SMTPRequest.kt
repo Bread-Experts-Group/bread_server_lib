@@ -3,6 +3,7 @@ package bread_experts_group.smtp
 import bread_experts_group.SmartToString
 import bread_experts_group.scanDelimiter
 import java.io.InputStream
+import kotlin.math.min
 
 class SMTPRequest(
 	val command: SMTPCommand,
@@ -25,7 +26,8 @@ class SMTPRequest(
 
 				else -> {
 					val check = SMTPCommand.mapping[commandStr]
-					if (check != null) check to message.substring(commandStr.length + 1)
+					if (check != null) check to
+							(if (commandStr.length >= message.length) "" else message.substring(commandStr.length + 1))
 					else SMTPCommand.UNKNOWN to message
 				}
 			}
