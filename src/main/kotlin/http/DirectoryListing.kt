@@ -14,18 +14,18 @@ fun getHTML(store: File, file: File, css: String): String = buildString {
 	append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
 	val files = file.listFiles()
 	if (files != null) {
-		files.sortByDescending { it.lastModified() }
-		files.sortByDescending { it.isDirectory }
-		files.forEach {
-			append("<tr><td><a href=\"${it.name}/\">${it.name}</td>")
-			append("<td>${if (it.isDirectory) "Directory" else it.length()}</td>")
-			val mod = Instant.ofEpochMilli(it.lastModified())
-				.atZone(ZoneId.systemDefault())
-			append("<td>${dateTimeFormatter.format(mod)}</td></tr>")
-		}
-	} else {
-		append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")
-	}
+		if (files.isEmpty()) {
+			files.sortByDescending { it.lastModified() }
+			files.sortByDescending { it.isDirectory }
+			files.forEach {
+				append("<tr><td><a href=\"${it.name}/\">${it.name}</td>")
+				append("<td>${if (it.isDirectory) "Directory" else it.length()}</td>")
+				val mod = Instant.ofEpochMilli(it.lastModified())
+					.atZone(ZoneId.systemDefault())
+				append("<td>${dateTimeFormatter.format(mod)}</td></tr>")
+			}
+		} else append("<tr><td>Folder empty</td><td>-1</td><td>-1</td></tr>")
+	} else append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")
 	append("<caption>")
 	val itParent = store.parentFile
 	append(itParent.invariantSeparatorsPath + '/')
@@ -39,5 +39,6 @@ fun getHTML(store: File, file: File, css: String): String = buildString {
 			else "<a href=\"$backReferences\">$it</a>/$completeCaption"
 		backReferences += "../"
 	}
-	append("$completeCaption</caption></tbody></table></body></html>")
+	val sizeStat = " [${file.usableSpace} / ${file.freeSpace} / ${file.totalSpace}]"
+	append("$completeCaption$sizeStat</caption></tbody></table></body></html>")
 }
