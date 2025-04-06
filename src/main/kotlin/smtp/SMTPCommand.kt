@@ -1,0 +1,25 @@
+package bread_experts_group.smtp
+
+enum class SMTPCommand {
+	HELO,
+	EHLO,
+	MAIL_FROM,
+	RCPT_TO,
+	DATA,
+	NOOP,
+	HELP,
+	VRFY,
+	EXPN,
+	RSET,
+	QUIT,
+	STARTTLS,
+	AUTH,
+	ATRN,
+	BDAT,
+	ETRN,
+	UNKNOWN;
+
+	companion object {
+		val mapping = entries.associateBy { it.name }
+	}
+}

@@ -8,9 +8,12 @@ class SMTPResponse(
 	val code: Int,
 	val message: String
 ) : SmartToString() {
-	override fun gist(): String = "< (SMTP) $code $message"
+	override fun gist(): String = "< (SMTP, $code) $message"
 
 	fun write(stream: OutputStream) {
-		stream.writeString("$code $message\r\n")
+		val lines = message.lines()
+		lines.forEachIndexed { index, line ->
+			stream.writeString("$code${if (index == lines.size - 1) ' ' else '-'}$line\r\n")
+		}
 	}
 }
