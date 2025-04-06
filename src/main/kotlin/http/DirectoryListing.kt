@@ -7,19 +7,23 @@ import java.time.ZoneId
 import kotlin.collections.forEach
 import kotlin.collections.sortByDescending
 
+fun truncateSizeHTML(size: Long): String =
+	if (size < 1000) "$size B"
+	else "<span class=\"tooltip\" title=\"$size B\">Truncate TODO</span>"
+
 fun getHTML(store: File, file: File, css: String): String = buildString {
 	append("<!doctype html><html><head><style>")
-	append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
-	append("</style></head><body><table style=\"width:100%\">")
+	append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css},")
+	append(".tooltip{text-decoration:dotted}</style></head><body><table style=\"width:100%\">")
 	append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
 	val files = file.listFiles()
 	if (files != null) {
-		if (files.isEmpty()) {
+		if (files.isNotEmpty()) {
 			files.sortByDescending { it.lastModified() }
 			files.sortByDescending { it.isDirectory }
 			files.forEach {
 				append("<tr><td><a href=\"${it.name}/\">${it.name}</td>")
-				append("<td>${if (it.isDirectory) "Directory" else it.length()}</td>")
+				append("<td>${if (it.isDirectory) "Directory" else truncateSizeHTML(it.length())}</td>")
 				val mod = Instant.ofEpochMilli(it.lastModified())
 					.atZone(ZoneId.systemDefault())
 				append("<td>${dateTimeFormatter.format(mod)}</td></tr>")
@@ -39,6 +43,11 @@ fun getHTML(store: File, file: File, css: String): String = buildString {
 			else "<a href=\"$backReferences\">$it</a>/$completeCaption"
 		backReferences += "../"
 	}
-	val sizeStat = " [${file.usableSpace} / ${file.freeSpace} / ${file.totalSpace}]"
+	val sizeStat = buildString {
+		append(" [ ")
+		append(truncateSizeHTML(file.usableSpace) + " / ")
+		append(truncateSizeHTML(file.freeSpace) + " / ")
+		append(truncateSizeHTML(file.totalSpace) + "]")
+	}
 	append("$completeCaption$sizeStat</caption></tbody></table></body></html>")
 }
