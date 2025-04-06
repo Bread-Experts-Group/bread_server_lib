@@ -6,18 +6,33 @@ import java.io.OutputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class HTTPResponse(
+class HTTPResponse private constructor(
 	val code: Int,
 	val version: String,
 	headers: Map<String, String> = emptyMap(),
-	val data: ByteArray = byteArrayOf()
+	val dataLength: Int = 0,
+	val data: ByteArray? = null
 ) : SmartToString() {
 	constructor(
 		code: Int,
 		version: String,
 		headers: Map<String, String> = emptyMap(),
 		data: String = ""
-	) : this(code, version, headers, data.toByteArray())
+	) : this(code, version, headers, data.length, data.encodeToByteArray())
+
+	constructor(
+		code: Int,
+		version: String,
+		headers: Map<String, String> = emptyMap(),
+		data: ByteArray = byteArrayOf(),
+	) : this(code, version, headers, data.size, data)
+
+	constructor(
+		code: Int,
+		version: String,
+		headers: Map<String, String> = emptyMap(),
+		dataSize: Int
+	) : this(code, version, headers, dataSize, null)
 
 	val headers = headers.toMutableMap().also {
 		disallowedHeaders.forEach { h ->
@@ -25,7 +40,7 @@ class HTTPResponse(
 		}
 		it["Server"] = "BEG-BSL"
 		it["Date"] = DateTimeFormatter.RFC_1123_DATE_TIME.format(LocalDateTime.now())
-		it["Content-Length"] = data.size.toString()
+		it["Content-Length"] = dataLength.toString()
 	}
 
 	override fun gist(): String = "< ($version) $code [HEAD#: ${headers.size}]" + buildString {
@@ -38,7 +53,11 @@ class HTTPResponse(
 		stream.writeString("$version $code\r\n")
 		headers.forEach { (key, value) -> stream.writeString("$key:$value\r\n") }
 		stream.writeString("\r\n")
-		stream.write(data)
+	}
+
+	fun writeWithData(stream: OutputStream) {
+		this.write(stream)
+		stream.write(data!!)
 	}
 
 	companion object {
