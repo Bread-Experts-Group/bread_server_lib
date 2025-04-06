@@ -1,5 +1,6 @@
 package bread_experts_group
 
+import java.time.format.DateTimeFormatter
 import kotlin.collections.forEachIndexed
 import kotlin.collections.joinToString
 import kotlin.collections.slice
@@ -10,6 +11,7 @@ import kotlin.text.replace
 import kotlin.text.split
 
 var toStringVerbosity = -1
+val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd [EEE] HH:mm:ss.SSS xxxx")
 
 fun reflectedToString(obj: Any): String =
 	if (toStringVerbosity < 0) {
