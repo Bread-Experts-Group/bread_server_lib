@@ -25,7 +25,7 @@ fun truncateSizeHTML(size: Long): String =
 fun getHTML(store: File, file: File, css: String): String = buildString {
 	append("<!doctype html><html><head><style>")
 	append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
-	append(".tooltip{text-decoration:dotted}</style></head><body><table style=\"width:100%\">")
+	append(".tooltip{text-decoration:underline dotted}</style></head><body><table style=\"width:100%\">")
 	append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
 	val files = file.listFiles()
 	if (files != null) {
@@ -58,7 +58,7 @@ fun getHTML(store: File, file: File, css: String): String = buildString {
 		append(" [ ")
 		append(truncateSizeHTML(file.usableSpace) + " / ")
 		append(truncateSizeHTML(file.freeSpace) + " / ")
-		append(truncateSizeHTML(file.totalSpace) + "]")
+		append(truncateSizeHTML(file.totalSpace) + " ]")
 	}
 	append("$completeCaption$sizeStat</caption></tbody></table></body></html>")
 }
