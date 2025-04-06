@@ -3,7 +3,7 @@ package bread_experts_group.http
 import bread_experts_group.SmartToString
 import bread_experts_group.writeString
 import java.io.OutputStream
-import java.time.Instant
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class HTTPResponse private constructor(
@@ -46,7 +46,7 @@ class HTTPResponse private constructor(
 			if (it.contains(h)) throw IllegalArgumentException("Do not set $h header")
 		}
 		it["Server"] = "BEG-BSL"
-		it["Date"] = DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.now())
+		it["Date"] = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now())
 		it["Content-Length"] = dataLength.toString()
 	}
 
