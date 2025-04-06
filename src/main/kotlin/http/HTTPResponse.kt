@@ -10,7 +10,7 @@ class HTTPResponse private constructor(
 	val code: Int,
 	val version: String,
 	headers: Map<String, String> = emptyMap(),
-	val dataLength: Int = 0,
+	val dataLength: Long = 0,
 	val data: ByteArray? = null
 ) : SmartToString() {
 	constructor(
@@ -18,20 +18,27 @@ class HTTPResponse private constructor(
 		version: String,
 		headers: Map<String, String> = emptyMap(),
 		data: String = ""
-	) : this(code, version, headers, data.length, data.encodeToByteArray())
+	) : this(code, version, headers, data.length.toLong(), data.encodeToByteArray())
 
 	constructor(
 		code: Int,
 		version: String,
 		headers: Map<String, String> = emptyMap(),
 		data: ByteArray = byteArrayOf(),
-	) : this(code, version, headers, data.size, data)
+	) : this(code, version, headers, data.size.toLong(), data)
 
 	constructor(
 		code: Int,
 		version: String,
 		headers: Map<String, String> = emptyMap(),
 		dataSize: Int
+	) : this(code, version, headers, dataSize.toLong(), null)
+
+	constructor(
+		code: Int,
+		version: String,
+		headers: Map<String, String> = emptyMap(),
+		dataSize: Long
 	) : this(code, version, headers, dataSize, null)
 
 	val headers = headers.toMutableMap().also {
