@@ -3,7 +3,6 @@ package bread_experts_group.smtp
 import bread_experts_group.SmartToString
 import bread_experts_group.scanDelimiter
 import java.io.InputStream
-import kotlin.math.min
 
 class SMTPRequest(
 	val command: SMTPCommand,
