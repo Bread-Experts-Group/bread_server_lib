@@ -1,6 +1,7 @@
 package bread_experts_group.websocket
 
 import bread_experts_group.SmartToString
+import bread_experts_group.info
 import bread_experts_group.read16
 import bread_experts_group.read32
 import bread_experts_group.read64
@@ -28,9 +29,9 @@ class WebSocketFrame(
 			stream.write16(data.size)
 		} else stream.write((if (mask) 0b1_0000000 else 0) or data.size)
 		if (mask) {
-			val maskKey = Random.nextInt()
+			val maskKey = Random.nextBytes(4)
 			data.forEachIndexed { index, b ->
-				data[index] = b xor (maskKey shr (24 - ((index % 4) * 8))).toByte()
+				data[index] = b xor maskKey[index % 4]
 			}
 		}
 		stream.write(data)
@@ -40,19 +41,26 @@ class WebSocketFrame(
 		fun read(stream: InputStream): WebSocketFrame {
 			val opcode = WebSocketOpcode.mapping.getValue(stream.read() and 0b1111)
 			val sizeMask = stream.read()
-			val maskKey = if (sizeMask and 0b1_0000000 > 0) stream.read32() else null
+			val masked = sizeMask and 0b1_0000000 > 0
 			val size = sizeMask and 0b0_1111111
-			val data = stream.readNBytes(
+			val trueSize =
 				if (size >= 127) stream.read64().also { if (it > Int.MAX_VALUE) error("Too high size $it") }.toInt()
 				else if (size == 126) stream.read16()
 				else size
-			)
-			if (maskKey != null) {
+			if (masked) {
+				val mask = listOf(
+					stream.read(),
+					stream.read(),
+					stream.read(),
+					stream.read()
+				).map { it.toByte() }
+				val data = stream.readNBytes(trueSize)
 				data.forEachIndexed { index, b ->
-					data[index] = b xor (maskKey shr (24 - ((index % 4) * 8))).toByte()
+					data[index] = b xor mask[index % 4]
 				}
+				return WebSocketFrame(opcode, data, true)
 			}
-			return WebSocketFrame(opcode, data, maskKey != null)
+			return WebSocketFrame(opcode, stream.readNBytes(trueSize), false)
 		}
 	}
 }
