@@ -34,14 +34,8 @@ class DNSResourceRecord(
 
 	companion object {
 		fun read(stream: InputStream): DNSResourceRecord {
-			var name = ""
-			while (true) {
-				val part = stream.readString(stream.read())
-				if (part.isEmpty()) break
-				name += "$part."
-			}
 			return DNSResourceRecord(
-				name,
+				readLabel(stream),
 				DNSType.mapping.getValue(stream.read16()),
 				DNSClass.mapping.getValue(stream.read16()),
 				stream.read32(),

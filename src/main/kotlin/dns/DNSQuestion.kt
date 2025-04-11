@@ -2,7 +2,6 @@ package bread_experts_group.dns
 
 import bread_experts_group.SmartToString
 import bread_experts_group.read16
-import bread_experts_group.readString
 import bread_experts_group.write16
 import bread_experts_group.writeString
 import java.io.InputStream
@@ -27,14 +26,8 @@ class DNSQuestion(
 
 	companion object {
 		fun read(stream: InputStream): DNSQuestion {
-			var name = ""
-			while (true) {
-				val part = stream.readString(stream.read())
-				if (part.isEmpty()) break
-				name += "$part."
-			}
 			return DNSQuestion(
-				name,
+				readLabel(stream),
 				DNSType.mapping.getValue(stream.read16()),
 				DNSClass.mapping.getValue(stream.read16())
 			)
