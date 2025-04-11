@@ -76,7 +76,7 @@ class DNSMessage private constructor(
 			questions: List<DNSQuestion>,
 			additionalRecords: List<DNSResourceRecord> = emptyList()
 		) = DNSMessage(
-			transactionID, true, opcode, false, false,
+			transactionID, false, opcode, false, false,
 			recursiveQuery, false, false, checkingDisabled, DNSResponseCode.OK,
 			questions, emptyList(), emptyList(), additionalRecords
 		)
@@ -93,7 +93,7 @@ class DNSMessage private constructor(
 			authorityRecords: List<DNSResourceRecord> = emptyList(),
 			additionalRecords: List<DNSResourceRecord> = emptyList()
 		) = DNSMessage(
-			transactionID, false, opcode, authoritative, false,
+			transactionID, true, opcode, authoritative, false,
 			false, recursionAvailable, authenticData, false, responseCode,
 			questions, answers, authorityRecords, additionalRecords
 		)
