@@ -9,9 +9,7 @@ enum class HTTPMethod {
 	CONNECT,
 	OPTIONS,
 	TRACE,
-	PATCH;
-
-	companion object {
-		val keys = entries.associateBy { it.name }
-	}
+	PATCH,
+	SSTP_DUPLEX_POST,
+	OTHER
 }

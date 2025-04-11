@@ -1,0 +1,24 @@
+package bread_experts_group.dns
+
+enum class DNSType(val code: Int) {
+	A__HOST_ADDRESS(1),
+	NS__NAME_SERVER(2),
+	MD__MAIL_DESTINATION(3),
+	MF__MAIL_FORWARDER(4),
+	CNAME__CANONICAL_NAME(5),
+	SOA__ZONE_START_OF_AUTHORITY(6),
+	MB__MAILBOX_DOMAIN(7),
+	MG__MAIL_GROUP_MEMBER(8),
+	MR__MAIL_RENAME_DOMAIN(9),
+	NULL(10),
+	WKS__WELL_KNOWN_SERVICE(11),
+	PTR__DOMAIN_POINTER(12),
+	HINFO__HOST_INFORMATION(13),
+	MINFO__MAILBOX(14),
+	MX__MAIL_EXCHANGE(15),
+	TXT__TEXT(16);
+
+	companion object {
+		val mapping = entries.associateBy(DNSType::code)
+	}
+}
