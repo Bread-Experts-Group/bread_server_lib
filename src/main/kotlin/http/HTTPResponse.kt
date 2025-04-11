@@ -50,7 +50,7 @@ class HTTPResponse private constructor(
 		it["Content-Length"] = dataLength.toString()
 	}
 
-	override fun gist(): String = "< ($version) $code [HEAD#: ${headers.size}]" + buildString {
+	override fun gist(): String = "($version, <Res>) $code [HEAD#: ${headers.size}]" + buildString {
 		headers.forEach {
 			append("\n${it.key}: ${it.value}")
 		}

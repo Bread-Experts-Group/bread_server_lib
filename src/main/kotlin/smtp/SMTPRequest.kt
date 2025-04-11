@@ -8,7 +8,7 @@ class SMTPRequest(
 	val command: SMTPCommand,
 	val message: String
 ) : SmartToString() {
-	override fun gist(): String = "> (SMTP, $command) $message"
+	override fun gist(): String = "(SMTP, <Req>, $command) $message"
 
 	companion object {
 		fun read(stream: InputStream): SMTPRequest {

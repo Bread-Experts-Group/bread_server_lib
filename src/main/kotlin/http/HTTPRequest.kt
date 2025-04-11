@@ -22,7 +22,7 @@ class HTTPRequest private constructor(
 		headers: Map<String, String> = emptyMap()
 	) : this(method, URLEncoder.encode(path, "UTF-8"), version, headers, true)
 
-	override fun gist(): String = "> ($version) $method $path [HEAD#: ${headers.size}]" + buildString {
+	override fun gist(): String = "($version, <Req>) $method $path [HEAD#: ${headers.size}]" + buildString {
 		headers.forEach {
 			append("\n${it.key}: ${it.value}")
 		}
