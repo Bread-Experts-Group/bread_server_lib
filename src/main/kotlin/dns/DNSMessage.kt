@@ -88,18 +88,23 @@ class DNSMessage private constructor(
 			authenticData: Boolean,
 			recursionAvailable: Boolean,
 			responseCode: DNSResponseCode,
+			questions: List<DNSQuestion>,
 			answers: List<DNSResourceRecord>,
 			authorityRecords: List<DNSResourceRecord> = emptyList(),
 			additionalRecords: List<DNSResourceRecord> = emptyList()
 		) = DNSMessage(
 			transactionID, false, opcode, authoritative, false,
 			false, recursionAvailable, authenticData, false, responseCode,
-			emptyList(), answers, authorityRecords, additionalRecords
+			questions, answers, authorityRecords, additionalRecords
 		)
 
 		fun read(stream: InputStream): DNSMessage {
 			val transactionID = stream.read16()
 			val flags = stream.read16()
+			val questions = stream.read16()
+			val answers = stream.read16()
+			val authorityRecords = stream.read16()
+			val additionalRecords = stream.read16()
 			return DNSMessage(
 				transactionID,
 				(flags and 0b1000000000000000) > 0,
@@ -111,10 +116,10 @@ class DNSMessage private constructor(
 				(flags and 0b0000000000100000) > 0,
 				(flags and 0b0000000000010000) > 0,
 				DNSResponseCode.mapping.getValue(flags and 0b0000000000001111),
-				List(stream.read16()) { DNSQuestion.read(stream) },
-				List(stream.read16()) { DNSResourceRecord.read(stream) },
-				List(stream.read16()) { DNSResourceRecord.read(stream) },
-				List(stream.read16()) { DNSResourceRecord.read(stream) },
+				List(questions) { DNSQuestion.read(stream) },
+				List(answers) { DNSResourceRecord.read(stream) },
+				List(authorityRecords) { DNSResourceRecord.read(stream) },
+				List(additionalRecords) { DNSResourceRecord.read(stream) },
 			)
 		}
 	}
