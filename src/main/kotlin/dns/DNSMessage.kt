@@ -9,7 +9,7 @@ import java.io.OutputStream
 
 class DNSMessage private constructor(
 	val transactionID: Int,
-	val query: Boolean,
+	val reply: Boolean,
 	val opcode: DNSOpcode,
 	val authoritative: Boolean,
 	val truncated: Boolean,
@@ -29,7 +29,7 @@ class DNSMessage private constructor(
 		if (truncated) thirdByte = thirdByte or 0b10
 		if (authoritative) thirdByte = thirdByte or 0b100
 		thirdByte = thirdByte or (opcode.code shl 3)
-		if (!query) thirdByte = thirdByte or 0b10000000
+		if (reply) thirdByte = thirdByte or 0b10000000
 		stream.write(thirdByte)
 		var fourthByte = responseCode.code
 		if (checkingDisabled) fourthByte = fourthByte or 0b10000
@@ -46,7 +46,7 @@ class DNSMessage private constructor(
 		additionalRecords.forEach { it.write(stream) }
 	}
 
-	override fun gist(): String = "(DNS, ${if (query) "<Req>" else "<Res>"}, ${opcode.name}) " + buildString {
+	override fun gist(): String = "(DNS, ${if (reply) "<Res>" else "<Req>"}, ${opcode.name}) " + buildString {
 		append("ID#${hex(transactionID)}; ")
 		append("Qst# ${questions.size}, ")
 		append("Ans# ${answers.size}, ")
