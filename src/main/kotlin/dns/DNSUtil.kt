@@ -8,9 +8,9 @@ fun readLabel(stream: InputStream): String {
 	var byte = stream.read()
 	when (byte and 0b11000000) {
 		0b00000000 -> while (true) {
-			byte = stream.read()
 			val part = stream.readString(byte)
 			if (part.isEmpty()) break
+			byte = stream.read()
 			name += "$part."
 		}
 
