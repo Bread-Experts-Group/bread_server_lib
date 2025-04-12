@@ -34,14 +34,12 @@ class DNSResourceRecord(
 	override fun gist(): String = "(DNS, Record) \"$name\" $rrType $rrClass (${timeToLive}s), # DATA: [${rrData.size}]"
 
 	companion object {
-		fun read(stream: InputStream): DNSResourceRecord {
-			return DNSResourceRecord(
-				readLabel(stream),
-				DNSType.mapping.getValue(stream.read16()),
-				DNSClass.mapping.getValue(stream.read16()),
-				stream.read32(),
-				stream.readNBytes(stream.read16())
-			)
-		}
+		fun read(stream: InputStream, lookbehind: ByteArray): DNSResourceRecord = DNSResourceRecord(
+			readLabel(stream, lookbehind),
+			DNSType.mapping.getValue(stream.read16()),
+			DNSClass.mapping.getValue(stream.read16()),
+			stream.read32(),
+			stream.readNBytes(stream.read16())
+		)
 	}
 }

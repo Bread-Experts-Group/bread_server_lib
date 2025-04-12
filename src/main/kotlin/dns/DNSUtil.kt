@@ -1,9 +1,10 @@
 package bread_experts_group.dns
 
 import bread_experts_group.readString
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 
-fun readLabel(stream: InputStream): String {
+fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 	var name = ""
 	var byte = stream.read()
 	when (byte and 0b11000000) {
@@ -14,7 +15,10 @@ fun readLabel(stream: InputStream): String {
 			name += "$part."
 		}
 
-		0b11000000 -> stream.read().let { name = "TODO...$it" }
+		0b11000000 -> readLabel(
+			ByteArrayInputStream(lookbehind).also { it.skip(stream.read().toLong()) },
+			lookbehind
+		)
 
 		else -> throw UnsupportedOperationException(byte.toString())
 	}

@@ -5,6 +5,7 @@ import bread_experts_group.Writable
 import bread_experts_group.hex
 import bread_experts_group.read16
 import bread_experts_group.write16
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -104,12 +105,20 @@ class DNSMessage private constructor(
 		)
 
 		fun read(stream: InputStream): DNSMessage {
-			val transactionID = stream.read16()
-			val flags = stream.read16()
-			val questions = stream.read16()
-			val answers = stream.read16()
-			val authorityRecords = stream.read16()
-			val additionalRecords = stream.read16()
+			val lookbehind = ByteArrayOutputStream()
+			val lookbehindRead = object : InputStream() {
+				override fun read(): Int {
+					val read = stream.read()
+					lookbehind.write(read)
+					return read
+				}
+			}
+			val transactionID = lookbehindRead.read16()
+			val flags = lookbehindRead.read16()
+			val questions = lookbehindRead.read16()
+			val answers = lookbehindRead.read16()
+			val authorityRecords = lookbehindRead.read16()
+			val additionalRecords = lookbehindRead.read16()
 			return DNSMessage(
 				transactionID,
 				(flags and 0b1000000000000000) > 0,
@@ -121,10 +130,18 @@ class DNSMessage private constructor(
 				(flags and 0b0000000000100000) > 0,
 				(flags and 0b0000000000010000) > 0,
 				DNSResponseCode.mapping.getValue(flags and 0b0000000000001111),
-				List(questions) { DNSQuestion.read(stream) },
-				List(answers) { DNSResourceRecord.read(stream) },
-				List(authorityRecords) { DNSResourceRecord.read(stream) },
-				List(additionalRecords) { DNSResourceRecord.read(stream) },
+				List(questions) {
+					DNSQuestion.read(lookbehindRead, lookbehind.toByteArray())
+				},
+				List(answers) {
+					DNSResourceRecord.read(lookbehindRead, lookbehind.toByteArray())
+				},
+				List(authorityRecords) {
+					DNSResourceRecord.read(lookbehindRead, lookbehind.toByteArray())
+				},
+				List(additionalRecords) {
+					DNSResourceRecord.read(lookbehindRead, lookbehind.toByteArray())
+				},
 			)
 		}
 	}

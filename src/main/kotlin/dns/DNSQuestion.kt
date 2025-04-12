@@ -27,12 +27,10 @@ class DNSQuestion(
 	override fun gist(): String = "(DNS, Question) \"$name\" $qType $qClass"
 
 	companion object {
-		fun read(stream: InputStream): DNSQuestion {
-			return DNSQuestion(
-				readLabel(stream),
-				DNSType.mapping.getValue(stream.read16()),
-				DNSClass.mapping.getValue(stream.read16())
-			)
-		}
+		fun read(stream: InputStream, lookbehind: ByteArray): DNSQuestion = DNSQuestion(
+			readLabel(stream, lookbehind),
+			DNSType.mapping.getValue(stream.read16()),
+			DNSClass.mapping.getValue(stream.read16())
+		)
 	}
 }
