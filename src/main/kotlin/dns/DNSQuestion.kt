@@ -9,16 +9,17 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class DNSQuestion(
-	val name: String,
+	name: String,
 	val qType: DNSType,
 	val qClass: DNSClass
 ) : SmartToString(), Writable {
+	val name: String = if (name.endsWith('.')) name else "$name."
+
 	override fun write(stream: OutputStream) {
 		name.split('.').forEach {
 			stream.write(it.length)
 			stream.writeString(it)
 		}
-		stream.write(0)
 		stream.write16(qType.code)
 		stream.write16(qClass.code)
 	}

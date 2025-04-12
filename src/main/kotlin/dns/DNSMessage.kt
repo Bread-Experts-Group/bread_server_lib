@@ -53,14 +53,18 @@ class DNSMessage private constructor(
 		append("Ans# ${answers.size}, ")
 		append("Ath# ${authorityRecords.size}, ")
 		append("Add# ${additionalRecords.size} ")
-		append('[')
-		if (authoritative) append("AA ")
-		if (truncated) append("TC ")
-		if (recursiveQuery) append("RD ")
-		if (recursionAvailable) append("RA ")
-		if (authenticData) append("AD ")
-		if (checkingDisabled) append("CD ")
-		append(']')
+		append(
+			"[${
+				buildList {
+					if (authoritative) add("AA")
+					if (truncated) add("TC")
+					if (recursiveQuery) add("RD")
+					if (recursionAvailable) add("RA")
+					if (authenticData) add("AD")
+					if (checkingDisabled) add("CD")
+				}.joinToString(" ")
+			}]"
+		)
 		append(" ${responseCode.name}")
 		questions.forEach { append("\nQST: $it") }
 		answers.forEach { append("\nANS: $it") }
