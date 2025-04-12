@@ -8,10 +8,10 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 	var name = ""
 	do {
 		val byte = stream.read()
-		name += when (byte and 0b11000000) {
-			0b00000000 -> "${stream.readString(byte)}."
+		when (byte and 0b11000000) {
+			0b00000000 -> name += "${stream.readString(byte)}."
 			0b11000000 -> {
-				readLabel(
+				name += readLabel(
 					ByteArrayInputStream(lookbehind).also { it.skip(stream.read().toLong()) },
 					lookbehind
 				)
