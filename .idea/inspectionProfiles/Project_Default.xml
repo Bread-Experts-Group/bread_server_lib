@@ -51,6 +51,7 @@
           <option value="UNCHECKED_CAST" />
           <option value="UNUSED" />
           <option value="KDocUnresolvedReference" />
+          <option value="ReplacePrintlnWithLogging" />
         </list>
       </option>
     </inspection_tool>
