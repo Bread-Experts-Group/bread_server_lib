@@ -33,8 +33,16 @@ class DNSResourceRecord(
 		stream.write(rrData)
 	}
 
-	override fun gist(): String = "(DNS, Record) \"$name\" $rrType $rrClass/${hex(rrClassRaw)} (${timeToLive}s), " +
-			"# DATA: [${rrData.size}]"
+	override fun gist(): String = buildString {
+		append("(DNS, Record) \"$name\" $rrType ")
+		if (rrType == DNSType.OPT__OPTION) {
+			append("${hex(rrClassRaw)} ${hex(timeToLive)}")
+		} else {
+			append("$rrClass${if (rrClass == DNSClass.OTHER) "/${hex(rrClassRaw)}" else ""} ")
+			append("(${timeToLive}s)")
+		}
+		append(", # DATA: [${rrData.size}]")
+	}
 
 	companion object {
 		fun read(stream: InputStream, lookbehind: ByteArray): DNSResourceRecord {
@@ -44,7 +52,7 @@ class DNSResourceRecord(
 			return DNSResourceRecord(
 				label,
 				DNSType.mapping.getValue(rrType),
-				DNSClass.mapping[rrClassRaw] ?: DNSClass.NOT_RELEVANT,
+				DNSClass.mapping[rrClassRaw] ?: DNSClass.OTHER,
 				rrClassRaw,
 				stream.read32(),
 				stream.readNBytes(stream.read16())
