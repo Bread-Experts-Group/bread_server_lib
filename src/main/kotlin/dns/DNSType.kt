@@ -55,6 +55,6 @@ enum class DNSType(val code: Int) {
 
 	companion object {
 		val mapping = entries.associateBy(DNSType::code)
-		val nameMappnig = entries.associateBy { it.name.substringBefore("__") }
+		val nameMapping = entries.associateBy { it.name.substringBefore("__") }
 	}
 }
