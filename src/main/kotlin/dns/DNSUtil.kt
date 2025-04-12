@@ -7,20 +7,17 @@ import java.io.InputStream
 fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 	var name = ""
 	var byte = stream.read()
-	when (byte and 0b11000000) {
-		0b00000000 -> while (true) {
-			val part = stream.readString(byte)
-			if (part.isEmpty()) break
-			byte = stream.read()
-			name += "$part."
+	while (byte > 0) {
+		name += when (byte and 0b11000000) {
+			0b00000000 -> "${stream.readString(byte)}."
+			0b11000000 -> readLabel(
+				ByteArrayInputStream(lookbehind).also { it.skip(stream.read().toLong()) },
+				lookbehind
+			)
+
+			else -> throw UnsupportedOperationException(byte.toString())
 		}
-
-		0b11000000 -> name = readLabel(
-			ByteArrayInputStream(lookbehind).also { it.skip(stream.read().toLong()) },
-			lookbehind
-		)
-
-		else -> throw UnsupportedOperationException(byte.toString())
+		byte = stream.read()
 	}
 	return name
 }
