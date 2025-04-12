@@ -2,6 +2,7 @@ package bread_experts_group.dns
 
 import bread_experts_group.SmartToString
 import bread_experts_group.Writable
+import bread_experts_group.hex
 import bread_experts_group.read16
 import bread_experts_group.read32
 import bread_experts_group.write16
@@ -14,6 +15,7 @@ class DNSResourceRecord(
 	name: String,
 	val rrType: DNSType,
 	val rrClass: DNSClass,
+	val rrClassRaw: Int,
 	val timeToLive: Int,
 	val rrData: ByteArray
 ) : SmartToString(), Writable {
@@ -25,21 +27,28 @@ class DNSResourceRecord(
 			stream.writeString(it)
 		}
 		stream.write16(rrType.code)
-		stream.write16(rrClass.code)
+		stream.write16(rrClassRaw)
 		stream.write32(timeToLive)
 		stream.write16(rrData.size)
 		stream.write(rrData)
 	}
 
-	override fun gist(): String = "(DNS, Record) \"$name\" $rrType $rrClass (${timeToLive}s), # DATA: [${rrData.size}]"
+	override fun gist(): String = "(DNS, Record) \"$name\" $rrType $rrClass/${hex(rrClassRaw)} (${timeToLive}s), " +
+			"# DATA: [${rrData.size}]"
 
 	companion object {
-		fun read(stream: InputStream, lookbehind: ByteArray): DNSResourceRecord = DNSResourceRecord(
-			readLabel(stream, lookbehind),
-			DNSType.mapping.getValue(stream.read16()),
-			DNSClass.mapping.getValue(stream.read16()),
-			stream.read32(),
-			stream.readNBytes(stream.read16())
-		)
+		fun read(stream: InputStream, lookbehind: ByteArray): DNSResourceRecord {
+			val label = readLabel(stream, lookbehind)
+			val rrType = stream.read16()
+			val rrClassRaw = stream.read16()
+			return DNSResourceRecord(
+				label,
+				DNSType.mapping.getValue(rrType),
+				DNSClass.mapping[rrClassRaw] ?: DNSClass.NOT_RELEVANT,
+				rrClassRaw,
+				stream.read32(),
+				stream.readNBytes(stream.read16())
+			)
+		}
 	}
 }

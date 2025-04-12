@@ -4,7 +4,8 @@ enum class DNSClass(val code: Int) {
 	IN__INTERNET(1),
 	CS__CSNET(2),
 	CH__CHAOS(3),
-	HS__HEIOD(4);
+	HS__HEIOD(4),
+	NOT_RELEVANT(-1);
 
 	companion object {
 		val mapping = entries.associateBy(DNSClass::code)
