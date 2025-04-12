@@ -1,6 +1,7 @@
 package bread_experts_group.dns
 
 import bread_experts_group.SmartToString
+import bread_experts_group.Writable
 import bread_experts_group.read16
 import bread_experts_group.read32
 import bread_experts_group.readString
@@ -16,8 +17,8 @@ class DNSResourceRecord(
 	val rrClass: DNSClass,
 	val timeToLive: Int,
 	val rrData: String
-) : SmartToString() {
-	fun write(stream: OutputStream) {
+) : SmartToString(), Writable {
+	override fun write(stream: OutputStream) {
 		name.split('.').forEach {
 			stream.write(it.length)
 			stream.writeString(it)

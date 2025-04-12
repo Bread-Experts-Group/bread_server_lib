@@ -1,6 +1,7 @@
 package bread_experts_group.dns
 
 import bread_experts_group.SmartToString
+import bread_experts_group.Writable
 import bread_experts_group.hex
 import bread_experts_group.read16
 import bread_experts_group.write16
@@ -22,8 +23,8 @@ class DNSMessage private constructor(
 	val answers: List<DNSResourceRecord>,
 	val authorityRecords: List<DNSResourceRecord>,
 	val additionalRecords: List<DNSResourceRecord>
-) : SmartToString() {
-	fun write(stream: OutputStream) {
+) : SmartToString(), Writable {
+	override fun write(stream: OutputStream) {
 		stream.write16(transactionID)
 		var thirdByte = if (recursiveQuery) 1 else 0
 		if (truncated) thirdByte = thirdByte or 0b10

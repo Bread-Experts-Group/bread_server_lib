@@ -14,7 +14,7 @@ fun readLabel(stream: InputStream): String {
 			name += "$part."
 		}
 
-		0b11000000 -> stream.read().let { name = "TODO..." }
+		0b11000000 -> stream.read().let { name = "TODO...$it" }
 
 		else -> throw UnsupportedOperationException(byte.toString())
 	}
