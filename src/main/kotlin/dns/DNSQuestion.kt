@@ -13,7 +13,7 @@ class DNSQuestion(
 	val qType: DNSType,
 	val qClass: DNSClass
 ) : SmartToString(), Writable {
-	val name: String = (if (name.endsWith('.')) name else "$name.").lowercase()
+	val name: String = if (name.endsWith('.')) name else "$name."
 
 	override fun write(stream: OutputStream) {
 		name.split('.').forEach {

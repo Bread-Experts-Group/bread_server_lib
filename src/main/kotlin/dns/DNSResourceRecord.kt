@@ -19,7 +19,7 @@ class DNSResourceRecord(
 	val timeToLive: Int,
 	val rrData: ByteArray
 ) : SmartToString(), Writable {
-	val name: String = (if (name.endsWith('.')) name else "$name.").lowercase()
+	val name: String = if (name.endsWith('.')) name else "$name."
 
 	override fun write(stream: OutputStream) {
 		name.split('.').forEach {
