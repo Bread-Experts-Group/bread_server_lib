@@ -15,7 +15,7 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 			name += "$part."
 		}
 
-		0b11000000 -> readLabel(
+		0b11000000 -> name = readLabel(
 			ByteArrayInputStream(lookbehind).also { it.skip(stream.read().toLong()) },
 			lookbehind
 		)
