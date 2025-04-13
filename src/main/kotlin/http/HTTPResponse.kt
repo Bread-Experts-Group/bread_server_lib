@@ -49,6 +49,7 @@ class HTTPResponse private constructor(
 		it["Date"] = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now())
 		it["Content-Length"] = dataLength.toString()
 		it["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+		it["Alt-Svc"] = "h3=\":443\"; h2=\":443\""
 	}
 
 	override fun gist(): String = "($version, <Res>) $code [HEAD#: ${headers.size}]" + buildString {
@@ -69,6 +70,6 @@ class HTTPResponse private constructor(
 	}
 
 	companion object {
-		val disallowedHeaders = listOf("Server", "Date", "Content-Length", "Strict-Transport-Security")
+		val disallowedHeaders = listOf("Server", "Date", "Content-Length", "Strict-Transport-Security", "Alt-Svc")
 	}
 }
