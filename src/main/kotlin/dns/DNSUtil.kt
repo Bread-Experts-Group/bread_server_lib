@@ -1,6 +1,7 @@
 package bread_experts_group.dns
 
 import bread_experts_group.readString
+import bread_experts_group.warn
 import bread_experts_group.writeString
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -29,6 +30,7 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 }
 
 fun writeLabel(label: String) = ByteArrayOutputStream().use {
+	warn(label)
 	label.split('.').forEach { s ->
 		it.write(s.length)
 		it.writeString(s)
