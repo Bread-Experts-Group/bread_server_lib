@@ -1,8 +1,11 @@
 package bread_experts_group.dns
 
 import bread_experts_group.readString
+import bread_experts_group.writeString
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.io.OutputStream
 
 fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 	var name = ""
@@ -23,4 +26,12 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 		byte = stream.read()
 	}
 	return name
+}
+
+fun writeLabel(label: String) = ByteArrayOutputStream().use {
+	label.split('.').forEach { s ->
+		it.write(s.length)
+		it.writeString(s)
+	}
+	it.toByteArray()
 }
