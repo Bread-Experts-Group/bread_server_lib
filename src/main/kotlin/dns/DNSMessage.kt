@@ -1,6 +1,5 @@
 package bread_experts_group.dns
 
-import bread_experts_group.SmartToString
 import bread_experts_group.Writable
 import bread_experts_group.hex
 import bread_experts_group.read16
@@ -24,7 +23,7 @@ class DNSMessage private constructor(
 	val answers: List<DNSResourceRecord>,
 	val authorityRecords: List<DNSResourceRecord>,
 	val additionalRecords: List<DNSResourceRecord>
-) : SmartToString(), Writable {
+) : Writable {
 	override fun write(stream: OutputStream) {
 		stream.write16(transactionID)
 		var thirdByte = if (recursiveQuery) 1 else 0
@@ -48,13 +47,9 @@ class DNSMessage private constructor(
 		additionalRecords.forEach { it.write(stream) }
 	}
 
-	override fun gist(): String = "(DNS, ${if (reply) "<Res>" else "<Req>"}, ${opcode.name}) " + buildString {
-		append("ID#${hex(transactionID)}; ")
-		append("Qst# ${questions.size}, ")
-		append("Ans# ${answers.size}, ")
-		append("Ath# ${authorityRecords.size}, ")
-		append("Add# ${additionalRecords.size} ")
-		append(
+	override fun toString() = "(DNS, ${if (reply) "<Res>" else "<Req>"}) ${opcode.name} " +
+			"[${hex(transactionID.toShort())}] [Qst/Ans/Ath/Add:" +
+			"${questions.size}/${answers.size}/${authorityRecords.size}/${additionalRecords.size}]" +
 			"[${
 				buildList {
 					if (authoritative) add("AA")
@@ -64,14 +59,13 @@ class DNSMessage private constructor(
 					if (authenticData) add("AD")
 					if (checkingDisabled) add("CD")
 				}.joinToString(" ")
-			}]"
-		)
-		append(" ${responseCode.name}")
-		questions.forEach { append("\nQST: $it") }
-		answers.forEach { append("\nANS: $it") }
-		authorityRecords.forEach { append("\nATH: $it") }
-		additionalRecords.forEach { append("\nADD: $it") }
-	}
+			}] ${responseCode.name}" +
+			buildString {
+				for (q in questions) append("\nQST: $q")
+				for (a in answers) append("\nQST: $a")
+				for (aa in authorityRecords) append("\nQST: $aa")
+				for (ar in additionalRecords) append("\nQST: $ar")
+			}
 
 	companion object {
 		fun query(

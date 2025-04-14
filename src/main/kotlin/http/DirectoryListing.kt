@@ -1,9 +1,9 @@
 package bread_experts_group.http
 
-import bread_experts_group.dateTimeFormatter
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.collections.forEach
 import kotlin.collections.sortByDescending
 
@@ -37,7 +37,7 @@ fun getHTML(store: File, file: File, css: String): String = buildString {
 				append("<td>${if (it.isDirectory) "Directory" else truncateSizeHTML(it.length())}</td>")
 				val mod = Instant.ofEpochMilli(it.lastModified())
 					.atZone(ZoneId.systemDefault())
-				append("<td>${dateTimeFormatter.format(mod)}</td></tr>")
+				append("<td>${DateTimeFormatter.RFC_1123_DATE_TIME.format(mod)}</td></tr>")
 			}
 		} else append("<tr><td>Folder empty</td><td>-1</td><td>-1</td></tr>")
 	} else append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")

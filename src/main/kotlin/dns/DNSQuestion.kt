@@ -1,6 +1,5 @@
 package bread_experts_group.dns
 
-import bread_experts_group.SmartToString
 import bread_experts_group.Writable
 import bread_experts_group.read16
 import bread_experts_group.write16
@@ -12,7 +11,7 @@ class DNSQuestion(
 	name: String,
 	val qType: DNSType,
 	val qClass: DNSClass
-) : SmartToString(), Writable {
+) : Writable {
 	val name: String = if (name.endsWith('.')) name else "$name."
 
 	override fun write(stream: OutputStream) {
@@ -24,7 +23,7 @@ class DNSQuestion(
 		stream.write16(qClass.code)
 	}
 
-	override fun gist(): String = "(DNS, Question) \"$name\" $qType $qClass"
+	override fun toString() = "(DNS, Question) \"$name\" $qType $qClass"
 
 	companion object {
 		fun read(stream: InputStream, lookbehind: ByteArray): DNSQuestion = DNSQuestion(

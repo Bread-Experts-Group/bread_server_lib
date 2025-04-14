@@ -1,6 +1,6 @@
 package bread_experts_group.http
 
-import bread_experts_group.SmartToString
+import bread_experts_group.Writable
 import bread_experts_group.writeString
 import java.io.OutputStream
 import java.time.ZonedDateTime
@@ -12,7 +12,7 @@ class HTTPResponse private constructor(
 	headers: Map<String, String> = emptyMap(),
 	val dataLength: Long = 0,
 	val data: ByteArray? = null
-) : SmartToString() {
+) : Writable {
 	constructor(
 		code: Int,
 		version: String,
@@ -52,13 +52,13 @@ class HTTPResponse private constructor(
 		it["Alt-Svc"] = "h3=\":443\"; h2=\":443\""
 	}
 
-	override fun gist(): String = "($version, <Res>) $code [HEAD#: ${headers.size}]" + buildString {
+	override fun toString(): String = "($version, <Res>) $code [HEAD#: ${headers.size}]" + buildString {
 		headers.forEach {
 			append("\n${it.key}: ${it.value}")
 		}
 	}
 
-	fun write(stream: OutputStream) {
+	override fun write(stream: OutputStream) {
 		stream.writeString("$version $code\r\n")
 		headers.forEach { (key, value) -> stream.writeString("$key:$value\r\n") }
 		stream.writeString("\r\n")

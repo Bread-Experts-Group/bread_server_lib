@@ -1,9 +1,6 @@
 package bread_experts_group.websocket
 
-import bread_experts_group.SmartToString
-import bread_experts_group.info
 import bread_experts_group.read16
-import bread_experts_group.read32
 import bread_experts_group.read64
 import bread_experts_group.write16
 import bread_experts_group.write64
@@ -16,8 +13,8 @@ class WebSocketFrame(
 	val opcode: WebSocketOpcode,
 	val data: ByteArray,
 	val mask: Boolean
-) : SmartToString() {
-	override fun gist(): String = "(WebSocket, $opcode) ${data.size}"
+) {
+	override fun toString(): String = "(WebSocket, $opcode) ${data.size}"
 
 	fun write(stream: OutputStream) {
 		stream.write(0b1_000_0000 or opcode.code)

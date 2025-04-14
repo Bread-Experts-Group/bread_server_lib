@@ -1,6 +1,5 @@
 package bread_experts_group.dns
 
-import bread_experts_group.SmartToString
 import bread_experts_group.Writable
 import bread_experts_group.hex
 import bread_experts_group.read16
@@ -18,7 +17,7 @@ class DNSResourceRecord(
 	val rrClassRaw: Int,
 	val timeToLive: Int,
 	val rrData: ByteArray
-) : SmartToString(), Writable {
+) : Writable {
 	val name: String = if (name.endsWith('.')) name else "$name."
 
 	override fun write(stream: OutputStream) {
@@ -33,7 +32,7 @@ class DNSResourceRecord(
 		stream.write(rrData)
 	}
 
-	override fun gist(): String = buildString {
+	override fun toString(): String = buildString {
 		append("(DNS, Record) \"$name\" $rrType ")
 		if (rrType == DNSType.OPT__OPTION) {
 			append("${hex(rrClassRaw)} ${hex(timeToLive)}")

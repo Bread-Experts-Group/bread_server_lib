@@ -1,6 +1,6 @@
 package bread_experts_group.http
 
-import bread_experts_group.SmartToString
+import bread_experts_group.Writable
 import bread_experts_group.scanDelimiter
 import bread_experts_group.writeString
 import java.io.InputStream
@@ -14,7 +14,7 @@ class HTTPRequest private constructor(
 	val version: String,
 	val headers: Map<String, String> = emptyMap(),
 	@Suppress("unused") val privateTag: Boolean = false
-) : SmartToString() {
+) : Writable {
 	constructor(
 		method: HTTPMethod,
 		path: String,
@@ -22,13 +22,13 @@ class HTTPRequest private constructor(
 		headers: Map<String, String> = emptyMap()
 	) : this(method, URLEncoder.encode(path, "UTF-8"), version, headers, true)
 
-	override fun gist(): String = "($version, <Req>) $method $path [HEAD#: ${headers.size}]" + buildString {
+	override fun toString(): String = "($version, <Req>) $method $path [HEAD#: ${headers.size}]" + buildString {
 		headers.forEach {
 			append("\n${it.key}: ${it.value}")
 		}
 	}
 
-	fun write(stream: OutputStream) {
+	override fun write(stream: OutputStream) {
 		stream.writeString("${method.name} $path $version\r\n")
 		headers.forEach { (key, value) ->
 			stream.writeString("$key:$value\r\n")
