@@ -9,6 +9,8 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.logging.Logger
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 object DirectoryListing {
 	private val logger = Logger.getLogger("DirectoryListing")
@@ -48,6 +50,8 @@ object DirectoryListing {
 	}
 
 	var css: String = ""
+
+	@OptIn(ExperimentalEncodingApi::class)
 	fun getDirectoryListingHTML(store: File, file: File): CachedList {
 		logger.finer { "Getting directory listing for $file, store: $store" }
 		val cache = directoryListingCache[file]
@@ -60,7 +64,7 @@ object DirectoryListing {
 		)
 		val cachedList = CachedList(
 			computed,
-			hasher.digest(computed.encodeToByteArray()).toString(Charsets.US_ASCII)
+			Base64.encode(hasher.digest(computed.encodeToByteArray()))
 		)
 		directoryListingCache[file] = cachedList
 		reverseCache[watchKey] = file
