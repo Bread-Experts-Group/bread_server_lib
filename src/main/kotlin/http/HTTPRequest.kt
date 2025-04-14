@@ -46,7 +46,7 @@ class HTTPRequest private constructor(
 					while (true) {
 						val raw = stream.scanDelimiter("\r\n")
 						if (raw == "") break
-						var (name, value) = raw.split(":")
+						var (name, value) = raw.split(":", ignoreCase = true, limit = 2)
 						if (value[0] == ' ') value = value.substring(1)
 						this[name] = value
 					}
