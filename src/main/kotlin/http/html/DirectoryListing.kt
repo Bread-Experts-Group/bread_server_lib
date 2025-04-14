@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.StandardWatchEventKinds
 import java.nio.file.WatchKey
+import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -12,8 +13,14 @@ import java.util.logging.Logger
 object DirectoryListing {
 	private val logger = Logger.getLogger("DirectoryListing")
 	private val watcher = FileSystems.getDefault().newWatchService()
-	private val directoryListingCache = mutableMapOf<File, String>()
+	private val directoryListingCache = mutableMapOf<File, CachedList>()
 	private val reverseCache = mutableMapOf<WatchKey, File>()
+	private val hasher = MessageDigest.getInstance("MD5")
+
+	data class CachedList(
+		val data: String,
+		val hash: String
+	)
 
 	init {
 		Thread.ofVirtual().name("DirectoryListing-CacheManager").start {
@@ -41,19 +48,23 @@ object DirectoryListing {
 	}
 
 	var css: String = ""
-	fun getDirectoryListingHTML(store: File, file: File): Pair<String, Boolean> {
+	fun getDirectoryListingHTML(store: File, file: File): CachedList {
 		logger.finer { "Getting directory listing for $file, store: $store" }
 		val cache = directoryListingCache[file]
-		if (cache != null) return cache to true
+		if (cache != null) return cache
 		val computed = computeDirectoryListingHTML(store, file)
 		val watchKey = file.toPath().register(
 			watcher,
 			StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE,
 			StandardWatchEventKinds.ENTRY_MODIFY
 		)
-		directoryListingCache[file] = computed
+		val cachedList = CachedList(
+			computed,
+			hasher.digest(computed.encodeToByteArray()).toString(Charsets.US_ASCII)
+		)
+		directoryListingCache[file] = cachedList
 		reverseCache[watchKey] = file
-		return computed to false
+		return cachedList
 	}
 
 	fun computeDirectoryListingHTML(store: File, file: File): String = buildString {
