@@ -116,14 +116,14 @@ class DNSMessage private constructor(
 			return DNSMessage(
 				transactionID,
 				(flags and 0b1000000000000000) > 0,
-				DNSOpcode.mapping.getValue((flags and 0b0111100000000000) shr 11),
+				DNSOpcode.mapping[(flags and 0b0111100000000000) shr 11] ?: DNSOpcode.OTHER,
 				(flags and 0b0000010000000000) > 0,
 				(flags and 0b0000001000000000) > 0,
 				(flags and 0b0000000100000000) > 0,
 				(flags and 0b0000000010000000) > 0,
 				(flags and 0b0000000000100000) > 0,
 				(flags and 0b0000000000010000) > 0,
-				DNSResponseCode.mapping.getValue(flags and 0b0000000000001111),
+				DNSResponseCode.mapping[flags and 0b0000000000001111] ?: DNSResponseCode.OTHER,
 				List(questions) {
 					DNSQuestion.read(lookbehindRead, lookbehind.toByteArray())
 				},

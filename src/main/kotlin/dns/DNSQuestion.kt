@@ -28,8 +28,8 @@ class DNSQuestion(
 	companion object {
 		fun read(stream: InputStream, lookbehind: ByteArray): DNSQuestion = DNSQuestion(
 			readLabel(stream, lookbehind),
-			DNSType.mapping.getValue(stream.read16()),
-			DNSClass.mapping.getValue(stream.read16())
+			DNSType.mapping[stream.read16()] ?: DNSType.OTHER,
+			DNSClass.mapping[stream.read16()] ?: DNSClass.OTHER
 		)
 	}
 }

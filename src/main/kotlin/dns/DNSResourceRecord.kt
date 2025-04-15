@@ -1,12 +1,6 @@
 package bread_experts_group.dns
 
-import bread_experts_group.Writable
-import bread_experts_group.hex
-import bread_experts_group.read16
-import bread_experts_group.read32
-import bread_experts_group.write16
-import bread_experts_group.write32
-import bread_experts_group.writeString
+import bread_experts_group.*
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -50,7 +44,7 @@ class DNSResourceRecord(
 			val rrClassRaw = stream.read16()
 			return DNSResourceRecord(
 				label,
-				DNSType.mapping.getValue(rrType),
+				DNSType.mapping[rrType] ?: DNSType.OTHER,
 				DNSClass.mapping[rrClassRaw] ?: DNSClass.OTHER,
 				rrClassRaw,
 				stream.read32(),
