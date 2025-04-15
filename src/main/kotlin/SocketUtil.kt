@@ -1,6 +1,5 @@
 package bread_experts_group
 
-import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Inet4Address
@@ -27,7 +26,7 @@ fun InputStream.scanDelimiter(lookFor: String): String {
 	var pool = ""
 	while (bucket.length != lookFor.length) {
 		val charCode = this.read()
-		if (charCode == -1) throw IOException("Communication terminated")
+		if (charCode == -1) break
 		val next = Char(charCode)
 		if (lookFor[bucket.length] == next) bucket += next
 		else {
