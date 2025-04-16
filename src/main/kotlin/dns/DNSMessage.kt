@@ -88,7 +88,7 @@ class DNSMessage private constructor(
 
 		fun reply(
 			transactionID: Int,
-			maxLength: Int,
+			maxLength: Int? = null,
 			opcode: DNSOpcode,
 			authoritative: Boolean,
 			authenticData: Boolean,
