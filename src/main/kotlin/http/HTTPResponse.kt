@@ -1,7 +1,7 @@
-package bread_experts_group.http
+package org.bread_experts_group.http
 
-import bread_experts_group.Writable
-import bread_experts_group.socket.writeString
+import org.bread_experts_group.Writable
+import org.bread_experts_group.socket.writeString
 import java.io.OutputStream
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter

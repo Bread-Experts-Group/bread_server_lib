@@ -1,4 +1,4 @@
-package bread_experts_group.dns
+package org.bread_experts_group.dns
 
 enum class DNSType(val code: Int) {
 	A__IPV4_ADDRESS(1),

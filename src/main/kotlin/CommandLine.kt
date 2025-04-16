@@ -1,4 +1,4 @@
-package bread_experts_group
+package org.bread_experts_group
 
 import java.util.logging.Logger
 

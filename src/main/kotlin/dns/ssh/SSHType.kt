@@ -1,4 +1,4 @@
-package bread_experts_group.dns.ssh
+package org.bread_experts_group.dns.ssh
 
 enum class SSHType(val code: Int) {
 	SHA_1(1),

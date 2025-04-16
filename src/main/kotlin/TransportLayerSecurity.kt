@@ -1,15 +1,10 @@
-package bread_experts_group
+package org.bread_experts_group
 
 import java.io.File
 import java.io.FileInputStream
 import java.nio.file.Path
 import java.security.KeyStore
-import javax.net.ssl.KeyManagerFactory
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLServerSocket
-import javax.net.ssl.SSLServerSocketFactory
-import javax.net.ssl.SSLSocket
-import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.*
 
 fun getKeyStoreFromPath(path: String, password: String): KeyStore = getKeyStoreFromPath(Path.of(path), password)
 fun getKeyStoreFromPath(path: Path, password: String): KeyStore = getKeyStoreFromPath(path.toFile(), password)

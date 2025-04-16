@@ -1,4 +1,4 @@
-package bread_experts_group.http.h2
+package org.bread_experts_group.http.h2
 
 enum class HTTP2FrameType(val code: Int) {
 	DATA(0),

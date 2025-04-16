@@ -1,9 +1,9 @@
-package bread_experts_group.dns
+package org.bread_experts_group.dns
 
-import bread_experts_group.Writable
-import bread_experts_group.hex
-import bread_experts_group.socket.read16ui
-import bread_experts_group.socket.write16
+import org.bread_experts_group.Writable
+import org.bread_experts_group.hex
+import org.bread_experts_group.socket.read16ui
+import org.bread_experts_group.socket.write16
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream

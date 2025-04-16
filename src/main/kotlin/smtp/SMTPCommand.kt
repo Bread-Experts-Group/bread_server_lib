@@ -1,4 +1,4 @@
-package bread_experts_group.smtp
+package org.bread_experts_group.smtp
 
 enum class SMTPCommand {
 	HELO,

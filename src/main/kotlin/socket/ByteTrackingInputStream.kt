@@ -1,4 +1,4 @@
-package bread_experts_group.socket
+package org.bread_experts_group.socket
 
 import java.io.InputStream
 

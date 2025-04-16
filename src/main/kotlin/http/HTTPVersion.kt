@@ -1,4 +1,4 @@
-package bread_experts_group.http
+package org.bread_experts_group.http
 
 enum class HTTPVersion(val tag: String) {
 	HTTP_1_1("HTTP/1.1"),

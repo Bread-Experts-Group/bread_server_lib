@@ -1,6 +1,6 @@
-package bread_experts_group.http.html
+package org.bread_experts_group.http.html
 
-import bread_experts_group.truncateSI
+import org.bread_experts_group.truncateSI
 
 fun truncateSizeHTML(size: Long): String =
 	if (size < 1000) "$size B"

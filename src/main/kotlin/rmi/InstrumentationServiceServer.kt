@@ -1,4 +1,4 @@
-package bread_experts_group.rmi
+package org.bread_experts_group.rmi
 
 import java.lang.management.ManagementFactory
 import java.rmi.registry.LocateRegistry

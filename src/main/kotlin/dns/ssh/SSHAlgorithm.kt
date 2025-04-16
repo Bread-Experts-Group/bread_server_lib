@@ -1,4 +1,4 @@
-package bread_experts_group.dns.ssh
+package org.bread_experts_group.dns.ssh
 
 enum class SSHAlgorithm(val code: Int) {
 	RSA(1),

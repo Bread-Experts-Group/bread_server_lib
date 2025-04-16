@@ -1,4 +1,4 @@
-package bread_experts_group.beg_stdproxy
+package org.bread_experts_group.beg_stdproxy
 
 enum class WebSocketRelayedProtocol(val code: Int) {
 	TRANSMISSION_CONTROL_PROTOCOL(0x00),

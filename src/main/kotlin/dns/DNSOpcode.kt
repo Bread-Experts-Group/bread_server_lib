@@ -1,4 +1,4 @@
-package bread_experts_group.dns
+package org.bread_experts_group.dns
 
 enum class DNSOpcode(val code: Int) {
 	QUERY(0),

@@ -1,6 +1,6 @@
-package bread_experts_group.http.h2.setting
+package org.bread_experts_group.http.h2.setting
 
-import bread_experts_group.socket.read32ul
+import org.bread_experts_group.socket.read32ul
 import java.io.InputStream
 
 class HTTP2SettingMaxHeaderListSize(

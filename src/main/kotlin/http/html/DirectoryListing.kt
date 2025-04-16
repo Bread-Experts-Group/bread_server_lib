@@ -1,4 +1,4 @@
-package bread_experts_group.http.html
+package org.bread_experts_group.http.html
 
 import java.io.File
 import java.nio.file.FileSystems

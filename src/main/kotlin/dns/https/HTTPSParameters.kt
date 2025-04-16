@@ -1,4 +1,4 @@
-package bread_experts_group.dns.https
+package org.bread_experts_group.dns.https
 
 enum class HTTPSParameters(val code: Int) {
 	MANDATORY(0),

@@ -1,4 +1,4 @@
-package bread_experts_group
+package org.bread_experts_group
 
 fun hexLen(s: String, n: Int) = "0x${s.uppercase().padStart(n, '0')}"
 fun hex(value: Long): String = hexLen(value.toString(16), 16)

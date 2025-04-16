@@ -1,4 +1,4 @@
-package bread_experts_group.http.h2.setting
+package org.bread_experts_group.http.h2.setting
 
 enum class HTTP2SettingIdentifier(val code: Int) {
 	SETTINGS_HEADER_TABLE_SIZE(1),

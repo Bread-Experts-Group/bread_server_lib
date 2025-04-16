@@ -1,4 +1,4 @@
-package bread_experts_group.dns
+package org.bread_experts_group.dns
 
 enum class DNSClass(val code: Int) {
 	IN__INTERNET(1),

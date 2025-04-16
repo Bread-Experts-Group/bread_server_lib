@@ -1,4 +1,4 @@
-package bread_experts_group.websocket
+package org.bread_experts_group.websocket
 
 enum class WebSocketOpcode(val code: Int) {
 	CONTINUATION(0),

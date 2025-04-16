@@ -1,8 +1,8 @@
-package bread_experts_group.http.h2
+package org.bread_experts_group.http.h2
 
-import bread_experts_group.hex
-import bread_experts_group.http.h2.setting.HTTP2Setting
-import bread_experts_group.socket.read32
+import org.bread_experts_group.hex
+import org.bread_experts_group.http.h2.setting.HTTP2Setting
+import org.bread_experts_group.socket.read32
 import java.io.InputStream
 
 class HTTP2SettingsFrame(

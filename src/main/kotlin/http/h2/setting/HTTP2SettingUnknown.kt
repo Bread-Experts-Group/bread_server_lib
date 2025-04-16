@@ -1,4 +1,4 @@
-package bread_experts_group.http.h2.setting
+package org.bread_experts_group.http.h2.setting
 
 import java.io.InputStream
 
