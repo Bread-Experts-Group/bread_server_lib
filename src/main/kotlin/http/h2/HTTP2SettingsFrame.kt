@@ -2,7 +2,7 @@ package bread_experts_group.http.h2
 
 import bread_experts_group.hex
 import bread_experts_group.http.h2.setting.HTTP2Setting
-import bread_experts_group.read32
+import bread_experts_group.socket.read32
 import java.io.InputStream
 
 class HTTP2SettingsFrame(
@@ -28,7 +28,6 @@ class HTTP2SettingsFrame(
 				buildList {
 					var remaining = length
 					while (remaining > 0) {
-						println(remaining)
 						add(HTTP2Setting.read(stream))
 						remaining -= 6
 					}

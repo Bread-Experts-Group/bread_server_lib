@@ -1,6 +1,6 @@
 package bread_experts_group.http.h2
 
-import bread_experts_group.read32
+import bread_experts_group.socket.read32
 import java.io.InputStream
 
 class HTTP2WindowUpdateFrame(

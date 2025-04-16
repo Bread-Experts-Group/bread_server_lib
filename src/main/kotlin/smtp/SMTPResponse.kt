@@ -1,6 +1,6 @@
 package bread_experts_group.smtp
 
-import bread_experts_group.writeString
+import bread_experts_group.socket.writeString
 import java.io.OutputStream
 
 class SMTPResponse(

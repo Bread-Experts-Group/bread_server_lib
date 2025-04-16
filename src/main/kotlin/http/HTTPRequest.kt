@@ -1,8 +1,8 @@
 package bread_experts_group.http
 
 import bread_experts_group.Writable
-import bread_experts_group.scanDelimiter
-import bread_experts_group.writeString
+import bread_experts_group.socket.scanDelimiter
+import bread_experts_group.socket.writeString
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.URLDecoder

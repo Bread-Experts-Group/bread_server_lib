@@ -1,6 +1,6 @@
 package bread_experts_group.http.h2.setting
 
-import bread_experts_group.read16ui
+import bread_experts_group.socket.read16ui
 import java.io.InputStream
 
 sealed class HTTP2Setting(val identifier: HTTP2SettingIdentifier) {

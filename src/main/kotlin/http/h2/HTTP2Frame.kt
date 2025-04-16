@@ -1,7 +1,7 @@
 package bread_experts_group.http.h2
 
 import bread_experts_group.hex
-import bread_experts_group.read24ui
+import bread_experts_group.socket.read24ui
 import java.io.InputStream
 
 sealed class HTTP2Frame(
