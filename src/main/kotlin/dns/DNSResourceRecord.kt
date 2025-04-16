@@ -1,6 +1,7 @@
 package bread_experts_group.dns
 
 import bread_experts_group.*
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -11,19 +12,29 @@ class DNSResourceRecord(
 	val rrClassRaw: Int,
 	val timeToLive: Long,
 	val rrData: ByteArray
-) : Writable {
+) {
 	val name: String = if (name.endsWith('.')) name else "$name."
 
-	override fun write(stream: OutputStream) {
-		name.split('.').forEach {
-			stream.write(it.length)
-			stream.writeString(it)
+	fun write(parent: DNSMessage, stream: OutputStream) {
+		if (parent.truncated) return
+		val data = ByteArrayOutputStream().use {
+			name.split('.').forEach {
+				stream.write(it.length)
+				stream.writeString(it)
+			}
+			stream.write16(rrType.code)
+			stream.write16(rrClassRaw)
+			stream.write32(timeToLive)
+			stream.write16(rrData.size)
+			stream.write(rrData)
+			it.toByteArray()
 		}
-		stream.write16(rrType.code)
-		stream.write16(rrClassRaw)
-		stream.write32(timeToLive)
-		stream.write16(rrData.size)
-		stream.write(rrData)
+		if (parent.maxLength != null && parent.maxLength + data.size > parent.maxLength) {
+			parent.truncated = true
+			return
+		}
+		parent.currentSize += data.size
+		stream.write(data)
 	}
 
 	override fun toString(): String = buildString {

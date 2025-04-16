@@ -13,7 +13,8 @@ class DNSMessage private constructor(
 	val reply: Boolean,
 	val opcode: DNSOpcode,
 	val authoritative: Boolean,
-	val truncated: Boolean,
+	truncated: Boolean,
+	val maxLength: Int?,
 	val recursiveQuery: Boolean,
 	val recursionAvailable: Boolean,
 	val authenticData: Boolean,
@@ -24,6 +25,10 @@ class DNSMessage private constructor(
 	val authorityRecords: List<DNSResourceRecord>,
 	val additionalRecords: List<DNSResourceRecord>
 ) : Writable {
+	var truncated: Boolean = truncated
+		internal set
+	internal var currentSize: Int = 12
+
 	override fun write(stream: OutputStream) {
 		stream.write16(transactionID)
 		var thirdByte = if (recursiveQuery) 1 else 0
@@ -41,10 +46,10 @@ class DNSMessage private constructor(
 		stream.write16(answers.size)
 		stream.write16(authorityRecords.size)
 		stream.write16(additionalRecords.size)
-		questions.forEach { it.write(stream) }
-		answers.forEach { it.write(stream) }
-		authorityRecords.forEach { it.write(stream) }
-		additionalRecords.forEach { it.write(stream) }
+		questions.forEach { it.write(this, stream) }
+		answers.forEach { it.write(this, stream) }
+		authorityRecords.forEach { it.write(this, stream) }
+		additionalRecords.forEach { it.write(this, stream) }
 	}
 
 	override fun toString() = "(DNS, ${if (reply) "<Res>" else "<Req>"}) ${opcode.name} " +
@@ -76,13 +81,14 @@ class DNSMessage private constructor(
 			questions: List<DNSQuestion>,
 			additionalRecords: List<DNSResourceRecord> = emptyList()
 		) = DNSMessage(
-			transactionID, false, opcode, false, false,
+			transactionID, false, opcode, false, false, null,
 			recursiveQuery, false, false, checkingDisabled, DNSResponseCode.OK,
 			questions, emptyList(), emptyList(), additionalRecords
 		)
 
 		fun reply(
 			transactionID: Int,
+			maxLength: Int,
 			opcode: DNSOpcode,
 			authoritative: Boolean,
 			authenticData: Boolean,
@@ -93,7 +99,7 @@ class DNSMessage private constructor(
 			authorityRecords: List<DNSResourceRecord> = emptyList(),
 			additionalRecords: List<DNSResourceRecord> = emptyList()
 		) = DNSMessage(
-			transactionID, true, opcode, authoritative, false,
+			transactionID, true, opcode, authoritative, false, maxLength,
 			false, recursionAvailable, authenticData, false, responseCode,
 			questions, answers, authorityRecords, additionalRecords
 		)
@@ -119,6 +125,7 @@ class DNSMessage private constructor(
 				DNSOpcode.mapping[(flags and 0b0111100000000000) shr 11] ?: DNSOpcode.OTHER,
 				(flags and 0b0000010000000000) > 0,
 				(flags and 0b0000001000000000) > 0,
+				null,
 				(flags and 0b0000000100000000) > 0,
 				(flags and 0b0000000010000000) > 0,
 				(flags and 0b0000000000100000) > 0,

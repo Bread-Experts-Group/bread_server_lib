@@ -1,9 +1,9 @@
 package bread_experts_group.dns
 
-import bread_experts_group.Writable
 import bread_experts_group.read16ui
 import bread_experts_group.write16
 import bread_experts_group.writeString
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -11,16 +11,26 @@ class DNSQuestion(
 	name: String,
 	val qType: DNSType,
 	val qClass: DNSClass
-) : Writable {
+) {
 	val name: String = if (name.endsWith('.')) name else "$name."
 
-	override fun write(stream: OutputStream) {
-		name.split('.').forEach {
-			stream.write(it.length)
-			stream.writeString(it)
+	fun write(parent: DNSMessage, stream: OutputStream) {
+		if (parent.truncated) return
+		val data = ByteArrayOutputStream().use {
+			name.split('.').forEach {
+				stream.write(it.length)
+				stream.writeString(it)
+			}
+			stream.write16(qType.code)
+			stream.write16(qClass.code)
+			it.toByteArray()
 		}
-		stream.write16(qType.code)
-		stream.write16(qClass.code)
+		if (parent.maxLength != null && parent.maxLength + data.size > parent.maxLength) {
+			parent.truncated = true
+			return
+		}
+		parent.currentSize += data.size
+		stream.write(data)
 	}
 
 	override fun toString() = "(DNS, Question) \"$name\" $qType $qClass"

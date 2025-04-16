@@ -30,7 +30,7 @@ class HTTP2HeaderFrame(
 			val identifier = stream.read32()
 			if (identifier == 0)
 				throw HTTP2ProtocolError("Header frame identifier must be non-zero, got ${hex(identifier)}")
-			var remainder = length - 5
+			var remainder = length
 			val padding = if (flags.contains(HTTP2HeaderFrameFlag.PADDED)) {
 				val padding = stream.read()
 				remainder -= padding + 1

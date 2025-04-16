@@ -28,6 +28,7 @@ class HTTP2SettingsFrame(
 				buildList {
 					var remaining = length
 					while (remaining > 0) {
+						println(remaining)
 						add(HTTP2Setting.read(stream))
 						remaining -= 6
 					}
