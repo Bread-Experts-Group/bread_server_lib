@@ -5,6 +5,7 @@ fun hex(value: Long): String = hexLen(value.toString(16), 16)
 fun hex(value: Int): String = hexLen(value.toString(16), 8)
 fun hex(value: Short): String = hexLen(value.toString(16), 4)
 fun hex(value: Byte): String = hexLen(value.toString(16), 2)
+fun hex(value: UByte): String = hexLen(value.toString(16), 2)
 
 val siKeys = listOf("k", "M", "G", "T", "P", "E")
 val siIntervals = listOf(0.0, 1000.0, 1e+6, 1e+9, 1e+12, 1e+15, 1e+18).map { it.toLong() }
