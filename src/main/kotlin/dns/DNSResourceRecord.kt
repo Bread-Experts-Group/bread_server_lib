@@ -29,7 +29,6 @@ class DNSResourceRecord(
 			it.write(rrData)
 			it.toByteArray()
 		}
-		println("RR ${parent.maxLength} ${parent.currentSize} ${data.size}")
 		if (parent.maxLength != null && parent.currentSize + data.size > parent.maxLength) {
 			parent.truncated = true
 			return
