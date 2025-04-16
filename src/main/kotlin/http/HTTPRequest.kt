@@ -39,7 +39,7 @@ class HTTPRequest private constructor(
 	companion object {
 		fun read(stream: InputStream): HTTPRequest {
 			return HTTPRequest(
-				HTTPMethod.valueOf(stream.scanDelimiter(" ")),
+				HTTPMethod.safeMapping[stream.scanDelimiter(" ")] ?: HTTPMethod.OTHER,
 				URLDecoder.decode(stream.scanDelimiter(" "), "UTF-8"),
 				stream.scanDelimiter("\r\n"),
 				buildMap {

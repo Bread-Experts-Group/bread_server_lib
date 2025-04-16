@@ -10,6 +10,11 @@ enum class HTTPMethod {
 	OPTIONS,
 	TRACE,
 	PATCH,
-	SSTP_DUPLEX_POST,
-	OTHER
+	SSTP_DUPLEX_POST, // SSTP
+	PRI, // HTTP/2 Preface
+	OTHER;
+
+	companion object {
+		val safeMapping = entries.associateBy(HTTPMethod::name)
+	}
 }
