@@ -20,6 +20,7 @@ sealed class HTTP2Frame(
 			val type = HTTP2FrameType.mapping[stream.read()] ?: HTTP2FrameType.OTHER
 			return when (type) {
 				HTTP2FrameType.DATA -> HTTP2DataFrame.read(stream, length)
+				HTTP2FrameType.SETTINGS -> HTTP2SettingsFrame.read(stream, length)
 				else -> throw TODO(type.name)
 			}
 		}
