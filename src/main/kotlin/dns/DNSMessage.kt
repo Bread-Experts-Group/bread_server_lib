@@ -2,7 +2,7 @@ package bread_experts_group.dns
 
 import bread_experts_group.Writable
 import bread_experts_group.hex
-import bread_experts_group.read16
+import bread_experts_group.read16ui
 import bread_experts_group.write16
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -107,12 +107,12 @@ class DNSMessage private constructor(
 					return read
 				}
 			}
-			val transactionID = lookbehindRead.read16()
-			val flags = lookbehindRead.read16()
-			val questions = lookbehindRead.read16()
-			val answers = lookbehindRead.read16()
-			val authorityRecords = lookbehindRead.read16()
-			val additionalRecords = lookbehindRead.read16()
+			val transactionID = lookbehindRead.read16ui()
+			val flags = lookbehindRead.read16ui()
+			val questions = lookbehindRead.read16ui()
+			val answers = lookbehindRead.read16ui()
+			val authorityRecords = lookbehindRead.read16ui()
+			val additionalRecords = lookbehindRead.read16ui()
 			return DNSMessage(
 				transactionID,
 				(flags and 0b1000000000000000) > 0,

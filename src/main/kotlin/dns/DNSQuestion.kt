@@ -1,7 +1,7 @@
 package bread_experts_group.dns
 
 import bread_experts_group.Writable
-import bread_experts_group.read16
+import bread_experts_group.read16ui
 import bread_experts_group.write16
 import bread_experts_group.writeString
 import java.io.InputStream
@@ -28,8 +28,8 @@ class DNSQuestion(
 	companion object {
 		fun read(stream: InputStream, lookbehind: ByteArray): DNSQuestion = DNSQuestion(
 			readLabel(stream, lookbehind),
-			DNSType.mapping[stream.read16()] ?: DNSType.OTHER,
-			DNSClass.mapping[stream.read16()] ?: DNSClass.OTHER
+			DNSType.mapping[stream.read16ui()] ?: DNSType.OTHER,
+			DNSClass.mapping[stream.read16ui()] ?: DNSClass.OTHER
 		)
 	}
 }

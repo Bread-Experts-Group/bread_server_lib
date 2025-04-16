@@ -9,7 +9,7 @@ class DNSResourceRecord(
 	val rrType: DNSType,
 	val rrClass: DNSClass,
 	val rrClassRaw: Int,
-	val timeToLive: Int,
+	val timeToLive: Long,
 	val rrData: ByteArray
 ) : Writable {
 	val name: String = if (name.endsWith('.')) name else "$name."
@@ -40,15 +40,15 @@ class DNSResourceRecord(
 	companion object {
 		fun read(stream: InputStream, lookbehind: ByteArray): DNSResourceRecord {
 			val label = readLabel(stream, lookbehind)
-			val rrType = stream.read16()
-			val rrClassRaw = stream.read16()
+			val rrType = stream.read16ui()
+			val rrClassRaw = stream.read16ui()
 			return DNSResourceRecord(
 				label,
 				DNSType.mapping[rrType] ?: DNSType.OTHER,
 				DNSClass.mapping[rrClassRaw] ?: DNSClass.OTHER,
 				rrClassRaw,
-				stream.read32(),
-				stream.readNBytes(stream.read16())
+				stream.read32ul(),
+				stream.readNBytes(stream.read16ui())
 			)
 		}
 	}
