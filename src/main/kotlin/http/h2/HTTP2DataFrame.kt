@@ -8,7 +8,7 @@ class HTTP2DataFrame(
 	val flags: List<HTTP2DataFrameFlag>,
 	val data: ByteArray
 ) : HTTP2Frame(HTTP2FrameType.DATA, identifier) {
-	override fun toString(): String = super.toString() + " [${flags.joinToString(",")}], DATA #: [${data.size}]"
+	override fun toString(): String = super.toString() + " [${flags.joinToString(" ")}], DATA #: [${data.size}]"
 
 	companion object {
 		fun read(stream: InputStream, length: Int): HTTP2DataFrame {

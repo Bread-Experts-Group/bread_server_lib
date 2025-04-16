@@ -9,8 +9,8 @@ class HTTP2SettingsFrame(
 	val flags: List<HTTP2SettingsFrameFlag>,
 	val settings: List<HTTP2Setting>
 ) : HTTP2Frame(HTTP2FrameType.SETTINGS, 0) {
-	override fun toString(): String = super.toString() + " [${flags.joinToString(",")}], SETTINGS #: [${settings.size}]" +
-			settings.joinToString("\n")
+	override fun toString(): String = super.toString() + " [${flags.joinToString(" ")}], SETTINGS #: [${settings.size}]" +
+			settings.joinToString("") { "\n$it" }
 
 	companion object {
 		fun read(stream: InputStream, length: Int): HTTP2SettingsFrame {

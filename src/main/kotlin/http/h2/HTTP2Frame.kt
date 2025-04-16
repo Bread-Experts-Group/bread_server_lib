@@ -21,6 +21,8 @@ sealed class HTTP2Frame(
 			return when (type) {
 				HTTP2FrameType.DATA -> HTTP2DataFrame.read(stream, length)
 				HTTP2FrameType.SETTINGS -> HTTP2SettingsFrame.read(stream, length)
+				HTTP2FrameType.WINDOW_UPDATE -> HTTP2WindowUpdateFrame.read(stream, length)
+				HTTP2FrameType.HEADERS -> HTTP2HeaderFrame.read(stream, length)
 				else -> throw TODO(type.name)
 			}
 		}
