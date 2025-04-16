@@ -11,11 +11,17 @@ class HTTP2HeaderFrame(
 	val priority: Priority?,
 	val block: ByteArray
 ) : HTTP2Frame(HTTP2FrameType.HEADERS, identifier) {
+	override fun toString(): String = super.toString() + " [${flags.joinToString(" ")}], DATA #: [${block.size}]" +
+			if (priority != null) "\n$priority" else ""
+
 	data class Priority(
 		val exclusive: Boolean,
 		val dependency: Int,
 		val weight: Int
-	)
+	) {
+		override fun toString(): String = "(HTTP/2, HEADERS Priority) [${if (exclusive) "EX" else ""}] " +
+				"DEP: ${hex(dependency)}, WHT: $weight"
+	}
 
 	companion object {
 		fun read(stream: InputStream, length: Int): HTTP2HeaderFrame {
