@@ -17,15 +17,15 @@ class DNSQuestion(
 	fun write(parent: DNSMessage, stream: OutputStream) {
 		if (parent.truncated) return
 		val data = ByteArrayOutputStream().use {
-			name.split('.').forEach {
-				stream.write(it.length)
-				stream.writeString(it)
+			name.split('.').forEach { s ->
+				it.write(s.length)
+				it.writeString(s)
 			}
-			stream.write16(qType.code)
-			stream.write16(qClass.code)
+			it.write16(qType.code)
+			it.write16(qClass.code)
 			it.toByteArray()
 		}
-		if (parent.maxLength != null && parent.maxLength + data.size > parent.maxLength) {
+		if (parent.maxLength != null && parent.currentSize + data.size > parent.maxLength) {
 			parent.truncated = true
 			return
 		}

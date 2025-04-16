@@ -18,18 +18,19 @@ class DNSResourceRecord(
 	fun write(parent: DNSMessage, stream: OutputStream) {
 		if (parent.truncated) return
 		val data = ByteArrayOutputStream().use {
-			name.split('.').forEach {
-				stream.write(it.length)
-				stream.writeString(it)
+			name.split('.').forEach { s ->
+				it.write(s.length)
+				it.writeString(s)
 			}
-			stream.write16(rrType.code)
-			stream.write16(rrClassRaw)
-			stream.write32(timeToLive)
-			stream.write16(rrData.size)
-			stream.write(rrData)
+			it.write16(rrType.code)
+			it.write16(rrClassRaw)
+			it.write32(timeToLive)
+			it.write16(rrData.size)
+			it.write(rrData)
 			it.toByteArray()
 		}
-		if (parent.maxLength != null && parent.maxLength + data.size > parent.maxLength) {
+		println("RR ${parent.maxLength} ${parent.currentSize} ${data.size}")
+		if (parent.maxLength != null && parent.currentSize + data.size > parent.maxLength) {
 			parent.truncated = true
 			return
 		}

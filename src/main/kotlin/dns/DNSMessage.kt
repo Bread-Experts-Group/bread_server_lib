@@ -31,6 +31,32 @@ class DNSMessage private constructor(
 
 	override fun write(stream: OutputStream) {
 		stream.write16(transactionID)
+		var actualQuestions = 0
+		var actualAnswers = 0
+		var actualAA = 0
+		var actualADD = 0
+		val data = ByteArrayOutputStream().use { dataStream ->
+			questions.forEach {
+				it.write(this, dataStream)
+				if (!truncated) actualQuestions++
+			}
+			if (truncated) return@use dataStream.toByteArray()
+			answers.forEach {
+				it.write(this, dataStream)
+				if (!truncated) actualAnswers++
+			}
+			if (truncated) return@use dataStream.toByteArray()
+			authorityRecords.forEach {
+				it.write(this, dataStream)
+				if (!truncated) actualAA++
+			}
+			if (truncated) return@use dataStream.toByteArray()
+			additionalRecords.forEach {
+				it.write(this, dataStream)
+				if (!truncated) actualADD++
+			}
+			dataStream.toByteArray()
+		}
 		var thirdByte = if (recursiveQuery) 1 else 0
 		if (truncated) thirdByte = thirdByte or 0b10
 		if (authoritative) thirdByte = thirdByte or 0b100
@@ -42,14 +68,13 @@ class DNSMessage private constructor(
 		if (authenticData) fourthByte = fourthByte or 0b100000
 		if (recursionAvailable) fourthByte = fourthByte or 0b10000000
 		stream.write(fourthByte)
-		stream.write16(questions.size)
-		stream.write16(answers.size)
-		stream.write16(authorityRecords.size)
-		stream.write16(additionalRecords.size)
-		questions.forEach { it.write(this, stream) }
-		answers.forEach { it.write(this, stream) }
-		authorityRecords.forEach { it.write(this, stream) }
-		additionalRecords.forEach { it.write(this, stream) }
+		stream.write16(actualQuestions)
+		stream.write16(actualAnswers)
+		stream.write16(actualAA)
+		stream.write16(actualADD)
+		stream.write(data)
+		currentSize = 12
+		truncated = false
 	}
 
 	override fun toString() = "(DNS, ${if (reply) "<Res>" else "<Req>"}) ${opcode.name} " +
