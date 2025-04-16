@@ -41,7 +41,6 @@
         <constraint name="Expr" minCount="0" maxCount="2147483647" within="" contains="" />
       </replaceConfiguration>
     </inspection_tool>
-    <inspection_tool class="SerializableHasSerialVersionUIDField" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="SuppressionAnnotation" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myAllowedSuppressions">
         <list>

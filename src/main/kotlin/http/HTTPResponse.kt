@@ -8,35 +8,35 @@ import java.time.format.DateTimeFormatter
 
 class HTTPResponse private constructor(
 	val code: Int,
-	val version: String,
+	val version: HTTPVersion,
 	headers: Map<String, String> = emptyMap(),
 	val dataLength: Long = 0,
 	val data: ByteArray? = null
 ) : Writable {
 	constructor(
 		code: Int,
-		version: String,
+		version: HTTPVersion,
 		headers: Map<String, String> = emptyMap(),
 		data: String = ""
 	) : this(code, version, headers, data.length.toLong(), data.encodeToByteArray())
 
 	constructor(
 		code: Int,
-		version: String,
+		version: HTTPVersion,
 		headers: Map<String, String> = emptyMap(),
 		data: ByteArray = byteArrayOf(),
 	) : this(code, version, headers, data.size.toLong(), data)
 
 	constructor(
 		code: Int,
-		version: String,
+		version: HTTPVersion,
 		headers: Map<String, String> = emptyMap(),
 		dataSize: Int
 	) : this(code, version, headers, dataSize.toLong(), null)
 
 	constructor(
 		code: Int,
-		version: String,
+		version: HTTPVersion,
 		headers: Map<String, String> = emptyMap(),
 		dataSize: Long
 	) : this(code, version, headers, dataSize, null)
@@ -59,7 +59,7 @@ class HTTPResponse private constructor(
 	}
 
 	override fun write(stream: OutputStream) {
-		stream.writeString("$version $code\r\n")
+		stream.writeString("${version.tag} $code\r\n")
 		headers.forEach { (key, value) -> stream.writeString("$key:$value\r\n") }
 		stream.writeString("\r\n")
 	}

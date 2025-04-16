@@ -11,18 +11,18 @@ import java.net.URLEncoder
 class HTTPRequest private constructor(
 	val method: HTTPMethod,
 	val path: String,
-	val version: String,
+	val version: HTTPVersion,
 	val headers: Map<String, String> = emptyMap(),
 	@Suppress("unused") val privateTag: Boolean = false
 ) : Writable {
 	constructor(
 		method: HTTPMethod,
 		path: String,
-		version: String,
+		version: HTTPVersion,
 		headers: Map<String, String> = emptyMap()
 	) : this(method, URLEncoder.encode(path, "UTF-8"), version, headers, true)
 
-	override fun toString(): String = "($version, <Req>) $method $path [HEAD#: ${headers.size}]" + buildString {
+	override fun toString(): String = "(${version.tag}, <Req>) $method $path [HEAD#: ${headers.size}]" + buildString {
 		headers.forEach {
 			append("\n${it.key}: ${it.value}")
 		}
@@ -41,7 +41,7 @@ class HTTPRequest private constructor(
 			return HTTPRequest(
 				HTTPMethod.safeMapping[stream.scanDelimiter(" ")] ?: HTTPMethod.OTHER,
 				URLDecoder.decode(stream.scanDelimiter(" "), "UTF-8"),
-				stream.scanDelimiter("\r\n"),
+				HTTPVersion.safeMapping[stream.scanDelimiter("\r\n")] ?: HTTPVersion.OTHER,
 				buildMap {
 					while (true) {
 						val raw = stream.scanDelimiter("\r\n")
