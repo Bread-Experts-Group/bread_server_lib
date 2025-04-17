@@ -14,13 +14,14 @@ class HTTPRangeHeader(
 			var ranges = buildList {
 				values.split(Regex(", ?")).forEach { value ->
 					val (from, to) = value.split('-', ignoreCase = true)
-					val parsed = Pair(
-						if (from.isEmpty()) -1 else from.toLong(),
-						if (to.isEmpty()) file.length() else to.toLong(),
-					)
-					size += if (parsed.first == -1L) parsed.second
-					else (parsed.second - parsed.first) + 1
-					add(parsed)
+					var fromL = if (from.isEmpty()) -1L else from.toLong()
+					var toL = if (to.isEmpty()) file.length() else to.toLong()
+					if (fromL == -1L) {
+						fromL = file.length() - toL
+						toL = file.length()
+					}
+					size += (toL - fromL) + 1L
+					add(fromL to toL)
 				}
 			}
 			return HTTPRangeHeader(size, ranges)
