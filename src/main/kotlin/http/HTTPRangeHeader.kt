@@ -18,8 +18,8 @@ class HTTPRangeHeader(
 						if (from.isEmpty()) -1 else from.toLong(),
 						if (to.isEmpty()) file.length() else to.toLong(),
 					)
-					size += if (parsed.first == -1L) file.length() - parsed.second
-					else parsed.second - parsed.first
+					size += if (parsed.first == -1L) parsed.second
+					else (parsed.second - parsed.first) + 1
 					add(parsed)
 				}
 			}
