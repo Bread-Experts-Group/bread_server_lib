@@ -9,7 +9,7 @@ class HTTPRangeHeader(
 	companion object {
 		fun parse(value: String, file: File): HTTPRangeHeader {
 			val (unit, values) = value.split('=')
-			if (unit.lowercase() != "byte") throw UnsupportedOperationException("HTTP Range unit \"$unit\"")
+			if (unit.lowercase() != "bytes") throw UnsupportedOperationException("HTTP Range unit \"$unit\"")
 			var size = 0L
 			var ranges = buildList {
 				values.split(Regex(", ?")).forEach { value ->
