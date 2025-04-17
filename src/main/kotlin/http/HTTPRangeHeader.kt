@@ -12,8 +12,9 @@ class HTTPRangeHeader(
 			if (unit.lowercase() != "bytes") throw UnsupportedOperationException("HTTP Range unit \"$unit\"")
 			var size = 0L
 			var ranges = buildList {
+				println(values)
 				values.split(Regex(", ?")).forEach { value ->
-					val (from, to) = value.split(',')
+					val (from, to) = value.split('-', ignoreCase = true)
 					val parsed = Pair(
 						if (from.isEmpty()) -1 else from.toLong(),
 						if (to.isEmpty()) file.length() else to.toLong(),
