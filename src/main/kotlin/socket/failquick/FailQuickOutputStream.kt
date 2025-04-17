@@ -1,0 +1,15 @@
+package org.bread_experts_group.socket.failquick
+
+import java.io.EOFException
+import java.io.IOException
+import java.io.OutputStream
+
+class FailQuickOutputStream(private val to: OutputStream) : OutputStream() {
+	override fun write(b: Int) {
+		try {
+			to.write(b)
+		} catch (e: IOException) {
+			throw EOFException(e.message)
+		}
+	}
+}
