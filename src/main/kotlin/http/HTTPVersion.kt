@@ -6,6 +6,6 @@ enum class HTTPVersion(val tag: String) {
 	OTHER("HTTP/???");
 
 	companion object {
-		val safeMapping = entries.associateBy(HTTPVersion::name)
+		val safeMapping = entries.associateBy(HTTPVersion::tag)
 	}
 }
