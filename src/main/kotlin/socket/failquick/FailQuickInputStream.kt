@@ -11,7 +11,15 @@ class FailQuickInputStream(private val from: InputStream) : InputStream() {
 		} catch (_: IOException) {
 			-1
 		}
-		if (next == -1) throw EOFException()
+		if (next == -1) {
+			this.close()
+			throw EOFException()
+		}
 		return next
+	}
+
+	override fun close() {
+		from.close()
+		super.close()
 	}
 }

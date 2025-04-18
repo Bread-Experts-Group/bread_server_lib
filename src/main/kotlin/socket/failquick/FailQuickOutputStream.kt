@@ -9,7 +9,13 @@ class FailQuickOutputStream(private val to: OutputStream) : OutputStream() {
 		try {
 			to.write(b)
 		} catch (e: IOException) {
+			this.close()
 			throw EOFException(e.message)
 		}
+	}
+
+	override fun close() {
+		to.close()
+		super.close()
 	}
 }
