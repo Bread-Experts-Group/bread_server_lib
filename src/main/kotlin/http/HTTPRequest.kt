@@ -29,7 +29,7 @@ class HTTPRequest private constructor(
 	}
 
 	override fun write(stream: OutputStream) {
-		stream.writeString("${method.name} $path $version\r\n")
+		stream.writeString("${method.name} $path ${version.tag}\r\n")
 		headers.forEach { (key, value) ->
 			stream.writeString("$key:$value\r\n")
 		}
