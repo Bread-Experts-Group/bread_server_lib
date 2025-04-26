@@ -1,7 +1,9 @@
 package org.bread_experts_group.irc
 
 import org.bread_experts_group.socket.scanDelimiter
+import org.bread_experts_group.socket.writeString
 import java.io.InputStream
+import java.io.OutputStream
 
 class IRCMessage(
 	val tags: Map<String, String>,
@@ -9,6 +11,20 @@ class IRCMessage(
 	val command: String,
 	val parameters: String
 ) {
+	override fun toString(): String = "(IRC, $command) " +
+			(if (tags.isNotEmpty()) "TAGS [${tags.size}][${tags.entries.joinToString(";") { "${it.key}=${it.value}" }}] "
+			else "") +
+			(if (source.isNotEmpty()) "SOURCE [$source] " else "") +
+			"<$parameters>"
+
+	fun write(stream: OutputStream) {
+		if (tags.isNotEmpty())
+			stream.writeString("@${tags.entries.joinToString(";") { "${it.key}=${it.value}" }} ")
+		if (source.isNotEmpty())
+			stream.writeString(":$source ")
+		stream.writeString("$command${if (parameters.isNotEmpty()) " $parameters" else ""}\r\n")
+	}
+
 	companion object {
 		fun read(stream: InputStream): IRCMessage {
 			var initialA = Char(stream.read())

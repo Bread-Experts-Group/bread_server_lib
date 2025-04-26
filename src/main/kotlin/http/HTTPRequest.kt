@@ -40,7 +40,13 @@ class HTTPRequest private constructor(
 		fun read(stream: InputStream): HTTPRequest {
 			return HTTPRequest(
 				HTTPMethod.safeMapping[stream.scanDelimiter(" ")] ?: HTTPMethod.OTHER,
-				URLDecoder.decode(stream.scanDelimiter(" "), "UTF-8"),
+				stream.scanDelimiter(" ").let {
+					try {
+						URLDecoder.decode(it, "UTF-8")
+					} catch (_: IllegalArgumentException) {
+						it
+					}
+				},
 				HTTPVersion.safeMapping[stream.scanDelimiter("\r\n")] ?: HTTPVersion.OTHER,
 				buildMap {
 					while (true) {
