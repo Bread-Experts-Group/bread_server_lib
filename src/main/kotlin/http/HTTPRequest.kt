@@ -13,23 +13,30 @@ class HTTPRequest private constructor(
 	val path: String,
 	val version: HTTPVersion,
 	val headers: Map<String, String> = emptyMap(),
-	@Suppress("unused") val privateTag: Boolean = false
+	@Suppress("unused") val privateTag: Boolean = false,
+	val query: String = "",
+	val fragment: String = ""
 ) : Writable {
 	constructor(
 		method: HTTPMethod,
 		path: String,
 		version: HTTPVersion,
-		headers: Map<String, String> = emptyMap()
-	) : this(method, URLEncoder.encode(path, "UTF-8"), version, headers, true)
+		headers: Map<String, String> = emptyMap(),
+		query: String = "",
+		fragment: String = ""
+	) : this(method, URLEncoder.encode(path, "UTF-8"), version, headers, true, query, fragment)
 
-	override fun toString(): String = "(${version.tag}, <Req>) $method $path [HEAD#: ${headers.size}]" + buildString {
+	override fun toString(): String = "(${version.tag}, <Req>) $method " + buildString {
+		append("$path${if (query.isNotEmpty()) "[#$fragment]" else ""}${if (query.isNotEmpty()) "[?$query]" else ""}")
+		append("[HEAD#: ${headers.size}]")
 		headers.forEach {
 			append("\n${it.key}: ${it.value}")
 		}
 	}
 
 	override fun write(stream: OutputStream) {
-		stream.writeString("${method.name} $path ${version.tag}\r\n")
+		val pathStr = "$path${if (query.isNotEmpty()) "#$fragment" else ""}${if (query.isNotEmpty()) "?$query" else ""}"
+		stream.writeString("${method.name} $pathStr ${version.tag}\r\n")
 		headers.forEach { (key, value) ->
 			stream.writeString("$key:$value\r\n")
 		}
@@ -38,15 +45,31 @@ class HTTPRequest private constructor(
 
 	companion object {
 		fun read(stream: InputStream): HTTPRequest {
+			val method = HTTPMethod.safeMapping[stream.scanDelimiter(" ")] ?: HTTPMethod.OTHER
+			var path = stream.scanDelimiter(" ").let {
+				try {
+					URLDecoder.decode(it, "UTF-8")
+				} catch (_: IllegalArgumentException) {
+					it
+				}
+			}
+			var fragment = if (path.contains('#', ignoreCase = true)) {
+				val split = path.split('#', ignoreCase = true, limit = 2)
+				path = split[0]
+				split[1]
+			} else ""
+			val query = if (path.contains('?', ignoreCase = true)) {
+				val split = path.split('?', ignoreCase = true, limit = 2)
+				path = split[0]
+				split[1]
+			} else if (fragment.contains('?', ignoreCase = true)) {
+				val split = fragment.split('?', ignoreCase = true, limit = 2)
+				fragment = split[0]
+				split[1]
+			} else ""
 			return HTTPRequest(
-				HTTPMethod.safeMapping[stream.scanDelimiter(" ")] ?: HTTPMethod.OTHER,
-				stream.scanDelimiter(" ").let {
-					try {
-						URLDecoder.decode(it, "UTF-8")
-					} catch (_: IllegalArgumentException) {
-						it
-					}
-				},
+				method,
+				path,
 				HTTPVersion.safeMapping[stream.scanDelimiter("\r\n")] ?: HTTPVersion.OTHER,
 				buildMap {
 					while (true) {
@@ -57,7 +80,9 @@ class HTTPRequest private constructor(
 						this[name] = value
 					}
 				},
-				true
+				true,
+				query,
+				fragment
 			)
 		}
 	}
