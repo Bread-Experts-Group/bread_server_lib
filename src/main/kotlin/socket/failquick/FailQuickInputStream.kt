@@ -22,7 +22,6 @@ class FailQuickInputStream(private val from: InputStream) : InputStream() {
 	override fun read(b: ByteArray, off: Int, len: Int): Int {
 		Objects.checkFromIndexSize(off, len, b.size)
 		if (len == 0) return 0
-
 		var i = 0
 		try {
 			while (i < len) {
@@ -36,7 +35,7 @@ class FailQuickInputStream(private val from: InputStream) : InputStream() {
 	}
 
 	override fun close() {
-		from.close()
+		this.from.close()
 		super.close()
 	}
 }

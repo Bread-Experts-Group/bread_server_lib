@@ -15,7 +15,7 @@ class FailQuickOutputStream(private val to: OutputStream) : OutputStream() {
 	}
 
 	override fun close() {
-		to.close()
+		this.to.close()
 		super.close()
 	}
 }
