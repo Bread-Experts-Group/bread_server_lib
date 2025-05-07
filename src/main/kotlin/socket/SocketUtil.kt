@@ -34,17 +34,18 @@ fun OutputStream.writeInet(data: InetAddress) = data.address.forEach { this.writ
 fun OutputStream.writeString(s: String) = this.write(s.encodeToByteArray())
 
 fun InputStream.scanDelimiter(lookFor: String): String {
-	var bucket = ""
-	var pool = ""
-	while (bucket.length != lookFor.length) {
+	val bucket: MutableList<Int> = mutableListOf()
+	val pool: MutableList<Int> = mutableListOf()
+	val lookForEncoded = lookFor.toByteArray().map { it.toInt() }
+	while (bucket.size != lookFor.length) {
 		val charCode = this.read()
 		if (charCode == -1) break
-		val next = Char(charCode)
-		if (lookFor[bucket.length] == next) bucket += next
+		if (lookForEncoded[bucket.size] == charCode) bucket += charCode
 		else {
-			pool += bucket + next
-			bucket = ""
+			pool += bucket
+			pool += charCode
+			bucket.clear()
 		}
 	}
-	return pool
+	return pool.map { it.toByte() }.toByteArray().decodeToString()
 }
