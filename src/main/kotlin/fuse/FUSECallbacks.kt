@@ -1,33 +1,19 @@
 package org.bread_experts_group.fuse
 
 import org.bread_experts_group.debugString
-import org.bread_experts_group.getDowncall
-import org.bread_experts_group.getLookup
-import java.lang.foreign.*
-import java.lang.invoke.MethodHandle
+import org.bread_experts_group.posix.POSIXStat
+import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
 import java.util.logging.Logger
 
-open class FUSECallbacks(linker: Linker = Linker.nativeLinker()) {
+open class FUSECallbacks {
 	private val localArena = Arena.ofAuto()
-	private val fuseLookup: SymbolLookup = this.localArena.getLookup("libfuse3.so.3")
 	private val logger: Logger = Logger.getLogger("FUSE Callbacks")
 
-	private val fuseEntryParamStructure: StructLayout = MemoryLayout.structLayout(
-		ValueLayout.JAVA_LONG.withName("ino"),
-		ValueLayout.JAVA_LONG.withName("generation"),
-		MemoryLayout.paddingLayout(144).withName("attr"),
-		ValueLayout.JAVA_DOUBLE.withName("attr_timeout"),
-		ValueLayout.JAVA_DOUBLE.withName("entry_timeout"),
-	)
-	private val inoHandle = this.fuseEntryParamStructure.varHandle(MemoryLayout.PathElement.groupElement("ino"))
-	private val generationHandle = this.fuseEntryParamStructure.varHandle(MemoryLayout.PathElement.groupElement("generation"))
-	private val attrTimeoutHandle = this.fuseEntryParamStructure.varHandle(MemoryLayout.PathElement.groupElement("attr_timeout"))
-	private val entrTimeoutHandle = this.fuseEntryParamStructure.varHandle(MemoryLayout.PathElement.groupElement("entry_timeout"))
-
-	private val nativeFuseReplyEntry: MethodHandle = fuseLookup.getDowncall(
-		linker, "fuse_reply_entry", ValueLayout.JAVA_INT,
-		ValueLayout.ADDRESS, ValueLayout.ADDRESS
-	)
+	protected fun replyBuffer(req: MemorySegment, buf: MemorySegment) {
+		val returnCode = nativeFuseReplyEntry.invokeExact(req, buf, buf.byteSize()) as Int
+		if (returnCode != 0) throw kotlin.IllegalStateException("fuse_reply_buf errno $returnCode")
+	}
 
 	protected fun replyEntry(
 		req: MemorySegment,
@@ -38,20 +24,15 @@ open class FUSECallbacks(linker: Linker = Linker.nativeLinker()) {
 		generationHandle.set(param, generation)
 		attrTimeoutHandle.set(param, attributesLifetime)
 		entrTimeoutHandle.set(param, entryLifetime)
-		val returnCode = this.nativeFuseReplyEntry.invokeExact(req, param) as Int
+		val returnCode = nativeFuseReplyEntry.invokeExact(req, param) as Int
 		if (returnCode != 0) throw kotlin.IllegalStateException("fuse_reply_entry errno $returnCode")
 	}
-
-	private val nativeFuseReplyError: MethodHandle = fuseLookup.getDowncall(
-		linker, "fuse_reply_err", ValueLayout.JAVA_INT,
-		ValueLayout.ADDRESS, ValueLayout.JAVA_INT
-	)
 
 	protected fun replyError(
 		req: MemorySegment,
 		code: Int
 	) {
-		val returnCode = this.nativeFuseReplyError.invokeExact(req, code) as Int
+		val returnCode = nativeFuseReplyError.invokeExact(req, code) as Int
 		if (returnCode != 0) throw kotlin.IllegalStateException("fuse_reply_err errno $returnCode")
 	}
 
@@ -77,9 +58,16 @@ open class FUSECallbacks(linker: Linker = Linker.nativeLinker()) {
 		replyError(handle, 100)
 	}
 
+	/**
+	 * @return Directory entry data via [replyBuffer] or an error via [replyError].
+	 * @see DirectoryEntries
+	 */
 	@Suppress("unused")
 	open fun readdir(handle: MemorySegment, inode: Long, size: Long, offset: Long, fileInfo: MemorySegment) {
 		logger.info("[readdir] ${handle.debugString()} / $inode / $size / $offset / ${fileInfo.debugString()}")
+		val entries = FUSEDirectoryEntries()
+		entries.add(FUSEDirectoryEntry("fakefile.troll", POSIXStat()))
+		logger.info("[readdir] ${entries.toBuffer(this.localArena, handle)}")
 		replyError(handle, 100)
 	}
 
