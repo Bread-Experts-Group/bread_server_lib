@@ -18,18 +18,12 @@ class FileSystemInUserSpace(
 	private val linker: Linker = Linker.nativeLinker(),
 	callbacks: FUSECallbacks = FUSECallbacks()
 ) : AutoCloseable {
+	private var isClosed = false
 	private val localArena = Arena.ofAuto()
 	private val fuseLookup: SymbolLookup = this.localArena.getLookup("libfuse3.so.3")
 	private val fuseLogger: Logger = Logger.getLogger("FUSE")
 	private val fuseSession: MemorySegment
 	private val fuseSessionLoop: Thread
-
-	open class FUSECallbacks {
-		private val logger: Logger = Logger.getLogger("FUSE Callbacks")
-		open fun readdir(handle: MemorySegment, inode: Long, size: Long, offset: Long, fileInfo: MemorySegment) {
-			logger.info("[readdir] ${handle.debugString()} / $inode / $size / $offset / ${fileInfo.debugString()}")
-		}
-	}
 
 	init {
 		if (mountFile.exists()) throw IllegalStateException("FUSE target must not exist!")
@@ -55,12 +49,73 @@ class FileSystemInUserSpace(
 		allocHandle.set(argumentsSegment, 1)
 
 		val fuseCallbacksStructure: StructLayout = MemoryLayout.structLayout(
-			ValueLayout.ADDRESS.withName("readdir")
+			ValueLayout.ADDRESS.withName("init"),
+			ValueLayout.ADDRESS.withName("destroy"),
+			ValueLayout.ADDRESS.withName("lookup"),
+			ValueLayout.ADDRESS.withName("mkdir"),
+			ValueLayout.ADDRESS.withName("readdir"),
+			ValueLayout.ADDRESS.withName("statfs"),
 		)
+		val callbacksInitHandle = fuseCallbacksStructure.varHandle(MemoryLayout.PathElement.groupElement("init"))
+		val callbacksDestroyHandle = fuseCallbacksStructure.varHandle(MemoryLayout.PathElement.groupElement("destroy"))
+		val callbacksLookupHandle = fuseCallbacksStructure.varHandle(MemoryLayout.PathElement.groupElement("lookup"))
+		val callbacksMkdirHandle = fuseCallbacksStructure.varHandle(MemoryLayout.PathElement.groupElement("mkdir"))
 		val callbacksReaddirHandle = fuseCallbacksStructure.varHandle(MemoryLayout.PathElement.groupElement("readdir"))
+		val callbacksStatfsHandle = fuseCallbacksStructure.varHandle(MemoryLayout.PathElement.groupElement("statfs"))
 		val callbacksDataSegment = this.localArena.allocate(fuseCallbacksStructure)
 
 		val methodLookup = MethodHandles.lookup()
+		callbacksInitHandle.set(
+			callbacksDataSegment,
+			linker.upcallStub(
+				methodLookup.bind(
+					callbacks, "init",
+					MethodType.methodType(Void.TYPE, MemorySegment::class.java, MemorySegment::class.java)
+				),
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+				this.localArena
+			)
+		)
+		callbacksDestroyHandle.set(
+			callbacksDataSegment,
+			linker.upcallStub(
+				methodLookup.bind(
+					callbacks, "destroy",
+					MethodType.methodType(Void.TYPE, MemorySegment::class.java)
+				),
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+				this.localArena
+			)
+		)
+		callbacksLookupHandle.set(
+			callbacksDataSegment,
+			linker.upcallStub(
+				methodLookup.bind(
+					callbacks, "lookup",
+					MethodType.methodType(
+						Void.TYPE,
+						MemorySegment::class.java, Long::class.javaPrimitiveType, MemorySegment::class.java
+					)
+				),
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
+				this.localArena
+			)
+		)
+		callbacksMkdirHandle.set(
+			callbacksDataSegment,
+			linker.upcallStub(
+				methodLookup.bind(
+					callbacks, "mkdir",
+					MethodType.methodType(
+						Void.TYPE,
+						MemorySegment::class.java, Long::class.javaPrimitiveType, MemorySegment::class.java,
+						Int::class.javaPrimitiveType
+					)
+				),
+				FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT),
+				this.localArena
+			)
+		)
 		callbacksReaddirHandle.set(
 			callbacksDataSegment,
 			linker.upcallStub(
@@ -81,6 +136,24 @@ class FileSystemInUserSpace(
 					ValueLayout.JAVA_LONG,
 					ValueLayout.JAVA_LONG,
 					ValueLayout.ADDRESS
+				),
+				this.localArena
+			)
+		)
+		callbacksStatfsHandle.set(
+			callbacksDataSegment,
+			linker.upcallStub(
+				methodLookup.bind(
+					callbacks, "statfs",
+					MethodType.methodType(
+						Void.TYPE,
+						MemorySegment::class.java,
+						Long::class.javaPrimitiveType
+					)
+				),
+				FunctionDescriptor.ofVoid(
+					ValueLayout.ADDRESS,
+					ValueLayout.JAVA_LONG
 				),
 				this.localArena
 			)
@@ -122,11 +195,19 @@ class FileSystemInUserSpace(
 		}
 	}
 
+
 	override fun close() {
+		if (isClosed) return
+		isClosed = true
+		fuseLookup.getDowncallVoid(
+			this.linker, "fuse_session_unmount", ValueLayout.ADDRESS
+		).invokeExact(fuseSession)
 		fuseLookup.getDowncallVoid(
 			this.linker, "fuse_session_exit", ValueLayout.ADDRESS
 		).invokeExact(fuseSession)
-		fuseLogger.info("FUSE session terminated.")
 		fuseSessionLoop.join()
+		fuseLookup.getDowncallVoid(
+			this.linker, "fuse_session_destroy", ValueLayout.ADDRESS
+		).invokeExact(fuseSession)
 	}
 }

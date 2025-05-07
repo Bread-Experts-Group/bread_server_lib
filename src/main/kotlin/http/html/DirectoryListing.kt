@@ -2,6 +2,7 @@ package org.bread_experts_group.http.html
 
 import java.io.File
 import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.nio.file.StandardWatchEventKinds
 import java.nio.file.WatchKey
 import java.security.MessageDigest
@@ -9,6 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.logging.Logger
+import java.util.stream.Collectors
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -45,6 +47,13 @@ object DirectoryListing {
 				next.cancel()
 				reverseCache.remove(next)
 				directoryListingCache.remove(reverse)
+				var parent = reverse.parentFile
+				while (parent != null) {
+					// Invalidate upper caches in case a directory size was cached
+					val wasRemoved = directoryListingCache.remove(parent)
+					if (wasRemoved != null) reverseCache.filterNotTo(reverseCache) { it.value.name == parent.name }
+					parent = parent.parentFile
+				}
 			}
 		}
 	}
@@ -83,8 +92,16 @@ object DirectoryListing {
 				files.sortByDescending { it.lastModified() }
 				files.sortByDescending { it.isDirectory }
 				files.forEach {
-					append("<tr><td><a href=\"${it.name}/\">${it.name}</td>")
-					append("<td>${if (it.isDirectory) "Directory" else truncateSizeHTML(it.length())}</td>")
+					val calculatedSize = if (!it.isDirectory) it.length()
+					else Files.walk(it.toPath())
+						.collect(Collectors.toList())
+						.parallelStream()
+						.filter { p -> p.toFile().isFile }
+						.mapToLong { p -> p.toFile().length() }
+						.sum()
+					append("<tr><td><a href=\"${it.name + (if (it.isDirectory) '/' else "")}\">${it.name}</a>")
+					append("${if (it.isDirectory) '/' else ""}</td>")
+					append("<td>${truncateSizeHTML(calculatedSize)}</td>")
 					val mod = Instant.ofEpochMilli(it.lastModified())
 						.atZone(ZoneId.systemDefault())
 					append("<td>${DateTimeFormatter.RFC_1123_DATE_TIME.format(mod)}</td></tr>")
@@ -94,7 +111,7 @@ object DirectoryListing {
 		append("<caption>")
 		val itParent = store.parentFile
 		append(itParent.invariantSeparatorsPath + '/')
-		var accessible = file.invariantSeparatorsPath
+		val accessible = file.invariantSeparatorsPath
 			.substring(itParent.invariantSeparatorsPath.length + 1)
 		var completeCaption = ""
 		var backReferences = ""

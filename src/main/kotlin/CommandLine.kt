@@ -8,8 +8,6 @@ fun stringToLong(str: String): Long =
 	else str.toLong()
 
 fun stringToInt(str: String): Int = stringToLong(str).toInt()
-
-
 fun stringToBoolean(str: String): Boolean = str.lowercase().let { it == "true" || it == "yes" || it == "1" }
 
 open class Flag<T>(
