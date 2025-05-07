@@ -37,7 +37,7 @@ fun InputStream.scanDelimiter(lookFor: String): String {
 	val bucket: MutableList<Int> = mutableListOf()
 	val pool: MutableList<Int> = mutableListOf()
 	val lookForEncoded = lookFor.toByteArray().map { it.toInt() }
-	while (bucket.size != lookFor.length) {
+	while (bucket.size < lookFor.length) {
 		val charCode = this.read()
 		if (charCode == -1) break
 		if (lookForEncoded[bucket.size] == charCode) bucket += charCode

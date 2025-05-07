@@ -20,11 +20,11 @@ class HTTPRequest private constructor(
 	constructor(
 		method: HTTPMethod,
 		path: String,
+		query: String,
+		fragment: String,
 		version: HTTPVersion,
-		headers: Map<String, String> = emptyMap(),
-		query: String = "",
-		fragment: String = ""
-	) : this(method, URLEncoder.encode(path, "UTF-8"), version, headers, true, query, fragment)
+		headers: Map<String, String> = emptyMap()
+	) : this(method, URLEncoder.encode(path, Charsets.UTF_8), version, headers, true, query, fragment)
 
 	override fun toString(): String = "(${version.tag}, <Req>) $method " + buildString {
 		append("$path${if (query.isNotEmpty()) "[#$fragment]" else ""}${if (query.isNotEmpty()) "[?$query]" else ""}")
@@ -48,7 +48,7 @@ class HTTPRequest private constructor(
 			val method = HTTPMethod.safeMapping[stream.scanDelimiter(" ")] ?: HTTPMethod.OTHER
 			var path = stream.scanDelimiter(" ").let {
 				try {
-					URLDecoder.decode(it, "UTF-8")
+					URLDecoder.decode(it, Charsets.UTF_8)
 				} catch (_: IllegalArgumentException) {
 					it
 				}
