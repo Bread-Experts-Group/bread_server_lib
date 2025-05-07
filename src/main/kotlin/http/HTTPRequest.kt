@@ -56,16 +56,16 @@ class HTTPRequest private constructor(
 			var fragment = if (path.contains('#', ignoreCase = true)) {
 				val split = path.split('#', ignoreCase = true, limit = 2)
 				path = split[0]
-				split[1]
+				split.getOrElse(1) { "" }
 			} else ""
 			val query = if (path.contains('?', ignoreCase = true)) {
 				val split = path.split('?', ignoreCase = true, limit = 2)
 				path = split[0]
-				split[1]
+				split.getOrElse(1) { "" }
 			} else if (fragment.contains('?', ignoreCase = true)) {
 				val split = fragment.split('?', ignoreCase = true, limit = 2)
 				fragment = split[0]
-				split[1]
+				split.getOrElse(1) { "" }
 			} else ""
 			return HTTPRequest(
 				method,
