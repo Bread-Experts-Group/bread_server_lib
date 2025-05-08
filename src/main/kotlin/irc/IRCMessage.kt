@@ -1,32 +1,32 @@
 package org.bread_experts_group.irc
 
+import org.bread_experts_group.CharacterWritable
 import org.bread_experts_group.socket.scanDelimiter
-import org.bread_experts_group.socket.writeString
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.InputStreamReader
+import java.io.Writer
 
 class IRCMessage(
 	val tags: Map<String, String>,
 	val source: String,
 	val command: String,
 	val parameters: String
-) {
+) : CharacterWritable {
 	override fun toString(): String = "(IRC, $command) " +
 			(if (tags.isNotEmpty()) "TAGS [${tags.size}][${tags.entries.joinToString(";") { "${it.key}=${it.value}" }}] "
 			else "") +
 			(if (source.isNotEmpty()) "SOURCE [$source] " else "") +
 			"<$parameters>"
 
-	fun write(stream: OutputStream) {
+	override fun write(writer: Writer) {
 		if (tags.isNotEmpty())
-			stream.writeString("@${tags.entries.joinToString(";") { "${it.key}=${it.value}" }} ")
+			writer.write("@${tags.entries.joinToString(";") { "${it.key}=${it.value}" }} ")
 		if (source.isNotEmpty())
-			stream.writeString(":$source ")
-		stream.writeString("$command${if (parameters.isNotEmpty()) " $parameters" else ""}\r\n")
+			writer.write(":$source ")
+		writer.write("$command${if (parameters.isNotEmpty()) " $parameters" else ""}\r\n")
 	}
 
 	companion object {
-		fun read(stream: InputStream): IRCMessage {
+		fun read(stream: InputStreamReader): IRCMessage {
 			var initialA = Char(stream.read())
 			val tags = if (initialA == '@') buildMap {
 				val readTags = stream.scanDelimiter(" ")

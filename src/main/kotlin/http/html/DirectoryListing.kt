@@ -104,7 +104,8 @@ object DirectoryListing {
 					append("<td>${truncateSizeHTML(calculatedSize)}</td>")
 					val mod = Instant.ofEpochMilli(it.lastModified())
 						.atZone(ZoneId.systemDefault())
-					append("<td>${DateTimeFormatter.RFC_1123_DATE_TIME.format(mod)}</td></tr>")
+						.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+					append("<td>$mod</td></tr>")
 				}
 			} else append("<tr><td>Folder empty</td><td>-1</td><td>-1</td></tr>")
 		} else append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")
@@ -127,6 +128,9 @@ object DirectoryListing {
 			append(truncateSizeHTML(file.freeSpace) + " / ")
 			append(truncateSizeHTML(file.totalSpace) + " ]")
 		}
-		append("$completeCaption$sizeStat</caption></tbody></table></body></html>")
+		val createdAt = Instant.ofEpochMilli(System.currentTimeMillis())
+			.atZone(ZoneId.systemDefault())
+			.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+		append("$completeCaption$sizeStat [${createdAt}]</caption></tbody></table></body></html>")
 	}
 }

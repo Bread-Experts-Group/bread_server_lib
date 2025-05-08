@@ -1,7 +1,7 @@
 package org.bread_experts_group.smtp
 
 import org.bread_experts_group.socket.scanDelimiter
-import java.io.InputStream
+import java.io.InputStreamReader
 
 class SMTPRequest(
 	val command: SMTPCommand,
@@ -10,7 +10,7 @@ class SMTPRequest(
 	override fun toString(): String = "(SMTP, <Req>, $command) $message"
 
 	companion object {
-		fun read(stream: InputStream): SMTPRequest {
+		fun read(stream: InputStreamReader): SMTPRequest {
 			val message = stream.scanDelimiter("\r\n")
 			val parseMessage = message.uppercase()
 			val (command, restMessage) = when (val commandStr = parseMessage.substringBefore(' ')) {

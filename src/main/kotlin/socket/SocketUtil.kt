@@ -2,9 +2,11 @@ package org.bread_experts_group.socket
 
 import java.io.InputStream
 import java.io.OutputStream
+import java.io.Reader
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
+import java.nio.charset.Charset
 
 fun InputStream.read16() = (this.read() shl 8) or this.read()
 fun InputStream.read16u() = this.read16().toUShort()
@@ -31,21 +33,18 @@ fun OutputStream.write32(data: Int) = this.write(data shr 24).also { this.write2
 fun OutputStream.write32(data: Long) = this.write32(data.toInt())
 fun OutputStream.write64(data: Long) = this.write32((data shr 32).toInt()).also { this.write32((data).toInt()) }
 fun OutputStream.writeInet(data: InetAddress) = data.address.forEach { this.write(it.toInt()) }
-fun OutputStream.writeString(s: String) = this.write(s.encodeToByteArray())
+fun OutputStream.writeString(s: String, c: Charset = Charsets.UTF_8) = this.write(s.toByteArray(c))
 
-fun InputStream.scanDelimiter(lookFor: String): String {
-	val bucket: MutableList<Int> = mutableListOf()
-	val pool: MutableList<Int> = mutableListOf()
-	val lookForEncoded = lookFor.toByteArray().map { it.toInt() }
-	while (bucket.size < lookFor.length) {
-		val charCode = this.read()
-		if (charCode == -1) break
-		if (lookForEncoded[bucket.size] == charCode) bucket += charCode
+fun Reader.scanDelimiter(lookFor: String): String {
+	var bucket = ""
+	var pool = ""
+	while (bucket.length < lookFor.length) {
+		val next = this.read().toChar()
+		if (lookFor[bucket.length] == next) bucket += next
 		else {
-			pool += bucket
-			pool += charCode
-			bucket.clear()
+			pool += bucket + next
+			bucket = ""
 		}
 	}
-	return pool.map { it.toByte() }.toByteArray().decodeToString()
+	return pool
 }
