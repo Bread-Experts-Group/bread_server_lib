@@ -82,7 +82,7 @@ object DirectoryListing {
 		logger.finer { "Computing directory listing for $file, store: $store" }
 		append("<!doctype html><html><head><style>")
 		append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
-		append(".tooltip{text-decoration:underline dotted}</style></head><body><table style=\"width:100%\">")
+		append("[title]{text-decoration:underline dotted}</style></head><body><table style=\"width:100%\">")
 		append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
 		val itParent = store.parentFile
 		val files = file.listFiles()
@@ -121,23 +121,23 @@ object DirectoryListing {
 							}
 						})
 						if (it.canRead()) append("<tr><td><a href=\"${it.name}/\">${it.name}</a>/</td>")
-						else append("<tr><td><span class=\"tooltip\" title=\"Unreadable\">${it.name}</span>/</td>")
+						else append("<tr><td><u title=\"Unreadable\">${it.name}</u>/</td>")
 						append("<td>${truncateSizeHTML(calculatedSize)} [")
 						val fileCount = if (files > 0) "$files files" else "empty"
 						if (errored + unreadable > 0) {
-							append("<span class=\"tooltip\" title=\"")
+							append("<u title=\"")
 							append(
 								buildList {
 									if (errored > 0) add("$errored tree errors")
 									if (unreadable > 0) add("$unreadable unreadable")
 								}.joinToString(", ")
 							)
-							append("\">$fileCount</span>")
+							append("\">$fileCount</u>")
 						} else append(fileCount)
 						append("]</td>")
 					} else {
 						if (it.canRead()) append("<tr><td><a href=\"${it.name}\">${it.name}</a></td>")
-						else append("<tr><td><span class=\"tooltip\" title=\"Unreadable\">${it.name}</span></td>")
+						else append("<tr><td><u title=\"Unreadable\">${it.name}</u></td>")
 						append("<td>${truncateSizeHTML(it.length())}</td>")
 					}
 					val mod = Instant.ofEpochMilli(it.lastModified())
