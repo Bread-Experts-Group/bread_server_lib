@@ -2,7 +2,6 @@ package org.bread_experts_group.socket
 
 import java.io.InputStream
 import java.io.OutputStream
-import java.io.Reader
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -25,7 +24,7 @@ fun InputStream.read64u() = this.read64().toULong()
 
 fun InputStream.readInet4(): Inet4Address = Inet4Address.getByAddress(this.readNBytes(4)) as Inet4Address
 fun InputStream.readInet6(): Inet6Address = Inet6Address.getByAddress(this.readNBytes(16)) as Inet6Address
-fun InputStream.readString(n: Int): String = this.readNBytes(n).decodeToString()
+fun InputStream.readString(n: Int, c: Charset = Charsets.UTF_8): String = this.readNBytes(n).toString(c)
 
 fun OutputStream.write16(data: Int) = this.write(data shr 8).also { this.write(data) }
 fun OutputStream.write24(data: Int) = this.write(data shr 16).also { this.write16(data) }
@@ -35,11 +34,13 @@ fun OutputStream.write64(data: Long) = this.write32((data shr 32).toInt()).also 
 fun OutputStream.writeInet(data: InetAddress) = data.address.forEach { this.write(it.toInt()) }
 fun OutputStream.writeString(s: String, c: Charset = Charsets.UTF_8) = this.write(s.toByteArray(c))
 
-fun Reader.scanDelimiter(lookFor: String): String {
+fun InputStream.scanDelimiter(lookFor: String): String {
 	var bucket = ""
 	var pool = ""
 	while (bucket.length < lookFor.length) {
-		val next = this.read().toChar()
+		val read = this.read()
+		if (read == -1) break
+		val next = read.toChar()
 		if (lookFor[bucket.length] == next) bucket += next
 		else {
 			pool += bucket + next

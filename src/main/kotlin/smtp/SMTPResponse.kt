@@ -1,17 +1,18 @@
 package org.bread_experts_group.smtp
 
-import org.bread_experts_group.CharacterWritable
-import java.io.Writer
+import org.bread_experts_group.Writable
+import org.bread_experts_group.socket.writeString
+import java.io.OutputStream
 
 class SMTPResponse(
 	val code: Int,
 	val message: String
-) : CharacterWritable {
+) : Writable {
 	override fun toString(): String = "(SMTP, <Res>, $code) $message"
-	override fun write(writer: Writer) {
+	override fun write(stream: OutputStream) {
 		val lines = message.lines()
 		lines.forEachIndexed { index, line ->
-			writer.write("$code${if (index == lines.size - 1) ' ' else '-'}$line\r\n")
+			stream.writeString("$code${if (index == lines.size - 1) ' ' else '-'}$line\r\n")
 		}
 	}
 }

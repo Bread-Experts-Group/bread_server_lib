@@ -1,16 +1,14 @@
 package org.bread_experts_group.http.html
 
 import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.StandardWatchEventKinds
-import java.nio.file.WatchKey
+import java.io.IOException
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.logging.Logger
-import java.util.stream.Collectors
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -86,22 +84,62 @@ object DirectoryListing {
 		append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
 		append(".tooltip{text-decoration:underline dotted}</style></head><body><table style=\"width:100%\">")
 		append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
+		val itParent = store.parentFile
 		val files = file.listFiles()
 		if (files != null) {
 			if (files.isNotEmpty()) {
 				files.sortByDescending { it.lastModified() }
 				files.sortByDescending { it.isDirectory }
 				files.forEach {
-					val calculatedSize = if (!it.isDirectory) it.length()
-					else Files.walk(it.toPath())
-						.collect(Collectors.toList())
-						.parallelStream()
-						.filter { p -> p.toFile().isFile }
-						.mapToLong { p -> p.toFile().length() }
-						.sum()
-					append("<tr><td><a href=\"${it.name + (if (it.isDirectory) '/' else "")}\">${it.name}</a>")
-					append("${if (it.isDirectory) '/' else ""}</td>")
-					append("<td>${truncateSizeHTML(calculatedSize)}</td>")
+					if (it.isDirectory) {
+						var errored = 0
+						var unreadable = 0
+						var calculatedSize = 0L
+						var files = 0
+						Files.walkFileTree(it.toPath(), object : SimpleFileVisitor<Path>() {
+							override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+								errored++
+								return FileVisitResult.SKIP_SUBTREE
+							}
+
+							override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+								files++
+								calculatedSize += file.toFile().length()
+								return FileVisitResult.CONTINUE
+							}
+
+							override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
+								if (!dir.toFile().canRead()) {
+									unreadable++
+									return FileVisitResult.SKIP_SUBTREE
+								}
+								return FileVisitResult.CONTINUE
+							}
+
+							override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
+								return FileVisitResult.CONTINUE
+							}
+						})
+						if (it.canRead()) append("<tr><td><a href=\"${it.name}/\">${it.name}</a>/</td>")
+						else append("<tr><td><span class=\"tooltip\" title=\"Unreadable\">${it.name}</span>/</td>")
+						append("<td>${truncateSizeHTML(calculatedSize)} [")
+						val fileCount = if (files > 0) "$files files" else "empty"
+						if (errored + unreadable > 0) {
+							append("<span class=\"tooltip\" title=\"")
+							append(
+								buildList {
+									if (errored > 0) add("$errored tree errors")
+									if (unreadable > 0) add("$unreadable unreadable")
+								}.joinToString(", ")
+							)
+							append("\">$fileCount</span>")
+						} else append(fileCount)
+						append("]</td>")
+					} else {
+						if (it.canRead()) append("<tr><td><a href=\"${it.name}\">${it.name}</a></td>")
+						else append("<tr><td><span class=\"tooltip\" title=\"Unreadable\">${it.name}</span></td>")
+						append("<td>${truncateSizeHTML(it.length())}</td>")
+					}
 					val mod = Instant.ofEpochMilli(it.lastModified())
 						.atZone(ZoneId.systemDefault())
 						.format(DateTimeFormatter.RFC_1123_DATE_TIME)
@@ -110,7 +148,6 @@ object DirectoryListing {
 			} else append("<tr><td>Folder empty</td><td>-1</td><td>-1</td></tr>")
 		} else append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")
 		append("<caption>")
-		val itParent = store.parentFile
 		append(itParent.invariantSeparatorsPath + '/')
 		val accessible = file.invariantSeparatorsPath
 			.substring(itParent.invariantSeparatorsPath.length + 1)

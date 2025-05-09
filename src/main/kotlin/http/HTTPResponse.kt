@@ -1,7 +1,8 @@
 package org.bread_experts_group.http
 
-import org.bread_experts_group.CharacterWritable
-import java.io.Writer
+import org.bread_experts_group.Writable
+import org.bread_experts_group.socket.writeString
+import java.io.OutputStream
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -12,7 +13,7 @@ class HTTPResponse(
 	val version: HTTPVersion,
 	headers: Map<String, String> = emptyMap(),
 	val dataLength: Long = 0
-) : CharacterWritable {
+) : Writable {
 	val headers = headers.toMutableMap().also {
 		disallowedHeaders.forEach { h ->
 			if (it.contains(h)) throw IllegalArgumentException("Do not set $h header")
@@ -35,10 +36,10 @@ class HTTPResponse(
 		}
 	}
 
-	override fun write(writer: Writer) {
-		writer.write("${version.tag} $code\r\n")
-		headers.forEach { (key, value) -> writer.write("$key:$value\r\n") }
-		writer.write("\r\n")
+	override fun write(stream: OutputStream) {
+		stream.writeString("${version.tag} $code\r\n")
+		headers.forEach { (key, value) -> stream.writeString("$key:$value\r\n") }
+		stream.writeString("\r\n")
 	}
 
 	companion object {

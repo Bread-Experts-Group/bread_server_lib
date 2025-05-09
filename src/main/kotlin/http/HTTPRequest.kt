@@ -1,9 +1,10 @@
 package org.bread_experts_group.http
 
-import org.bread_experts_group.CharacterWritable
+import org.bread_experts_group.Writable
 import org.bread_experts_group.socket.scanDelimiter
-import java.io.InputStreamReader
-import java.io.Writer
+import org.bread_experts_group.socket.writeString
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.URI
 
 class HTTPRequest private constructor(
@@ -11,7 +12,7 @@ class HTTPRequest private constructor(
 	val path: URI,
 	val version: HTTPVersion,
 	val headers: Map<String, String> = emptyMap()
-) : CharacterWritable {
+) : Writable {
 	override fun toString(): String = "(${version.tag}, <Req>) $method $path " + buildString {
 		append("[HEAD#: ${headers.size}]")
 		headers.forEach {
@@ -19,18 +20,16 @@ class HTTPRequest private constructor(
 		}
 	}
 
-	override fun write(writer: Writer) {
-		writer.write("${method.name} $path ${version.tag}\r\n")
-		headers.forEach { (key, value) ->
-			writer.write("$key:$value\r\n")
-		}
-		writer.write("\r\n")
+	override fun write(stream: OutputStream) {
+		stream.writeString("${method.name} $path ${version.tag}\r\n")
+		headers.forEach { (key, value) -> stream.writeString("$key:$value\r\n") }
+		stream.writeString("\r\n")
 	}
 
 	companion object {
-		fun read(stream: InputStreamReader): HTTPRequest = HTTPRequest(
+		fun read(stream: InputStream): HTTPRequest = HTTPRequest(
 			HTTPMethod.safeMapping[stream.scanDelimiter(" ")] ?: HTTPMethod.OTHER,
-			URI(stream.scanDelimiter(" ")),
+			URI(stream.scanDelimiter(" ").replace(Regex("%(?![0-9a-fA-F]{2})"), "%25")),
 			HTTPVersion.safeMapping[stream.scanDelimiter("\r\n")] ?: HTTPVersion.OTHER,
 			buildMap {
 				while (true) {
