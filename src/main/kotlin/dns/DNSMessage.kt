@@ -79,7 +79,7 @@ class DNSMessage private constructor(
 
 	override fun toString() = "(DNS, ${if (reply) "<Res>" else "<Req>"}) ${opcode.name} " +
 			"[${hex(transactionID.toShort())}] [Qst/Ans/Ath/Add:" +
-			"${questions.size}/${answers.size}/${authorityRecords.size}/${additionalRecords.size}]" +
+			"${questions.size}/${answers.size}/${authorityRecords.size}/${additionalRecords.size}] " +
 			"[${
 				buildList {
 					if (authoritative) add("AA")
@@ -92,9 +92,9 @@ class DNSMessage private constructor(
 			}] ${responseCode.name}" +
 			buildString {
 				for (q in questions) append("\nQST: $q")
-				for (a in answers) append("\nQST: $a")
-				for (aa in authorityRecords) append("\nQST: $aa")
-				for (ar in additionalRecords) append("\nQST: $ar")
+				for (a in answers) append("\nANS: $a")
+				for (aa in authorityRecords) append("\nATH: $aa")
+				for (ar in additionalRecords) append("\nADD: $ar")
 			}
 
 	companion object {
