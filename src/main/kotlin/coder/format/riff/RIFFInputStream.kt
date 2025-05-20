@@ -44,6 +44,7 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 		this.addParser(identifier) {
 			ContainerChunk(
 				identifier,
+				it.readString(4, Charsets.US_ASCII),
 				RIFFInputStream(it).readAllParsed()
 			)
 		}
