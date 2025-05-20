@@ -21,8 +21,8 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 
 	override fun readParsed(): RIFFChunk {
 		val chunk = RIFFChunk(
-			from.readString(4, Charsets.US_ASCII),
-			from.read32().let {
+			readString(4, Charsets.US_ASCII),
+			read32().let {
 				val flipBuffer = ByteBuffer.allocateDirect(4)
 				flipBuffer.order(ByteOrder.LITTLE_ENDIAN)
 				flipBuffer.putInt(it)
@@ -30,15 +30,14 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 				flipBuffer.flip()
 				val realSize = flipBuffer.getInt()
 				if (realSize < 0)
-					throw DecodingException("Size is too big [${realSize.toLong()}]!")
-				val data = from.readNBytes(realSize)
-				if (realSize % 2L != 0L) from.read()
+					throw DecodingException("Size is too big [${realSize.toUInt()}]!")
+				val data = readNBytes(realSize)
+				if (realSize % 2L != 0L) read()
 				data
 			}
 		)
 		return chunkParsers[chunk.identifier]?.invoke(ByteArrayInputStream(chunk.data)) ?: chunk
 	}
-
 
 	fun containerChunk(identifier: String) {
 		this.addParser(identifier) {

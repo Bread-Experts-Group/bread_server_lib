@@ -1,7 +1,9 @@
 package org.bread_experts_group.coder.format.riff.chunk
 
-class ContainerChunk(
-	identifier: String,
+data class ContainerChunk(
+	override val identifier: String,
 	val localIdentifier: String,
-	val chunks: Array<RIFFChunk>
-) : RIFFChunk(identifier, byteArrayOf())
+	val chunks: List<RIFFChunk>
+) : RIFFChunk(identifier, byteArrayOf()) {
+	override fun toString(): String = "ContainerChunk.$identifier[$localIdentifier:[${chunks.size}]$chunks]"
+}
