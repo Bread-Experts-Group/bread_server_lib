@@ -91,7 +91,7 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 				Short.reverseBytes(it.read16()).toInt(),
 				Integer.reverseBytes(it.read32()),
 				Integer.reverseBytes(it.read32()),
-				Integer.reverseBytes(it.read32()),
+				Short.reverseBytes(it.read16()).toInt(),
 				Short.reverseBytes(it.read16()).toInt(),
 				it.readAllBytes()
 			)

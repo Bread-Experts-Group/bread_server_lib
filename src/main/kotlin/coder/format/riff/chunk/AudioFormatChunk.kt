@@ -5,8 +5,8 @@ class AudioFormatChunk(
 	val numberOfChannels: Int,
 	val sampleRate: Int,
 	val byteRate: Int,
-	val bitsPerSample: Int,
 	val blockAlign: Int,
+	val bitsPerSample: Int,
 	misc: ByteArray
 ) : RIFFChunk("fmt ", misc) {
 	override fun toString(): String = "RIFFChunk.\"${identifier}\"[$encoding, $numberOfChannels channels, " +
