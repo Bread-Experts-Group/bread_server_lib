@@ -4,7 +4,7 @@ import org.bread_experts_group.coder.DecodingException
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.riff.chunk.ContainerChunk
 import org.bread_experts_group.coder.format.riff.chunk.RIFFChunk
-import org.bread_experts_group.stream.read32ul
+import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -22,10 +22,10 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 	override fun readParsed(): RIFFChunk {
 		val chunk = RIFFChunk(
 			from.readString(4, Charsets.US_ASCII),
-			from.read32ul().let {
-				val flipBuffer = ByteBuffer.allocateDirect(8)
+			from.read32().let {
+				val flipBuffer = ByteBuffer.allocateDirect(4)
 				flipBuffer.order(ByteOrder.LITTLE_ENDIAN)
-				flipBuffer.putLong(it)
+				flipBuffer.putInt(it)
 				flipBuffer.order(ByteOrder.BIG_ENDIAN)
 				flipBuffer.flip()
 				val realSize = flipBuffer.getInt()
