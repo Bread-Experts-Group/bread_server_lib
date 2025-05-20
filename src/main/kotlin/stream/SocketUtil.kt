@@ -7,10 +7,10 @@ import java.net.Inet6Address
 import java.net.InetAddress
 import java.nio.charset.Charset
 
-fun InputStream.read16() = (this.read() shl 8) or this.read()
+fun InputStream.read16() = ((this.read() shl 8) or this.read()).toShort()
 fun InputStream.read16u() = this.read16().toUShort()
 fun InputStream.read16ui() = this.read16u().toInt()
-fun InputStream.read24() = (this.read16() shl 8) or this.read()
+fun InputStream.read24() = (this.read16().toInt() shl 8) or this.read()
 fun InputStream.read24u() = this.read24().toUInt()
 fun InputStream.read24ui() = this.read24u().toInt()
 fun InputStream.read32() = (this.read24() shl 8) or this.read()

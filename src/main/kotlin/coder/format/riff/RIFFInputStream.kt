@@ -6,11 +6,17 @@ import org.bread_experts_group.coder.format.riff.chunk.AudioFormatChunk
 import org.bread_experts_group.coder.format.riff.chunk.ContainerChunk
 import org.bread_experts_group.coder.format.riff.chunk.RIFFChunk
 import org.bread_experts_group.coder.format.riff.chunk.TextChunk
-import org.bread_experts_group.stream.read16ui
+import org.bread_experts_group.stream.read16
 import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import java.lang.Short
+import kotlin.IllegalArgumentException
+import kotlin.String
+import kotlin.let
+import kotlin.text.decodeToString
+import kotlin.toUInt
 
 class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 	private val chunkParsers = mutableMapOf<String, (InputStream) -> RIFFChunk>()
@@ -81,12 +87,12 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 		textChunk("ITCH")
 		this.addParser("fmt ") {
 			AudioFormatChunk(
-				AudioFormatChunk.AudioEncoding.mapping.getValue(Integer.reverseBytes(it.read16ui())),
-				Integer.reverseBytes(it.read16ui()),
+				AudioFormatChunk.AudioEncoding.mapping.getValue(Short.reverseBytes(it.read16()).toInt()),
+				Short.reverseBytes(it.read16()).toInt(),
 				Integer.reverseBytes(it.read32()),
 				Integer.reverseBytes(it.read32()),
 				Integer.reverseBytes(it.read32()),
-				Integer.reverseBytes(it.read16ui()),
+				Short.reverseBytes(it.read16()).toInt(),
 				it.readAllBytes()
 			)
 		}

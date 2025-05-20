@@ -42,7 +42,7 @@ class WebSocketFrame(
 			val size = sizeMask and 0b0_1111111
 			val trueSize =
 				if (size >= 127) stream.read64().also { if (it > Int.MAX_VALUE) error("Too high size $it") }.toInt()
-				else if (size == 126) stream.read16()
+				else if (size == 126) stream.read16().toInt()
 				else size
 			if (masked) {
 				val mask = listOf(
