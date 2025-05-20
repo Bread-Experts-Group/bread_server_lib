@@ -11,8 +11,6 @@ import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.ByteArrayInputStream
 import java.io.InputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 	private val chunkParsers = mutableMapOf<String, (InputStream) -> RIFFChunk>()
@@ -25,17 +23,11 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 	override fun readParsed(): RIFFChunk {
 		val chunk = RIFFChunk(
 			readString(4),
-			read32().let {
-				val flipBuffer = ByteBuffer.allocateDirect(4)
-				flipBuffer.order(ByteOrder.LITTLE_ENDIAN)
-				flipBuffer.putInt(it)
-				flipBuffer.order(ByteOrder.BIG_ENDIAN)
-				flipBuffer.flip()
-				val realSize = flipBuffer.getInt()
-				if (realSize < 0)
-					throw DecodingException("Size is too big [${realSize.toUInt()}]!")
-				val data = readNBytes(realSize)
-				if (realSize % 2L != 0L) read()
+			Integer.reverseBytes(read32()).let {
+				if (it < 0)
+					throw DecodingException("Size is too big [${it.toUInt()}]!")
+				val data = readNBytes(it)
+				if (it % 2L != 0L) read()
 				data
 			}
 		)
@@ -89,12 +81,12 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 		textChunk("ITCH")
 		this.addParser("fmt ") {
 			AudioFormatChunk(
-				AudioFormatChunk.AudioEncoding.mapping.getValue(it.read16ui()),
-				it.read16ui(),
-				it.read32(),
-				it.read32(),
-				it.read32(),
-				it.read16ui(),
+				AudioFormatChunk.AudioEncoding.mapping.getValue(Integer.reverseBytes(it.read16ui())),
+				Integer.reverseBytes(it.read16ui()),
+				Integer.reverseBytes(it.read32()),
+				Integer.reverseBytes(it.read32()),
+				Integer.reverseBytes(it.read32()),
+				Integer.reverseBytes(it.read16ui()),
 				it.readAllBytes()
 			)
 		}
