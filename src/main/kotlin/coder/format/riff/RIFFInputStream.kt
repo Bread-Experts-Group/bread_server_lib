@@ -23,15 +23,16 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 		val chunk = RIFFChunk(
 			from.readString(4, Charsets.US_ASCII),
 			from.read32ul().let {
-				if (it > Int.MAX_VALUE)
-					throw DecodingException("Size is over Int.MAX_VALUE! [$it] I cannot parse this yet!")
 				val flipBuffer = ByteBuffer.allocateDirect(8)
 				flipBuffer.order(ByteOrder.LITTLE_ENDIAN)
 				flipBuffer.putLong(it)
 				flipBuffer.order(ByteOrder.BIG_ENDIAN)
 				flipBuffer.flip()
-				val data = from.readNBytes(flipBuffer.getInt())
-				if (it % 2L != 0L) from.read()
+				val realSize = flipBuffer.getInt()
+				if (realSize < 0)
+					throw DecodingException("Size is too big [${realSize.toLong()}]!")
+				val data = from.readNBytes(realSize)
+				if (realSize % 2L != 0L) from.read()
 				data
 			}
 		)
