@@ -2,8 +2,11 @@ package org.bread_experts_group.coder.format.riff
 
 import org.bread_experts_group.coder.DecodingException
 import org.bread_experts_group.coder.format.Parser
+import org.bread_experts_group.coder.format.riff.chunk.AudioFormatChunk
 import org.bread_experts_group.coder.format.riff.chunk.ContainerChunk
 import org.bread_experts_group.coder.format.riff.chunk.RIFFChunk
+import org.bread_experts_group.coder.format.riff.chunk.TextChunk
+import org.bread_experts_group.stream.read16ui
 import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.ByteArrayInputStream
@@ -21,7 +24,7 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 
 	override fun readParsed(): RIFFChunk {
 		val chunk = RIFFChunk(
-			readString(4, Charsets.US_ASCII),
+			readString(4),
 			read32().let {
 				val flipBuffer = ByteBuffer.allocateDirect(4)
 				flipBuffer.order(ByteOrder.LITTLE_ENDIAN)
@@ -43,8 +46,17 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 		this.addParser(identifier) {
 			ContainerChunk(
 				identifier,
-				it.readString(4, Charsets.US_ASCII),
+				it.readString(4),
 				RIFFInputStream(it).readAllParsed()
+			)
+		}
+	}
+
+	fun textChunk(identifier: String) {
+		this.addParser(identifier) {
+			TextChunk(
+				identifier,
+				it.readAllBytes().decodeToString()
 			)
 		}
 	}
@@ -52,5 +64,39 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 	init {
 		containerChunk("RIFF")
 		containerChunk("LIST")
+		textChunk("IARL")
+		textChunk("IART")
+		textChunk("ICMS")
+		textChunk("ICMT")
+		textChunk("ICOP")
+		textChunk("ICRD")
+		textChunk("ICRP")
+		textChunk("IDIM")
+		textChunk("IDPI")
+		textChunk("IENG")
+		textChunk("IGNR")
+		textChunk("IKEY")
+		textChunk("ILGT")
+		textChunk("IMED")
+		textChunk("INAM")
+		textChunk("IPLT")
+		textChunk("IPRD")
+		textChunk("ISBJ")
+		textChunk("ISFT")
+		textChunk("ISHP")
+		textChunk("ISRC")
+		textChunk("ISRF")
+		textChunk("ITCH")
+		this.addParser("fmt ") {
+			AudioFormatChunk(
+				AudioFormatChunk.AudioEncoding.mapping.getValue(it.read16ui()),
+				it.read16ui(),
+				it.read32(),
+				it.read32(),
+				it.read32(),
+				it.read16ui(),
+				it.readAllBytes()
+			)
+		}
 	}
 }

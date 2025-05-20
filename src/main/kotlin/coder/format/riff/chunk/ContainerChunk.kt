@@ -5,5 +5,5 @@ data class ContainerChunk(
 	val localIdentifier: String,
 	val chunks: List<RIFFChunk>
 ) : RIFFChunk(identifier, byteArrayOf()) {
-	override fun toString(): String = "ContainerChunk.$identifier[$localIdentifier:[${chunks.size}]$chunks]"
+	override fun toString(): String = "ContainerChunk.\"$identifier\"[\"$localIdentifier\":[${chunks.size}]$chunks]"
 }

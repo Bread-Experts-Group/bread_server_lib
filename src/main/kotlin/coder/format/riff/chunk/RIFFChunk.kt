@@ -4,5 +4,5 @@ open class RIFFChunk(
 	open val identifier: String,
 	val data: ByteArray
 ) {
-	override fun toString(): String = "RIFFChunk.$identifier[${data.size}]"
+	override fun toString(): String = "RIFFChunk.\"$identifier\"[${data.size}]"
 }
