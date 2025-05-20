@@ -1,7 +1,7 @@
 package org.bread_experts_group.dns
 
 import org.bread_experts_group.hex
-import org.bread_experts_group.socket.*
+import org.bread_experts_group.stream.*
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream

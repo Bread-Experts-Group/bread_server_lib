@@ -1,4 +1,4 @@
-package org.bread_experts_group.coder.json
+package org.bread_experts_group.coder.fixed.json
 
 import java.math.BigDecimal
 

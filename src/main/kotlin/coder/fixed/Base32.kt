@@ -1,4 +1,6 @@
-package org.bread_experts_group.coder
+package org.bread_experts_group.coder.fixed
+
+import org.bread_experts_group.coder.DecodingException
 
 object Base32 {
 	private val BASE_32_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"

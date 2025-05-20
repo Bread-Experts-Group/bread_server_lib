@@ -1,6 +1,6 @@
-package org.bread_experts_group.coder.json
+package org.bread_experts_group.coder.fixed.json
 
-import org.bread_experts_group.coder.json.JSONElement.Companion
+import org.bread_experts_group.coder.fixed.json.JSONElement.Companion
 import java.math.BigDecimal
 
 data class JSONObject(

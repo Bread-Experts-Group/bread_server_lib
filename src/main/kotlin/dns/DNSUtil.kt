@@ -1,7 +1,7 @@
 package org.bread_experts_group.dns
 
-import org.bread_experts_group.socket.readString
-import org.bread_experts_group.socket.writeString
+import org.bread_experts_group.stream.readString
+import org.bread_experts_group.stream.writeString
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream

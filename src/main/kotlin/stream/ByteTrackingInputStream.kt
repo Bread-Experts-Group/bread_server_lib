@@ -1,4 +1,4 @@
-package org.bread_experts_group.socket
+package org.bread_experts_group.stream
 
 import org.bread_experts_group.hex
 import java.io.InputStream

@@ -1,7 +1,7 @@
 package org.bread_experts_group.http.h2
 
 import org.bread_experts_group.hex
-import org.bread_experts_group.socket.read24ui
+import org.bread_experts_group.stream.read24ui
 import java.io.InputStream
 
 sealed class HTTP2Frame(
@@ -23,7 +23,13 @@ sealed class HTTP2Frame(
 				HTTP2FrameType.SETTINGS -> HTTP2SettingsFrame.read(stream, length)
 				HTTP2FrameType.WINDOW_UPDATE -> HTTP2WindowUpdateFrame.read(stream, length)
 				HTTP2FrameType.HEADERS -> HTTP2HeaderFrame.read(stream, length)
-				else -> throw TODO(type.name)
+				HTTP2FrameType.PRIORITY -> TODO()
+				HTTP2FrameType.STOP_STREAM -> TODO()
+				HTTP2FrameType.PUSH_PROMISE -> TODO()
+				HTTP2FrameType.PING -> TODO()
+				HTTP2FrameType.SHUTDOWN -> TODO()
+				HTTP2FrameType.CONTINUATION -> TODO()
+				HTTP2FrameType.OTHER -> TODO()
 			}
 		}
 	}

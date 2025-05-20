@@ -1,8 +1,8 @@
 package org.bread_experts_group.http.h2
 
 import org.bread_experts_group.hex
-import org.bread_experts_group.socket.read32
-import org.bread_experts_group.socket.read32ul
+import org.bread_experts_group.stream.read32
+import org.bread_experts_group.stream.read32ul
 import java.io.InputStream
 
 class HTTP2HeaderFrame(
@@ -26,7 +26,7 @@ class HTTP2HeaderFrame(
 	companion object {
 		fun read(stream: InputStream, length: Int): HTTP2HeaderFrame {
 			val flagsRaw = stream.read()
-			var flags = buildList { HTTP2HeaderFrameFlag.entries.forEach { if (it.position and flagsRaw > 0) add(it) } }
+			val flags = buildList { HTTP2HeaderFrameFlag.entries.forEach { if (it.position and flagsRaw > 0) add(it) } }
 			val identifier = stream.read32()
 			if (identifier == 0)
 				throw HTTP2ProtocolError("Header frame identifier must be non-zero, got ${hex(identifier)}")

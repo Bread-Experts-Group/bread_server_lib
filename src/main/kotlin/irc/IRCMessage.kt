@@ -1,8 +1,8 @@
 package org.bread_experts_group.irc
 
 import org.bread_experts_group.Writable
-import org.bread_experts_group.socket.scanDelimiter
-import org.bread_experts_group.socket.writeString
+import org.bread_experts_group.stream.scanDelimiter
+import org.bread_experts_group.stream.writeString
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -13,7 +13,9 @@ class IRCMessage(
 	val parameters: String
 ) : Writable {
 	override fun toString(): String = "(IRC, $command) " +
-			(if (tags.isNotEmpty()) "TAGS [${tags.size}][${tags.entries.joinToString(";") { "${it.key}=${it.value}" }}] "
+			(if (tags.isNotEmpty()) "TAGS [${tags.size}][${
+				tags.entries.joinToString(";") { "${it.key}=${it.value}" }
+			}] "
 			else "") +
 			(if (source.isNotEmpty()) "SOURCE [$source] " else "") +
 			"<$parameters>"

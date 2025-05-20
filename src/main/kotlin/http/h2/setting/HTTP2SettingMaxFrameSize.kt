@@ -1,7 +1,7 @@
 package org.bread_experts_group.http.h2.setting
 
 import org.bread_experts_group.http.h2.HTTP2Frame
-import org.bread_experts_group.socket.read32ul
+import org.bread_experts_group.stream.read32ul
 import java.io.InputStream
 
 class HTTP2SettingMaxFrameSize(

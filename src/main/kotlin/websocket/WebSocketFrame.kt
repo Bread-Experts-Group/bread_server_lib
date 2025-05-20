@@ -1,9 +1,9 @@
 package org.bread_experts_group.websocket
 
-import org.bread_experts_group.socket.read16
-import org.bread_experts_group.socket.read64
-import org.bread_experts_group.socket.write16
-import org.bread_experts_group.socket.write64
+import org.bread_experts_group.stream.read16
+import org.bread_experts_group.stream.read64
+import org.bread_experts_group.stream.write16
+import org.bread_experts_group.stream.write64
 import java.io.InputStream
 import java.io.OutputStream
 import kotlin.experimental.xor

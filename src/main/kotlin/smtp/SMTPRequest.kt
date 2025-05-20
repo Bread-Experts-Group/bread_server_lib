@@ -1,6 +1,6 @@
 package org.bread_experts_group.smtp
 
-import org.bread_experts_group.socket.scanDelimiter
+import org.bread_experts_group.stream.scanDelimiter
 import java.io.InputStream
 
 class SMTPRequest(
