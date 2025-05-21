@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.5.0"
+version = "2.5.1"
 
 repositories {
 	mavenCentral()
@@ -112,6 +112,6 @@ object BuildInfo {
 }
 
 sourceSets["main"].kotlin.srcDir(generatedDir)
-tasks.compileKotlin {
-	dependsOn(generateBuildInfo)
-}
+tasks.dokkaGeneratePublicationJavadoc { dependsOn(generateBuildInfo) }
+tasks.kotlinSourcesJar { dependsOn(generateBuildInfo) }
+tasks.compileKotlin { dependsOn(generateBuildInfo) }

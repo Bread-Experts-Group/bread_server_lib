@@ -1,6 +1,7 @@
 package org.bread_experts_group
 
 import org.bread_experts_group.logging.ColoredLogger
+import java.util.logging.Level
 import kotlin.system.exitProcess
 
 fun stringToLong(str: String): Long =
@@ -88,7 +89,7 @@ fun readArgs(
 				append("\t-${it.flagName.padEnd(longestFlagName)}\n")
 				append("\t\t${it.flagDescription.replace("\n", "\n\t\t ").padEnd(longestFlagDescription)}\n")
 				if (it.default != null) append("\t\tDefault [${it.default}]\n")
-				if (it.required > 0) append("\t\tRequired ${it.required} time${if (it.required > 1) 's' else ""}")
+				if (it.required > 0) append("\t\tRequired ${it.required} time${if (it.required > 1) 's' else ""}\n")
 			}
 		})
 		exitProcess(3319)
@@ -96,9 +97,12 @@ fun readArgs(
 
 	val singleArgs = mutableMapOf<String, Any>()
 	val multipleArgs = mutableMapOf<String, MutableList<Any>>()
+	val problems = mutableListOf<Throwable>()
 	args.forEach {
 		logger.finer { "Parse argument \"$it\"" }
-		if (it[0] != '-') throw IllegalArgumentException("Bad argument \"$it\", requires - before name")
+		if (it[0] != '-') problems.add(
+			IllegalArgumentException("Bad argument \"$it\", requires - before name")
+		)
 		val equIndex = it.indexOf('=')
 		val flag = flags.first { f -> f.flagName == it.substring(1, if (equIndex == -1) it.length else equIndex) }
 		val value = if (equIndex == -1) "true" else it.substring(equIndex + 1)
@@ -114,8 +118,9 @@ fun readArgs(
 					.getOrPut(flag.flagName) { mutableListOf() }
 					.add(typedValue)
 			} else {
-				if (singleArgs.putIfAbsent(flag.flagName, typedValue) != null)
-					throw IllegalArgumentException("Duplicate flag, \"${flag.flagName}\"")
+				if (singleArgs.putIfAbsent(flag.flagName, typedValue) != null) problems.add(
+					IllegalArgumentException("Duplicate flag, \"${flag.flagName}\"")
+				)
 			}
 		}
 	}
@@ -127,16 +132,17 @@ fun readArgs(
 			singleArgs.put(it.flagName, it.default)
 		}
 		if (it.required == 1 && !singleArgs.containsKey(it.flagName))
-			throw RequiredArgumentsMissingException(it, 0)
+			problems.add(RequiredArgumentsMissingException(it, 0))
 		if (it.required > 1)
 			if (!multipleArgs.containsKey(it.flagName))
-				throw RequiredArgumentsMissingException(it, 0)
+				problems.add(RequiredArgumentsMissingException(it, 0))
 			else multipleArgs.getValue(it.flagName).let { a ->
-				if (a.size < it.required) throw RequiredArgumentsMissingException(
-					it,
-					a.size
-				)
+				if (a.size < it.required) problems.add(RequiredArgumentsMissingException(it, a.size))
 			}
+	}
+	if (problems.isNotEmpty()) {
+		problems.forEachIndexed { i, problem -> logger.log(Level.SEVERE, problem) { "Argument problem [$i]" } }
+		exitProcess(3122)
 	}
 	return singleArgs to multipleArgs
 }
