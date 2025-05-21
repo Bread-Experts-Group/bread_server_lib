@@ -1,12 +1,17 @@
 package org.bread_experts_group
 
+import org.bread_experts_group.logging.ColoredLogger
+import java.io.IOException
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
 import java.util.logging.Logger
 import kotlin.jvm.optionals.getOrNull
-import kotlin.system.exitProcess
 
-private val nativeLogger: Logger = Logger.getLogger("Foreign Function Interface Operations")
+private val nativeLogger: Logger = ColoredLogger.newLogger("Foreign Function Interface")
+
+abstract class NativeObjectNotFoundException(name: String) : IOException(name)
+class NativeLibraryNotFoundException(library: String) : NativeObjectNotFoundException(library)
+class SymbolNotFoundException(symbol: String) : NativeObjectNotFoundException(symbol)
 
 fun Arena.getLookup(library: String): SymbolLookup = try {
 	nativeLogger.fine { "Getting the library lookup for \"$library\", standby" }
@@ -15,7 +20,7 @@ fun Arena.getLookup(library: String): SymbolLookup = try {
 	}
 } catch (_: IllegalArgumentException) {
 	nativeLogger.severe { "Library \"$library\" was not located." }
-	exitProcess(-1)
+	throw NativeLibraryNotFoundException(library)
 }
 
 fun MemorySegment.composeFlags(): String = '[' + buildList {
@@ -34,7 +39,7 @@ fun SymbolLookup.getAddress(name: String): MemorySegment {
 	val address: MemorySegment? = this.find(name).getOrNull()
 	if (address == null) {
 		nativeLogger.severe { "\"$name\" was not located." }
-		exitProcess(-1)
+		throw SymbolNotFoundException(name)
 	}
 	nativeLogger.info { "\"$name\" was located at the address ${address.debugString()}" }
 	return address

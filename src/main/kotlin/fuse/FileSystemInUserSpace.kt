@@ -1,6 +1,7 @@
 package org.bread_experts_group.fuse
 
 import org.bread_experts_group.debugString
+import org.bread_experts_group.logging.ColoredLogger
 import java.io.File
 import java.lang.AutoCloseable
 import java.lang.foreign.*
@@ -15,7 +16,7 @@ class FileSystemInUserSpace(
 ) : AutoCloseable {
 	private var isClosed = false
 	private val localArena = Arena.ofAuto()
-	private val fuseLogger: Logger = Logger.getLogger("FUSE")
+	private val fuseLogger: Logger = ColoredLogger.newLogger("FUSE")
 	private val fuseSession: MemorySegment
 	private val fuseSessionLoop: Thread
 

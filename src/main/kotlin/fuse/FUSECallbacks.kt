@@ -1,6 +1,7 @@
 package org.bread_experts_group.fuse
 
 import org.bread_experts_group.debugString
+import org.bread_experts_group.logging.ColoredLogger
 import org.bread_experts_group.posix.POSIXStat
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -8,7 +9,7 @@ import java.util.logging.Logger
 
 open class FUSECallbacks {
 	private val localArena = Arena.ofAuto()
-	private val logger: Logger = Logger.getLogger("FUSE Callbacks")
+	private val logger: Logger = ColoredLogger.newLogger("FUSE Callbacks")
 
 	protected fun replyBuffer(req: MemorySegment, buf: MemorySegment) {
 		val returnCode = nativeFuseReplyEntry.invokeExact(req, buf, buf.byteSize()) as Int

@@ -1,6 +1,6 @@
 package org.bread_experts_group
 
-import java.util.logging.Logger
+import org.bread_experts_group.logging.ColoredLogger
 
 fun stringToLong(str: String): Long =
 	if (str.substring(0, 1) == "0x") str.substring(2).toLong(16)
@@ -29,7 +29,7 @@ fun readArgs(
 	vararg flags: Flag<*>
 ) = readArgs(args, flags.toList())
 
-private val logger = Logger.getLogger("Bread Server Library Argument Retrieval")
+private val logger = ColoredLogger.newLogger("Program Argument Retrieval")
 fun readArgs(
 	args: Array<String>,
 	flags: List<Flag<*>>

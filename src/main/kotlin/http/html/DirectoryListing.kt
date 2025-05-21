@@ -1,5 +1,6 @@
 package org.bread_experts_group.http.html
 
+import org.bread_experts_group.logging.ColoredLogger
 import java.io.File
 import java.io.IOException
 import java.nio.file.*
@@ -8,12 +9,11 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.logging.Logger
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 object DirectoryListing {
-	private val logger = Logger.getLogger("DirectoryListing")
+	private val logger = ColoredLogger.newLogger("HTML Directory Listing")
 	private val watcher = FileSystems.getDefault().newWatchService()
 	private val directoryListingCache = mutableMapOf<File, CachedList>()
 	private val reverseCache = mutableMapOf<WatchKey, File>()
