@@ -1,3 +1,5 @@
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 plugins {
@@ -10,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.4.0"
+version = "2.5.0"
 
 repositories {
 	mavenCentral()
@@ -84,4 +86,32 @@ tasks.javadoc {
 	if (JavaVersion.current().isJava9Compatible) {
 		(options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
 	}
+}
+
+val generatedDir: String = layout.buildDirectory.get().asFile.resolve("generated").canonicalPath
+val compileTime: String = ZonedDateTime.now().format(
+	DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss.SSSSSS xxxxx")
+)
+
+val generateBuildInfo by tasks.registering {
+	val outputDir = file(generatedDir)
+	outputs.dir(outputDir)
+	doLast {
+		outputDir.mkdirs()
+		val file = file("$generatedDir/BuildInfo.kt")
+		file.writeText(
+			"""package org.bread_experts_group
+
+object BuildInfo {
+	const val COMPILE_DATE = "$compileTime"
+	const val VERSION = "$version"
+}
+"""
+		)
+	}
+}
+
+sourceSets["main"].kotlin.srcDir(generatedDir)
+tasks.compileKotlin {
+	dependsOn(generateBuildInfo)
 }
