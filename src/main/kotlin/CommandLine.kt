@@ -98,14 +98,21 @@ fun readArgs(
 	val singleArgs = mutableMapOf<String, Any>()
 	val multipleArgs = mutableMapOf<String, MutableList<Any>>()
 	val problems = mutableListOf<Throwable>()
-	args.forEach {
-		logger.finer { "Parse argument \"$it\"" }
-		if (it[0] != '-') problems.add(
-			IllegalArgumentException("Bad argument \"$it\", requires - before name")
-		)
-		val equIndex = it.indexOf('=')
-		val flag = flags.first { f -> f.flagName == it.substring(1, if (equIndex == -1) it.length else equIndex) }
-		val value = if (equIndex == -1) "true" else it.substring(equIndex + 1)
+	for (arg in args) {
+		logger.finer { "Parse argument \"$arg\"" }
+		if (arg[0] != '-') {
+			problems.add(IllegalArgumentException("Bad argument \"$arg\", requires - before name"))
+			continue
+		}
+		val equIndex = arg.indexOf('=')
+		val flag = flags.firstOrNull { f ->
+			f.flagName == arg.substring(1, if (equIndex == -1) arg.length else equIndex)
+		}
+		if (flag == null) {
+			problems.add(IllegalArgumentException("Bad argument \"$arg\", not a flag; see -help"))
+			continue
+		}
+		val value = if (equIndex == -1) "true" else arg.substring(equIndex + 1)
 		val typedValue = if (value.isNotBlank()) flag.conv(value) else flag.default
 		logger.finer {
 			"Conversion \"${typedValue.toString()}\" " +
