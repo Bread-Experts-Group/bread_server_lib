@@ -138,12 +138,10 @@ fun readArgs(
 			}
 			singleArgs.put(it.flagName, it.default)
 		}
-		if (it.required == 1 && !singleArgs.containsKey(it.flagName))
+		if (it.required != 0 && !(singleArgs.containsKey(it.flagName) || multipleArgs.containsKey(it.flagName)))
 			problems.add(RequiredArgumentsMissingException(it, 0))
-		if (it.required > 1)
-			if (!multipleArgs.containsKey(it.flagName))
-				problems.add(RequiredArgumentsMissingException(it, 0))
-			else multipleArgs.getValue(it.flagName).let { a ->
+		else if (it.required > 1)
+			multipleArgs.getValue(it.flagName).let { a ->
 				if (a.size < it.required) problems.add(RequiredArgumentsMissingException(it, a.size))
 			}
 	}
