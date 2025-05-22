@@ -6,31 +6,19 @@ import org.bread_experts_group.coder.format.riff.chunk.AudioFormatChunk
 import org.bread_experts_group.coder.format.riff.chunk.ContainerChunk
 import org.bread_experts_group.coder.format.riff.chunk.RIFFChunk
 import org.bread_experts_group.coder.format.riff.chunk.TextChunk
-import org.bread_experts_group.logging.ColoredLogger
 import org.bread_experts_group.stream.read16
 import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.lang.Short
-import kotlin.IllegalArgumentException
 import kotlin.String
 import kotlin.also
 import kotlin.let
 import kotlin.text.decodeToString
 import kotlin.toUInt
 
-class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
-	private val chunkParsers = mutableMapOf<String, (InputStream) -> RIFFChunk>()
-	private val globalLogger = ColoredLogger.newLogger("RIFF Parser")
-
-	override fun addParser(chunkIdentifier: String, parser: (InputStream) -> RIFFChunk) {
-		globalLogger.fine { "Registering parser [$parser] for chunk identifier [$chunkIdentifier]" }
-		if (chunkParsers.containsKey(chunkIdentifier))
-			throw IllegalArgumentException("Parser for identifier \"$chunkIdentifier\" already exists")
-		chunkParsers[chunkIdentifier] = parser
-	}
-
+class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>("Resource Interchange File Format", from) {
 	override fun readParsed(): RIFFChunk {
 		val chunk = RIFFChunk(
 			readString(4),
@@ -42,14 +30,14 @@ class RIFFInputStream(from: InputStream) : Parser<String, RIFFChunk>(from) {
 				data
 			}
 		)
-		val parser = chunkParsers[chunk.identifier]
-		globalLogger.fine {
+		val parser = this.parsers[chunk.identifier]
+		this.logger.fine {
 			"Read generic chunk [${chunk.identifier}], size [${chunk.data.size}]" +
 					if (parser != null) " | responsible parser: $parser"
 					else ""
 		}
 		return parser?.invoke(ByteArrayInputStream(chunk.data))?.also {
-			globalLogger.fine { "Parsed chunk into [${it.javaClass.canonicalName}] from [$parser], $chunk" }
+			this.logger.fine { "Parsed chunk into [${it.javaClass.canonicalName}] from [$parser], $chunk" }
 		} ?: chunk
 	}
 
