@@ -54,7 +54,6 @@ sealed class JSONElement {
 					'f' -> JSONBoolean(stream.skip(4).let { false })
 					'}' -> throw ObjectExit()
 					']' -> throw ArrayExit()
-					' ', ',' -> continue
 					else -> if (entry.isDigit()) {
 						var concatenated = entry.toString()
 						while (true) {
@@ -63,7 +62,8 @@ sealed class JSONElement {
 							concatenated += next
 						}
 						JSONNumber(BigDecimal(concatenated))
-					} else throw DecodingException("JSON element entry '$entry'")
+					} else if (entry.isWhitespace() || entry == ',') continue
+					else throw DecodingException("JSON element entry '$entry'")
 				}
 			}
 		}
