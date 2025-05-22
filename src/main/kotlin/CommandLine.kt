@@ -1,6 +1,7 @@
 package org.bread_experts_group
 
 import org.bread_experts_group.logging.ColoredLogger
+import java.net.URI
 import java.util.logging.Level
 import kotlin.system.exitProcess
 
@@ -9,6 +10,7 @@ fun stringToLong(str: String): Long =
 	else if (str.substring(0, 1) == "0b") str.substring(2).toLong(2)
 	else str.toLong()
 
+fun stringToURI(str: String): URI = URI(str)
 fun stringToInt(str: String): Int = stringToLong(str).toInt()
 fun stringToBoolean(str: String): Boolean = str.lowercase().let { it == "true" || it == "yes" || it == "1" }
 
@@ -113,7 +115,12 @@ fun readArgs(
 			continue
 		}
 		val value = if (equIndex == -1) "true" else arg.substring(equIndex + 1)
-		val typedValue = if (value.isNotBlank()) flag.conv(value) else flag.default
+		val typedValue = try {
+			if (value.isNotBlank()) flag.conv(value) else flag.default
+		} catch (e: Throwable) {
+			problems.add(e)
+			continue
+		}
 		logger.finer {
 			"Conversion \"${typedValue.toString()}\" " +
 					if (typedValue != null) "(${typedValue::class.simpleName})"
