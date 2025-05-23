@@ -1,10 +1,11 @@
 package org.bread_experts_group.coder.format
 
+import org.bread_experts_group.Writable
 import org.bread_experts_group.logging.ColoredLogger
 import org.bread_experts_group.stream.FailQuickInputStream
 import java.io.InputStream
 
-abstract class Parser<I, O>(format: String, from: InputStream) : FailQuickInputStream(from) {
+abstract class Parser<I, O : Writable>(format: String, from: InputStream) : FailQuickInputStream(from) {
 	protected val logger = ColoredLogger.newLogger("$format Parser")
 	protected val parsers = mutableMapOf<I, (InputStream) -> O>()
 	fun addParser(identifier: I, parser: (InputStream) -> O) {
