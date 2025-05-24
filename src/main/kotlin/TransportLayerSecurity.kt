@@ -32,13 +32,18 @@ fun getTLSContext(keystorePath: File, password: String): SSLContext {
 }
 
 val goodSchemes = arrayOf(
-	"TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256", "TLS_CHACHA20_POLY1305_SHA256",
-	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-	"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+	// TLS 1.3
+	"TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256",
+	// TLS 1.2
+	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+	// Undesignated
+	"TLS_FALLBACK_SCSV"
 )
 
 fun getSSLServerSocket(keystorePath: File, password: String): SSLServerSocket = getTLSContext(keystorePath, password)
-	.getServerSocket().also { it.enabledCipherSuites = goodSchemes }
+	.getServerSocket()
+	.also { it.enabledCipherSuites = goodSchemes }
 
 fun getSSLSocket(keystorePath: File, password: String): SSLSocket = getTLSContext(keystorePath, password)
-	.getSocket().also { it.enabledCipherSuites = goodSchemes }
+	.getSocket()
+	.also { it.enabledCipherSuites = goodSchemes }

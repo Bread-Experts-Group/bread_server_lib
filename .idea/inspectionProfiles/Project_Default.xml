@@ -51,6 +51,7 @@
           <option value="UNUSED" />
           <option value="KDocUnresolvedReference" />
           <option value="ReplacePrintlnWithLogging" />
+          <option value="SpellCheckingInspection" />
         </list>
       </option>
     </inspection_tool>
