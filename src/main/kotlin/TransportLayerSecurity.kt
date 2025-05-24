@@ -18,12 +18,17 @@ fun KeyStore.getManagerFactoryX509(password: String): KeyManagerFactory = KeyMan
 	.getInstance("SunX509")
 	.also { it.init(this, password.toCharArray()) }
 
-fun KeyManagerFactory.getTLSContext() = SSLContext
+fun KeyManagerFactory.getTLSContext(): SSLContext = SSLContext
 	.getInstance("TLS")
 	.also { it.init(this.keyManagers, null, null) }
 
-fun SSLContext.getServerSocket() = ((this.serverSocketFactory as SSLServerSocketFactory).createServerSocket() as SSLServerSocket)
-fun SSLContext.getSocket() = ((this.socketFactory as SSLSocketFactory).createSocket() as SSLSocket)
+fun SSLContext.getServerSocket() =
+	((this.serverSocketFactory as SSLServerSocketFactory).createServerSocket() as SSLServerSocket)
+		.also { it.enabledCipherSuites = goodSchemes }
+
+fun SSLContext.getSocket() =
+	((this.socketFactory as SSLSocketFactory).createSocket() as SSLSocket)
+		.also { it.enabledCipherSuites = goodSchemes }
 
 fun getTLSContext(keystorePath: File, password: String): SSLContext {
 	val keystore = getKeyStoreFromPath(keystorePath, password)
@@ -35,9 +40,7 @@ val goodSchemes = arrayOf(
 	// TLS 1.3
 	"TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256",
 	// TLS 1.2
-	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
-	// Undesignated
-	"TLS_FALLBACK_SCSV"
+	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
 )
 
 fun getSSLServerSocket(keystorePath: File, password: String): SSLServerSocket = getTLSContext(keystorePath, password)
