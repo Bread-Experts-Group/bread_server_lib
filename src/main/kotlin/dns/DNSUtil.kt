@@ -7,9 +7,12 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 interface DNSLabel
-class DNSExtendedLabel(val type: Int) : DNSLabel
+class DNSExtendedLabel(val type: Int) : DNSLabel {
+	override fun toString(): String = "[extended label: $type]"
+}
 class DNSLabelLiteral(literal: String) : DNSLabel {
 	val literal = if (literal.endsWith('.')) literal else "$literal."
+	override fun toString(): String = "[literal label: \"$literal\"]"
 }
 
 fun readLabel(stream: InputStream, lookbehind: ByteArray): DNSLabel {

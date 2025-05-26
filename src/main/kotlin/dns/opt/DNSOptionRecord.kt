@@ -20,4 +20,10 @@ class DNSOptionRecord(
 			((responseCodeUpper and 0xFF0) shl 20) or
 			(if (wantDNSSEC) 0x8000 else 0)).toLong(),
 	byteArrayOf()
-)
+) {
+	override fun toString(): String = buildString {
+		append("(DNS, Option Record) UDP size: $dnsPayloadSize, RCODE upper: $responseCodeUpper, v$eDNSVersion")
+		append("[${if (wantDNSSEC) "wants DNSSEC" else ""}], # OPTs: [${options.size}]")
+		options.forEach { append("\n $it") }
+	}
+}

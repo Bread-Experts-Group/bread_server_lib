@@ -41,7 +41,7 @@ open class DNSResourceRecord(
 	}
 
 	override fun toString(): String = buildString {
-		append("(DNS, Record) \"$name\" $rrType ")
+		append("(DNS, Record) $name $rrType ")
 		if (rrType == DNSType.OPT__OPTION) {
 			append("${hex(rrClassRaw)} ${hex(timeToLive)}")
 		} else {
