@@ -14,13 +14,17 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 			0b00000000 -> name += "${stream.readString(byte)}."
 			0b11000000 -> {
 				name += readLabel(
-					ByteArrayInputStream(lookbehind).also { it.skip(stream.read().toLong()) },
+					ByteArrayInputStream(lookbehind).also {
+						it.skip((((byte and 0b00111111) shl 8) or stream.read()).toLong())
+					},
 					lookbehind
 				)
 				break
 			}
 
-			else -> throw UnsupportedOperationException(byte.toString())
+			else -> throw UnsupportedOperationException(
+				(byte shr 6).toString(2).padStart(2, '0')
+			)
 		}
 		byte = stream.read()
 	}
