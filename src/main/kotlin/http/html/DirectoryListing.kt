@@ -96,7 +96,7 @@ object DirectoryListing {
 				.format(DateTimeFormatter.RFC_1123_DATE_TIME)
 			"$sizeStat [${createdAt}]</caption></tbody></table></body></html>"
 		}
-		if (file.canonicalPath.startsWith(store.canonicalPath)) {
+		if (!file.canonicalPath.startsWith(store.canonicalPath)) {
 			append("<tr><td>Outside of store</tr></tbody>")
 			append("<caption>")
 			append(file.canonicalPath)
