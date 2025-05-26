@@ -2,7 +2,6 @@ package org.bread_experts_group.dns
 
 import org.bread_experts_group.stream.read16ui
 import org.bread_experts_group.stream.write16
-import org.bread_experts_group.stream.writeString
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
@@ -15,10 +14,7 @@ class DNSQuestion(
 	fun write(parent: DNSMessage, stream: OutputStream) {
 		if (parent.truncated) return
 		val data = ByteArrayOutputStream().use {
-			(name as DNSLabelLiteral).literal.split('.').forEach { s ->
-				it.write(s.length)
-				it.writeString(s)
-			}
+			writeLabel((name as DNSLabelLiteral).literal)
 			it.write16(qType.code)
 			it.write16(qClass.code)
 			it.toByteArray()

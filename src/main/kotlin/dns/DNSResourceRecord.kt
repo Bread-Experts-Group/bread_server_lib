@@ -4,7 +4,10 @@ import org.bread_experts_group.dns.opt.DNSOption
 import org.bread_experts_group.dns.opt.DNSOptionRecord
 import org.bread_experts_group.dns.opt.DNSOptionType
 import org.bread_experts_group.hex
-import org.bread_experts_group.stream.*
+import org.bread_experts_group.stream.read16ui
+import org.bread_experts_group.stream.read32ul
+import org.bread_experts_group.stream.write16
+import org.bread_experts_group.stream.write32
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -21,10 +24,7 @@ open class DNSResourceRecord(
 	fun write(parent: DNSMessage, stream: OutputStream) {
 		if (parent.truncated) return
 		val data = ByteArrayOutputStream().use {
-			(name as DNSLabelLiteral).literal.split('.').forEach { s ->
-				it.write(s.length)
-				it.writeString(s)
-			}
+			writeLabel((name as DNSLabelLiteral).literal)
 			it.write16(rrType.code)
 			it.write16(rrClassRaw)
 			it.write32(timeToLive)
