@@ -24,7 +24,7 @@ open class DNSResourceRecord(
 	fun write(parent: DNSMessage, stream: OutputStream) {
 		if (parent.truncated) return
 		val data = ByteArrayOutputStream().use {
-			writeLabel((name as DNSLabelLiteral).literal)
+			it.write(writeLabel((name as DNSLabelLiteral).literal))
 			it.write16(rrType.code)
 			it.write16(rrClassRaw)
 			it.write32(timeToLive)

@@ -14,7 +14,7 @@ class DNSQuestion(
 	fun write(parent: DNSMessage, stream: OutputStream) {
 		if (parent.truncated) return
 		val data = ByteArrayOutputStream().use {
-			writeLabel((name as DNSLabelLiteral).literal)
+			it.write(writeLabel((name as DNSLabelLiteral).literal))
 			it.write16(qType.code)
 			it.write16(qClass.code)
 			it.toByteArray()
