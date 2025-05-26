@@ -84,6 +84,24 @@ object DirectoryListing {
 		append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
 		append("[title]{text-decoration:underline dotted}</style></head><body><table style=\"width:100%\">")
 		append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
+		val trailer = run {
+			val sizeStat = buildString {
+				append(" [ ")
+				append(truncateSizeHTML(file.usableSpace) + " / ")
+				append(truncateSizeHTML(file.freeSpace) + " / ")
+				append(truncateSizeHTML(file.totalSpace) + " ]")
+			}
+			val createdAt = Instant.ofEpochMilli(System.currentTimeMillis())
+				.atZone(ZoneId.systemDefault())
+				.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+			"$sizeStat [${createdAt}]</caption></tbody></table></body></html>"
+		}
+		if (file.canonicalPath.startsWith(store.canonicalPath)) {
+			append("<tr><td>Outside of store</tr></tbody>")
+			append("<caption>")
+			append(file.canonicalPath)
+			append(trailer)
+		}
 		val itParent = store.parentFile
 		val files = file.listFiles()
 		if (files != null) {
@@ -159,15 +177,7 @@ object DirectoryListing {
 				else "<a href=\"$backReferences\">$it</a>/$completeCaption"
 			backReferences += "../"
 		}
-		val sizeStat = buildString {
-			append(" [ ")
-			append(truncateSizeHTML(file.usableSpace) + " / ")
-			append(truncateSizeHTML(file.freeSpace) + " / ")
-			append(truncateSizeHTML(file.totalSpace) + " ]")
-		}
-		val createdAt = Instant.ofEpochMilli(System.currentTimeMillis())
-			.atZone(ZoneId.systemDefault())
-			.format(DateTimeFormatter.RFC_1123_DATE_TIME)
-		append("$completeCaption$sizeStat [${createdAt}]</caption></tbody></table></body></html>")
+		append(completeCaption)
+		append(trailer)
 	}
 }
