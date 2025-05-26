@@ -32,7 +32,8 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 }
 
 fun writeLabel(label: String) = ByteArrayOutputStream().use {
-	label.split('.').forEach { s ->
+	if (label == ".") it.write(0)
+	else label.split('.').forEach { s ->
 		it.write(s.length)
 		it.writeString(s)
 	}
