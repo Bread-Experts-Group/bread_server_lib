@@ -22,12 +22,12 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): DNSLabel {
 		when ((byte and 0b11000000) shr 6) {
 			0b00 -> name += "${stream.readString(byte)}."
 			0b11 -> {
-				name += readLabel(
+				name += ((readLabel(
 					ByteArrayInputStream(lookbehind).also {
 						it.skip((((byte and 0b00111111) shl 8) or stream.read()).toLong())
 					},
 					lookbehind
-				)
+				)) as DNSLabelLiteral).literal
 				break
 			}
 
