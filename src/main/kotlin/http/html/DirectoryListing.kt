@@ -101,6 +101,7 @@ object DirectoryListing {
 			append("<caption>")
 			append(file.canonicalPath)
 			append(trailer)
+			return@buildString
 		}
 		val itParent = store.parentFile
 		val files = file.listFiles()
