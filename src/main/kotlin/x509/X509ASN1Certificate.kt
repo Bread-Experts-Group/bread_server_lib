@@ -1,6 +1,6 @@
 package org.bread_experts_group.x509
 
-import org.bread_experts_group.asn1.element.*
+import org.bread_experts_group.coder.format.asn1.element.*
 import org.bread_experts_group.jws.JSONWebKey.Companion.to32Bytes
 import java.math.BigInteger
 import java.security.KeyPair

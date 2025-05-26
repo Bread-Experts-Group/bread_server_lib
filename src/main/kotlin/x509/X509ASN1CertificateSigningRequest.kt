@@ -1,6 +1,6 @@
 package org.bread_experts_group.x509
 
-import org.bread_experts_group.asn1.element.*
+import org.bread_experts_group.coder.format.asn1.element.*
 import org.bread_experts_group.jws.JSONWebKey.Companion.to48Bytes
 import org.bread_experts_group.x509.X509ASN1Certificate.Companion.ATTRIBUTE_COMMON_NAME
 import org.bread_experts_group.x509.X509ASN1Certificate.Companion.ECDSA_WITH_SHA_512

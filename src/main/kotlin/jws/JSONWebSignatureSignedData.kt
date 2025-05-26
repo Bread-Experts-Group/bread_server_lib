@@ -1,9 +1,9 @@
 package org.bread_experts_group.jws
 
-import org.bread_experts_group.asn1.ASN1InputStream
-import org.bread_experts_group.asn1.element.ASN1Integer
-import org.bread_experts_group.asn1.element.ASN1Sequence
 import org.bread_experts_group.coder.fixed.json.JSONConvertible
+import org.bread_experts_group.coder.format.asn1.ASN1InputStream
+import org.bread_experts_group.coder.format.asn1.element.ASN1Integer
+import org.bread_experts_group.coder.format.asn1.element.ASN1Sequence
 import org.bread_experts_group.jws.JSONWebKey.Companion.to32Bytes
 import java.io.ByteArrayInputStream
 import java.security.KeyPair

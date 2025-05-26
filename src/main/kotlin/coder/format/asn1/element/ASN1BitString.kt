@@ -1,15 +1,15 @@
-package org.bread_experts_group.asn1.element
+package org.bread_experts_group.coder.format.asn1.element
 
 import java.io.OutputStream
 
-data class ASN1OctetString(
+data class ASN1BitString(
 	val string: ByteArray
-) : ASN1Element(4, byteArrayOf()) {
+) : ASN1Element(3, byteArrayOf()) {
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true
 		if (javaClass != other?.javaClass) return false
 
-		other as ASN1OctetString
+		other as ASN1BitString
 
 		return string.contentEquals(other.string)
 	}
@@ -19,7 +19,8 @@ data class ASN1OctetString(
 	}
 
 	override fun writeExtra(stream: OutputStream) {
-		stream.writeLength(string.size)
+		stream.writeLength(string.size + 1)
+		stream.write(0)
 		stream.write(string)
 	}
 }

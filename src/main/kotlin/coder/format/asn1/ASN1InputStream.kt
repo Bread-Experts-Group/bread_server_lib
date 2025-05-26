@@ -1,7 +1,7 @@
-package org.bread_experts_group.asn1
+package org.bread_experts_group.coder.format.asn1
 
-import org.bread_experts_group.asn1.element.*
 import org.bread_experts_group.coder.format.Parser
+import org.bread_experts_group.coder.format.asn1.element.*
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.math.BigInteger
