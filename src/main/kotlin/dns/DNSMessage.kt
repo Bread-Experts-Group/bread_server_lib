@@ -20,6 +20,7 @@ class DNSMessage private constructor(
 	val authenticData: Boolean,
 	val checkingDisabled: Boolean,
 	val responseCode: DNSResponseCode,
+	val responseCodeRaw: Int,
 	val questions: List<DNSQuestion>,
 	val answers: List<DNSResourceRecord>,
 	val authorityRecords: List<DNSResourceRecord>,
@@ -63,7 +64,7 @@ class DNSMessage private constructor(
 		thirdByte = thirdByte or (opcode.code shl 3)
 		if (reply) thirdByte = thirdByte or 0b10000000
 		stream.write(thirdByte)
-		var fourthByte = responseCode.code
+		var fourthByte = responseCodeRaw
 		if (checkingDisabled) fourthByte = fourthByte or 0b10000
 		if (authenticData) fourthByte = fourthByte or 0b100000
 		if (recursionAvailable) fourthByte = fourthByte or 0b10000000
@@ -89,7 +90,7 @@ class DNSMessage private constructor(
 					if (authenticData) add("AD")
 					if (checkingDisabled) add("CD")
 				}.joinToString(" ")
-			}] ${responseCode.name}" +
+			}] ${responseCode.name} [$responseCodeRaw]" +
 			buildString {
 				for (q in questions) append("\nQST: $q")
 				for (a in answers) append("\nANS: $a")
@@ -106,27 +107,51 @@ class DNSMessage private constructor(
 			questions: List<DNSQuestion>,
 			additionalRecords: List<DNSResourceRecord> = emptyList()
 		) = DNSMessage(
-			transactionID, false, opcode, false, false, null,
-			recursiveQuery, false, false, checkingDisabled, DNSResponseCode.OK,
-			questions, emptyList(), emptyList(), additionalRecords
+			transactionID,
+			reply = false,
+			opcode,
+			authoritative = false,
+			truncated = false,
+			maxLength = null,
+			recursiveQuery = recursiveQuery,
+			recursionAvailable = false,
+			authenticData = false,
+			checkingDisabled = checkingDisabled,
+			responseCode = DNSResponseCode.OK,
+			responseCodeRaw = 0,
+			questions = questions,
+			answers = emptyList(),
+			authorityRecords = emptyList(),
+			additionalRecords = additionalRecords
 		)
 
 		fun reply(
-			transactionID: Int,
+			to: DNSMessage,
 			maxLength: Int? = null,
-			opcode: DNSOpcode,
 			authoritative: Boolean,
 			authenticData: Boolean,
 			recursionAvailable: Boolean,
 			responseCode: DNSResponseCode,
-			questions: List<DNSQuestion>,
 			answers: List<DNSResourceRecord>,
 			authorityRecords: List<DNSResourceRecord> = emptyList(),
 			additionalRecords: List<DNSResourceRecord> = emptyList()
 		) = DNSMessage(
-			transactionID, true, opcode, authoritative, false, maxLength,
-			false, recursionAvailable, authenticData, false, responseCode,
-			questions, answers, authorityRecords, additionalRecords
+			to.transactionID,
+			true,
+			to.opcode,
+			authoritative,
+			false,
+			maxLength,
+			to.recursiveQuery,
+			recursionAvailable,
+			authenticData,
+			to.checkingDisabled,
+			responseCode,
+			responseCode.code,
+			to.questions,
+			answers,
+			authorityRecords,
+			additionalRecords
 		)
 
 		fun read(stream: InputStream): DNSMessage {
@@ -156,6 +181,7 @@ class DNSMessage private constructor(
 				(flags and 0b0000000000100000) > 0,
 				(flags and 0b0000000000010000) > 0,
 				DNSResponseCode.mapping[flags and 0b0000000000001111] ?: DNSResponseCode.OTHER,
+				flags and 0b0000000000001111,
 				List(questions) {
 					DNSQuestion.read(lookbehindRead, lookbehind.toByteArray())
 				},
