@@ -6,13 +6,19 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
-fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
+interface DNSLabel
+class DNSExtendedLabel(val type: Int) : DNSLabel
+class DNSLabelLiteral(literal: String) : DNSLabel {
+	val literal = if (literal.endsWith('.')) literal else "$literal."
+}
+
+fun readLabel(stream: InputStream, lookbehind: ByteArray): DNSLabel {
 	var name = ""
 	var byte = stream.read()
 	while (byte > 0) {
-		when (byte and 0b11000000) {
-			0b00000000 -> name += "${stream.readString(byte)}."
-			0b11000000 -> {
+		when ((byte and 0b11000000) shr 6) {
+			0b00 -> name += "${stream.readString(byte)}."
+			0b11 -> {
 				name += readLabel(
 					ByteArrayInputStream(lookbehind).also {
 						it.skip((((byte and 0b00111111) shl 8) or stream.read()).toLong())
@@ -22,13 +28,12 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): String {
 				break
 			}
 
-			else -> throw UnsupportedOperationException(
-				(byte shr 6).toString(2).padStart(2, '0')
-			)
+			0b01 -> return DNSExtendedLabel(byte and 0b00111111)
+			0b10 -> throw UnsupportedOperationException("Unallocated label type used!")
 		}
 		byte = stream.read()
 	}
-	return name
+	return DNSLabelLiteral(name)
 }
 
 fun writeLabel(label: String) = ByteArrayOutputStream().use {

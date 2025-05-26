@@ -8,16 +8,14 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class DNSQuestion(
-	name: String,
+	val name: DNSLabel,
 	val qType: DNSType,
 	val qClass: DNSClass
 ) {
-	val name: String = if (name.endsWith('.')) name else "$name."
-
 	fun write(parent: DNSMessage, stream: OutputStream) {
 		if (parent.truncated) return
 		val data = ByteArrayOutputStream().use {
-			name.split('.').forEach { s ->
+			(name as DNSLabelLiteral).literal.split('.').forEach { s ->
 				it.write(s.length)
 				it.writeString(s)
 			}
