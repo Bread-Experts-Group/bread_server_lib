@@ -57,11 +57,14 @@ object DirectoryListing {
 	}
 
 	val base64Encoder: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
-	fun getDirectoryListingHTML(store: File, file: File): CachedList {
+	fun getDirectoryListingHTML(
+		store: File, file: File,
+		locale: Locale = Locale.getDefault()
+	): CachedList {
 		logger.finer { "Getting directory listing for $file, store: $store" }
 		val cache = directoryListingCache[file]
 		if (cache != null) return cache
-		val computed = computeDirectoryListingHTML(store, file)
+		val computed = computeDirectoryListingHTML(store, file, locale)
 		val watchKey = file.toPath().register(
 			watcher,
 			StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE,
@@ -86,7 +89,7 @@ object DirectoryListing {
 
 	fun computeDirectoryListingHTML(
 		store: File, file: File,
-		locale: Locale = Locale.getDefault(),
+		locale: Locale = Locale.getDefault()
 	): String = buildString {
 		logger.finer { "Computing directory listing for $file, store: $store" }
 		append("<!doctype html><html><head><link rel=\"stylesheet\" href=\"/$directoryListingFile\"></head><body>")

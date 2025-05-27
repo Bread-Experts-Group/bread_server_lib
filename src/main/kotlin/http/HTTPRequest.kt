@@ -37,6 +37,10 @@ class HTTPRequest private constructor(
 					if (raw.isEmpty()) break
 					var (name, value) = raw.split(':', ignoreCase = true, limit = 2)
 					if (value[0] == ' ') value = value.substring(1)
+					name = name
+						.lowercase()
+						.split('-')
+						.joinToString("-") { it.replaceFirstChar { ch -> ch.uppercaseChar() } }
 					this[name] = value
 				}
 			}
