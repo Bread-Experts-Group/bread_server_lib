@@ -2,7 +2,7 @@ package org.bread_experts_group.resource
 
 import java.util.*
 
-class DirectoryListingResource_en_US : ListResourceBundle() {
+class DirectoryListingResource : ListResourceBundle() {
 	override fun getContents(): Array<out Array<out Any>> = arrayOf(
 		arrayOf("files", "Files"),
 		arrayOf("name", "Name"),
