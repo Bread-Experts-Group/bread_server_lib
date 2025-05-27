@@ -28,6 +28,22 @@ class HTTPResponse(
 		it["Content-Length"] = dataLength.toString()
 		it["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 		it["Alt-Svc"] = "http/1.1=\":443\""
+		// Defaults
+		it["X-Frame-Options"] = "DENY"
+		it["X-Content-Type-Options"] = "nosniff"
+		it["Referrer-Policy"] = "strict-origin-when-cross-origin"
+		it["Permissions-Policy"] = "bluetooth=(), ambient-light-sensor=(), attribution-reporting=(), accelerometer=()" +
+				", autoplay=(self), browsing-topics=(), camera=(), compute-pressure=(), cross-origin-isolated=()" +
+				", deferred-fetch=(), deferred-fetch-minimal=(), display-capture=(), encrypted-media=()" +
+				", fullscreen=(), geolocation=(), gyroscope=(), hid=(), identity-credentials-get=()" +
+				", idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), otp-credentials=()" +
+				", payment=(), picture-in-picture=(self), publickey-credentials-create=()" +
+				", publickey-credentials-get=(), screen-wake-lock=(), serial=(), storage-access=(), summarizer=()" +
+				", usb=(), web-share=(), window-management=(), xr-spatial-tracking=()"
+		it["Content-Security-Policy"] = "default-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
+		it["Cross-Origin-Embedder-Policy"] = "require-corp"
+		it["Cross-Origin-Resource-Policy"] = "same-origin"
+		it["Cross-Origin-Opener-Policy"] = "same-origin"
 	}
 
 	override fun toString(): String = "($version, <Res>) $code [HEAD#: ${headers.size}]" + buildString {

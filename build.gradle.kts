@@ -12,12 +12,14 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.13.0"
+version = "2.14.0"
 
 repositories {
 	mavenCentral()
 }
-
+dependencies {
+	testImplementation(kotlin("test"))
+}
 tasks.test {
 	useJUnitPlatform()
 }
