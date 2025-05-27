@@ -19,7 +19,7 @@ import kotlin.random.Random
 object DirectoryListing {
 	private val logger = ColoredLogger.newLogger("HTML Directory Listing")
 	private val watcher = FileSystems.getDefault().newWatchService()
-	private val directoryListingCache = mutableMapOf<File, CachedList>()
+	private val directoryListingCache = mutableMapOf<File, MutableMap<Locale, CachedList>>()
 	private val reverseCache = mutableMapOf<WatchKey, File>()
 	private val hasher = MessageDigest.getInstance("MD5")
 
@@ -66,7 +66,7 @@ object DirectoryListing {
 		locale: Locale = Locale.getDefault()
 	): CachedList {
 		logger.finer { "Getting directory listing for $file, store: $store" }
-		val cache = directoryListingCache[file]
+		val cache = directoryListingCache[file]?.get(locale)
 		if (cache != null) return cache
 		val computed = computeDirectoryListingHTML(store, file, locale)
 		val watchKey = file.toPath().register(
@@ -78,7 +78,7 @@ object DirectoryListing {
 			computed,
 			base64Encoder.encodeToString(hasher.digest(computed.encodeToByteArray()))
 		)
-		directoryListingCache[file] = cachedList
+		directoryListingCache.getOrPut(file) { mutableMapOf() }[locale] = cachedList
 		reverseCache[watchKey] = file
 		return cachedList
 	}
