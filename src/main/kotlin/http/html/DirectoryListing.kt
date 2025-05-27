@@ -8,7 +8,11 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
+import java.time.chrono.Chronology
 import java.time.format.DateTimeFormatter
+import java.time.format.DecimalStyle
+import java.time.format.FormatStyle
+import java.time.format.ResolverStyle
 import java.util.*
 import kotlin.random.Random
 
@@ -92,6 +96,13 @@ object DirectoryListing {
 		locale: Locale = Locale.getDefault()
 	): String = buildString {
 		logger.finer { "Computing directory listing for $file, store: $store" }
+		val dateTimeFormatter = DateTimeFormatter
+			.ofLocalizedDateTime(FormatStyle.FULL)
+			.withLocale(locale)
+			.withZone(ZoneId.systemDefault())
+			.withChronology(Chronology.ofLocale(locale))
+			.withDecimalStyle(DecimalStyle.of(locale))
+			.withResolverStyle(ResolverStyle.SMART)
 		append("<!doctype html><html><head><link rel=\"stylesheet\" href=\"/$directoryListingFile\"></head><body>")
 		append("<table><thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
 		val trailer = run {
@@ -103,7 +114,7 @@ object DirectoryListing {
 			}
 			val createdAt = Instant.ofEpochMilli(System.currentTimeMillis())
 				.atZone(ZoneId.systemDefault())
-				.format(DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(locale))
+				.format(dateTimeFormatter)
 			"$sizeStat [${createdAt}]</caption></tbody></table></body></html>"
 		}
 		if (!file.canonicalPath.startsWith(store.canonicalPath)) {
@@ -171,7 +182,7 @@ object DirectoryListing {
 					}
 					val mod = Instant.ofEpochMilli(it.lastModified())
 						.atZone(ZoneId.systemDefault())
-						.format(DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(locale))
+						.format(dateTimeFormatter)
 					append("<td>$mod</td></tr>")
 				}
 			} else append("<tr><td>Folder empty</td><td>-1</td><td>-1</td></tr>")
