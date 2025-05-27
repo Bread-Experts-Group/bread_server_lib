@@ -95,7 +95,10 @@ object DirectoryListing {
 		store: File, file: File,
 		locale: Locale = Locale.getDefault()
 	): String = buildString {
-		val bundle = ResourceBundle.getBundle("org.bread_experts_group.resource.DirectoryListingResource")
+		val bundle = ResourceBundle.getBundle(
+			"org.bread_experts_group.resource.DirectoryListingResource",
+			locale
+		)
 		logger.finer { "Computing directory listing for $file, store: $store" }
 		val dateTimeFormatter = DateTimeFormatter
 			.ofLocalizedDateTime(FormatStyle.FULL)
