@@ -57,7 +57,6 @@ object DirectoryListing {
 	}
 
 	val base64Encoder: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
-	var css: String = ""
 	fun getDirectoryListingHTML(store: File, file: File): CachedList {
 		logger.finer { "Getting directory listing for $file, store: $store" }
 		val cache = directoryListingCache[file]
@@ -77,11 +76,13 @@ object DirectoryListing {
 		return cachedList
 	}
 
-	val directoryListingStyle = buildString {
-		append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
-		append("[title]{text-decoration:underline dotted}table{width:100%}")
-	}
-	val directoryListingFile = base64Encoder.encodeToString(Random.nextBytes(16)) + ".css"
+	var css: String = ""
+	val directoryListingStyle: String
+		get() = buildString {
+			append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
+			append("[title]{text-decoration:underline dotted}table{width:100%}")
+		}
+	val directoryListingFile = base64Encoder.encodeToString(Random.nextBytes(32)) + ".css"
 
 	fun computeDirectoryListingHTML(store: File, file: File): String = buildString {
 		logger.finer { "Computing directory listing for $file, store: $store" }
