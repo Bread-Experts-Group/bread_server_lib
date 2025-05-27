@@ -116,7 +116,5 @@ object BuildInfo {
 sourceSets["main"].kotlin.srcDir(generatedDir)
 tasks.dokkaGeneratePublicationJavadoc { dependsOn(generateBuildInfo) }
 tasks.kotlinSourcesJar { dependsOn(generateBuildInfo) }
-tasks.compileKotlin {
-	dependsOn(generateBuildInfo)
-	dependsOn(tasks.test)
-}
+tasks.compileKotlin { dependsOn(generateBuildInfo) }
+tasks.publish { dependsOn(tasks.test) }
