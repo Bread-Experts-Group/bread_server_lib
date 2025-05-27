@@ -33,7 +33,7 @@ class HTTPResponse(
 		it.putIfAbsent("X-Content-Type-Options", "nosniff")
 		it.putIfAbsent("Referrer-Policy", "strict-origin-when-cross-origin")
 		it.putIfAbsent(
-			"Permissions-Policy", "bluetooth=(), ambient-light-sensor=(), attribution-reporting=(), " +
+			"Permissions-Policy", "bluetooth=(), ambient-light-sensor=(), attribution-reporting=()" +
 					", autoplay=(self), browsing-topics=(), camera=(), compute-pressure=(), cross-origin-isolated=()" +
 					", deferred-fetch=(), deferred-fetch-minimal=(), display-capture=(), encrypted-media=()" +
 					", fullscreen=(), geolocation=(), gyroscope=(), hid=(), identity-credentials-get=()" +
