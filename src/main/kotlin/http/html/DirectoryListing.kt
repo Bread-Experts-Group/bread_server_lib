@@ -79,7 +79,7 @@ object DirectoryListing {
 
 	val directoryListingStyle = buildString {
 		append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
-		append("[title]{text-decoration:underline dotted};table{width:100%}")
+		append("[title]{text-decoration:underline dotted}table{width:100%}")
 	}
 	val directoryListingFile = base64Encoder.encodeToString(Random.nextBytes(16)) + ".css"
 
