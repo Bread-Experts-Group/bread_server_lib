@@ -12,7 +12,7 @@ class DirectoryListingResourceTest {
 	@Test
 	fun getContents() {
 		val bundleEnUs = ResourceBundle.getBundle(name, Locale.of("en", "US"))
-		val bundleJaJp = ResourceBundle.getBundle(name, Locale.of("jp", "JA"))
+		val bundleJaJp = ResourceBundle.getBundle(name, Locale.of("ja", "JP"))
 		fun ResourceBundle.checkBundle(forStr: String) {
 			assert(this.containsKey(forStr)) { "${this.locale} is missing translation key \"$forStr\"" }
 			assertEquals(this.keySet().size, bundleEnUs.keySet().size, "${this.locale} key mismatch!")
