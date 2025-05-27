@@ -9,8 +9,8 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
+import java.util.*
+import kotlin.random.Random
 
 object DirectoryListing {
 	private val logger = ColoredLogger.newLogger("HTML Directory Listing")
@@ -56,9 +56,8 @@ object DirectoryListing {
 		}
 	}
 
+	val base64Encoder: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
 	var css: String = ""
-
-	@OptIn(ExperimentalEncodingApi::class)
 	fun getDirectoryListingHTML(store: File, file: File): CachedList {
 		logger.finer { "Getting directory listing for $file, store: $store" }
 		val cache = directoryListingCache[file]
@@ -71,19 +70,23 @@ object DirectoryListing {
 		)
 		val cachedList = CachedList(
 			computed,
-			Base64.encode(hasher.digest(computed.encodeToByteArray()))
+			base64Encoder.encodeToString(hasher.digest(computed.encodeToByteArray()))
 		)
 		directoryListingCache[file] = cachedList
 		reverseCache[watchKey] = file
 		return cachedList
 	}
 
+	val directoryListingStyle = buildString {
+		append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
+		append("[title]{text-decoration:underline dotted};table{width:100%}")
+	}
+	val directoryListingFile = base64Encoder.encodeToString(Random.nextBytes(16)) + ".css"
+
 	fun computeDirectoryListingHTML(store: File, file: File): String = buildString {
 		logger.finer { "Computing directory listing for $file, store: $store" }
-		append("<!doctype html><html><head><style>")
-		append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
-		append("[title]{text-decoration:underline dotted}</style></head><body><table style=\"width:100%\">")
-		append("<thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
+		append("<!doctype html><html><head><link rel=\"stylesheet\" href=\"/$directoryListingFile\"></head><body>")
+		append("<table><thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
 		val trailer = run {
 			val sizeStat = buildString {
 				append(" [ ")
