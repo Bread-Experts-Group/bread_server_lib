@@ -23,12 +23,16 @@ fun KeyManagerFactory.getTLSContext(): SSLContext = SSLContext
 	.also { it.init(this.keyManagers, null, null) }
 
 fun SSLContext.getServerSocket() =
-	((this.serverSocketFactory as SSLServerSocketFactory).createServerSocket() as SSLServerSocket)
-		.also { it.enabledCipherSuites = goodSchemes }
+	((this.serverSocketFactory as SSLServerSocketFactory).createServerSocket() as SSLServerSocket).also {
+		it.enabledCipherSuites = goodSchemes
+		it.enabledProtocols = allowedProtocols
+	}
 
 fun SSLContext.getSocket() =
-	((this.socketFactory as SSLSocketFactory).createSocket() as SSLSocket)
-		.also { it.enabledCipherSuites = goodSchemes }
+	((this.socketFactory as SSLSocketFactory).createSocket() as SSLSocket).also {
+		it.enabledCipherSuites = goodSchemes
+		it.enabledProtocols = allowedProtocols
+	}
 
 fun getTLSContext(keystorePath: File, password: String): SSLContext {
 	val keystore = getKeyStoreFromPath(keystorePath, password)
@@ -42,11 +46,12 @@ val goodSchemes = arrayOf(
 	// TLS 1.2
 	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
 )
+val allowedProtocols = arrayOf(
+	"TLSv1.3", "TLSv1.2"
+)
 
 fun getSSLServerSocket(keystorePath: File, password: String): SSLServerSocket = getTLSContext(keystorePath, password)
 	.getServerSocket()
-	.also { it.enabledCipherSuites = goodSchemes }
 
 fun getSSLSocket(keystorePath: File, password: String): SSLSocket = getTLSContext(keystorePath, password)
 	.getSocket()
-	.also { it.enabledCipherSuites = goodSchemes }
