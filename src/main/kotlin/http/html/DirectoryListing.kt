@@ -95,6 +95,7 @@ object DirectoryListing {
 		store: File, file: File,
 		locale: Locale = Locale.getDefault()
 	): String = buildString {
+		val bundle = ResourceBundle.getBundle("org.bread_experts_group.resource.DirectoryListingResource")
 		logger.finer { "Computing directory listing for $file, store: $store" }
 		val dateTimeFormatter = DateTimeFormatter
 			.ofLocalizedDateTime(FormatStyle.FULL)
@@ -104,7 +105,8 @@ object DirectoryListing {
 			.withDecimalStyle(DecimalStyle.of(locale))
 			.withResolverStyle(ResolverStyle.SMART)
 		append("<!doctype html><html><head><link rel=\"stylesheet\" href=\"/$directoryListingFile\"></head><body>")
-		append("<table><thead><th>Name</th><th>Size</th><th>Last Modified</th></thead><tbody>")
+		append("<table><thead><th>${bundle.getString("name")}</th><th>${bundle.getString("size")}")
+		append("</th><th>${bundle.getString("last_modification")}</th></thead><tbody>")
 		val trailer = run {
 			val sizeStat = buildString {
 				append(" [ ")
@@ -118,7 +120,7 @@ object DirectoryListing {
 			"$sizeStat [${createdAt}]</caption></tbody></table></body></html>"
 		}
 		if (!file.canonicalPath.startsWith(store.canonicalPath)) {
-			append("<tr><td>Outside of store</tr></tbody>")
+			append("<tr><td>${bundle.getString("outside_of_store")}</tr></tbody>")
 			append("<caption>")
 			append(file.canonicalPath)
 			append(trailer)
@@ -161,15 +163,17 @@ object DirectoryListing {
 							}
 						})
 						if (it.canRead()) append("<tr><td><a href=\"${it.name}/\">${it.name}</a>/</td>")
-						else append("<tr><td><u title=\"Unreadable\">${it.name}</u>/</td>")
+						else append("<tr><td><u title=\"${bundle.getString("unreadable")}\">${it.name}</u>/</td>")
 						append("<td>${truncateSizeHTML(calculatedSize)} [")
-						val fileCount = if (files > 0) "$files files" else "empty"
+						val fileCount =
+							if (files > 0) "$files ${bundle.getString("files").lowercase()}"
+							else bundle.getString("empty").lowercase()
 						if (errored + unreadable > 0) {
 							append("<u title=\"")
 							append(
 								buildList {
-									if (errored > 0) add("$errored tree errors")
-									if (unreadable > 0) add("$unreadable unreadable")
+									if (errored > 0) add("$errored ${bundle.getString("tree_errors").lowercase()}")
+									if (unreadable > 0) add("$unreadable ${bundle.getString("unreadable").lowercase()}")
 								}.joinToString(", ")
 							)
 							append("\">$fileCount</u>")
@@ -177,7 +181,7 @@ object DirectoryListing {
 						append("]</td>")
 					} else {
 						if (it.canRead()) append("<tr><td><a href=\"${it.name}\">${it.name}</a></td>")
-						else append("<tr><td><u title=\"Unreadable\">${it.name}</u></td>")
+						else append("<tr><td><u title=\"${bundle.getString("unreadable")}\">${it.name}</u></td>")
 						append("<td>${truncateSizeHTML(it.length())}</td>")
 					}
 					val mod = Instant.ofEpochMilli(it.lastModified())
@@ -185,8 +189,8 @@ object DirectoryListing {
 						.format(dateTimeFormatter)
 					append("<td>$mod</td></tr>")
 				}
-			} else append("<tr><td>Folder empty</td><td>-1</td><td>-1</td></tr>")
-		} else append("<tr><td>Folder not accessible</td><td>-1</td><td>-1</td></tr>")
+			} else append("<tr><td>${bundle.getString("folder_empty")}</td><td>-1</td><td>-1</td></tr>")
+		} else append("<tr><td>${bundle.getString("folder_inaccessible")}</td><td>-1</td><td>-1</td></tr>")
 		append("<caption>")
 		append(itParent.invariantSeparatorsPath + '/')
 		val accessible = file.invariantSeparatorsPath
