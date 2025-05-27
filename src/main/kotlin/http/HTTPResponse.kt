@@ -16,7 +16,7 @@ class HTTPResponse(
 ) : Writable {
 	val headers = headers.toMutableMap().also {
 		disallowedHeaders.forEach { h ->
-			if (it.contains(h)) throw IllegalArgumentException("Do not set $h header")
+			if (it.contains(h)) throw IllegalArgumentException("Do not set $h header!")
 		}
 		it["Server"] = "BEG-BSL"
 		it["Date"] = DateTimeFormatter.RFC_1123_DATE_TIME.format(
@@ -29,21 +29,26 @@ class HTTPResponse(
 		it["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 		it["Alt-Svc"] = "http/1.1=\":443\""
 		// Defaults
-		it["X-Frame-Options"] = "DENY"
-		it["X-Content-Type-Options"] = "nosniff"
-		it["Referrer-Policy"] = "strict-origin-when-cross-origin"
-		it["Permissions-Policy"] = "bluetooth=(), ambient-light-sensor=(), attribution-reporting=(), accelerometer=()" +
-				", autoplay=(self), browsing-topics=(), camera=(), compute-pressure=(), cross-origin-isolated=()" +
-				", deferred-fetch=(), deferred-fetch-minimal=(), display-capture=(), encrypted-media=()" +
-				", fullscreen=(), geolocation=(), gyroscope=(), hid=(), identity-credentials-get=()" +
-				", idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), otp-credentials=()" +
-				", payment=(), picture-in-picture=(self), publickey-credentials-create=()" +
-				", publickey-credentials-get=(), screen-wake-lock=(), serial=(), storage-access=(), summarizer=()" +
-				", usb=(), web-share=(), window-management=(), xr-spatial-tracking=()"
-		it["Content-Security-Policy"] = "default-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
-		it["Cross-Origin-Embedder-Policy"] = "require-corp"
-		it["Cross-Origin-Resource-Policy"] = "same-origin"
-		it["Cross-Origin-Opener-Policy"] = "same-origin"
+		it.putIfAbsent("X-Frame-Options", "DENY")
+		it.putIfAbsent("X-Content-Type-Options", "nosniff")
+		it.putIfAbsent("Referrer-Policy", "strict-origin-when-cross-origin")
+		it.putIfAbsent(
+			"Permissions-Policy", "bluetooth=(), ambient-light-sensor=(), attribution-reporting=(), " +
+					", autoplay=(self), browsing-topics=(), camera=(), compute-pressure=(), cross-origin-isolated=()" +
+					", deferred-fetch=(), deferred-fetch-minimal=(), display-capture=(), encrypted-media=()" +
+					", fullscreen=(), geolocation=(), gyroscope=(), hid=(), identity-credentials-get=()" +
+					", idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), otp-credentials=()" +
+					", payment=(), picture-in-picture=(self), publickey-credentials-create=()" +
+					", publickey-credentials-get=(), screen-wake-lock=(), serial=(), storage-access=(), summarizer=()" +
+					", usb=(), web-share=(), window-management=(), xr-spatial-tracking=(), accelerometer=()"
+		)
+		it.putIfAbsent(
+			"Content-Security-Policy",
+			"default-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
+		)
+		it.putIfAbsent("Cross-Origin-Embedder-Policy", "require-corp")
+		it.putIfAbsent("Cross-Origin-Resource-Policy", "same-origin")
+		it.putIfAbsent("Cross-Origin-Opener-Policy", "same-origin")
 	}
 
 	override fun toString(): String = "($version, <Res>) $code [HEAD#: ${headers.size}]" + buildString {
