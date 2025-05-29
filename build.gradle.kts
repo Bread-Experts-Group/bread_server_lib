@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.20.5"
+version = "2.22.2"
 
 repositories {
 	mavenCentral()
@@ -72,7 +72,7 @@ publishing {
 	}
 	repositories {
 		maven {
-			url = uri("https://maven.javart.zip/")
+			url = uri("https://107-132-83-172.lightspeed.snantx.sbcglobal.net/")
 			credentials {
 				username = localProperties["mavenUser"] as String
 				password = localProperties["mavenPassword"] as String
@@ -115,6 +115,9 @@ object BuildInfo {
 
 sourceSets["main"].kotlin.srcDir(generatedDir)
 tasks.dokkaGeneratePublicationJavadoc { dependsOn(generateBuildInfo) }
-tasks.kotlinSourcesJar { dependsOn(generateBuildInfo) }
+tasks.kotlinSourcesJar {
+	dependsOn(generateBuildInfo)
+	dependsOn(tasks.compileJava)
+}
 tasks.compileKotlin { dependsOn(generateBuildInfo) }
 tasks.publish { dependsOn(tasks.test) }

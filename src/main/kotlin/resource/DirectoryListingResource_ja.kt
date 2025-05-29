@@ -5,6 +5,8 @@ import java.util.*
 class DirectoryListingResource_ja : ListResourceBundle() {
 	override fun getContents(): Array<out Array<out Any>> = arrayOf(
 		arrayOf("files", "ファイル"),
+		arrayOf("folders", "フォルダ"),
+		arrayOf("loops", "ループ"),
 		arrayOf("name", "名前"),
 		arrayOf("size", "サイズ"),
 		arrayOf("last_modification", "最終更新"),
@@ -13,6 +15,7 @@ class DirectoryListingResource_ja : ListResourceBundle() {
 		arrayOf("tree_errors", "木構造のエラー"),
 		arrayOf("folder_empty", "空のフォルダ"),
 		arrayOf("folder_inaccessible", "アクセスできないフォルダ"),
-		arrayOf("outside_of_store", "仮想ルートディレクトリ外")
+		arrayOf("outside_of_store", "仮想ルートディレクトリ外"),
+		arrayOf("this_is_symlink", "シンボリックリンクです"),
 	)
 }

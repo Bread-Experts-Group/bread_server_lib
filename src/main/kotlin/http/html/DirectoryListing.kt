@@ -14,6 +14,7 @@ import java.time.format.DecimalStyle
 import java.time.format.FormatStyle
 import java.time.format.ResolverStyle
 import java.util.*
+import kotlin.io.path.*
 import kotlin.random.Random
 
 object DirectoryListing {
@@ -86,8 +87,9 @@ object DirectoryListing {
 	var css: String = ""
 	val directoryListingStyle: String
 		get() = buildString {
-			append("*{font-family:\"Lucida Console\",monospace;text-align:left;$css}")
-			append("[title]{text-decoration:underline dotted}table{width:100%}")
+			append("*{font-family:monospace;text-align:left;$css}")
+			append(".dotted{text-decoration:underline dotted}table{width:100%}")
+			append(".symlink{background-color:#FFFF0055}")
 		}
 	val directoryListingFile = base64Encoder.encodeToString(Random.nextBytes(32)) + ".css"
 
@@ -129,65 +131,102 @@ object DirectoryListing {
 			append(trailer)
 			return@buildString
 		}
-		val itParent = store.parentFile
+		val storeParent = store.parentFile
 		val files = file.listFiles()
 		if (files != null) {
 			if (files.isNotEmpty()) {
 				files.sortByDescending { it.lastModified() }
 				files.sortByDescending { it.isDirectory }
-				files.forEach {
-					if (it.isDirectory) {
+				files.forEach { file ->
+					val thisPath = file.toPath()
+					val (classes, title) = run {
+						val titles = mutableListOf<String>()
+						val classes = mutableListOf<String>()
+						if (!Files.isReadable(thisPath)) {
+							classes.add("dotted")
+							titles.add(bundle.getString("unreadable"))
+						}
+						if (Files.isSymbolicLink(thisPath)) {
+							classes.add("symlink")
+							titles.add(bundle.getString("this_is_symlink"))
+						}
+						(if (classes.isNotEmpty()) "class=\"${classes.joinToString(" ")}\"" else "") to
+								(if (titles.isNotEmpty()) "title=\"${titles.joinToString(", ")}\"" else "")
+					}
+					if (thisPath.isDirectory()) {
 						var errored = 0
 						var unreadable = 0
 						var calculatedSize = 0L
 						var files = 0
-						Files.walkFileTree(it.toPath(), object : SimpleFileVisitor<Path>() {
-							override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
-								errored++
-								return FileVisitResult.SKIP_SUBTREE
-							}
-
-							override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-								files++
-								calculatedSize += file.toFile().length()
-								return FileVisitResult.CONTINUE
-							}
-
-							override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
-								if (!dir.toFile().canRead()) {
-									unreadable++
+						var loops = 0
+						var directories = 0
+						Files.walkFileTree(
+							thisPath,
+							setOf(FileVisitOption.FOLLOW_LINKS),
+							Int.MAX_VALUE,
+							object : FileVisitor<Path> {
+								override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+									when (exc) {
+										is FileSystemLoopException -> loops++
+										is AccessDeniedException -> unreadable++
+										else -> {
+											errored++
+											logger.warning { "Support needed for [${exc::class.java.canonicalName}]!" }
+										}
+									}
 									return FileVisitResult.SKIP_SUBTREE
 								}
-								return FileVisitResult.CONTINUE
-							}
 
-							override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
-								return FileVisitResult.CONTINUE
+								override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+									files++
+									calculatedSize += file.fileSize()
+									return FileVisitResult.CONTINUE
+								}
+
+								override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
+									if (!dir.isReadable()) {
+										unreadable++
+										return FileVisitResult.SKIP_SUBTREE
+									}
+									return FileVisitResult.CONTINUE
+								}
+
+								override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
+									if (thisPath != dir) directories++
+									return FileVisitResult.CONTINUE
+								}
 							}
-						})
-						if (it.canRead()) append("<tr><td><a href=\"${it.name}/\">${it.name}</a>/</td>")
-						else append("<tr><td><u title=\"${bundle.getString("unreadable")}\">${it.name}</u>/</td>")
+						)
+						if (thisPath.isReadable())
+							append("<tr><td><a $classes $title href=\"${thisPath.name}/\">${thisPath.name}</a>/</td>")
+						else append("<tr><td><u $classes $title>${thisPath.name}</u>/</td>")
 						append("<td>${truncateSizeHTML(calculatedSize)} [")
-						val fileCount =
-							if (files > 0) "$files ${bundle.getString("files").lowercase()}"
-							else bundle.getString("empty").lowercase()
-						if (errored + unreadable > 0) {
-							append("<u title=\"")
+						val entryCount = if (files + directories > 0) buildList {
+							if (files > 0) add("$files ${bundle.getString("files").lowercase()}")
+							if (directories > 0) add("$directories ${bundle.getString("folders").lowercase()}")
+						}.joinToString(", ") else bundle.getString("empty").lowercase()
+						if (errored + unreadable + loops > 0) {
+							append("<u class=\"dotted\" title=\"")
 							append(
 								buildList {
-									if (errored > 0) add("$errored ${bundle.getString("tree_errors").lowercase()}")
-									if (unreadable > 0) add("$unreadable ${bundle.getString("unreadable").lowercase()}")
+									if (errored > 0)
+										add("$errored ${bundle.getString("tree_errors").lowercase()}")
+									if (unreadable > 0)
+										add("$unreadable ${bundle.getString("unreadable").lowercase()}")
+									if (loops > 0)
+										add("$loops ${bundle.getString("loops").lowercase()}")
 								}.joinToString(", ")
 							)
-							append("\">$fileCount</u>")
-						} else append(fileCount)
+							append("\">$entryCount</u>")
+						} else append(entryCount)
 						append("]</td>")
 					} else {
-						if (it.canRead()) append("<tr><td><a href=\"${it.name}\">${it.name}</a></td>")
-						else append("<tr><td><u title=\"${bundle.getString("unreadable")}\">${it.name}</u></td>")
-						append("<td>${truncateSizeHTML(it.length())}</td>")
+						if (thisPath.isReadable())
+							append("<tr><td><a $classes $title href=\"${thisPath.name}\">${thisPath.name}</a>")
+						else append("<tr><td><u $classes $title>${thisPath.name}</u>")
+						append("</td><td>${truncateSizeHTML(thisPath.fileSize())}</td>")
 					}
-					val mod = Instant.ofEpochMilli(it.lastModified())
+					val mod = Instant.ofEpochMilli(thisPath.getLastModifiedTime().toMillis())
 						.atZone(ZoneId.systemDefault())
 						.format(dateTimeFormatter)
 					append("<td>$mod</td></tr>")
@@ -195,16 +234,28 @@ object DirectoryListing {
 			} else append("<tr><td>${bundle.getString("folder_empty")}</td><td>-1</td><td>-1</td></tr>")
 		} else append("<tr><td>${bundle.getString("folder_inaccessible")}</td><td>-1</td><td>-1</td></tr>")
 		append("<caption>")
-		append(itParent.invariantSeparatorsPath + '/')
-		val accessible = file.invariantSeparatorsPath
-			.substring(itParent.invariantSeparatorsPath.length + 1)
+		val parentInvariantPath = "${storeParent.invariantSeparatorsPath}/"
+		append(parentInvariantPath)
+		val accessible = file.invariantSeparatorsPath.substring(parentInvariantPath.length)
 		var completeCaption = ""
 		var backReferences = ""
-		accessible.split('/').reversed().forEachIndexed { index, it ->
-			completeCaption =
-				if (index == 0) it
-				else "<a href=\"$backReferences\">$it</a>/$completeCaption"
-			backReferences += "../"
+		accessible.split('/').also {
+			val markerList = buildList {
+				var localPath = storeParent.toPath()
+				it.forEach { path ->
+					localPath = localPath.resolve(path)
+					if (localPath.isSymbolicLink())
+						add(" class=\"symlink\" title=\"${bundle.getString("this_is_symlink")}\"")
+					else add("")
+				}
+			}
+			it.asReversed().forEachIndexed { index, path ->
+				val marker = markerList[it.size - index - 1]
+				completeCaption =
+					if (index == 0) "<span$marker>$path</span>"
+					else "<a$marker href=\"$backReferences\">$path</a>/$completeCaption"
+				backReferences += "../"
+			}
 		}
 		append(completeCaption)
 		append(trailer)
