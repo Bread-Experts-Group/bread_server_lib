@@ -16,8 +16,8 @@ fun InputStream.read24ui() = this.read24u().toInt()
 fun InputStream.read32() = (this.read24() shl 8) or this.read()
 fun InputStream.read32u() = this.read32().toUInt()
 fun InputStream.read32ul() = this.read32u().toLong()
-fun InputStream.read64() = (this.read32().toLong() shl 32) or this.read32().toLong()
-fun InputStream.read64u() = this.read64().toULong()
+fun InputStream.read64() = this.read64u().toLong()
+fun InputStream.read64u() = ((this.read32().toULong() shl 32) or this.read32u().toULong())
 fun InputStream.readInet4(): Inet4Address = Inet4Address.getByAddress(this.readNBytes(4)) as Inet4Address
 fun InputStream.readInet6(): Inet6Address = Inet6Address.getByAddress(this.readNBytes(16)) as Inet6Address
 fun InputStream.readString(n: Int, c: Charset = Charsets.UTF_8): String = this.readNBytes(n).toString(c)
