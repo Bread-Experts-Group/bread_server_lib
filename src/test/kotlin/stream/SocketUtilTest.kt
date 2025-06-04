@@ -1,11 +1,9 @@
 package stream
 
-import org.bread_experts_group.stream.read16
-import org.bread_experts_group.stream.read24
-import org.bread_experts_group.stream.read32
-import org.bread_experts_group.stream.read64
+import org.bread_experts_group.stream.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayOutputStream
 
 class SocketUtilTest {
 	@Test
@@ -42,17 +40,36 @@ class SocketUtilTest {
 
 	@Test
 	fun write16() {
+		val output = ByteArrayOutputStream()
+		output.write16(0xCAFE)
+		assertEquals(0xCAFE.toShort(), output.toByteArray().inputStream().read16())
 	}
 
 	@Test
 	fun write24() {
+		val output = ByteArrayOutputStream()
+		output.write24(0xBACAFE)
+		assertEquals(0xBACAFE, output.toByteArray().inputStream().read24())
 	}
 
 	@Test
 	fun write32() {
+		val output = ByteArrayOutputStream()
+		output.write32(0xBABECAFE)
+		assertEquals(0xBABECAFE.toInt(), output.toByteArray().inputStream().read32())
 	}
 
 	@Test
 	fun write64() {
+		val output = ByteArrayOutputStream()
+		output.write64(0x4400FF00BABECAFE)
+		assertEquals(0x4400FF00BABECAFE, output.toByteArray().inputStream().read64())
+	}
+
+	@Test
+	fun write64u() {
+		val output = ByteArrayOutputStream()
+		output.write64u(0xFF00FF00BABECAFEu)
+		assertEquals(0xFF00FF00BABECAFEu, output.toByteArray().inputStream().read64u())
 	}
 }

@@ -1,7 +1,7 @@
 package org.bread_experts_group.http.h2
 
 import org.bread_experts_group.hex
-import org.bread_experts_group.stream.read24ui
+import org.bread_experts_group.stream.read24
 import java.io.InputStream
 
 sealed class HTTP2Frame(
@@ -16,7 +16,7 @@ sealed class HTTP2Frame(
 
 	companion object {
 		fun read(stream: InputStream): HTTP2Frame {
-			val length = stream.read24ui()
+			val length = stream.read24()
 			val type = HTTP2FrameType.mapping[stream.read()] ?: HTTP2FrameType.OTHER
 			return when (type) {
 				HTTP2FrameType.DATA -> HTTP2DataFrame.read(stream, length)

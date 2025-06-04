@@ -7,12 +7,11 @@ import java.net.Inet6Address
 import java.net.InetAddress
 import java.nio.charset.Charset
 
-fun InputStream.read16() = ((this.read() shl 8) or this.read()).toShort()
-fun InputStream.read16u() = this.read16().toUShort()
+fun InputStream.read16() = this.read16u().toShort()
+fun InputStream.read16u() = ((this.read() shl 8) or this.read()).toUShort()
 fun InputStream.read16ui() = this.read16u().toInt()
-fun InputStream.read24() = (this.read16().toInt() shl 8) or this.read()
-fun InputStream.read24u() = this.read24().toUInt()
-fun InputStream.read24ui() = this.read24u().toInt()
+fun InputStream.read24() = this.read24u().toInt()
+fun InputStream.read24u() = ((this.read16ui() shl 8) or this.read()).toUInt()
 fun InputStream.read32() = (this.read24() shl 8) or this.read()
 fun InputStream.read32u() = this.read32().toUInt()
 fun InputStream.read32ul() = this.read32u().toLong()
@@ -27,6 +26,7 @@ fun OutputStream.write24(data: Int) = this.write(data shr 16).also { this.write1
 fun OutputStream.write32(data: Int) = this.write(data shr 24).also { this.write24(data) }
 fun OutputStream.write32(data: Long) = this.write32(data.toInt())
 fun OutputStream.write64(data: Long) = this.write32((data shr 32).toInt()).also { this.write32((data).toInt()) }
+fun OutputStream.write64u(data: ULong) = this.write64(data.toLong())
 fun OutputStream.writeInet(data: InetAddress) = data.address.forEach { this.write(it.toInt()) }
 fun OutputStream.writeString(s: String, c: Charset = Charsets.UTF_8) = this.write(s.toByteArray(c))
 

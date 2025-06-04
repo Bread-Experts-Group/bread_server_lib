@@ -18,7 +18,7 @@ class DirectoryListingResourceTest {
 			assertEquals(this.keySet().size, bundleEnUs.keySet().size, "${this.locale} key mismatch!")
 		}
 		bundleEnUs.keys.iterator().forEach {
-			logger.info("Testing \"$it\"")
+			logger.fine("Testing \"$it\"")
 			bundleJaJp.checkBundle(it)
 		}
 	}

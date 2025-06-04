@@ -22,7 +22,7 @@ class ISOBMFFInputStreamTest {
 				var parsed: ISOBMFFBox
 				while (true) {
 					parsed = testStream.readParsed()
-					logger.info(parsed.toString())
+					logger.fine(parsed.toString())
 				}
 			} catch (_: FailQuickInputStream.EndOfStream) {
 			}
