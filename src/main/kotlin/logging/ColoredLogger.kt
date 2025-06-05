@@ -133,7 +133,7 @@ object ColoredLogger : Handler() {
 	}.build() + (thrown.cause?.let {
 		'\n' + createExceptionMessage(
 			record, prefix, exceptionName, exceptionMessage, spaced,
-			it, hitThrown + it
+			it, hitThrown + thrown
 		)
 	} ?: "")
 
