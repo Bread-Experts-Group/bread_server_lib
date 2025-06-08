@@ -15,6 +15,7 @@ object ColoredLogger : Handler() {
 	private var closed: Boolean = false
 	var coloring: Boolean = true
 	var stackTraceOnlyInLoggingModule: Boolean = false
+	var standardLevel: Level = Level.INFO
 
 	private fun createExceptionMessage(
 		record: LogRecord,
@@ -202,5 +203,6 @@ object ColoredLogger : Handler() {
 	fun newLogger(name: String): Logger = Logger.getLogger(name).also {
 		it.useParentHandlers = false
 		it.addHandler(this)
+		it.level = standardLevel
 	}
 }

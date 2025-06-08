@@ -5,5 +5,5 @@ class ISOBMFFFileTypeCompatibilityBox(
 	val minorVersion: Int,
 	val compatibleBrands: List<String>
 ) : ISOBMFFBox("ftyp", byteArrayOf()) {
-	override fun toString(): String = "ISOBMFFBox.\"$name\"[$majorBrand, $minorVersion, $compatibleBrands]"
+	override fun toString(): String = "ISOBMFFBox.\"$tag\"[$majorBrand, $minorVersion, $compatibleBrands]"
 }

@@ -1,12 +1,20 @@
 package org.bread_experts_group.coder.format.riff.chunk
 
-import org.bread_experts_group.Writable
+import org.bread_experts_group.stream.Tagged
+import org.bread_experts_group.stream.Writable
+import org.bread_experts_group.stream.write32
+import org.bread_experts_group.stream.writeString
 import java.io.OutputStream
 
 open class RIFFChunk(
-	open val identifier: String,
+	override val tag: String,
 	val data: ByteArray
-) : Writable {
-	override fun toString(): String = "RIFFChunk.\"$identifier\"[${data.size}]"
-	override fun write(stream: OutputStream) = TODO("RIFFChunk writing")
+) : Writable, Tagged<String> {
+	var parent: RIFFContainerChunk? = null
+	override fun toString(): String = "RIFFChunk.\"$tag\"[${data.size}]"
+	override fun write(stream: OutputStream) {
+		stream.writeString(tag)
+		stream.write32(Integer.reverseBytes(data.size))
+		stream.write(data)
+	}
 }

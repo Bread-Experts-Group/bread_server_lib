@@ -2,43 +2,35 @@ package org.bread_experts_group.coder.format.asn1
 
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.asn1.element.*
-import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.math.BigInteger
 
-class ASN1InputStream(from: InputStream) : Parser<Int, ASN1Element>("Abstract Syntax Notation One", from) {
-	override fun readParsed(): ASN1Element {
-		val element = ASN1Element(
-			this.read(),
-			this.readNBytes(this.read())
-		)
-		val parser = this.parsers[element.tag]
-		this.logger.fine {
-			"Read generic element [${element.tag}], size [${element.data.size}]" +
-					if (parser != null) " | responsible parser: $parser"
-					else ""
-		}
-		return parser?.invoke(ByteArrayInputStream(element.data))?.also {
-			this.logger.fine { "Parsed element into [${it.javaClass.canonicalName}] from [$parser], $element" }
-		} ?: element
-	}
+class ASN1InputStream(
+	from: InputStream
+) : Parser<Int, ASN1Element, InputStream>("Abstract Syntax Notation One", from) {
+	override fun responsibleStream(of: ASN1Element): InputStream = of.data.inputStream()
+
+	override fun readBase(): ASN1Element = ASN1Element(
+		this.read(),
+		this.readNBytes(this.read())
+	)
 
 	init {
-		addParser(1) { ASN1Boolean(it.read() == 0xFF) }
-		addParser(2) { ASN1Integer(BigInteger(it.readAllBytes())) }
-		addParser(3) { ASN1BitString(it.readAllBytes()) }
-		addParser(4) { ASN1OctetString(it.readAllBytes()) }
-		addParser(5) { ASN1Null() }
-		addParser(6) {
+		addParser(1) { stream, _ -> ASN1Boolean(stream.read() == 0xFF) }
+		addParser(2) { stream, _ -> ASN1Integer(BigInteger(stream.readAllBytes())) }
+		addParser(3) { stream, _ -> ASN1BitString(stream.readAllBytes()) }
+		addParser(4) { stream, _ -> ASN1OctetString(stream.readAllBytes()) }
+		addParser(5) { stream, _ -> ASN1Null() }
+		addParser(6) { stream, _ ->
 			ASN1ObjectIdentifier(
 				buildList {
-					val firstByte = it.read()
+					val firstByte = stream.read()
 					add(firstByte / 40)
 					add(firstByte % 40)
 
 					var value = 0
 					while (true) {
-						val b = it.read()
+						val b = stream.read()
 						if (b == -1) break
 						value = (value shl 7) or (b and 0x7F)
 						if ((b and 0x80) == 0) {
@@ -49,8 +41,8 @@ class ASN1InputStream(from: InputStream) : Parser<Int, ASN1Element>("Abstract Sy
 				}.toTypedArray()
 			)
 		}
-		addParser(16) { ASN1Set(ASN1InputStream(it).readAllParsed()) }
-		addParser(17) { ASN1Sequence(ASN1InputStream(it).readAllParsed()) }
-		addParser(48) { ASN1Sequence(ASN1InputStream(it).readAllParsed()) }
+		addParser(16) { stream, _ -> ASN1Set(ASN1InputStream(stream).readAllParsed()) }
+		addParser(17) { stream, _ -> ASN1Sequence(ASN1InputStream(stream).readAllParsed()) }
+		addParser(48) { stream, _ -> ASN1Sequence(ASN1InputStream(stream).readAllParsed()) }
 	}
 }

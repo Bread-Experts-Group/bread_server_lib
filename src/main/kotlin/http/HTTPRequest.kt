@@ -1,6 +1,6 @@
 package org.bread_experts_group.http
 
-import org.bread_experts_group.Writable
+import org.bread_experts_group.stream.Writable
 import org.bread_experts_group.stream.scanDelimiter
 import org.bread_experts_group.stream.writeString
 import java.io.InputStream

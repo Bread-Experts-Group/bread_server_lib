@@ -1,7 +1,7 @@
 package org.bread_experts_group.dns
 
-import org.bread_experts_group.Writable
 import org.bread_experts_group.hex
+import org.bread_experts_group.stream.Writable
 import org.bread_experts_group.stream.read16ui
 import org.bread_experts_group.stream.write16
 import java.io.ByteArrayOutputStream

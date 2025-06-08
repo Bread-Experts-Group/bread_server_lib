@@ -1,5 +1,6 @@
 package org.bread_experts_group.stream
 
+import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Inet4Address
@@ -44,4 +45,12 @@ fun InputStream.scanDelimiter(lookFor: String): String {
 		}
 	}
 	return pool
+}
+
+fun <R> FileInputStream.resetPosition(offset: Long, run: FileInputStream.() -> R): R {
+	val save = this.channel.position()
+	this.channel.position(offset)
+	val returned = run()
+	this.channel.position(save)
+	return returned
 }

@@ -1,0 +1,10 @@
+package org.bread_experts_group.coder.format.gamemaker_win.bytecode
+
+enum class GameMakerWINVariableType(val code: Int) {
+	FUNCTION(0x80),
+	VARIABLE(0xA0);
+
+	companion object {
+		val mapping = entries.associateBy(GameMakerWINVariableType::code)
+	}
+}

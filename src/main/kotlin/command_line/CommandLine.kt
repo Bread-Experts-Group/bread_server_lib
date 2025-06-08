@@ -1,43 +1,8 @@
-package org.bread_experts_group
+package org.bread_experts_group.command_line
 
 import org.bread_experts_group.logging.ColoredLogger
-import java.net.URI
 import java.util.logging.Level
 import kotlin.system.exitProcess
-
-fun stringToLong(str: String): Long =
-	if (str.substring(0, 1) == "0x") str.substring(2).toLong(16)
-	else if (str.substring(0, 1) == "0b") str.substring(2).toLong(2)
-	else str.toLong()
-
-fun stringToURI(str: String): URI = URI(str)
-fun stringToInt(str: String): Int = stringToLong(str).toInt()
-fun stringToBoolean(str: String): Boolean = str.lowercase().let { it == "true" || it == "yes" || it == "1" }
-
-class ArgumentConstructionError(msg: String) : Error(msg)
-
-open class Flag<T>(
-	flagName: String,
-	val flagDescription: String,
-	val repeatable: Boolean = false,
-	val required: Int = 0,
-	val default: T? = null,
-	val conv: ((String) -> T) = {
-		@Suppress("UNCHECKED_CAST")
-		it as T
-	}
-) {
-	val flagName = flagName.lowercase().replace('-', '_')
-
-	init {
-		if (required > 1 && !repeatable)
-			throw ArgumentConstructionError("[$flagName] requires $required specifications, but isn't repeatable")
-	}
-}
-
-typealias SingleArgs = Map<String, Any>
-typealias MultipleArgs = Map<String, List<Any>>
-typealias Args = Pair<SingleArgs, MultipleArgs>
 
 fun readArgs(
 	args: Array<String>,
@@ -48,18 +13,12 @@ fun readArgs(
 
 private val logger = ColoredLogger.newLogger("Program Argument Retrieval")
 
-class RequiredArgumentsMissingException(flag: Flag<*>, count: Int) : RuntimeException(buildString {
-	append("Missing flags for [${flag.flagName}]\n")
-	append("\t${flag.flagDescription.replace("\n", "\n\t\t ")}\n")
-	append("* Required ${flag.required} time${if (flag.required > 1) 's' else ""}, got $count")
-})
-
 fun readArgs(
 	args: Array<String>,
 	flags: List<Flag<*>>,
 	projectName: String,
 	projectUsage: String
-): Args {
+): ArgumentContainer {
 	run {
 		val argNames = mutableSetOf("help")
 		flags.forEach {
@@ -156,5 +115,5 @@ fun readArgs(
 		problems.forEachIndexed { i, problem -> logger.log(Level.SEVERE, problem) { "Argument problem [$i]" } }
 		exitProcess(3122)
 	}
-	return singleArgs to multipleArgs
+	return ArgumentContainer(singleArgs + multipleArgs)
 }

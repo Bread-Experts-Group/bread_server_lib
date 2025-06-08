@@ -1,6 +1,6 @@
 package org.bread_experts_group.ntp
 
-import org.bread_experts_group.Writable
+import org.bread_experts_group.stream.Writable
 import java.io.InputStream
 import java.io.OutputStream
 import java.math.BigDecimal

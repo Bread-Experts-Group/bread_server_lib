@@ -52,6 +52,8 @@
           <option value="KDocUnresolvedReference" />
           <option value="ReplacePrintlnWithLogging" />
           <option value="SpellCheckingInspection" />
+          <option value="ClassName" />
+          <option value="ReplaceJavaStaticMethodWithKotlinAnalog" />
         </list>
       </option>
     </inspection_tool>

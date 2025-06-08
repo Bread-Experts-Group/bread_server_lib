@@ -15,7 +15,7 @@ class ISOMBFFMovieHeaderBoxV0(
 	val predefined: ByteArray,
 	val nextTrackID: Int
 ) : ISOBMFFBox("mvhd", byteArrayOf()) {
-	override fun toString(): String = "ISOBMFFBox.\"$name\"[flags: $flags, $creationTime, $modificationTime" +
+	override fun toString(): String = "ISOBMFFBox.\"$tag\"[flags: $flags, $creationTime, $modificationTime" +
 			", timescale: 1/$timescale of a second, duration: $duration [${duration * (1.0 / timescale)}s]" +
 			", preferredRate: $preferredRate, preferredVolume: $preferredVolume, nextTrackID: $nextTrackID]"
 }

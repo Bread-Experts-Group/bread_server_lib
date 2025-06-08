@@ -1,6 +1,18 @@
 package org.bread_experts_group.coder.format.riff.chunk
 
-class AudioFormatChunk(
+import org.bread_experts_group.formatDurationTime
+import org.bread_experts_group.stream.write16
+import org.bread_experts_group.stream.write32
+import org.bread_experts_group.stream.writeString
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+import java.lang.Short
+import kotlin.ByteArray
+import kotlin.Int
+import kotlin.String
+import kotlin.let
+
+class RIFFAudioFormatChunk(
 	val encoding: AudioEncoding,
 	val numberOfChannels: Int,
 	val sampleRate: Int,
@@ -9,9 +21,28 @@ class AudioFormatChunk(
 	val bitsPerSample: Int,
 	misc: ByteArray
 ) : RIFFChunk("fmt ", misc) {
-	override fun toString(): String = "RIFFChunk.\"${identifier}\"[$encoding, $numberOfChannels channels, " +
+	override fun toString(): String = "RIFFChunk.\"$tag\"[$encoding, $numberOfChannels channel(s), " +
 			"${sampleRate / 1000.0} kHz, $byteRate bytes/s, $bitsPerSample-bit, $blockAlign block alignment" +
-			(if (data.isNotEmpty()) ", ${data.size} bytes misc data" else "") + ']'
+			(if (data.isNotEmpty()) ", ${data.size} bytes misc data" else "") + (parent?.let { parent ->
+		val dataChunk = parent.chunks.firstOrNull { it.tag == "data" } ?: return@let ""
+		", ${formatDurationTime(dataChunk.data.size.toDouble() / byteRate)}"
+	} ?: "") + ']'
+
+	override fun write(stream: OutputStream) {
+		stream.writeString(tag)
+		val data = ByteArrayOutputStream().use {
+			it.write16(Short.reverseBytes(this.encoding.code.toShort()).toInt())
+			it.write16(Short.reverseBytes(this.numberOfChannels.toShort()).toInt())
+			it.write32(Integer.reverseBytes(this.sampleRate))
+			it.write32(Integer.reverseBytes(this.byteRate))
+			it.write16(Short.reverseBytes(this.blockAlign.toShort()).toInt())
+			it.write16(Short.reverseBytes(this.bitsPerSample.toShort()).toInt())
+			it.write(this.data)
+			it.toByteArray()
+		}
+		stream.write32(Integer.reverseBytes(data.size))
+		stream.write(data)
+	}
 
 	enum class AudioEncoding(val code: Int) {
 		MICROSOFT_PCM(0x1),

@@ -1,12 +1,13 @@
 package org.bread_experts_group.coder.format.asn1.element
 
-import org.bread_experts_group.Writable
+import org.bread_experts_group.stream.Tagged
+import org.bread_experts_group.stream.Writable
 import java.io.OutputStream
 
 open class ASN1Element(
-	val tag: Int,
+	override val tag: Int,
 	open val data: ByteArray
-) : Writable {
+) : Writable, Tagged<Int> {
 	override fun toString(): String = "ASN1Element.$tag[${data.size}]"
 	final override fun write(stream: OutputStream) {
 		stream.write(tag)

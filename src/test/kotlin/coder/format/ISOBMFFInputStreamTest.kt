@@ -16,16 +16,14 @@ class ISOBMFFInputStreamTest {
 	val logger = ColoredLogger.newLogger("ISOBMFF InputStream Tests")
 
 	@Test
-	fun readParsed() {
-		assertDoesNotThrow {
-			try {
-				var parsed: ISOBMFFBox
-				while (true) {
-					parsed = testStream.readParsed()
-					logger.fine(parsed.toString())
-				}
-			} catch (_: FailQuickInputStream.EndOfStream) {
+	fun readParsed() = assertDoesNotThrow {
+		try {
+			var parsed: ISOBMFFBox
+			while (true) {
+				parsed = testStream.readParsed()
+				logger.fine(parsed.toString())
 			}
+		} catch (_: FailQuickInputStream.EndOfStream) {
 		}
 	}
 }

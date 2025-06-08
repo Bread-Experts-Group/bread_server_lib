@@ -1,4 +1,4 @@
-package org.bread_experts_group
+package org.bread_experts_group.stream
 
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
