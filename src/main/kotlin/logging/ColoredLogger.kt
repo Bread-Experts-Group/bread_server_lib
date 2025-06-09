@@ -138,7 +138,9 @@ object ColoredLogger : Handler() {
 		)
 	} ?: "")
 
+	val recentlyLogged = mutableSetOf<Long>()
 	override fun publish(record: LogRecord) {
+		if (!recentlyLogged.add(record.sequenceNumber)) return
 		if (closed) return
 		val prefix = ansi {
 			setResets = coloring
