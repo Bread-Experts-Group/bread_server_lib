@@ -60,7 +60,7 @@ class HTTPProtocolSelectorTest {
 				logger.info("Connection from [${connection.remoteSocketAddress}]")
 				val selector = HTTPProtocolSelector(version, connection.inputStream, connection.outputStream)
 				logger.info("Request: ${selector.nextRequest()}")
-				selector.sendResponse(HTTPResponse(200))
+				selector.sendResponse(HTTPResponse(200, data = "Hello, ${version.tag}".byteInputStream()))
 				latch.await()
 				break
 			} catch (_: SocketException) {
@@ -81,9 +81,9 @@ class HTTPProtocolSelectorTest {
 				HttpRequest.newBuilder(URI.create("http://localhost:${socket.localPort}"))
 					.version(HttpClient.Version.HTTP_1_1)
 					.build(),
-				HttpResponse.BodyHandlers.discarding()
+				HttpResponse.BodyHandlers.ofString()
 			)
-			logger.info("Response: $response")
+			logger.info("Response: $response [${response.body()}]")
 			block.countDown()
 		}
 		test(socket, HTTPVersion.HTTP_1_1, block)
@@ -103,9 +103,9 @@ class HTTPProtocolSelectorTest {
 				HttpRequest.newBuilder(URI.create("https://localhost:${socket.localPort}"))
 					.version(HttpClient.Version.HTTP_2)
 					.build(),
-				HttpResponse.BodyHandlers.discarding()
+				HttpResponse.BodyHandlers.ofString()
 			)
-			logger.info("Response: $response")
+			logger.info("Response: $response [${response.body()}]")
 			block.countDown()
 		}
 		test(socket, HTTPVersion.HTTP_2, block)

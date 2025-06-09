@@ -15,9 +15,7 @@ class HTTPRequest(
 ) : Writable {
 	override fun toString(): String = "(${version.tag}, <Req>) $method $path " + buildString {
 		append("[HEAD#: ${headers.size}]")
-		headers.forEach {
-			append("\n${it.key}: ${it.value}")
-		}
+		headers.forEach { append("\n${it.key}: ${it.value}") }
 	}
 
 	override fun write(stream: OutputStream) {

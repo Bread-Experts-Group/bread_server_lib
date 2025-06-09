@@ -87,6 +87,7 @@ class HTTPProtocolSelector(
 					while (true) {
 						val frame = (if (clientSettingsOK && serverSettingsOK) backlog.poll() else null)
 							?: HTTP2Frame.read(from, dynamic)
+						logger.fine("> $frame")
 						if (clientSettingsOK && !serverSettingsOK && frame !is HTTP2SettingsFrame) {
 							backlog.add(frame)
 							continue
@@ -131,7 +132,7 @@ class HTTPProtocolSelector(
 												null
 											),
 											HTTPVersion.HTTP_2,
-											blocks,
+											blocks.toMap(),
 											stream
 										)
 									)
@@ -173,13 +174,16 @@ class HTTPProtocolSelector(
 			to.writeString("${version.tag} ${response.code}\r\n")
 			response.headers.forEach { (key, value) -> to.writeString("$key:$value\r\n") }
 			to.writeString("\r\n")
+			response.data.transferTo(to)
 		}
 
 		HTTPVersion.HTTP_2 -> {
-			if (response.data.available() > 0) TODO("Data length")
 			HTTP2HeaderFrame(
 				1,
-				listOf(HTTP2HeaderFrameFlag.END_OF_HEADERS, HTTP2HeaderFrameFlag.END_OF_STREAM),
+				buildList {
+					add(HTTP2HeaderFrameFlag.END_OF_HEADERS)
+					if (response.data.available() == 0) add(HTTP2HeaderFrameFlag.END_OF_STREAM)
+				},
 				null,
 				mapOf(
 					":status" to response.code.toString()
@@ -187,6 +191,13 @@ class HTTPProtocolSelector(
 			)
 				.also { logger.fine("< $it") }
 				.write(to)
+			if (response.data.available() > 0) {
+				// TODO: Factor for window/frame limits
+				HTTP2DataFrame(1, listOf(HTTP2DataFrameFlag.END_OF_STREAM), response.data.readAllBytes())
+					.also { logger.fine("< $it") }
+					.write(to)
+			}
+			null
 		}
 
 		HTTPVersion.HTTP_3 -> TODO("HTTP/3")
