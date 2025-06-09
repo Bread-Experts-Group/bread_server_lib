@@ -12,12 +12,13 @@ data class ASN1Set(
 
 	override fun toString(): String = "ASN1Set[${elements.size}]$elements"
 
+	val encoded: ByteArray = ByteArrayOutputStream(elements.size * 2).use {
+		elements.forEach { element -> element.write(it) }
+		it.toByteArray()
+	}
+
+	override fun computeSize(): Long = encoded.size.toLong()
 	override fun writeExtra(stream: OutputStream) {
-		val buffer = ByteArrayOutputStream(elements.size * 2)
-		elements.forEach {
-			it.write(buffer)
-		}
-		stream.writeLength(buffer.size())
-		stream.write(buffer.toByteArray())
+		stream.write(encoded)
 	}
 }

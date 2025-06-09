@@ -18,9 +18,9 @@ fun KeyStore.getManagerFactoryX509(password: String): KeyManagerFactory = KeyMan
 	.getInstance("SunX509")
 	.also { it.init(this, password.toCharArray()) }
 
-fun KeyManagerFactory.getTLSContext(): SSLContext = SSLContext
+fun KeyManagerFactory.getTLSContext(trustManagers: Array<TrustManager>? = null): SSLContext = SSLContext
 	.getInstance("TLS")
-	.also { it.init(this.keyManagers, null, null) }
+	.also { it.init(this.keyManagers, trustManagers, null) }
 
 fun SSLContext.getServerSocket() =
 	((this.serverSocketFactory as SSLServerSocketFactory).createServerSocket() as SSLServerSocket).also {
@@ -34,10 +34,10 @@ fun SSLContext.getSocket() =
 		it.enabledProtocols = allowedProtocols
 	}
 
-fun getTLSContext(keystorePath: File, password: String): SSLContext {
+fun getTLSContext(keystorePath: File, password: String, trustManagers: Array<TrustManager>? = null): SSLContext {
 	val keystore = getKeyStoreFromPath(keystorePath, password)
 	val managerFactory = keystore.getManagerFactoryX509(password)
-	return managerFactory.getTLSContext()
+	return managerFactory.getTLSContext(trustManagers)
 }
 
 val goodSchemes = arrayOf(

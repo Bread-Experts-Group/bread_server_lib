@@ -12,9 +12,11 @@ open class RIFFChunk(
 ) : Writable, Tagged<String> {
 	var parent: RIFFContainerChunk? = null
 	override fun toString(): String = "RIFFChunk.\"$tag\"[${data.size}]"
+
+	override fun computeSize(): Long = data.size.toLong()
 	override fun write(stream: OutputStream) {
 		stream.writeString(tag)
-		stream.write32(Integer.reverseBytes(data.size))
+		stream.write32(Integer.reverseBytes(computeSize().toInt()))
 		stream.write(data)
 	}
 }

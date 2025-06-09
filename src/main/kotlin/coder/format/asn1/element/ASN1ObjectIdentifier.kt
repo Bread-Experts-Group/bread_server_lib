@@ -6,6 +6,10 @@ import java.io.OutputStream
 data class ASN1ObjectIdentifier(
 	val values: Array<Int>
 ) : ASN1Element(6, byteArrayOf()) {
+	init {
+		require(values.size >= 2) { "OID must have at least two components" }
+	}
+
 	constructor(
 		vararg values: Int
 	) : this(values.toTypedArray())
@@ -23,27 +27,19 @@ data class ASN1ObjectIdentifier(
 		return values.contentHashCode()
 	}
 
-	override fun writeExtra(stream: OutputStream) {
-		require(values.size >= 2) { "OID must have at least two components" }
-
+	private val encoded = run {
 		val body = ByteArrayOutputStream()
-
-		// Encode the first byte
 		val first = 40 * values[0] + values[1]
 		body.write(first)
+		for (i in 2 until values.size) encodeBase128(values[i], body)
+		body.toByteArray()
+	}
 
-		// Encode remaining components
-		for (i in 2 until values.size) {
-			encodeBase128(values[i], body)
-		}
-
-		// Now write the length prefix
-		val encoded = body.toByteArray()
-		stream.writeLength(encoded.size)
+	override fun computeSize(): Long = encoded.size.toLong()
+	override fun writeExtra(stream: OutputStream) {
 		stream.write(encoded)
 	}
 
-	// Encodes a single integer using base-128 with MSB continuation bit
 	private fun encodeBase128(value: Int, stream: OutputStream) {
 		var v = value
 		val stack = mutableListOf<Byte>()
@@ -53,7 +49,6 @@ data class ASN1ObjectIdentifier(
 			v = v ushr 7
 		} while (v > 0)
 
-		// Write in reverse order, MSB=1 for all but last
 		for (i in stack.indices.reversed()) {
 			val byte = stack[i]
 			if (i != 0) stream.write(byte.toInt() or 0x80)

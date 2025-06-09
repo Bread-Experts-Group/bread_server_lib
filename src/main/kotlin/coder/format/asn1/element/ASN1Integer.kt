@@ -8,9 +8,10 @@ data class ASN1Integer(
 ) : ASN1Element(2, byteArrayOf()) {
 	constructor(value: Long) : this(BigInteger.valueOf(value))
 
+	private val asBytes = value.toByteArray()
+
+	override fun computeSize(): Long = asBytes.size.toLong()
 	override fun writeExtra(stream: OutputStream) {
-		val array = value.toByteArray()
-		stream.writeLength(array.size)
-		stream.write(array)
+		stream.write(asBytes)
 	}
 }

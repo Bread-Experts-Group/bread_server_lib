@@ -16,8 +16,8 @@ data class ASN1UTCTime private constructor(
 			.format(time)
 	)
 
+	override fun computeSize(): Long = time.length.toLong()
 	override fun writeExtra(stream: OutputStream) {
-		stream.writeLength(time.length)
 		stream.writeString(time)
 	}
 }

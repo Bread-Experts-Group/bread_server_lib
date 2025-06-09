@@ -18,8 +18,8 @@ data class ASN1OctetString(
 		return string.contentHashCode()
 	}
 
+	override fun computeSize(): Long = string.size.toLong()
 	override fun writeExtra(stream: OutputStream) {
-		stream.writeLength(string.size)
 		stream.write(string)
 	}
 }

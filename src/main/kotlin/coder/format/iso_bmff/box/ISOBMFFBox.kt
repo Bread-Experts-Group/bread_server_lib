@@ -14,8 +14,9 @@ open class ISOBMFFBox(
 		require(tag.length == 4) { "Name must be exactly 4 characters long" }
 	}
 
+	override fun computeSize(): Long = data.size.toLong()
 	override fun write(stream: OutputStream) {
-		stream.write32(data.size)
+		stream.write32(computeSize())
 		stream.writeString(tag, Charsets.US_ASCII)
 		stream.write(data)
 	}

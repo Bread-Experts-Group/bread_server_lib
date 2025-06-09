@@ -14,6 +14,10 @@ open class GameMakerWINChunk(
 		require(tag.length == 4) { "Name must be exactly 4 characters long" }
 	}
 
+	override fun computeSize(): Long {
+		TODO("Not yet implemented")
+	}
+
 	override fun toString(): String = "${this::class.java.simpleName}.\"$tag\"@$offset[$length]"
 	override fun write(stream: OutputStream) {
 		TODO("Not yet implemented")

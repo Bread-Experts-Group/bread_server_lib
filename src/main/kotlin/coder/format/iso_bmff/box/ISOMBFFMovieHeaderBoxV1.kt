@@ -1,5 +1,6 @@
 package org.bread_experts_group.coder.format.iso_bmff.box
 
+import java.io.OutputStream
 import java.time.ZonedDateTime
 
 class ISOMBFFMovieHeaderBoxV1(
@@ -18,4 +19,10 @@ class ISOMBFFMovieHeaderBoxV1(
 	override fun toString(): String = "ISOBMFFBox.\"$tag\"[flags: $flags, $creationTime, $modificationTime" +
 			", timescale: 1/$timescale of a second, duration: $duration [${duration * (1.0 / timescale)}s]" +
 			", preferredRate: $preferredRate, preferredVolume: $preferredVolume, nextTrackID: $nextTrackID]"
+
+	override fun computeSize(): Long = TODO("V0 Size")
+	override fun write(stream: OutputStream) {
+		super.write(stream)
+		TODO("V0")
+	}
 }

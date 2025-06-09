@@ -3,12 +3,12 @@ package org.bread_experts_group.coder.format.riff.chunk
 import org.bread_experts_group.formatDurationTime
 import org.bread_experts_group.stream.write16
 import org.bread_experts_group.stream.write32
-import org.bread_experts_group.stream.writeString
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.lang.Short
 import kotlin.ByteArray
 import kotlin.Int
+import kotlin.Long
 import kotlin.String
 import kotlin.let
 
@@ -28,20 +28,21 @@ class RIFFAudioFormatChunk(
 		", ${formatDurationTime(dataChunk.data.size.toDouble() / byteRate)}"
 	} ?: "") + ']'
 
+	val encoded: ByteArray = ByteArrayOutputStream().use {
+		it.write16(Short.reverseBytes(this.encoding.code.toShort()).toInt())
+		it.write16(Short.reverseBytes(this.numberOfChannels.toShort()).toInt())
+		it.write32(Integer.reverseBytes(this.sampleRate))
+		it.write32(Integer.reverseBytes(this.byteRate))
+		it.write16(Short.reverseBytes(this.blockAlign.toShort()).toInt())
+		it.write16(Short.reverseBytes(this.bitsPerSample.toShort()).toInt())
+		it.write(this.data)
+		it.toByteArray()
+	}
+
+	override fun computeSize(): Long = encoded.size.toLong()
 	override fun write(stream: OutputStream) {
-		stream.writeString(tag)
-		val data = ByteArrayOutputStream().use {
-			it.write16(Short.reverseBytes(this.encoding.code.toShort()).toInt())
-			it.write16(Short.reverseBytes(this.numberOfChannels.toShort()).toInt())
-			it.write32(Integer.reverseBytes(this.sampleRate))
-			it.write32(Integer.reverseBytes(this.byteRate))
-			it.write16(Short.reverseBytes(this.blockAlign.toShort()).toInt())
-			it.write16(Short.reverseBytes(this.bitsPerSample.toShort()).toInt())
-			it.write(this.data)
-			it.toByteArray()
-		}
-		stream.write32(Integer.reverseBytes(data.size))
-		stream.write(data)
+		super.write(stream)
+		stream.write(encoded)
 	}
 
 	enum class AudioEncoding(val code: Int) {

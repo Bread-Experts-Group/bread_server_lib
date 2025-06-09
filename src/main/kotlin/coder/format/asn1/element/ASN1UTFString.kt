@@ -6,8 +6,8 @@ import java.io.OutputStream
 data class ASN1UTFString(
 	val string: String
 ) : ASN1Element(12, byteArrayOf()) {
+	override fun computeSize(): Long = string.length.toLong()
 	override fun writeExtra(stream: OutputStream) {
-		stream.writeLength(string.length)
 		stream.writeString(string)
 	}
 }

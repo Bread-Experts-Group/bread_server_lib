@@ -1,4 +1,4 @@
-package org.bread_experts_group.http
+package org.bread_experts_group.http.header
 
 class HTTPRangeHeader(
 	val totalSize: Long,

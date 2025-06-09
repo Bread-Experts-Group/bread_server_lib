@@ -10,8 +10,7 @@ enum class HTTP2FrameType(val code: Int) {
 	PING(6),
 	SHUTDOWN(7),
 	WINDOW_UPDATE(8),
-	CONTINUATION(9),
-	OTHER(-1);
+	CONTINUATION(9);
 
 	companion object {
 		val mapping = entries.associateBy(HTTP2FrameType::code)

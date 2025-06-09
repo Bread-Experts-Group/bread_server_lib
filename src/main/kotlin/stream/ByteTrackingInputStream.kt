@@ -1,6 +1,5 @@
 package org.bread_experts_group.stream
 
-import org.bread_experts_group.hex
 import java.io.InputStream
 
 class ByteTrackingInputStream(private val from: InputStream) : InputStream() {
@@ -10,7 +9,7 @@ class ByteTrackingInputStream(private val from: InputStream) : InputStream() {
 	}
 
 	fun dumpRead(): String {
-		val dumped = tracked.joinToString(", ") { hex(it.toUByte()) }
+		val dumped = tracked.joinToString("") { it.toUByte().toString(16).uppercase().padStart(2, '0') }
 		tracked.clear()
 		return dumped
 	}

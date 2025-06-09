@@ -54,6 +54,8 @@
           <option value="SpellCheckingInspection" />
           <option value="ClassName" />
           <option value="ReplaceJavaStaticMethodWithKotlinAnalog" />
+          <option value="LocalVariableName" />
+          <option value="DuplicatedCode" />
         </list>
       </option>
     </inspection_tool>

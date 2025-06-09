@@ -1,9 +1,10 @@
 package org.bread_experts_group.http.h2.setting
 
+import org.bread_experts_group.stream.Writable
 import org.bread_experts_group.stream.read16ui
 import java.io.InputStream
 
-sealed class HTTP2Setting(val identifier: HTTP2SettingIdentifier) {
+sealed class HTTP2Setting(val identifier: HTTP2SettingIdentifier) : Writable {
 	override fun toString(): String = "(HTTP/2, Setting) ${identifier.name}"
 
 	companion object {

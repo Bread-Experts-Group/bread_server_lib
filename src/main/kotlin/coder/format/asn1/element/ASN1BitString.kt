@@ -18,8 +18,9 @@ data class ASN1BitString(
 		return string.contentHashCode()
 	}
 
+	override fun computeSize(): Long = string.size + 1L
+
 	override fun writeExtra(stream: OutputStream) {
-		stream.writeLength(string.size + 1)
 		stream.write(0)
 		stream.write(string)
 	}

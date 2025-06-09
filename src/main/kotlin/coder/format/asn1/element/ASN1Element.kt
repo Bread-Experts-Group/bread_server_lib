@@ -9,9 +9,12 @@ open class ASN1Element(
 	open val data: ByteArray
 ) : Writable, Tagged<Int> {
 	override fun toString(): String = "ASN1Element.$tag[${data.size}]"
+
+	override fun computeSize(): Long = data.size.toLong()
 	final override fun write(stream: OutputStream) {
 		stream.write(tag)
 		writeExtra(stream)
+		stream.writeLength(computeSize().toInt())
 	}
 
 	protected fun OutputStream.writeLength(size: Int) {
