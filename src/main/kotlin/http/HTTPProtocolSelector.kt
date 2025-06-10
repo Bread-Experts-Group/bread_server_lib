@@ -245,8 +245,11 @@ class HTTPProtocolSelector(
 		}
 
 		HTTPVersion.HTTP_2 -> {
+			val request = response.to
+			if (request !is HTTP2Request)
+				throw UnsupportedOperationException("HTTP/2 response must be to HTTP/2 request")
 			HTTP2HeaderFrame(
-				1,
+				request.stream,
 				buildList {
 					add(HTTP2HeaderFrameFlag.END_OF_HEADERS)
 					if (response.data.available() == 0) add(HTTP2HeaderFrameFlag.END_OF_STREAM)
@@ -260,7 +263,7 @@ class HTTPProtocolSelector(
 				.write(to)
 			if (response.data.available() > 0) {
 				// TODO: Factor for window/frame limits
-				HTTP2DataFrame(1, listOf(HTTP2DataFrameFlag.END_OF_STREAM), response.data.readAllBytes())
+				HTTP2DataFrame(request.stream, listOf(HTTP2DataFrameFlag.END_OF_STREAM), response.data.readAllBytes())
 					.also { logger.fine("< $it") }
 					.write(to)
 			}
