@@ -1,13 +1,21 @@
 package logging
 
+import org.bread_experts_group.logging.ColoredLevel
 import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ansi_colorspace.ANSI16
+import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
+import org.bread_experts_group.logging.ansi_colorspace.ANSI256Color
+import org.bread_experts_group.logging.ansi_colorspace.ANSITrueColor
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import java.util.logging.Level
+import kotlin.random.Random
+import kotlin.random.nextUBytes
 
 class ColoredLoggerTest {
 	val logger = ColoredLogger.newLogger("Colored Logger Tests")
 
+	@OptIn(ExperimentalUnsignedTypes::class)
 	@Test
 	fun publish() = assertDoesNotThrow {
 		logger.info("Hello world!")
@@ -21,5 +29,18 @@ class ColoredLoggerTest {
 			object : Level("TEST", 923) {},
 			"Weird level"
 		)
+		ANSI16.entries.forEach {
+			val level = ColoredLevel("Test ${it.name} [${it.ordinal}]", ANSI16Color(it))
+			logger.log(level, "Test")
+		}
+		repeat(256) {
+			val level = ColoredLevel("Test Palette $it", ANSI256Color(it.toUByte()))
+			logger.log(level, "Test")
+		}
+		repeat(10) {
+			val rgb = Random.nextUBytes(3)
+			val level = ColoredLevel("Test RGB", ANSITrueColor(rgb[0], rgb[1], rgb[2]))
+			logger.log(level, "Random sampling ${rgb[0]}.${rgb[1]}.${rgb[2]}")
+		}
 	}
 }

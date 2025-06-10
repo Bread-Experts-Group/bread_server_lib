@@ -1,5 +1,7 @@
 package org.bread_experts_group.logging
 
+import org.bread_experts_group.logging.ansi_colorspace.ANSI16
+import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -27,7 +29,7 @@ object ColoredLogger : Handler() {
 		hitThrown: Set<Throwable> = emptySet()
 	): String = if (hitThrown.contains(thrown)) " =⁂= CYCLE THROWN CAUSE DETECTED =⁂= " else ansi {
 		setResets = coloring
-		lightGray {
+		color(ANSI16Color(ANSI16.LIGHT_GRAY)) {
 			val fromModuleName = try {
 				if (record.sourceClassName == null) null
 				else this::class.java.classLoader.loadClass(record.sourceClassName).module.name
@@ -67,11 +69,11 @@ object ColoredLogger : Handler() {
 
 			fun traceString() = "<$truncatedCount excluded trace${if (truncatedCount > 1) 's' else ""}>"
 			fun logTruncated() = if (truncatedCount > 0) {
-				lightGray { append("\n${traceString()}") }
+				color(ANSI16Color(ANSI16.LIGHT_GRAY)) { append("\n${traceString()}") }
 				truncatedCount = 0
 			} else null
 
-			lightGray {
+			color(ANSI16Color(ANSI16.LIGHT_GRAY)) {
 				var additionalOffset = 0
 				if (truncatedCount > 0) traceString().also {
 					additionalOffset = it.length
@@ -79,11 +81,11 @@ object ColoredLogger : Handler() {
 				}
 				append(" ".repeat(max(0, prefix.length() - exceptionName.length - 3 - additionalOffset)))
 				append('[')
-				red { append(exceptionName) }
+				color(ANSI16Color(ANSI16.RED)) { append(exceptionName) }
 				append(']')
 			}
 			append(' ')
-			yellow {
+			color(ANSI16Color(ANSI16.YELLOW)) {
 				append(exceptionMessage[0])
 				if (exceptionMessage.size > 1) append(
 					('\n' + exceptionMessage[1]).replace("\n", "\n$spaced", true)
@@ -101,31 +103,32 @@ object ColoredLogger : Handler() {
 				}
 				logTruncated()
 				append('\n')
-				if (traceIndex == 0) red { append('.') }
+				if (traceIndex == 0) color(ANSI16Color(ANSI16.RED)) { append('.') }
 				else append('^')
 				append(" [")
 				if (trace.moduleName != null || trace.moduleVersion != null) {
 					append('[')
-					blue {
+					color(ANSI16Color(ANSI16.BLUE)) {
 						append((trace.moduleName ?: "").padEnd(moduleNamePad))
-						lightGray { append(':') }
+						color(ANSI16Color(ANSI16.LIGHT_GRAY)) { append(':') }
 						append((trace.moduleVersion ?: "").padEnd(moduleVersionPad))
 					}
 					append("] ")
 				} else append(" ".repeat(moduleNamePad + moduleVersionPad + 4))
-				cyan {
+				color(ANSI16Color(ANSI16.CYAN)) {
 					append((trace.fileName ?: "").padEnd(filePad))
-					lightGray { append(" | ") }
+					color(ANSI16Color(ANSI16.LIGHT_GRAY)) { append(" | ") }
 					append((trace.classLoaderName ?: "").padEnd(classLoadPad))
 				}
 				append("] ")
-				green { append(trace.className.padEnd(classNamePad)) }
+				color(ANSI16Color(ANSI16.GREEN)) { append(trace.className.padEnd(classNamePad)) }
 				append('.')
-				(if (trace.isNativeMethod) ::magenta
-				else ::default).invoke { append(trace.methodName.padEnd(methodNamePad)) }
+				color(ANSI16Color(if (trace.isNativeMethod) ANSI16.MAGENTA else ANSI16.DEFAULT)) {
+					append(trace.methodName.padEnd(methodNamePad))
+				}
 				if (trace.lineNumber > -1) {
 					append(';')
-					yellow { append(trace.lineNumber.toString()) }
+					color(ANSI16Color(ANSI16.YELLOW)) { append(trace.lineNumber.toString()) }
 				}
 				traceIndex++
 			}
@@ -144,19 +147,22 @@ object ColoredLogger : Handler() {
 		if (closed) return
 		val prefix = ansi {
 			setResets = coloring
-			lightGray {
+			color(ANSI16Color(ANSI16.LIGHT_GRAY)) {
 				append('[')
-				when (record.level) {
-					Level.FINEST -> ::darkGray
-					Level.FINER -> ::lightGray
-					Level.FINE -> ::default
-					Level.INFO -> ::cyan
-					Level.WARNING -> ::yellow
-					Level.SEVERE -> ::red
-					else -> ::magenta
-				}.invoke { append(record.level.name.padEnd(levelNamePad)) }
+				color(
+					when (val level = record.level) {
+						Level.FINEST -> ANSI16Color(ANSI16.DARK_GRAY)
+						Level.FINER -> ANSI16Color(ANSI16.LIGHT_GRAY)
+						Level.FINE -> ANSI16Color(ANSI16.DEFAULT)
+						Level.INFO -> ANSI16Color(ANSI16.CYAN)
+						Level.WARNING -> ANSI16Color(ANSI16.YELLOW)
+						Level.SEVERE -> ANSI16Color(ANSI16.RED)
+						is ColoredLevel -> level.color
+						else -> ANSI16Color(ANSI16.MAGENTA)
+					}
+				) { append(record.level.name.padEnd(levelNamePad)) }
 				append(" | ")
-				yellow {
+				color(ANSI16Color(ANSI16.YELLOW)) {
 					append(
 						formatter.format(
 							ZonedDateTime.ofInstant(
@@ -167,13 +173,13 @@ object ColoredLogger : Handler() {
 					)
 				}
 				append(" | ")
-				default { append(record.loggerName) }
+				color(ANSI16Color(ANSI16.DEFAULT)) { append(record.loggerName) }
 				append(" | ")
-				default {
+				color(ANSI16Color(ANSI16.DEFAULT)) {
 					append(record.sourceMethodName)
-					lightGray {
+					color(ANSI16Color(ANSI16.LIGHT_GRAY)) {
 						append('[')
-						cyan { append(record.longThreadID.toString()) }
+						color(ANSI16Color(ANSI16.CYAN)) { append(record.longThreadID.toString()) }
 						append(']')
 					}
 				}
