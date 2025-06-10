@@ -1,5 +1,6 @@
 package org.bread_experts_group.stream
 
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.LinkedBlockingDeque
@@ -8,6 +9,12 @@ class ConsolidatedInputStream : InputStream() {
 	val streams = LinkedBlockingDeque<InputStream>()
 
 	override fun available(): Int = streams.sumOf { it.available() }
+	override fun readAllBytes(): ByteArray {
+		val output = ByteArrayOutputStream()
+		this.transferTo(output)
+		return output.toByteArray()
+	}
+
 	override fun transferTo(out: OutputStream): Long {
 		val transferred = streams.sumOf { it.transferTo(out) }
 		streams.clear()
