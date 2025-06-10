@@ -75,8 +75,8 @@ class HTTPProtocolSelector(
 								else -> version
 							}
 						}
-						val code = from.scanDelimiter(" ").let {
-							val parsed = it.toIntOrNull()
+						val code = from.scanDelimiter("\r\n").let {
+							val parsed = it.split(' ', limit = 2)[0].toIntOrNull()
 							if (parsed == null) throw DecodingException("Server sent bad status code [$it]")
 							parsed
 						}
