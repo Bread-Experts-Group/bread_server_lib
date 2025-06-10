@@ -133,7 +133,7 @@ class HTTPProtocolSelector(
 				val headerBlocks = mutableMapOf<Int, MutableMap<String, String>>()
 				var dynamic = listOf<Pair<String, String>>()
 
-				var backlog = ArrayDeque<HTTP2Frame>()
+				val backlog = ArrayDeque<HTTP2Frame>()
 				var clientSettingsOK = false
 				var serverSettingsOK = false
 				while (true) {
