@@ -80,7 +80,6 @@ class HTTPProtocolSelector(
 							if (parsed == null) throw DecodingException("Server sent bad status code [$it]")
 							parsed
 						}
-						from.scanDelimiter("\r\n")
 						val headers = buildMap {
 							while (true) {
 								val read = from.scanDelimiter("\r\n").split(':', limit = 2)
