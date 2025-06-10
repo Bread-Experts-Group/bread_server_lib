@@ -11,7 +11,7 @@ class HTTPResponse(
 	headers: Map<String, String> = emptyMap(),
 	val data: InputStream = byteArrayOf().inputStream()
 ) {
-	val headers = headers.mapKeys { (k, _) -> k.lowercase() }.toMutableMap().also {
+	val headers = headers.mapKeys { it.key.lowercase() }.toMutableMap().also {
 		disallowedHeaders.forEach { h ->
 			if (it.contains(h)) throw IllegalArgumentException("Do not set $h header!")
 		}

@@ -10,9 +10,11 @@ class HTTPRequest(
 	val method: HTTPMethod,
 	val path: URI,
 	val version: HTTPVersion,
-	val headers: Map<String, String> = emptyMap(),
+	headers: Map<String, String> = emptyMap(),
 	val data: InputStream
 ) : Writable {
+	val headers = headers.mapKeys { it.key.lowercase() }
+
 	override fun toString(): String = "(${version.tag}, <Req>) $method $path " + buildString {
 		append("[HEAD#: ${headers.size}]")
 		headers.forEach { append("\n${it.key}: ${it.value}") }
