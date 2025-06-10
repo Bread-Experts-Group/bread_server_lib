@@ -58,11 +58,11 @@ fun readArgs(
 
 	val singleArgs = mutableMapOf<String, Any>()
 	val multipleArgs = mutableMapOf<String, MutableList<Any>>()
-	val problems = mutableListOf<Throwable>()
+	val problems = mutableListOf<ArgumentParsingError>()
 	for (arg in args) {
 		logger.finer { "Parse argument \"$arg\"" }
 		if (arg[0] != '-') {
-			problems.add(IllegalArgumentException("Bad argument \"$arg\", requires - before name"))
+			problems.add(ArgumentParsingError("Bad argument \"$arg\", requires - before name"))
 			continue
 		}
 		val equIndex = arg.indexOf('=')
@@ -70,14 +70,14 @@ fun readArgs(
 			f.flagName == arg.substring(1, if (equIndex == -1) arg.length else equIndex)
 		}
 		if (flag == null) {
-			problems.add(IllegalArgumentException("Bad argument \"$arg\", not a flag; see -help"))
+			problems.add(ArgumentParsingError("Bad argument \"$arg\", not a flag; see -help"))
 			continue
 		}
 		val value = if (equIndex == -1) "true" else arg.substring(equIndex + 1)
 		val typedValue = try {
 			if (value.isNotBlank()) flag.conv(value) else flag.default
 		} catch (e: Throwable) {
-			problems.add(e)
+			problems.add(ArgumentParsingError("Error while converting argument", flag, e))
 			continue
 		}
 		logger.finer {
@@ -92,7 +92,7 @@ fun readArgs(
 					.add(typedValue)
 			} else {
 				if (singleArgs.putIfAbsent(flag.flagName, typedValue) != null) problems.add(
-					IllegalArgumentException("Duplicate flag, \"${flag.flagName}\"")
+					ArgumentParsingError("Duplicate flag", flag)
 				)
 			}
 		}
