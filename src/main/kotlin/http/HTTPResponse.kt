@@ -7,11 +7,13 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class HTTPResponse(
+	val to: HTTPRequest,
 	val code: Int,
 	headers: Map<String, String> = emptyMap(),
-	val data: InputStream = byteArrayOf().inputStream()
+	val data: InputStream = InputStream.nullInputStream(),
+	rawHeaders: Boolean = false
 ) {
-	val headers = headers.mapKeys { it.key.lowercase() }.toMutableMap().also {
+	val headers = if (rawHeaders) headers else headers.mapKeys { it.key.lowercase() }.toMutableMap().also {
 		disallowedHeaders.forEach { h ->
 			if (it.contains(h)) throw IllegalArgumentException("Do not set $h header!")
 		}
@@ -48,12 +50,12 @@ class HTTPResponse(
 		it.putIfAbsent("cross-origin-opener-policy", "same-origin")
 	}
 
-	override fun toString(): String = "(HTTP/*, <Res>) $code [HEAD#: ${headers.size}]" + buildString {
+	override fun toString(): String = "(<Res>) $code [DATA#: ${data.available()}] " + buildString {
+		append("[HEAD#: ${headers.size}]")
 		headers.forEach {
 			append("\n${it.key}: ${it.value}")
 		}
 	}
-
 
 	companion object {
 		val disallowedHeaders = listOf("Server", "Date", "Content-Length", "Strict-Transport-Security", "Alt-Svc")

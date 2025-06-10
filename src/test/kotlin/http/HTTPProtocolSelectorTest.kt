@@ -1,9 +1,7 @@
 package http
 
 import org.bread_experts_group.getTLSContext
-import org.bread_experts_group.http.HTTPProtocolSelector
-import org.bread_experts_group.http.HTTPResponse
-import org.bread_experts_group.http.HTTPVersion
+import org.bread_experts_group.http.*
 import org.bread_experts_group.logging.ColoredLogger
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
@@ -53,14 +51,15 @@ class HTTPProtocolSelectorTest {
 		remoteClient = HttpClient.newBuilder().sslContext(tlsContext).build()
 	}
 
-	fun test(socket: ServerSocket, version: HTTPVersion, latch: CountDownLatch) {
+	fun testNextRequest(socket: ServerSocket, version: HTTPVersion, latch: CountDownLatch) {
 		while (true) {
 			val connection = socket.accept()
 			try {
 				logger.info("Connection from [${connection.remoteSocketAddress}]")
-				val selector = HTTPProtocolSelector(version, connection.inputStream, connection.outputStream)
-				logger.info("Request: ${selector.nextRequest()}")
-				selector.sendResponse(HTTPResponse(200, data = "Hello, ${version.tag}".byteInputStream()))
+				val selector = HTTPProtocolSelector(version, connection.inputStream, connection.outputStream, true)
+				val request = selector.nextRequest()
+				logger.info("Request: $request")
+				selector.sendResponse(HTTPResponse(request, 200, data = "Hello, ${version.tag}".byteInputStream()))
 				latch.await()
 				break
 			} catch (_: SocketException) {
@@ -86,7 +85,7 @@ class HTTPProtocolSelectorTest {
 			logger.info("Response: $response [${response.body()}]")
 			block.countDown()
 		}
-		test(socket, HTTPVersion.HTTP_1_1, block)
+		testNextRequest(socket, HTTPVersion.HTTP_1_1, block)
 	}
 
 	@Test
@@ -108,6 +107,19 @@ class HTTPProtocolSelectorTest {
 			logger.info("Response: $response [${response.body()}]")
 			block.countDown()
 		}
-		test(socket, HTTPVersion.HTTP_2, block)
+		testNextRequest(socket, HTTPVersion.HTTP_2, block)
+	}
+
+	fun testNextResponse(socket: Socket, version: HTTPVersion) {
+		val selector = HTTPProtocolSelector(version, socket.inputStream, socket.outputStream, false)
+		selector.sendRequest(HTTPRequest(HTTPMethod.GET, URI.create("/")))
+		logger.info("Response: ${selector.nextResponse()}")
+	}
+
+	@Test
+	fun nextResponseHTTP11() = assertDoesNotThrow {
+		val socket = Socket()
+		socket.connect(InetSocketAddress("google.com", 80), 5000)
+		testNextResponse(socket, HTTPVersion.HTTP_1_1)
 	}
 }
