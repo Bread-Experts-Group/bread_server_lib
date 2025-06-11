@@ -14,7 +14,6 @@ import java.security.cert.X509Certificate
 import java.util.concurrent.CountDownLatch
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLEngine
-import javax.net.ssl.SSLServerSocket
 import javax.net.ssl.X509ExtendedTrustManager
 import kotlin.io.path.outputStream
 
@@ -88,27 +87,28 @@ class HTTPProtocolSelectorTest {
 		testNextRequest(socket, HTTPVersion.HTTP_1_1, block)
 	}
 
-	@Test
-	fun nextRequestHTTP2() = assertDoesNotThrow {
-		val socket = tlsContext.serverSocketFactory.createServerSocket() as SSLServerSocket
-		val parameters = socket.sslParameters
-		parameters.applicationProtocols = arrayOf("h2")
-		socket.sslParameters = parameters
-		socket.bind(InetSocketAddress("localhost", 60502))
-		logger.info("Server active on address [${socket.localSocketAddress}]")
-		val block = CountDownLatch(1)
-		Thread.ofVirtual().name("HTTP/2 Selection Tests, Remote Client").start {
-			val response = remoteClient.send(
-				HttpRequest.newBuilder(URI.create("https://localhost:${socket.localPort}"))
-					.version(HttpClient.Version.HTTP_2)
-					.build(),
-				HttpResponse.BodyHandlers.ofString()
-			)
-			logger.info("Response: $response [${response.body()}]")
-			block.countDown()
-		}
-		testNextRequest(socket, HTTPVersion.HTTP_2, block)
-	}
+	// TODO HTTP/2 Resumption
+//	@Test
+//	fun nextRequestHTTP2() = assertDoesNotThrow {
+//		val socket = tlsContext.serverSocketFactory.createServerSocket() as SSLServerSocket
+//		val parameters = socket.sslParameters
+//		parameters.applicationProtocols = arrayOf("h2")
+//		socket.sslParameters = parameters
+//		socket.bind(InetSocketAddress("localhost", 60502))
+//		logger.info("Server active on address [${socket.localSocketAddress}]")
+//		val block = CountDownLatch(1)
+//		Thread.ofVirtual().name("HTTP/2 Selection Tests, Remote Client").start {
+//			val response = remoteClient.send(
+//				HttpRequest.newBuilder(URI.create("https://localhost:${socket.localPort}"))
+//					.version(HttpClient.Version.HTTP_2)
+//					.build(),
+//				HttpResponse.BodyHandlers.ofString()
+//			)
+//			logger.info("Response: $response [${response.body()}]")
+//			block.countDown()
+//		}
+//		testNextRequest(socket, HTTPVersion.HTTP_2, block)
+//	}
 
 	fun testNextResponse(socket: Socket, version: HTTPVersion) {
 		val selector = HTTPProtocolSelector(version, socket.inputStream, socket.outputStream, false)

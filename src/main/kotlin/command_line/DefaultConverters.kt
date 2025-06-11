@@ -17,7 +17,7 @@ fun stringToLong(between: LongRange = Long.MIN_VALUE..Long.MAX_VALUE): (String) 
 	numeric
 }
 
-fun stringToInt(between: IntRange): (String) -> Int {
+fun stringToInt(between: IntRange = Integer.MIN_VALUE..Integer.MAX_VALUE): (String) -> Int {
 	val effector = stringToLong(between.start.toLong()..between.last)
 	return { effector(it).toInt() }
 }
