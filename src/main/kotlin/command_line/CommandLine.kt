@@ -1,6 +1,6 @@
 package org.bread_experts_group.command_line
 
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import java.util.logging.Level
 import kotlin.system.exitProcess
 
@@ -11,7 +11,7 @@ fun readArgs(
 	vararg flags: Flag<*>
 ) = readArgs(args, flags.toList(), projectName, projectUsage)
 
-private val logger = ColoredLogger.newLogger("Program Argument Retrieval")
+private val logger = ColoredHandler.newLogger("Program Argument Retrieval")
 
 fun readArgs(
 	args: Array<String>,
@@ -28,8 +28,8 @@ fun readArgs(
 		}
 	}
 	if (args.any { it.substringAfter('-') == "help" }) {
-		val bslLocation = ColoredLogger::class.java.protectionDomain.codeSource.location.path
-		val buildInfo = ColoredLogger::class.java.classLoader.loadClass("org.bread_experts_group.BuildInfo")
+		val bslLocation = ColoredHandler::class.java.protectionDomain.codeSource.location.path
+		val buildInfo = ColoredHandler::class.java.classLoader.loadClass("org.bread_experts_group.BuildInfo")
 		logger.info("Bread Server Library information")
 		logger.info("Location     [$bslLocation]")
 		logger.info("Version      [${buildInfo.getField("VERSION").get(null) as String}]")

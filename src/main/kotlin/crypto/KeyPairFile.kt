@@ -1,6 +1,6 @@
 package org.bread_experts_group.crypto
 
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -17,7 +17,7 @@ data class KeyPairFile(
 	val publicKey: File,
 	val privateKey: File
 ) : Destroyable {
-	val logger = ColoredLogger.newLogger("Key Pair Files")
+	val logger = ColoredHandler.newLogger("Key Pair Files")
 
 	fun ensurePermissions() {
 		ensureDestruction()

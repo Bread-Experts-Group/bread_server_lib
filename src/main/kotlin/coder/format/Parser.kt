@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.FailQuickInputStream
 import org.bread_experts_group.stream.Tagged
 import org.bread_experts_group.stream.Writable
@@ -10,7 +10,7 @@ abstract class Parser<I, O, S : InputStream>(
 	format: String,
 	protected val from: S
 ) : FailQuickInputStream(from) where O : Tagged<I>, O : Writable {
-	protected val logger = ColoredLogger.newLogger("$format Parser")
+	protected val logger = ColoredHandler.newLogger("$format Parser")
 	protected val parsers = mutableMapOf<I, (S, O) -> O>()
 	fun addParser(identifier: I, parser: (S, O) -> O) {
 		logger.fine { "Registering parser [$parser] for identifier [$identifier]" }

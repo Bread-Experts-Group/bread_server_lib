@@ -6,7 +6,7 @@ import org.bread_experts_group.coder.format.gamemaker_win.chunk.*
 import org.bread_experts_group.coder.format.gamemaker_win.structure.GameMakerWINBytecode
 import org.bread_experts_group.formatDurationTime
 import org.bread_experts_group.hex
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.read16
 import org.bread_experts_group.stream.read16ui
 import org.bread_experts_group.stream.read32
@@ -22,9 +22,9 @@ import kotlin.test.Test
 
 class GameMakerWINInputStreamTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
-		"gamemaker/data.win"
+		"coder/format/gamemaker/data.win"
 	)
-	val logger = ColoredLogger.newLogger("GameMaker WIN InputStream Tests")
+	val logger = ColoredHandler.newLogger("GameMaker WIN InputStream Tests")
 
 	@Test
 	fun readParsed() = assertDoesNotThrow {

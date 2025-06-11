@@ -3,7 +3,7 @@ package org.bread_experts_group.http.h2
 import org.bread_experts_group.coder.format.huffman.BitInputStream
 import org.bread_experts_group.coder.format.huffman.HuffmanBranch
 import org.bread_experts_group.hex
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.read32ul
 import org.bread_experts_group.stream.writeString
 import java.io.ByteArrayOutputStream
@@ -315,7 +315,7 @@ class HTTP2HeaderFrame(
 																_1111111111110.edge(true, '}')
 															}
 															_111111111111.branch(true).also { _1111111111111 ->
-																ColoredLogger.newLogger("HTTP2 Header Frame")
+																ColoredHandler.newLogger("HTTP2 Header Frame")
 																	.severe("TODO _1111111111111 branch")
 															}
 														}

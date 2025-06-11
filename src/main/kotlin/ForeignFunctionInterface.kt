@@ -1,13 +1,13 @@
 package org.bread_experts_group
 
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import java.io.IOException
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
 import java.util.logging.Logger
 import kotlin.jvm.optionals.getOrNull
 
-private val nativeLogger: Logger = ColoredLogger.newLogger("Foreign Function Interface")
+private val nativeLogger: Logger = ColoredHandler.newLogger("Foreign Function Interface")
 
 abstract class NativeObjectNotFoundException(name: String) : IOException(name)
 class NativeLibraryNotFoundException(library: String) : NativeObjectNotFoundException(library)

@@ -28,7 +28,7 @@ fun truncateSI(n: Long, decimals: Int = 2): String {
 fun formatDurationTime(durationSeconds: Double) = durationSeconds.seconds.toComponents { hours, minutes, seconds, ns ->
 	String.format(
 		Locale.getDefault(),
-		"%02d:%02d:%05.2f",
+		"%02d:%02d:%05.5f",
 		hours,
 		minutes,
 		seconds + (ns / 1000000000.0)

@@ -1,6 +1,6 @@
 package org.bread_experts_group.rmi
 
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import java.lang.management.ManagementFactory
 import java.rmi.registry.LocateRegistry
 import java.rmi.registry.Registry
@@ -14,7 +14,7 @@ class InstrumentationServiceServer : UnicastRemoteObject(), InstrumentationServi
 	override fun threads(): List<String> = threadMXBean.getThreadInfo(threadMXBean.allThreadIds).map { it.threadName }
 
 	companion object {
-		private val logger = ColoredLogger.newLogger("Remote Method Invocation")
+		private val logger = ColoredHandler.newLogger("Remote Method Invocation")
 		val registry: Registry = try {
 			logger.fine("Creating RMI registry [25799]")
 			LocateRegistry.createRegistry(25799)

@@ -2,7 +2,7 @@ package http
 
 import org.bread_experts_group.getTLSContext
 import org.bread_experts_group.http.*
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import java.net.*
@@ -20,7 +20,7 @@ import kotlin.io.path.outputStream
 
 
 class HTTPProtocolSelectorTest {
-	val logger = ColoredLogger.newLogger("HTTP Protocol Selection Tests")
+	val logger = ColoredHandler.newLogger("HTTP Protocol Selection Tests")
 	val tlsContext: SSLContext
 	val remoteClient: HttpClient
 

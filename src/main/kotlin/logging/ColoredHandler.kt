@@ -2,6 +2,7 @@ package org.bread_experts_group.logging
 
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
+import java.io.PrintStream
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -11,13 +12,33 @@ import java.util.logging.LogRecord
 import java.util.logging.Logger
 import kotlin.math.max
 
-object ColoredLogger : Handler() {
-	private val formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm:ss.SSSSSS")
-	private val levelNamePad = System.Logger.Level.entries.maxOf { it.name.length }
+/**
+ * A handler for colored, formatted logging towards a [PrintStream].
+ * @author Miko Elbrecht
+ * @since 2.4.0
+ */
+class ColoredHandler(
+	var dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/dd HH:mm:ss.SSSSSS"),
+	var stackTraceOnlyInLoggingModule: Boolean = false,
+	var towards: PrintStream = System.out
+) : Handler() {
+	companion object {
+		private var levelNamePad = System.Logger.Level.entries.maxOf { it.name.length }
+		var coloring: Boolean = true
+
+		fun newLogger(
+			name: String,
+			level: Level = Logger.getLogger("").level
+		): Logger = Logger.getLogger(name).also {
+			it.useParentHandlers = false
+			it.addHandler(ColoredHandler())
+			it.level = level
+		}
+
+		val recentlyLogged = mutableSetOf<Long>()
+	}
+
 	private var closed: Boolean = false
-	var coloring: Boolean = true
-	var stackTraceOnlyInLoggingModule: Boolean = false
-	var standardLevel: Level = Level.INFO
 
 	private fun createExceptionMessage(
 		record: LogRecord,
@@ -141,10 +162,9 @@ object ColoredLogger : Handler() {
 		)
 	} ?: "")
 
-	val recentlyLogged = mutableSetOf<Long>()
 	override fun publish(record: LogRecord) {
 		if (!recentlyLogged.add(record.sequenceNumber)) return
-		if (closed) return
+		if (closed) throw IllegalStateException("ColoredHandler closed")
 		val prefix = ansi {
 			setResets = coloring
 			color(ANSI16Color(ANSI16.LIGHT_GRAY)) {
@@ -164,7 +184,7 @@ object ColoredLogger : Handler() {
 				append(" | ")
 				color(ANSI16Color(ANSI16.YELLOW)) {
 					append(
-						formatter.format(
+						dateTimeFormatter.format(
 							ZonedDateTime.ofInstant(
 								record.instant,
 								ZoneId.systemDefault()
@@ -196,21 +216,13 @@ object ColoredLogger : Handler() {
 				.split('\n', limit = 2, ignoreCase = true)
 			initialMessage + '\n' + createExceptionMessage(record, prefix, exceptionName, exceptionMessage, spaced)
 		} else prefix.build() + paddedMessage
-		synchronized(System.out) {
-			@Suppress("ReplaceJavaStaticMethodWithKotlinAnalog")
-			System.out.println(fullMessage)
+		synchronized(towards) {
+			towards.println(fullMessage)
 		}
 	}
 
 	override fun flush() {}
-
 	override fun close() {
 		closed = true
-	}
-
-	fun newLogger(name: String): Logger = Logger.getLogger(name).also {
-		it.useParentHandlers = false
-		it.addHandler(this)
-		it.level = standardLevel
 	}
 }

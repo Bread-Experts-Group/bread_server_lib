@@ -1,6 +1,6 @@
 package org.bread_experts_group.http.html
 
-import org.bread_experts_group.logging.ColoredLogger
+import org.bread_experts_group.logging.ColoredHandler
 import java.io.File
 import java.io.IOException
 import java.nio.file.*
@@ -18,7 +18,7 @@ import kotlin.io.path.*
 import kotlin.random.Random
 
 object DirectoryListing {
-	private val logger = ColoredLogger.newLogger("HTML Directory Listing")
+	private val logger = ColoredHandler.newLogger("HTML Directory Listing")
 	private val watcher = FileSystems.getDefault().newWatchService()
 	private val directoryListingCache = mutableMapOf<File, MutableMap<Locale, CachedList>>()
 	private val reverseCache = mutableMapOf<WatchKey, File>()

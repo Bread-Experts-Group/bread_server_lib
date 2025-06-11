@@ -1,7 +1,7 @@
 package logging
 
+import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.logging.ColoredLevel
-import org.bread_experts_group.logging.ColoredLogger
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
 import org.bread_experts_group.logging.ansi_colorspace.ANSI256Color
@@ -13,7 +13,7 @@ import kotlin.random.Random
 import kotlin.random.nextUBytes
 
 class ColoredLoggerTest {
-	val logger = ColoredLogger.newLogger("Colored Logger Tests")
+	val logger = ColoredHandler.newLogger("Colored Logger Tests")
 
 	@OptIn(ExperimentalUnsignedTypes::class)
 	@Test
