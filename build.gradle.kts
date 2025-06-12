@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.33.0"
+version = "2.34.0"
 
 repositories {
 	mavenCentral()
@@ -22,6 +22,7 @@ dependencies {
 }
 tasks.test {
 	useJUnitPlatform()
+	maxHeapSize = "20G"
 }
 kotlin {
 	jvmToolchain(21)

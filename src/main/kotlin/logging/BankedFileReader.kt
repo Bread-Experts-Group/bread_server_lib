@@ -49,7 +49,15 @@ class BankedFileReader(
 		}
 	}
 
+	fun createLevel(name: String, resourceBundle: String?, value: Int): Level = try {
+		Level.parse(name)
+	} catch (_: IllegalArgumentException) {
+		ColoredLevel(name, ANSI16Color(ANSI16.MAGENTA), value, resourceBundle)
+	}
+
 	var nanos = 0L
+	val savedLevels = mutableMapOf<ULong, Level>()
+	val messages = mutableListOf<String>()
 	fun nextRecord(): LogRecord {
 		val initialPosition = content.position()
 		val data = ByteBuffer.allocate(90)
@@ -62,34 +70,42 @@ class BankedFileReader(
 				nanos
 			)
 		}
-		val (levelName, resourceBundleName) = stream.readExtensibleULong().let {
-			if (it and 1u == 1uL) {
-				val bundleName = memoryBank[stream.readExtensibleULong().toInt()]
-				bundleName to memoryBank[(it shr 1).toInt()]
-			} else memoryBank[(it shr 1).toInt()] to null
-		}
-		val levelValue = stream.readExtensibleLong().toInt()
-		val level = try {
-			Level.parse(levelName)
-		} catch (_: IllegalArgumentException) {
-			ColoredLevel(levelName, ANSI16Color(ANSI16.MAGENTA), levelValue, resourceBundleName)
+		val levelDescriptor = stream.readExtensibleULong()
+		val levelIndex = levelDescriptor shr 1
+		val level = if (levelDescriptor and 1u == 1uL) {
+			val nameIndex = stream.readExtensibleULong()
+			createLevel(
+				memoryBank[nameIndex.toInt()],
+				memoryBank[levelIndex.toInt()],
+				stream.readExtensibleLong().toInt()
+			).also { savedLevels[nameIndex] = it }
+		} else {
+			savedLevels[levelIndex] ?: createLevel(
+				memoryBank[levelIndex.toInt()],
+				null,
+				stream.readExtensibleLong().toInt()
+			).also { savedLevels[levelIndex] = it }
 		}
 		val loggerName = memoryBank[stream.readExtensibleULong().toInt()]
 		val threadID = stream.readExtensibleLong()
-		val messageLength = stream.readExtensibleULong()
-		val messageData = ByteBuffer.allocate((messageLength * 10u).toInt())
-		val messageStream = messageData.array().inputStream()
+		val messageDescriptor = stream.readExtensibleULong()
+		val messageLength = (messageDescriptor shr 1).toInt()
 		content.position(initialPosition + (data.capacity() - stream.available()))
-		val dataPosition = content.position()
-		content.read(messageData)
-		val message = buildString {
-			val length = messageLength.toInt()
-			repeat(length) {
-				append(memoryBank[messageStream.readExtensibleULong().toInt()])
-				append(' ')
+		val message = if (messageDescriptor and 1u == 0uL) {
+			val messageData = ByteBuffer.allocate(messageLength * 10)
+			val messageStream = messageData.array().inputStream()
+			val dataPosition = content.position()
+			content.read(messageData)
+			val message = buildString {
+				repeat(messageLength) {
+					append(memoryBank[messageStream.readExtensibleULong().toInt()])
+					append(' ')
+				}
 			}
-		}
-		content.position(dataPosition + (messageData.capacity() - messageStream.available()))
+			messages.add(message)
+			content.position(dataPosition + (messageData.capacity() - messageStream.available()))
+			message
+		} else messages[messageLength]
 		val record = LogRecord(level, message)
 		record.instant = time
 		record.loggerName = loggerName

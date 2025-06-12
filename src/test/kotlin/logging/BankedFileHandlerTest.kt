@@ -5,6 +5,7 @@ import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import kotlin.io.path.Path
+import kotlin.io.path.deleteIfExists
 
 class BankedFileHandlerTest {
 	val logger = ColoredHandler.newLogger("Banked File Handler Tests")
@@ -20,5 +21,8 @@ class BankedFileHandlerTest {
 		repeat(1000) { logger.info("Basic text message") }
 		repeat(1000) { logger.info("Complex メッセージ ỳ ġ \uD83D\uDD25\uD83D\uDD25") }
 		handler.close()
+		handler.bankPath.deleteIfExists()
+		handler.contentPath.deleteIfExists()
+		handler.timestampPath.deleteIfExists()
 	}
 }

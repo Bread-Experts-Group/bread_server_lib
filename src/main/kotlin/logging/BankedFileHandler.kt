@@ -137,6 +137,8 @@ class BankedFileHandler(
 
 	var recentNanos = 0
 	private val breaker = BreakIterator.getWordInstance()
+	private val specifiedLevelDetails = mutableSetOf<ULong>()
+	private val writtenMessages = mutableListOf<String>()
 	override fun publish(record: LogRecord) {
 		if (closed) throw IllegalStateException("BankedFileHandler closed")
 		val output = ByteArrayOutputStream()
@@ -145,34 +147,44 @@ class BankedFileHandler(
 		val nanos = record.instant.nano
 		output.writeExtensibleLong((nanos - recentNanos).toLong())
 		recentNanos = nanos
-		if (
-			record.level.resourceBundleName != null &&
-			try {
-				ResourceBundle.getBundle(record.level.resourceBundleName).containsKey(record.level.name)
-			} catch (_: MissingResourceException) {
-				false
-			}
-		) {
-			output.writeExtensibleULong((bankedWord(record.level.resourceBundleName) shl 1) or 1u)
-			output.writeExtensibleULong(bankedWord(record.level.name))
-		} else output.writeExtensibleULong(bankedWord(record.level.name) shl 1)
-		output.writeExtensibleLong(record.level.intValue().toLong())
+		val bankedLevelName = bankedWord(record.level.name)
+		if (specifiedLevelDetails.contains(bankedLevelName)) {
+			output.writeExtensibleULong(bankedLevelName shl 1)
+		} else {
+			if (
+				record.level.resourceBundleName != null &&
+				try {
+					ResourceBundle.getBundle(record.level.resourceBundleName).containsKey(record.level.name)
+				} catch (_: MissingResourceException) {
+					false
+				}
+			) {
+				output.writeExtensibleULong((bankedWord(record.level.resourceBundleName) shl 1) or 1u)
+				output.writeExtensibleULong(bankedLevelName)
+			} else output.writeExtensibleULong(bankedLevelName shl 1)
+			output.writeExtensibleLong(record.level.intValue().toLong())
+			specifiedLevelDetails.add(bankedLevelName)
+		}
 		output.writeExtensibleULong(bankedWord(record.loggerName))
 		output.writeExtensibleLong(record.longThreadID)
-		val broken = buildList {
-			val alpha = Normalizer.normalize(record.message, Normalizer.Form.NFC)
-			breaker.setText(alpha)
-			var from = breaker.first()
-			while (true) {
-				val next = breaker.next()
-				if (next == BreakIterator.DONE) break
-				val word = alpha.substring(from..(next - 1))
-				if (word.isNotBlank()) add(word)
-				from = next
+		val recordIndex = writtenMessages.indexOf(record.message)
+		if (recordIndex == -1) {
+			val broken = buildList {
+				val alpha = Normalizer.normalize(record.message, Normalizer.Form.NFC)
+				breaker.setText(alpha)
+				var from = breaker.first()
+				while (true) {
+					val next = breaker.next()
+					if (next == BreakIterator.DONE) break
+					val word = alpha.substring(from..(next - 1))
+					if (word.isNotBlank()) add(word)
+					from = next
+				}
 			}
-		}
-		output.writeExtensibleULong(broken.size.toULong())
-		broken.forEach { output.writeExtensibleULong(bankedWord(it)) }
+			output.writeExtensibleULong(broken.size.toULong() shl 1)
+			broken.forEach { output.writeExtensibleULong(bankedWord(it)) }
+			writtenMessages.add(record.message)
+		} else output.writeExtensibleULong((recordIndex.toULong() shl 1) or 1u)
 		content.write(ByteBuffer.wrap(output.toByteArray()))
 	}
 
