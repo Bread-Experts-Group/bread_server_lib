@@ -23,7 +23,9 @@ class ColoredHandler(
 	var towards: PrintStream = System.out
 ) : Handler() {
 	companion object {
-		private var levelNamePad = System.Logger.Level.entries.maxOf { it.name.length }
+		private var levelNamePad = System.Logger.Level.entries.maxOf {
+			Level.parse(it.severity.toString()).localizedName.length
+		}
 		var coloring: Boolean = true
 
 		fun newLogger(
@@ -180,7 +182,11 @@ class ColoredHandler(
 						is ColoredLevel -> level.color
 						else -> ANSI16Color(ANSI16.MAGENTA)
 					}
-				) { append(record.level.name.padEnd(levelNamePad)) }
+				) {
+					append(record.level.localizedName.padEnd(levelNamePad))
+					if (record.level.localizedName.length > levelNamePad)
+						levelNamePad = record.level.localizedName.length
+				}
 				append(" | ")
 				color(ANSI16Color(ANSI16.YELLOW)) {
 					append(

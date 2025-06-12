@@ -9,11 +9,11 @@ import org.bread_experts_group.stream.writeExtensibleULong
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.nio.channels.FileLock
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.text.BreakIterator
 import java.text.Normalizer
+import java.util.*
 import java.util.logging.Handler
 import java.util.logging.LogRecord
 
@@ -22,13 +22,12 @@ import java.util.logging.LogRecord
  * @author Miko Elbrecht
  * @since 2.32.0
  */
-@OptIn(ExperimentalStdlibApi::class)
 class BankedFileHandler(
-	bankPath: Path,
-	contentPath: Path,
-	timestampPath: Path
+	val bankPath: Path,
+	val contentPath: Path,
+	val timestampPath: Path
 ) : Handler() {
-	@Suppress("LongLine", "IncorrectFormatting", "SpellCheckingInspection")
+	@Suppress("LongLine", "SpellCheckingInspection")
 	@OptIn(ExperimentalStdlibApi::class)
 	companion object {
 		val englishHuffman = HuffmanBranch.import(
@@ -40,6 +39,36 @@ class BankedFileHandler(
 				.inputStream()
 		) to 2
 		val huffmen = listOf(englishHuffman, japaneseHuffman)
+
+		fun readMemoryBank(bank: FileChannel): MutableList<String> = buildList {
+			while (bank.position() < bank.size()) {
+				val initialPosition = bank.position()
+				val backed = ByteBuffer.allocate(11)
+				bank.read(backed)
+				val data = backed.array().inputStream()
+				val size = data.readExtensibleULong()
+				if (size > Int.MAX_VALUE.toUInt())
+					throw UnsupportedOperationException("Size is too big! [$size]")
+				val compressionMethod = data.read()
+				bank.position(initialPosition + (backed.capacity() - data.available()))
+				val contentBacked = ByteBuffer.allocate(size.toInt())
+				bank.read(contentBacked)
+				when (compressionMethod) {
+					0 -> add(contentBacked.array().decodeToString())
+					else -> {
+						huffmen.firstOrNull { (_, type) ->
+							type == (compressionMethod and 0b00011111)
+						}?.let { (huffman, _) ->
+							val unused = compressionMethod shr 5
+							val input = BitInputStream(contentBacked.array().inputStream())
+							var decoded = ""
+							while ((input.available() - unused) > 0) decoded += huffman.next(input)
+							add(decoded)
+						} ?: throw UnsupportedOperationException("Compression method [$compressionMethod]")
+					}
+				}
+			}
+		}.toMutableList()
 	}
 
 	val bank: FileChannel = FileChannel.open(
@@ -55,42 +84,11 @@ class BankedFileHandler(
 		timestampPath,
 		StandardOpenOption.WRITE, StandardOpenOption.CREATE
 	)
-	val bankLock: FileLock = bank.lock()
-	val contentLock: FileLock = content.lock()
-	val timestampLock: FileLock = timestamp.lock()
-	val memoryBank = mutableMapOf<String, ULong>()
+	val memoryBank = readMemoryBank(bank)
 	private var closed = false
-	private var memoryIndex = 0uL
-
 	var timeIndex = 0uL
 
 	init {
-		while (bank.position() < bank.size()) {
-			val initialPosition = bank.position()
-			val backed = ByteBuffer.allocate(11)
-			bank.read(backed)
-			val data = backed.array().inputStream()
-			val size = data.readExtensibleULong()
-			if (size > Int.MAX_VALUE.toUInt()) throw UnsupportedOperationException("Size is too big! [$size]")
-			val compressionMethod = data.read()
-			bank.position(initialPosition + (backed.capacity() - data.available()))
-			val contentBacked = ByteBuffer.allocate(size.toInt())
-			bank.read(contentBacked)
-			when (compressionMethod) {
-				0 -> memoryBank[contentBacked.array().decodeToString()] = memoryIndex++
-				else -> {
-					huffmen.firstOrNull { (huffman, type) ->
-						type == (compressionMethod and 0b00011111)
-					}?.let { (huffman, type) ->
-						val unused = compressionMethod shr 5
-						val input = BitInputStream(contentBacked.array().inputStream())
-						var decoded = ""
-						while ((input.available() - unused) > 0) decoded += huffman.next(input)
-						memoryBank[decoded] = memoryIndex++
-					} ?: throw UnsupportedOperationException("Compression method [$compressionMethod]")
-				}
-			}
-		}
 		val timestampBacked = ByteBuffer.allocate(10)
 		val timestampData = timestampBacked.array().inputStream()
 		timeIndex = timestampData.readExtensibleULong()
@@ -98,9 +96,8 @@ class BankedFileHandler(
 	}
 
 	private fun bankedWord(string: String): ULong {
-		if (!memoryBank.containsKey(string)) {
-			val nextIndex = memoryIndex++
-			memoryBank[string] = nextIndex
+		if (!memoryBank.contains(string)) {
+			memoryBank.add(string)
 			val plaintext = string.toByteArray()
 			val (array, compression) = huffmen.firstNotNullOfOrNull { (huffman, type) ->
 				if (string.all { huffman.directMap.containsKey(it) }) {
@@ -118,36 +115,44 @@ class BankedFileHandler(
 			output.write(compression)
 			output.write(array)
 			bank.write(ByteBuffer.wrap(output.toByteArray()))
-			return nextIndex
-		} else return memoryBank.getValue(string)
+		}
+		return memoryBank.indexOf(string).toULong()
 	}
 
 	var recentSeconds = 0uL
-	private fun timestamp(seconds: ULong): ULong = if (recentSeconds != seconds) {
-		recentSeconds = seconds
-		val newIndex = ++timeIndex
-		timestamp.position(0)
-		val idStream = ByteArrayOutputStream()
-		idStream.writeExtensibleULong(timeIndex)
-		timestamp.write(ByteBuffer.wrap(idStream.toByteArray()))
-		timestamp.position(timestamp.size().coerceAtLeast(10))
-		val timeData = ByteArrayOutputStream()
-		timeData.writeExtensibleULong(seconds)
-		timestamp.write(ByteBuffer.wrap(timeData.toByteArray()))
-		newIndex
-	} else timeIndex
+	private fun timestamp(seconds: ULong): ULong {
+		if (recentSeconds != seconds) {
+			recentSeconds = seconds
+			timestamp.position(0)
+			val idStream = ByteArrayOutputStream()
+			idStream.writeExtensibleULong(timeIndex++)
+			timestamp.write(ByteBuffer.wrap(idStream.toByteArray()))
+			timestamp.position(timestamp.size().coerceAtLeast(10))
+			val timeData = ByteArrayOutputStream()
+			timeData.writeExtensibleULong(seconds)
+			timestamp.write(ByteBuffer.wrap(timeData.toByteArray()))
+		}
+		return timeIndex - 1u
+	}
 
-	var recentNanos = 0uL
+	var recentNanos = 0
 	private val breaker = BreakIterator.getWordInstance()
 	override fun publish(record: LogRecord) {
 		if (closed) throw IllegalStateException("BankedFileHandler closed")
 		val output = ByteArrayOutputStream()
 		val timeIndex = timestamp(record.instant.epochSecond.toULong())
 		output.writeExtensibleULong(timeIndex)
-		val nanos = record.instant.nano.toULong()
-		output.writeExtensibleULong(nanos - recentNanos)
+		val nanos = record.instant.nano
+		output.writeExtensibleLong((nanos - recentNanos).toLong())
 		recentNanos = nanos
-		if (record.level.resourceBundleName != null) {
+		if (
+			record.level.resourceBundleName != null &&
+			try {
+				ResourceBundle.getBundle(record.level.resourceBundleName).containsKey(record.level.name)
+			} catch (_: MissingResourceException) {
+				false
+			}
+		) {
 			output.writeExtensibleULong((bankedWord(record.level.resourceBundleName) shl 1) or 1u)
 			output.writeExtensibleULong(bankedWord(record.level.name))
 		} else output.writeExtensibleULong(bankedWord(record.level.name) shl 1)
@@ -179,9 +184,6 @@ class BankedFileHandler(
 
 	override fun close() {
 		this.flush()
-		bankLock.release()
-		contentLock.release()
-		timestampLock.release()
 		bank.close()
 		content.close()
 		timestamp.close()
