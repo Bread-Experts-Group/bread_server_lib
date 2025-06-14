@@ -1,4 +1,4 @@
-package org.bread_experts_group.taggart.png.chunk
+package org.bread_experts_group.coder.format.png.chunk
 
 import org.bread_experts_group.stream.Tagged
 import org.bread_experts_group.stream.Writable

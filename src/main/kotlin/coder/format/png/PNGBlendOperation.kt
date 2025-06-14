@@ -1,4 +1,4 @@
-package org.bread_experts_group.taggart.png
+package org.bread_experts_group.coder.format.png
 
 enum class PNGBlendOperation(val code: Int) {
 	APNG_BLEND_OP_SOURCE(0),

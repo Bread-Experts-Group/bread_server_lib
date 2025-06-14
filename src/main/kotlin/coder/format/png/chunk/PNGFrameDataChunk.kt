@@ -1,4 +1,4 @@
-package org.bread_experts_group.taggart.png.chunk
+package org.bread_experts_group.coder.format.png.chunk
 
 class PNGFrameDataChunk(
 	override val sequence: Int,

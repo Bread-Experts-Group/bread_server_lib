@@ -1,7 +1,7 @@
-package org.bread_experts_group.taggart.png.chunk
+package org.bread_experts_group.coder.format.png.chunk
 
-import org.bread_experts_group.taggart.png.PNGBlendOperation
-import org.bread_experts_group.taggart.png.PNGDisposeOperation
+import org.bread_experts_group.coder.format.png.PNGBlendOperation
+import org.bread_experts_group.coder.format.png.PNGDisposeOperation
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 

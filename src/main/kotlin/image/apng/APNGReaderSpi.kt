@@ -1,5 +1,6 @@
-package org.bread_experts_group.taggart.apng
+package org.bread_experts_group.image.apng
 
+import java.io.InputStream
 import java.util.*
 import javax.imageio.ImageReader
 import javax.imageio.spi.ImageReaderSpi
@@ -13,7 +14,7 @@ class APNGReaderSpi : ImageReaderSpi() {
 		suffixes = arrayOf("coder/format/png", "apng")
 		MIMETypes = arrayOf("image/png", "image/apng")
 		pluginClassName = APNGReader::class.java.name
-		inputTypes = arrayOf(ImageInputStream::class.java)
+		inputTypes = arrayOf(ImageInputStream::class.java, InputStream::class.java)
 		supportsStandardStreamMetadataFormat = false
 		supportsStandardImageMetadataFormat = false
 	}

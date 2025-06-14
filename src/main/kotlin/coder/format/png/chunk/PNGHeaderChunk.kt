@@ -1,8 +1,8 @@
-package org.bread_experts_group.taggart.png.chunk
+package org.bread_experts_group.coder.format.png.chunk
 
-import org.bread_experts_group.taggart.png.PNGCompressionType
-import org.bread_experts_group.taggart.png.PNGFilterType
-import org.bread_experts_group.taggart.png.PNGInterlaceType
+import org.bread_experts_group.coder.format.png.PNGCompressionType
+import org.bread_experts_group.coder.format.png.PNGFilterType
+import org.bread_experts_group.coder.format.png.PNGInterlaceType
 
 class PNGHeaderChunk(
 	val width: Int,

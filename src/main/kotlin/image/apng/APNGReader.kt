@@ -1,11 +1,11 @@
-package org.bread_experts_group.taggart.apng
+package org.bread_experts_group.image.apng
 
+import org.bread_experts_group.coder.format.png.PNGAdaptiveFilterType
+import org.bread_experts_group.coder.format.png.PNGBlendOperation
+import org.bread_experts_group.coder.format.png.PNGDisposeOperation
+import org.bread_experts_group.coder.format.png.PNGParser
+import org.bread_experts_group.coder.format.png.chunk.*
 import org.bread_experts_group.stream.DataInputProxyStream
-import org.bread_experts_group.taggart.png.PNGAdaptiveFilterType
-import org.bread_experts_group.taggart.png.PNGBlendOperation
-import org.bread_experts_group.taggart.png.PNGDisposeOperation
-import org.bread_experts_group.taggart.png.PNGParser
-import org.bread_experts_group.taggart.png.chunk.*
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -174,14 +174,19 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 
 	private fun readAll() {
 		if (readImages.isNotEmpty()) return
-		val parsed = PNGParser(DataInputProxyStream(this.input as ImageInputStream))
-			.readAllParsed().fold(mutableListOf<PNGChunk>()) { acc, chunk ->
-				if ((chunk.tag == "IDAT" || chunk.tag == "fdAT") && acc.lastOrNull()?.tag == chunk.tag) {
-					val last = acc.removeLast()
-					acc += PNGChunk(chunk.tag, last.data + chunk.data)
-				} else acc += chunk
-				acc
+		val parsed = PNGParser(
+			when (this.input) {
+				is ImageInputStream -> DataInputProxyStream(this.input as ImageInputStream)
+				is InputStream -> this.input as InputStream
+				else -> throw UnsupportedOperationException(this.input::class.java.canonicalName)
 			}
+		).readAllParsed().fold(mutableListOf<PNGChunk>()) { acc, chunk ->
+			if ((chunk.tag == "IDAT" || chunk.tag == "fdAT") && acc.lastOrNull()?.tag == chunk.tag) {
+				val last = acc.removeLast()
+				acc += PNGChunk(chunk.tag, last.data + chunk.data)
+			} else acc += chunk
+			acc
+		}
 		val header = parsed.firstNotNullOf { it as? PNGHeaderChunk }
 		val palette = parsed.firstNotNullOfOrNull { it as? PNGPaletteChunk }
 		run {

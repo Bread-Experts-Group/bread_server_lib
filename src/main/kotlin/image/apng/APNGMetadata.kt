@@ -1,4 +1,4 @@
-package org.bread_experts_group.taggart.apng
+package org.bread_experts_group.image.apng
 
 import org.w3c.dom.Node
 import javax.imageio.metadata.IIOMetadata

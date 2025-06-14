@@ -1,4 +1,4 @@
-package org.bread_experts_group.taggart.png
+package org.bread_experts_group.coder.format.png
 
 enum class PNGDisposeOperation(val code: Int) {
 	APNG_DISPOSE_OP_NONE(0),

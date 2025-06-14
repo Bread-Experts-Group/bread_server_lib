@@ -1,10 +1,10 @@
-package org.bread_experts_group.taggart.png
+package org.bread_experts_group.coder.format.png
 
 import org.bread_experts_group.coder.format.Parser
+import org.bread_experts_group.coder.format.png.chunk.*
 import org.bread_experts_group.stream.read16ui
 import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
-import org.bread_experts_group.taggart.png.chunk.*
 import java.awt.Color
 import java.io.InputStream
 
