@@ -28,8 +28,8 @@ class HTTPProtocolSelector(
 	}
 
 	val logger = ColoredHandler.newLogger("HTTP Protocol Selector ($version)")
-	val requestBacklog = LinkedBlockingQueue<HTTPRequest>()
-	val responseBacklog = LinkedBlockingQueue<HTTPResponse>()
+	val requestBacklog = LinkedBlockingQueue<Result<HTTPRequest>>()
+	val responseBacklog = LinkedBlockingQueue<Result<HTTPResponse>>()
 
 	private fun versionInitialization(from: InputStream) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
@@ -62,7 +62,9 @@ class HTTPProtocolSelector(
 								this[name] = value
 							}
 						}
-						requestBacklog.add(HTTPRequest(method, url, headers, byteArrayOf().inputStream()))
+						requestBacklog.add(
+							Result.success(HTTPRequest(method, url, headers, byteArrayOf().inputStream()))
+						)
 					} else {
 						from.scanDelimiter(" ").let {
 							val version = HTTPVersion.mapping[it]
@@ -101,16 +103,20 @@ class HTTPProtocolSelector(
 							from.readNBytes(headers.getValue("content-length").toInt()).inputStream()
 						)
 						responseBacklog.add(
-							HTTPResponse(
-								HTTPRequest(HTTPMethod.GET, URI.create("/")),
-								code,
-								headers,
-								data,
-								true
+							Result.success(
+								HTTPResponse(
+									HTTPRequest(HTTPMethod.GET, URI.create("/")),
+									code,
+									headers,
+									data,
+									true
+								)
 							)
 						)
 					}
 				}
+			}.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, t ->
+				responseBacklog.add(Result.failure(t))
 			}
 		}
 
@@ -173,18 +179,20 @@ class HTTPProtocolSelector(
 							if (frame.flags.contains(HTTP2HeaderFrameFlag.END_OF_HEADERS)) {
 								val stream = streams.getOrPut(frame.identifier) { ConsolidatedInputStream() }
 								requestBacklog.add(
-									HTTP2Request(
-										frame.identifier,
-										HTTPMethod.safeMapping[blocks.remove(":method")] ?: HTTPMethod.OTHER,
-										URI(
-											blocks.remove(":scheme"),
-											blocks.remove(":authority"),
-											blocks.remove(":path"),
-											null,
-											null
-										),
-										blocks.toMap(),
-										stream
+									Result.success(
+										HTTP2Request(
+											frame.identifier,
+											HTTPMethod.safeMapping[blocks.remove(":method")] ?: HTTPMethod.OTHER,
+											URI(
+												blocks.remove(":scheme"),
+												blocks.remove(":authority"),
+												blocks.remove(":path"),
+												null,
+												null
+											),
+											blocks.toMap(),
+											stream
+										)
 									)
 								)
 								blocks.clear()
@@ -211,6 +219,8 @@ class HTTPProtocolSelector(
 						is HTTP2StopStreamFrame -> {} // TODO Stream states
 					}
 				}
+			}.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, t ->
+				responseBacklog.add(Result.failure(t))
 			}
 		}
 
@@ -221,7 +231,7 @@ class HTTPProtocolSelector(
 		if (from != null) versionInitialization(from)
 	}
 
-	fun nextRequest(): HTTPRequest = requestBacklog.take()
+	fun nextRequest(): Result<HTTPRequest> = requestBacklog.take()
 
 	fun sendRequest(request: HTTPRequest) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
@@ -234,7 +244,7 @@ class HTTPProtocolSelector(
 		HTTPVersion.HTTP_3 -> TODO("HTTP/3")
 	}
 
-	fun nextResponse(): HTTPResponse = responseBacklog.take()
+	fun nextResponse(): Result<HTTPResponse> = responseBacklog.take()
 
 	fun sendResponse(response: HTTPResponse) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
