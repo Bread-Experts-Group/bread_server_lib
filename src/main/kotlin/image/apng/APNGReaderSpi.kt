@@ -10,8 +10,8 @@ class APNGReaderSpi : ImageReaderSpi() {
 	init {
 		vendorName = "Bread Experts Group"
 		version = "1.0.0"
-		names = arrayOf("coder/format/png", "apng")
-		suffixes = arrayOf("coder/format/png", "apng")
+		names = arrayOf("png", "apng")
+		suffixes = arrayOf("png", "apng")
 		MIMETypes = arrayOf("image/png", "image/apng")
 		pluginClassName = APNGReader::class.java.name
 		inputTypes = arrayOf(ImageInputStream::class.java, InputStream::class.java)
