@@ -116,7 +116,8 @@ class HTTPProtocolSelector(
 					}
 				}
 			}.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, t ->
-				responseBacklog.add(Result.failure(t))
+				if (server) requestBacklog.add(Result.failure(t))
+				else responseBacklog.add(Result.failure(t))
 			}
 		}
 
@@ -220,7 +221,8 @@ class HTTPProtocolSelector(
 					}
 				}
 			}.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, t ->
-				responseBacklog.add(Result.failure(t))
+				if (server) requestBacklog.add(Result.failure(t))
+				else responseBacklog.add(Result.failure(t))
 			}
 		}
 

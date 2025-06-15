@@ -58,7 +58,9 @@ class HTTPProtocolSelectorTest {
 				val selector = HTTPProtocolSelector(version, connection.inputStream, connection.outputStream, true)
 				val request = selector.nextRequest()
 				logger.info("Request: $request")
-				selector.sendResponse(HTTPResponse(request, 200, data = "Hello, ${version.tag}".byteInputStream()))
+				selector.sendResponse(
+					HTTPResponse(request.getOrThrow(), 200, data = "Hello, ${version.tag}".byteInputStream())
+				)
 				latch.await()
 				break
 			} catch (_: SocketException) {
