@@ -1,5 +1,6 @@
 package logging
 
+import org.bread_experts_group.command_line.ArgumentParsingError
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.logging.ColoredLevel
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
@@ -12,7 +13,7 @@ import java.util.logging.Level
 import kotlin.random.Random
 import kotlin.random.nextUBytes
 
-class ColoredLoggerTest {
+class ColoredHandlerTest {
 	val logger = ColoredHandler.newLogger("Colored Logger Tests")
 
 	@OptIn(ExperimentalUnsignedTypes::class)
@@ -42,5 +43,7 @@ class ColoredLoggerTest {
 			val level = ColoredLevel("Test RGB", ANSITrueColor(rgb[0], rgb[1], rgb[2]))
 			logger.log(level, "Random sampling ${rgb[0]}.${rgb[1]}.${rgb[2]}")
 		}
+		val err = ArgumentParsingError("Test Parse Error", cause = ClassCircularityError())
+		logger.log(Level.INFO, err) { "Error message with cause" }
 	}
 }

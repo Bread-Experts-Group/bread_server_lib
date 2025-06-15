@@ -45,8 +45,6 @@ class ColoredHandler(
 	private fun createExceptionMessage(
 		record: LogRecord,
 		prefix: ANSIString,
-		exceptionName: String,
-		exceptionMessage: List<String>,
 		spaced: String,
 		thrown: Throwable = record.thrown,
 		hitThrown: Set<Throwable> = emptySet()
@@ -96,6 +94,9 @@ class ColoredHandler(
 				truncatedCount = 0
 			} else null
 
+			val exceptionName = thrown.javaClass.canonicalName ?: "???"
+			val exceptionMessage = (thrown.localizedMessage ?: "<no message>")
+				.split('\n', limit = 2, ignoreCase = true)
 			color(ANSI16Color(ANSI16.LIGHT_GRAY)) {
 				var additionalOffset = 0
 				if (truncatedCount > 0) traceString().also {
@@ -159,7 +160,7 @@ class ColoredHandler(
 		}
 	}.build() + (thrown.cause?.let {
 		'\n' + createExceptionMessage(
-			record, prefix, exceptionName, exceptionMessage, spaced,
+			record, prefix, spaced,
 			it, hitThrown + thrown
 		)
 	} ?: "")
@@ -216,11 +217,8 @@ class ColoredHandler(
 		val spaced = " ".repeat(prefix.length())
 		val paddedMessage = record.message.replace("\n", "\n$spaced", true)
 		val fullMessage = if (record.thrown != null) {
-			val exceptionName = record.thrown.javaClass.canonicalName ?: "???"
 			val initialMessage = prefix.build() + paddedMessage
-			val exceptionMessage = (record.thrown.localizedMessage ?: "<no message>")
-				.split('\n', limit = 2, ignoreCase = true)
-			initialMessage + '\n' + createExceptionMessage(record, prefix, exceptionName, exceptionMessage, spaced)
+			initialMessage + '\n' + createExceptionMessage(record, prefix, spaced)
 		} else prefix.build() + paddedMessage
 		synchronized(towards) {
 			towards.println(fullMessage)
