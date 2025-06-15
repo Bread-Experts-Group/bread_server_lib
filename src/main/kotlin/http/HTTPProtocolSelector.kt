@@ -33,11 +33,40 @@ class HTTPProtocolSelector(
 
 	private fun versionInitialization(from: InputStream) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
+			fun decodeHeaders(): Map<String, String> = buildMap {
+				while (true) {
+					val read = from.scanDelimiter("\r\n").split(':', limit = 2)
+					if (read.size != 2) break
+					set(read[0].lowercase(), if (read[1][0] == ' ') read[1].substring(1) else read[1])
+				}
+			}
+
+			fun decodeData(headers: Map<String, String>): ConsolidatedInputStream {
+				val data = ConsolidatedInputStream()
+				if (headers.contains("transfer-encoding")) {
+					if (headers.getValue("transfer-encoding") != "chunked")
+						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
+					while (true) {
+						val length = from.scanDelimiter("\r\n").toInt(16)
+						if (length == 0) break
+						data.streams.add(from.readNBytes(length).inputStream())
+						from.scanDelimiter("\r\n")
+					}
+				} else if (headers.contains("content-length")) data.streams.add(
+					from.readNBytes(headers.getValue("content-length").toInt()).inputStream()
+				)
+				return data
+			}
+
 			Thread.ofVirtual().name("HTTP/0.9-1.1 Backlogger").start {
 				while (true) {
 					if (server) {
 						val method = HTTPMethod.safeMapping[from.scanDelimiter(" ")] ?: HTTPMethod.OTHER
-						val url = URI(from.scanDelimiter(" ").replace(Regex("%(?![0-9a-fA-F]{2})"), "%25"))
+						val path = URI(
+							from
+								.scanDelimiter(" ")
+								.replace(Regex("%(?![0-9a-fA-F]{2})"), "%25")
+						)
 						from.scanDelimiter("\r\n").let {
 							val version = HTTPVersion.mapping[it]
 							when (version) {
@@ -49,21 +78,16 @@ class HTTPProtocolSelector(
 								else -> version
 							}
 						}
-						val headers = buildMap {
-							while (true) {
-								val raw = from.scanDelimiter("\r\n")
-								if (raw.isEmpty()) break
-								var (name, value) = raw.split(':', ignoreCase = true, limit = 2)
-								if (value[0] == ' ') value = value.substring(1)
-								name = name
-									.lowercase()
-									.split('-')
-									.joinToString("-") { it.replaceFirstChar { ch -> ch.uppercaseChar() } }
-								this[name] = value
-							}
-						}
+						val headers = decodeHeaders()
 						requestBacklog.add(
-							Result.success(HTTPRequest(method, url, headers, byteArrayOf().inputStream()))
+							Result.success(
+								HTTPRequest(
+									method,
+									path,
+									headers,
+									decodeData(headers)
+								)
+							)
 						)
 					} else {
 						from.scanDelimiter(" ").let {
@@ -82,33 +106,14 @@ class HTTPProtocolSelector(
 							if (parsed == null) throw DecodingException("Server sent bad status code [$it]")
 							parsed
 						}
-						val headers = buildMap {
-							while (true) {
-								val read = from.scanDelimiter("\r\n").split(':', limit = 2)
-								if (read.size != 2) break
-								set(read[0].lowercase(), if (read[1][0] == ' ') read[1].substring(1) else read[1])
-							}
-						}
-						val data = ConsolidatedInputStream()
-						if (headers.contains("transfer-encoding")) {
-							if (headers.getValue("transfer-encoding") != "chunked")
-								throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
-							while (true) {
-								val length = from.scanDelimiter("\r\n").toInt(16)
-								if (length == 0) break
-								data.streams.add(from.readNBytes(length).inputStream())
-								from.scanDelimiter("\r\n")
-							}
-						} else if (headers.contains("content-length")) data.streams.add(
-							from.readNBytes(headers.getValue("content-length").toInt()).inputStream()
-						)
+						val headers = decodeHeaders()
 						responseBacklog.add(
 							Result.success(
 								HTTPResponse(
 									HTTPRequest(HTTPMethod.GET, URI.create("/")),
 									code,
 									headers,
-									data,
+									decodeData(headers),
 									true
 								)
 							)
