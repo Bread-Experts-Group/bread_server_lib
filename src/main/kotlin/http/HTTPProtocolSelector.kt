@@ -245,6 +245,7 @@ class HTTPProtocolSelector(
 			to.writeString("${request.method.name} ${request.path} ${version.tag}\r\n")
 			request.headers.forEach { (key, value) -> to.writeString("$key:$value\r\n") }
 			to.writeString("\r\n")
+			request.data.transferTo(to)
 		}
 
 		HTTPVersion.HTTP_2 -> TODO("HTTP/2")
