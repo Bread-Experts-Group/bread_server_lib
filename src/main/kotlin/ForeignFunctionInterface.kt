@@ -32,7 +32,7 @@ fun MemorySegment.composeFlags(): String = '[' + buildList {
 	if (this@composeFlags.isReadOnly) add("READONLY")
 }.joinToString(",") + ']'
 
-fun MemorySegment.debugString() = "{${hex(this.address().toULong())}}; ${this.composeFlags()}"
+fun MemorySegment.debugString(): String = "{${hex(this.address().toULong())}}; ${this.composeFlags()}"
 
 fun SymbolLookup.getAddress(name: String): MemorySegment {
 	nativeLogger.fine { "Getting the address for \"$name\", standby" }

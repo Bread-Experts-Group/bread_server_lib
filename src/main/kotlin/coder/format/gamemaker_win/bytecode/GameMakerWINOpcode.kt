@@ -36,6 +36,6 @@ enum class GameMakerWINOpcode(val code: Int, val variant: GameMakerWINOpcodeVari
 	BREAK(0xFF, GameMakerWINOpcodeVariant.BREAK);
 
 	companion object {
-		val mapping = entries.associateBy(GameMakerWINOpcode::code)
+		val mapping: Map<Int, GameMakerWINOpcode> = entries.associateBy(GameMakerWINOpcode::code)
 	}
 }

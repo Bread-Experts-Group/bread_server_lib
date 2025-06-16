@@ -9,6 +9,6 @@ class ColoredLevel(
 	resourceBundleName: String? = null
 ) : Level(name, value, resourceBundleName) {
 	companion object {
-		var coloredLoggerSpace = 25777
+		var coloredLoggerSpace: Int = 25777
 	}
 }

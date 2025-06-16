@@ -1,12 +1,14 @@
-package org.bread_experts_group.coder.format.huffman
+package org.bread_experts_group.coder.format
 
 import java.io.OutputStream
 
 class BitOutputStream<T : OutputStream>(val to: T) : OutputStream() {
-	override fun write(b: Int) = throw UnsupportedOperationException("Use writeBit() instead")
+	override fun write(b: Int): Nothing = throw UnsupportedOperationException("Use writeBit() instead")
 
-	var currentByte = 0
-	var position = 7
+	private var currentByte = 0
+	var position: Int = 7
+		private set
+
 	fun writeBit(bit: Boolean) {
 		if (bit) currentByte = currentByte or (1 shl position)
 		position--

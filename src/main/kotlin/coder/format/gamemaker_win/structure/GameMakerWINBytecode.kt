@@ -8,7 +8,7 @@ class GameMakerWINBytecode(
 	arguments: Int,
 	val address: Long
 ) {
-	val arguments = arguments and 0x7FFF
+	val arguments: Int = arguments and 0x7FFF
 
 	override fun toString(): String = "GameMakerWINBytecode@$offset[$name, # $length, $locals local(s), " +
 			"$arguments argument(s), @ $address]"

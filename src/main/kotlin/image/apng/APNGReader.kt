@@ -5,6 +5,7 @@ import org.bread_experts_group.coder.format.png.PNGBlendOperation
 import org.bread_experts_group.coder.format.png.PNGDisposeOperation
 import org.bread_experts_group.coder.format.png.PNGParser
 import org.bread_experts_group.coder.format.png.chunk.*
+import org.bread_experts_group.image.AnimatedMetadata
 import org.bread_experts_group.stream.DataInputProxyStream
 import java.awt.AlphaComposite
 import java.awt.Color
@@ -207,7 +208,7 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 				val (control, data) = ani.removeFirst()
 				control as PNGFrameControlChunk
 				if (control.sequence == 0) {
-					readImages[0].metadata = APNGMetadata(control.delayMillis)
+					readImages[0].metadata = AnimatedMetadata(control.delayMillis)
 				} else bufferedImages.add(run {
 					val data = InflaterInputStream(data.data.inputStream())
 					val newImage = decodeImage(
@@ -237,7 +238,7 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 						PNGDisposeOperation.APNG_DISPOSE_OP_PREVIOUS -> canvas = precopy!!
 					}
 					graphics.dispose()
-					readImages.add(IIOImage(copy, listOf(), APNGMetadata(control.delayMillis)))
+					readImages.add(IIOImage(copy, listOf(), AnimatedMetadata(control.delayMillis)))
 					copy
 				})
 			}

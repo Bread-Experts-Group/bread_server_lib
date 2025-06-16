@@ -49,14 +49,14 @@ val nativeFuseSessionLoop: MethodHandle = fuseLookup.getDowncall(
 	ValueLayout.ADDRESS
 )
 
-val nativeFuseSessionUnmount = fuseLookup.getDowncallVoid(
+val nativeFuseSessionUnmount: MethodHandle = fuseLookup.getDowncallVoid(
 	linker, "fuse_session_unmount", ValueLayout.ADDRESS
 )
 
-val nativeFuseSessionExit = fuseLookup.getDowncallVoid(
+val nativeFuseSessionExit: MethodHandle = fuseLookup.getDowncallVoid(
 	linker, "fuse_session_exit", ValueLayout.ADDRESS
 )
 
-val nativeFuseSessionDestroy = fuseLookup.getDowncallVoid(
+val nativeFuseSessionDestroy: MethodHandle = fuseLookup.getDowncallVoid(
 	linker, "fuse_session_destroy", ValueLayout.ADDRESS
 )

@@ -25,6 +25,6 @@ enum class DNSResponseCode(val code: Int) {
 	OTHER(-1);
 
 	companion object {
-		val mapping = entries.associateBy(DNSResponseCode::code)
+		val mapping: Map<Int, DNSResponseCode> = entries.associateBy(DNSResponseCode::code)
 	}
 }

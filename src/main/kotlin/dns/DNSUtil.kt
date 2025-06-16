@@ -11,7 +11,7 @@ class DNSExtendedLabel(val type: Int) : DNSLabel {
 	override fun toString(): String = "[extended label: $type]"
 }
 class DNSLabelLiteral(literal: String) : DNSLabel {
-	val literal = if (literal.endsWith('.')) literal else "$literal."
+	val literal: String = if (literal.endsWith('.')) literal else "$literal."
 	override fun toString(): String = "[literal label: \"$literal\"]"
 }
 
@@ -39,7 +39,7 @@ fun readLabel(stream: InputStream, lookbehind: ByteArray): DNSLabel {
 	return DNSLabelLiteral(name)
 }
 
-fun writeLabel(label: String) = ByteArrayOutputStream().use {
+fun writeLabel(label: String): ByteArray = ByteArrayOutputStream().use {
 	if (label == ".") it.write(0)
 	else label.split('.').forEach { s ->
 		it.write(s.length)

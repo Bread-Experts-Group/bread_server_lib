@@ -1,7 +1,6 @@
-package http
+package org.bread_experts_group.http
 
 import org.bread_experts_group.getTLSContext
-import org.bread_experts_group.http.*
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
@@ -12,6 +11,7 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.security.cert.X509Certificate
 import java.util.concurrent.CountDownLatch
+import java.util.logging.Logger
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLEngine
 import javax.net.ssl.X509ExtendedTrustManager
@@ -19,7 +19,7 @@ import kotlin.io.path.outputStream
 
 
 class HTTPProtocolSelectorTest {
-	val logger = ColoredHandler.newLogger("HTTP Protocol Selection Tests")
+	val logger: Logger = ColoredHandler.newLogger("HTTP Protocol Selection Tests")
 	val tlsContext: SSLContext
 	val remoteClient: HttpClient
 
@@ -71,7 +71,7 @@ class HTTPProtocolSelectorTest {
 	}
 
 	@Test
-	fun nextRequestHTTP11() = assertDoesNotThrow {
+	fun nextRequestHTTP11(): Unit = assertDoesNotThrow {
 		val socket = ServerSocket()
 		socket.bind(InetSocketAddress("localhost", 60511))
 		logger.info("Server active on address [${socket.localSocketAddress}]")
@@ -119,7 +119,7 @@ class HTTPProtocolSelectorTest {
 	}
 
 	@Test
-	fun nextResponseHTTP11() = assertDoesNotThrow {
+	fun nextResponseHTTP11(): Unit = assertDoesNotThrow {
 		val socket = Socket()
 		socket.connect(InetSocketAddress("google.com", 80), 5000)
 		testNextResponse(socket, HTTPVersion.HTTP_1_1)

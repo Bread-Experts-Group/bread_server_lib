@@ -20,6 +20,6 @@ enum class SMTPCommand {
 	UNKNOWN;
 
 	companion object {
-		val mapping = entries.associateBy { it.name }
+		val mapping: Map<String, SMTPCommand> = entries.associateBy { it.name }
 	}
 }

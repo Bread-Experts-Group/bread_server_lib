@@ -9,6 +9,6 @@ enum class WebSocketOpcode(val code: Int) {
 	PONG(10);
 
 	companion object {
-		val mapping = entries.associateBy(WebSocketOpcode::code)
+		val mapping: Map<Int, WebSocketOpcode> = entries.associateBy(WebSocketOpcode::code)
 	}
 }

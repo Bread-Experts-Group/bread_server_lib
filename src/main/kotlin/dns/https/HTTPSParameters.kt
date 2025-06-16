@@ -10,6 +10,6 @@ enum class HTTPSParameters(val code: Int) {
 	IPV6_HINT(6);
 
 	companion object {
-		val mapping = entries.associateBy(HTTPSParameters::code)
+		val mapping: Map<Int, HTTPSParameters> = entries.associateBy(HTTPSParameters::code)
 	}
 }

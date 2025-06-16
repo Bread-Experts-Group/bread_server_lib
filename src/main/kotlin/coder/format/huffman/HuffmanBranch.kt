@@ -1,5 +1,7 @@
 package org.bread_experts_group.coder.format.huffman
 
+import org.bread_experts_group.coder.format.BitInputStream
+import org.bread_experts_group.coder.format.BitOutputStream
 import org.bread_experts_group.stream.FailQuickInputStream
 import org.bread_experts_group.stream.readExtensibleULong
 import org.bread_experts_group.stream.writeExtensibleULong
@@ -14,7 +16,8 @@ class HuffmanBranch<T> private constructor(
 	constructor() : this(mutableMapOf(), emptyList())
 
 	companion object {
-		val consolidatoryComparator = Comparator<Pair<*, Int>> { (_, f1), (_, f2) -> f1.compareTo(f2) }
+		val consolidatoryComparator: Comparator<Pair<*, Int>> =
+			Comparator<Pair<*, Int>> { (_, f1), (_, f2) -> f1.compareTo(f2) }
 		fun <T> consolidate(priorities: Collection<Pair<T, Int>>): List<*> {
 			val queue = PriorityQueue(priorities.size, consolidatoryComparator)
 			val secondaryQueue = PriorityQueue(priorities.size, consolidatoryComparator)

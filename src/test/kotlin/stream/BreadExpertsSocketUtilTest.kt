@@ -1,16 +1,13 @@
-package stream
+package org.bread_experts_group.stream
 
 import org.bread_experts_group.formatDurationTime
 import org.bread_experts_group.logging.ColoredHandler
-import org.bread_experts_group.stream.readExtensibleLong
-import org.bread_experts_group.stream.readExtensibleULong
-import org.bread_experts_group.stream.writeExtensibleLong
-import org.bread_experts_group.stream.writeExtensibleULong
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.util.logging.Logger
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
@@ -21,10 +18,10 @@ import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
 class BreadExpertsSocketUtilTest {
-	val logger = ColoredHandler.newLogger("Bread Experts Group Private Socket Utilities Test")
-	val sampleSize = 10000
+	val logger: Logger = ColoredHandler.newLogger("Bread Experts Group Private Socket Utilities Test")
+	val sampleSize: Int = 10000
 
-	var longWriteCalls = 0
+	var longWriteCalls: Int = 0
 	fun OutputStream.writeExtensibleLongCounted(value: Long) {
 		this.writeExtensibleLong(value)
 		longWriteCalls++
@@ -103,7 +100,7 @@ class BreadExpertsSocketUtilTest {
 		boundedWriteTest(-1L..1)
 	}
 
-	var uLongWriteCalls = 0
+	var uLongWriteCalls: Int = 0
 	fun OutputStream.writeExtensibleULongCounted(value: ULong) {
 		this.writeExtensibleULong(value)
 		uLongWriteCalls++

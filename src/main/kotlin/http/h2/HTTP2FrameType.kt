@@ -13,6 +13,6 @@ enum class HTTP2FrameType(val code: Int) {
 	CONTINUATION(9);
 
 	companion object {
-		val mapping = entries.associateBy(HTTP2FrameType::code)
+		val mapping: Map<Int, HTTP2FrameType> = entries.associateBy(HTTP2FrameType::code)
 	}
 }

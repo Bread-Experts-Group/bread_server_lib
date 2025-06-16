@@ -5,6 +5,6 @@ enum class SSHType(val code: Int) {
 	SHA_256(2);
 
 	companion object {
-		val mapping = entries.associateBy(SSHType::code)
+		val mapping: Map<Int, SSHType> = entries.associateBy(SSHType::code)
 	}
 }

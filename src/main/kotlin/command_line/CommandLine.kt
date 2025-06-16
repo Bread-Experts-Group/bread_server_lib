@@ -9,7 +9,7 @@ fun readArgs(
 	projectName: String,
 	projectUsage: String,
 	vararg flags: Flag<*>
-) = readArgs(args, flags.toList(), projectName, projectUsage)
+): ArgumentContainer = readArgs(args, flags.toList(), projectName, projectUsage)
 
 private val logger = ColoredHandler.newLogger("Program Argument Retrieval")
 

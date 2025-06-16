@@ -91,7 +91,7 @@ object DirectoryListing {
 			append(".dotted{text-decoration:underline dotted}table{width:100%}")
 			append(".symlink{background-color:#FFFF0055}")
 		}
-	val directoryListingFile = base64Encoder.encodeToString(Random.nextBytes(32)) + ".css"
+	val directoryListingFile: String = base64Encoder.encodeToString(Random.nextBytes(32)) + ".css"
 
 	fun computeDirectoryListingHTML(
 		store: File, file: File,

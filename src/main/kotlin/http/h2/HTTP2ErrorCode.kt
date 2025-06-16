@@ -17,6 +17,6 @@ enum class HTTP2ErrorCode(val code: Int) {
 	HTTP_1_1_REQUIRED(0xD);
 
 	companion object {
-		val mapping = entries.associateBy(HTTP2ErrorCode::code)
+		val mapping: Map<Int, HTTP2ErrorCode> = entries.associateBy(HTTP2ErrorCode::code)
 	}
 }

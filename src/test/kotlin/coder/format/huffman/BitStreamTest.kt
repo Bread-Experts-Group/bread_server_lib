@@ -1,7 +1,7 @@
-package coder.format.huffman
+package org.bread_experts_group.coder.format.huffman
 
-import org.bread_experts_group.coder.format.huffman.BitInputStream
-import org.bread_experts_group.coder.format.huffman.BitOutputStream
+import org.bread_experts_group.coder.format.BitInputStream
+import org.bread_experts_group.coder.format.BitOutputStream
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream

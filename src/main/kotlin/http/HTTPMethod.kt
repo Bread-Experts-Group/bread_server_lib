@@ -15,6 +15,6 @@ enum class HTTPMethod {
 	OTHER;
 
 	companion object {
-		val safeMapping = entries.associateBy(HTTPMethod::name)
+		val safeMapping: Map<String, HTTPMethod> = entries.associateBy(HTTPMethod::name)
 	}
 }

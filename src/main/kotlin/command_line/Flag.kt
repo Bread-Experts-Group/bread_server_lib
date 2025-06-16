@@ -11,7 +11,7 @@ open class Flag<T>(
 		it as T
 	}
 ) {
-	val flagName = flagName.lowercase().replace('-', '_')
+	val flagName: String = flagName.lowercase().replace('-', '_')
 
 	init {
 		if (required > 1 && !repeatable)

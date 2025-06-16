@@ -22,13 +22,13 @@ fun KeyManagerFactory.getTLSContext(trustManagers: Array<TrustManager>? = null):
 	.getInstance("TLS")
 	.also { it.init(this.keyManagers, trustManagers, null) }
 
-fun SSLContext.getServerSocket() =
+fun SSLContext.getServerSocket(): SSLServerSocket =
 	((this.serverSocketFactory as SSLServerSocketFactory).createServerSocket() as SSLServerSocket).also {
 		it.enabledCipherSuites = goodSchemes
 		it.enabledProtocols = allowedProtocols
 	}
 
-fun SSLContext.getSocket() =
+fun SSLContext.getSocket(): SSLSocket =
 	((this.socketFactory as SSLSocketFactory).createSocket() as SSLSocket).also {
 		it.enabledCipherSuites = goodSchemes
 		it.enabledProtocols = allowedProtocols
@@ -40,13 +40,13 @@ fun getTLSContext(keystorePath: File, password: String, trustManagers: Array<Tru
 	return managerFactory.getTLSContext(trustManagers)
 }
 
-val goodSchemes = arrayOf(
+val goodSchemes: Array<String> = arrayOf(
 	// TLS 1.3
 	"TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256",
 	// TLS 1.2
 	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
 )
-val allowedProtocols = arrayOf(
+val allowedProtocols: Array<String> = arrayOf(
 	"TLSv1.3", "TLSv1.2"
 )
 

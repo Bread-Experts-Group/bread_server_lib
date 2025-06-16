@@ -1,6 +1,6 @@
 package org.bread_experts_group.http.h2
 
-import org.bread_experts_group.coder.format.huffman.BitInputStream
+import org.bread_experts_group.coder.format.BitInputStream
 import org.bread_experts_group.coder.format.huffman.HuffmanBranch
 import org.bread_experts_group.hex
 import org.bread_experts_group.logging.ColoredHandler
@@ -51,7 +51,7 @@ class HTTP2HeaderFrame(
 
 	companion object {
 		@Suppress("LocalVariableName", "DuplicatedCode")
-		val huffmanRoot = HuffmanBranch<Char>().also { root ->
+		val huffmanRoot: HuffmanBranch<Char> = HuffmanBranch<Char>().also { root ->
 			root.branch(false).also { _0 ->
 				_0.branch(false).also { _00 ->
 					_00.branch(false).also { _000 ->
@@ -332,7 +332,7 @@ class HTTP2HeaderFrame(
 			}
 		}
 
-		val staticHeaders = mapOf<Int, Pair<String, String?>>(
+		val staticHeaders: Map<Int, Pair<String, String?>> = mapOf<Int, Pair<String, String?>>(
 			1 to (":authority" to null),
 			2 to (":method" to "GET"),
 			4 to (":path" to "/"),

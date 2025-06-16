@@ -1,16 +1,15 @@
-package org.bread_experts_group.image.apng
+package org.bread_experts_group.image
 
 import org.w3c.dom.Node
 import javax.imageio.metadata.IIOMetadata
 import javax.imageio.metadata.IIOMetadataNode
 
-
-class APNGMetadata(
+class AnimatedMetadata(
 	private val delayMillis: Long
 ) : IIOMetadata(
 	false,
-	"org.bread_experts_group.apng_1.0.0",
-	APNGMetadata::class.java.canonicalName,
+	"org.bread_experts_group.animated_1.0.0",
+	AnimatedMetadata::class.java.canonicalName,
 	null, null
 ) {
 	override fun isReadOnly(): Boolean = false

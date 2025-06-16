@@ -5,6 +5,6 @@ enum class WebSocketRelayedProtocol(val code: Int) {
 	USER_DATAGRAM_PROTOCOL(0x01);
 
 	companion object {
-		val mapping = entries.associateBy(WebSocketRelayedProtocol::code)
+		val mapping: Map<Int, WebSocketRelayedProtocol> = entries.associateBy(WebSocketRelayedProtocol::code)
 	}
 }

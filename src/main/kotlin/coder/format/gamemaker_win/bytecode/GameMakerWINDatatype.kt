@@ -14,6 +14,6 @@ enum class GameMakerWINDatatype(val code: Int) {
 	SHORT(15);
 
 	companion object {
-		val mapping = entries.associateBy(GameMakerWINDatatype::code)
+		val mapping: Map<Int, GameMakerWINDatatype> = entries.associateBy(GameMakerWINDatatype::code)
 	}
 }

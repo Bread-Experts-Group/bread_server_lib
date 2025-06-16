@@ -6,7 +6,7 @@ import java.io.OutputStream
 import java.util.concurrent.LinkedBlockingDeque
 
 class ConsolidatedBlockingInputStream : InputStream() {
-	val streams = LinkedBlockingDeque<InputStream>()
+	val streams: LinkedBlockingDeque<InputStream> = LinkedBlockingDeque<InputStream>()
 
 	override fun available(): Int = streams.sumOf { it.available() }
 	override fun readAllBytes(): ByteArray {

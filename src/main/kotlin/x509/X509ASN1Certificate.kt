@@ -19,97 +19,97 @@ class X509ASN1Certificate(
 	keyAuthorization: ByteArray
 ) {
 	companion object {
-		const val OID_CURVE_PRIME_FIELD = 0
-		const val OID_ISO = 1
-		const val OID_INTERNET = 1
-		const val OID_PRIVATE_EXTENSION = 1
-		const val OID_NAMED_CURVES_PRIME_FIELDS = 1
-		const val OID_PUBLIC_KEY_CRYPTOGRAPHY_STANDARDS = 1
-		const val OID_JOINT_ISO_CCITT = 2
-		const val OID_MEMBER_BODY = 2
-		const val OID_PUBLIC_KEY_TYPES = 2
-		const val OID_ELLIPTIC_CURVE_DOMAIN_PARAMETERS = 3
-		const val OID_IDENTIFIED_ORGANIZATION = 3
-		const val OID_ECDSA_WITH_SHA2 = 3
-		const val OID_SIGNATURES = 4
-		const val OID_SECURITY = 5
-		const val OID_DIRECTORY_SERVICES = 5
-		const val OID_MECHANISMS = 5
-		const val OID_DEPARTMENT_OF_DEFENSE = 6
-		const val OID_PKIX = 7
-		const val OID_PKCS_9 = 9
-		const val OID_CERTIFICATE_EXTENSIONS = 29
-		const val OID_STANDARDS_FOR_EFFICIENT_CRYPTOGRAPHY_GROUP = 132
-		const val OID_UNITED_STATES_ANSI = 840
-		const val OID_ANSI_X9_62 = 10045
-		const val OID_RSA_DATA_SECURITY_INC = 113549
+		const val OID_CURVE_PRIME_FIELD: Int = 0
+		const val OID_ISO: Int = 1
+		const val OID_INTERNET: Int = 1
+		const val OID_PRIVATE_EXTENSION: Int = 1
+		const val OID_NAMED_CURVES_PRIME_FIELDS: Int = 1
+		const val OID_PUBLIC_KEY_CRYPTOGRAPHY_STANDARDS: Int = 1
+		const val OID_JOINT_ISO_CCITT: Int = 2
+		const val OID_MEMBER_BODY: Int = 2
+		const val OID_PUBLIC_KEY_TYPES: Int = 2
+		const val OID_ELLIPTIC_CURVE_DOMAIN_PARAMETERS: Int = 3
+		const val OID_IDENTIFIED_ORGANIZATION: Int = 3
+		const val OID_ECDSA_WITH_SHA2: Int = 3
+		const val OID_SIGNATURES: Int = 4
+		const val OID_SECURITY: Int = 5
+		const val OID_DIRECTORY_SERVICES: Int = 5
+		const val OID_MECHANISMS: Int = 5
+		const val OID_DEPARTMENT_OF_DEFENSE: Int = 6
+		const val OID_PKIX: Int = 7
+		const val OID_PKCS_9: Int = 9
+		const val OID_CERTIFICATE_EXTENSIONS: Int = 29
+		const val OID_STANDARDS_FOR_EFFICIENT_CRYPTOGRAPHY_GROUP: Int = 132
+		const val OID_UNITED_STATES_ANSI: Int = 840
+		const val OID_ANSI_X9_62: Int = 10045
+		const val OID_RSA_DATA_SECURITY_INC: Int = 113549
 
 		// Object Identifiers
-		val ATTRIBUTE_COMMON_NAME = ASN1ObjectIdentifier( // id-at
+		val ATTRIBUTE_COMMON_NAME: ASN1ObjectIdentifier = ASN1ObjectIdentifier( // id-at
 			OID_JOINT_ISO_CCITT, OID_DIRECTORY_SERVICES, 4,
 			3
 		)
-		val EXTENSION_SUBJECT_ALT_NAME = ASN1ObjectIdentifier( // id-ce
+		val EXTENSION_SUBJECT_ALT_NAME: ASN1ObjectIdentifier = ASN1ObjectIdentifier( // id-ce
 			OID_JOINT_ISO_CCITT, OID_DIRECTORY_SERVICES, OID_CERTIFICATE_EXTENSIONS,
 			17
 		)
-		val EXTENSION_BASIC_CONSTRAINTS = ASN1ObjectIdentifier( // id-ce
+		val EXTENSION_BASIC_CONSTRAINTS: ASN1ObjectIdentifier = ASN1ObjectIdentifier( // id-ce
 			OID_JOINT_ISO_CCITT, OID_DIRECTORY_SERVICES, OID_CERTIFICATE_EXTENSIONS,
 			19
 		)
-		val EXTENSION_ACME = ASN1ObjectIdentifier( // id-pe
+		val EXTENSION_ACME: ASN1ObjectIdentifier = ASN1ObjectIdentifier( // id-pe
 			OID_ISO, OID_IDENTIFIED_ORGANIZATION, OID_DEPARTMENT_OF_DEFENSE,
 			OID_INTERNET, OID_SECURITY, OID_MECHANISMS, OID_PKIX, OID_PRIVATE_EXTENSION,
 			31
 		)
-		val EXTENSION_REQUEST = ASN1ObjectIdentifier(
+		val EXTENSION_REQUEST: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_MEMBER_BODY, OID_UNITED_STATES_ANSI,
 			OID_RSA_DATA_SECURITY_INC, OID_PUBLIC_KEY_CRYPTOGRAPHY_STANDARDS, OID_PKCS_9,
 			14
 		)
-		val EC_PUBLIC_KEY = ASN1ObjectIdentifier(
+		val EC_PUBLIC_KEY: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_MEMBER_BODY, OID_UNITED_STATES_ANSI,
 			OID_ANSI_X9_62, OID_PUBLIC_KEY_TYPES,
 			1
 		)
-		val SECP256R1 = ASN1ObjectIdentifier(
+		val SECP256R1: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_MEMBER_BODY, OID_UNITED_STATES_ANSI,
 			OID_ANSI_X9_62, OID_ELLIPTIC_CURVE_DOMAIN_PARAMETERS, OID_NAMED_CURVES_PRIME_FIELDS,
 			7
 		)
-		val SECP384R1 = ASN1ObjectIdentifier(
+		val SECP384R1: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_IDENTIFIED_ORGANIZATION, OID_STANDARDS_FOR_EFFICIENT_CRYPTOGRAPHY_GROUP,
 			OID_CURVE_PRIME_FIELD,
 			34
 		)
-		val SECP521R1 = ASN1ObjectIdentifier(
+		val SECP521R1: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_IDENTIFIED_ORGANIZATION, OID_STANDARDS_FOR_EFFICIENT_CRYPTOGRAPHY_GROUP,
 			OID_CURVE_PRIME_FIELD,
 			35
 		)
-		val ECDSA_WITH_SHA_224 = ASN1ObjectIdentifier(
+		val ECDSA_WITH_SHA_224: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_MEMBER_BODY, OID_UNITED_STATES_ANSI,
 			OID_ANSI_X9_62, OID_SIGNATURES, OID_ECDSA_WITH_SHA2,
 			1
 		)
-		val ECDSA_WITH_SHA_256 = ASN1ObjectIdentifier(
+		val ECDSA_WITH_SHA_256: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_MEMBER_BODY, OID_UNITED_STATES_ANSI,
 			OID_ANSI_X9_62, OID_SIGNATURES, OID_ECDSA_WITH_SHA2,
 			2
 		)
-		val ECDSA_WITH_SHA_384 = ASN1ObjectIdentifier(
+		val ECDSA_WITH_SHA_384: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_MEMBER_BODY, OID_UNITED_STATES_ANSI,
 			OID_ANSI_X9_62, OID_SIGNATURES, OID_ECDSA_WITH_SHA2,
 			3
 		)
-		val ECDSA_WITH_SHA_512 = ASN1ObjectIdentifier(
+		val ECDSA_WITH_SHA_512: ASN1ObjectIdentifier = ASN1ObjectIdentifier(
 			OID_ISO, OID_MEMBER_BODY, OID_UNITED_STATES_ANSI,
 			OID_ANSI_X9_62, OID_SIGNATURES, OID_ECDSA_WITH_SHA2,
 			4
 		)
 	}
 
-	val tbsCertificate = ASN1Sequence(
+	val tbsCertificate: ASN1Sequence = ASN1Sequence(
 		ASN1Tagged(0, true, ASN1Integer(2)),
 		ASN1Integer(BigInteger("B4EAD", 16)),
 		ASN1Sequence(
@@ -183,7 +183,7 @@ class X509ASN1Certificate(
 		)
 	)
 
-	val x509 = ASN1Sequence(
+	val x509: ASN1Sequence = ASN1Sequence(
 		tbsCertificate,
 		ASN1Sequence(
 			ECDSA_WITH_SHA_512,

@@ -10,6 +10,6 @@ enum class HTTP2SettingIdentifier(val code: Int) {
 	OTHER(-1);
 
 	companion object {
-		val mapping = entries.associateBy(HTTP2SettingIdentifier::code)
+		val mapping: Map<Int, HTTP2SettingIdentifier> = entries.associateBy(HTTP2SettingIdentifier::code)
 	}
 }

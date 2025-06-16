@@ -1,13 +1,14 @@
-package resource
+package org.bread_experts_group.resource.tests
 
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Test
 import java.util.*
+import java.util.logging.Logger
 import kotlin.test.assertEquals
 
 class DirectoryListingResourceTest {
-	val logger = ColoredHandler.newLogger("Directory Listing Resource Tests")
-	val name = "org.bread_experts_group.resource.DirectoryListingResource"
+	val logger: Logger = ColoredHandler.Companion.newLogger("Directory Listing Resource Tests")
+	val name: String = "org.bread_experts_group.resource.DirectoryListingResource"
 
 	@Test
 	fun getContents() {

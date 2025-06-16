@@ -11,13 +11,14 @@ import java.security.KeyPairGenerator
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import java.util.logging.Logger
 import javax.security.auth.Destroyable
 
 data class KeyPairFile(
 	val publicKey: File,
 	val privateKey: File
 ) : Destroyable {
-	val logger = ColoredHandler.newLogger("Key Pair Files")
+	val logger: Logger = ColoredHandler.newLogger("Key Pair Files")
 
 	fun ensurePermissions() {
 		ensureDestruction()

@@ -8,6 +8,6 @@ enum class DNSClass(val code: Int) {
 	OTHER(-1);
 
 	companion object {
-		val mapping = entries.associateBy(DNSClass::code)
+		val mapping: Map<Int, DNSClass> = entries.associateBy(DNSClass::code)
 	}
 }

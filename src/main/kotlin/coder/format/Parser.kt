@@ -5,13 +5,14 @@ import org.bread_experts_group.stream.FailQuickInputStream
 import org.bread_experts_group.stream.Tagged
 import org.bread_experts_group.stream.Writable
 import java.io.InputStream
+import java.util.logging.Logger
 
 abstract class Parser<I, O, S : InputStream>(
 	format: String,
 	protected val from: S
 ) : FailQuickInputStream(from) where O : Tagged<I>, O : Writable {
-	protected val logger = ColoredHandler.newLogger("$format Parser")
-	protected val parsers = mutableMapOf<I, (S, O) -> O>()
+	protected val logger: Logger = ColoredHandler.newLogger("$format Parser")
+	protected val parsers: MutableMap<I, (S, O) -> O> = mutableMapOf<I, (S, O) -> O>()
 	fun addParser(identifier: I, parser: (S, O) -> O) {
 		logger.fine { "Registering parser [$parser] for identifier [$identifier]" }
 		if (parsers.containsKey(identifier))
@@ -32,7 +33,7 @@ abstract class Parser<I, O, S : InputStream>(
 
 	fun readParsed(): O = refineBase(readBase())
 
-	fun readAllParsed() = buildList {
+	fun readAllParsed(): List<O> = buildList {
 		try {
 			while (true) add(readParsed())
 		} catch (_: EndOfStream) {

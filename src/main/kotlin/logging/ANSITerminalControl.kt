@@ -24,13 +24,13 @@ class ANSIString(private var total: String = "") {
 		reset()
 	}
 
-	var setResets = true
-	fun reset() {
+	var setResets: Boolean = true
+	private fun reset() {
 		if (setResets) this.total += resetChar
 	}
 
-	fun build() = this.total
-	fun length() = this.length
+	fun build(): String = this.total
+	fun length(): Int = this.length
 }
 
 fun ansi(init: ANSIString.() -> Unit): ANSIString = ANSIString().also { it.init() }

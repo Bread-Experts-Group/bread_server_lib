@@ -15,6 +15,7 @@ import java.io.OutputStream
 import java.net.URI
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.logging.Logger
 
 @OptIn(ExperimentalStdlibApi::class)
 class HTTPProtocolSelector(
@@ -27,9 +28,9 @@ class HTTPProtocolSelector(
 		const val HTTP2_PREFACE: String = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 	}
 
-	val logger = ColoredHandler.newLogger("HTTP Protocol Selector ($version)")
-	val requestBacklog = LinkedBlockingQueue<Result<HTTPRequest>>()
-	val responseBacklog = LinkedBlockingQueue<Result<HTTPResponse>>()
+	val logger: Logger = ColoredHandler.newLogger("HTTP Protocol Selector ($version)")
+	val requestBacklog: LinkedBlockingQueue<Result<HTTPRequest>> = LinkedBlockingQueue<Result<HTTPRequest>>()
+	val responseBacklog: LinkedBlockingQueue<Result<HTTPResponse>> = LinkedBlockingQueue<Result<HTTPResponse>>()
 
 	private fun versionInitialization(from: InputStream) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
@@ -240,7 +241,7 @@ class HTTPProtocolSelector(
 
 	fun nextRequest(): Result<HTTPRequest> = requestBacklog.take()
 
-	fun sendRequest(request: HTTPRequest) = when (version) {
+	fun sendRequest(request: HTTPRequest): Long = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
 			to.writeString("${request.method.name} ${request.path} ${version.tag}\r\n")
 			request.headers.forEach { (key, value) -> to.writeString("$key:$value\r\n") }
@@ -254,7 +255,7 @@ class HTTPProtocolSelector(
 
 	fun nextResponse(): Result<HTTPResponse> = responseBacklog.take()
 
-	fun sendResponse(response: HTTPResponse) = when (version) {
+	fun sendResponse(response: HTTPResponse): Long? = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
 			to.writeString("${version.tag} ${response.code}\r\n")
 			response.headers.forEach { (key, value) -> to.writeString("$key:$value\r\n") }

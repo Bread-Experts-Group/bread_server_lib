@@ -9,7 +9,7 @@ open class HTTPRequest(
 	headers: Map<String, String> = emptyMap(),
 	val data: InputStream = InputStream.nullInputStream()
 ) {
-	val headers = headers.mapKeys { it.key.lowercase() }
+	val headers: Map<String, String> = headers.mapKeys { it.key.lowercase() }
 
 	override fun toString(): String = "(<Req>) $method $path " + buildString {
 		append("[HEAD#: ${headers.size}]")

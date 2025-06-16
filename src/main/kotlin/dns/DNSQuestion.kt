@@ -27,7 +27,7 @@ class DNSQuestion(
 		stream.write(data)
 	}
 
-	override fun toString() = "(DNS, Question) \"$name\" $qType $qClass"
+	override fun toString(): String = "(DNS, Question) \"$name\" $qType $qClass"
 
 	companion object {
 		fun read(stream: InputStream, lookbehind: ByteArray): DNSQuestion = DNSQuestion(

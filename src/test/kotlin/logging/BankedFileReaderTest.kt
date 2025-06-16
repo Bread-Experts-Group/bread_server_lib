@@ -1,9 +1,5 @@
-package logging
+package org.bread_experts_group.logging
 
-import org.bread_experts_group.logging.BankedFileHandler
-import org.bread_experts_group.logging.BankedFileReader
-import org.bread_experts_group.logging.ColoredHandler
-import org.bread_experts_group.logging.ColoredLevel
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
 import org.junit.jupiter.api.Test
@@ -16,8 +12,8 @@ import kotlin.io.path.deleteIfExists
 import kotlin.test.assertEquals
 
 class BankedFileReaderTest {
-	val logger = ColoredHandler.newLogger("Banked File Reader Tests")
-	val plaintextSizeTarget = 1000000
+	val logger: Logger = ColoredHandler.newLogger("Banked File Reader Tests")
+	val plaintextSizeTarget: Int = 1000000
 
 	@Test
 	fun nextRecord() {

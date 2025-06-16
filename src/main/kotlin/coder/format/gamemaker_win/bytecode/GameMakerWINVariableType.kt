@@ -5,6 +5,6 @@ enum class GameMakerWINVariableType(val code: Int) {
 	VARIABLE(0xA0);
 
 	companion object {
-		val mapping = entries.associateBy(GameMakerWINVariableType::code)
+		val mapping: Map<Int, GameMakerWINVariableType> = entries.associateBy(GameMakerWINVariableType::code)
 	}
 }

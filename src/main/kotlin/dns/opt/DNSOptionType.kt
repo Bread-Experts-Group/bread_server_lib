@@ -4,6 +4,6 @@ enum class DNSOptionType(val code: Int) {
 	OTHER(-1);
 
 	companion object {
-		val mapping = entries.associateBy(DNSOptionType::code)
+		val mapping: Map<Int, DNSOptionType> = entries.associateBy(DNSOptionType::code)
 	}
 }

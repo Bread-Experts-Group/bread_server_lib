@@ -8,6 +8,6 @@ enum class GameMakerWINEnvironment(val code: Int) {
 	GLOBAL(0xFFFB);
 
 	companion object {
-		val mapping = entries.associateBy(GameMakerWINEnvironment::code)
+		val mapping: Map<Int, GameMakerWINEnvironment> = entries.associateBy(GameMakerWINEnvironment::code)
 	}
 }

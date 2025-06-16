@@ -5,6 +5,6 @@ enum class PNGInterlaceType(val code: Int) {
 	ADAM7(1);
 
 	companion object {
-		val mapping = entries.associateBy(PNGInterlaceType::code)
+		val mapping: Map<Int, PNGInterlaceType> = entries.associateBy(PNGInterlaceType::code)
 	}
 }

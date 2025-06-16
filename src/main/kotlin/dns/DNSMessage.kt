@@ -78,7 +78,7 @@ class DNSMessage private constructor(
 		truncated = false
 	}
 
-	override fun toString() = "(DNS, ${if (reply) "<Res>" else "<Req>"}) ${opcode.name} " +
+	override fun toString(): String = "(DNS, ${if (reply) "<Res>" else "<Req>"}) ${opcode.name} " +
 			"[${hex(transactionID.toShort())}] [Qst/Ans/Ath/Add:" +
 			"${questions.size}/${answers.size}/${authorityRecords.size}/${additionalRecords.size}] " +
 			"[${
@@ -106,7 +106,7 @@ class DNSMessage private constructor(
 			checkingDisabled: Boolean,
 			questions: List<DNSQuestion>,
 			additionalRecords: List<DNSResourceRecord> = emptyList()
-		) = DNSMessage(
+		): DNSMessage = DNSMessage(
 			transactionID,
 			reply = false,
 			opcode,
@@ -135,7 +135,7 @@ class DNSMessage private constructor(
 			answers: List<DNSResourceRecord>,
 			authorityRecords: List<DNSResourceRecord> = emptyList(),
 			additionalRecords: List<DNSResourceRecord> = emptyList()
-		) = DNSMessage(
+		): DNSMessage = DNSMessage(
 			to.transactionID,
 			true,
 			to.opcode,

@@ -13,7 +13,8 @@ class HTTPResponse(
 	val data: InputStream = InputStream.nullInputStream(),
 	rawHeaders: Boolean = false
 ) {
-	val headers = if (rawHeaders) headers else headers.mapKeys { it.key.lowercase() }.toMutableMap().also {
+	val headers: Map<String, String> =
+		if (rawHeaders) headers else headers.mapKeys { it.key.lowercase() }.toMutableMap().also {
 		disallowedHeaders.forEach { h ->
 			if (it.contains(h)) throw IllegalArgumentException("Do not set $h header!")
 		}
@@ -58,6 +59,7 @@ class HTTPResponse(
 	}
 
 	companion object {
-		val disallowedHeaders = listOf("Server", "Date", "Content-Length", "Strict-Transport-Security", "Alt-Svc")
+		val disallowedHeaders: List<String> =
+			listOf("Server", "Date", "Content-Length", "Strict-Transport-Security", "Alt-Svc")
 	}
 }

@@ -8,6 +8,6 @@ enum class SSHAlgorithm(val code: Int) {
 	ED448(6);
 
 	companion object {
-		val mapping = entries.associateBy(SSHAlgorithm::code)
+		val mapping: Map<Int, SSHAlgorithm> = entries.associateBy(SSHAlgorithm::code)
 	}
 }

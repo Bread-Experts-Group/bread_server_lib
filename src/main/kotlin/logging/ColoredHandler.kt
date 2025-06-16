@@ -37,7 +37,7 @@ class ColoredHandler(
 			it.level = level
 		}
 
-		val recentlyLogged = mutableSetOf<Long>()
+		val recentlyLogged: MutableSet<Long> = mutableSetOf<Long>()
 	}
 
 	private var closed: Boolean = false

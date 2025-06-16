@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 plugins {
-	kotlin("jvm") version "2.1.10"
+	kotlin("jvm") version "2.2.0-RC3"
 	id("org.jetbrains.dokka") version "2.0.0"
 	id("org.jetbrains.dokka-javadoc") version "2.0.0"
 	`maven-publish`
@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.37.0"
+version = "2.39.0"
 
 repositories {
 	mavenCentral()
@@ -32,7 +32,7 @@ tasks.register<Jar>("dokkaJavadocJar") {
 	from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
 	archiveClassifier.set("javadoc")
 }
-val localProperties = Properties().apply {
+val localProperties: Properties = Properties().apply {
 	rootProject.file("local.properties").reader().use(::load)
 }
 publishing {
@@ -45,7 +45,7 @@ publishing {
 			pom {
 				name = "Bread Server Library"
 				description = "Distribution of software for Bread Experts Group operated servers."
-				url = "https://javart.zip"
+				url = "https://breadexperts.group"
 				signing {
 					sign(publishing.publications["mavenKotlin"])
 					sign(configurations.archives.get())
@@ -73,7 +73,7 @@ publishing {
 	}
 	repositories {
 		maven {
-			url = uri("https://107-132-83-172.lightspeed.snantx.sbcglobal.net/")
+			url = uri("https://maven.breadexperts.group/")
 			credentials {
 				username = localProperties["mavenUser"] as String
 				password = localProperties["mavenPassword"] as String
@@ -96,7 +96,7 @@ val compileTime: String = ZonedDateTime.now().format(
 	DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss.SSSSSS xxxxx")
 )
 
-val generateBuildInfo by tasks.registering {
+val generateBuildInfo: TaskProvider<Task?> by tasks.registering {
 	val outputDir = file(generatedDir)
 	outputs.dir(outputDir)
 	doLast {

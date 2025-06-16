@@ -7,7 +7,7 @@ class ASN1Tagged(
 	private val constructed: Boolean,
 	val element: ASN1Element
 ) : ASN1Element((if (constructed) 0xA0 else 0x80) + tagNumber, byteArrayOf()) {
-	val encoded = element.asBytes()
+	val encoded: ByteArray = element.asBytes()
 
 	override fun computeSize(): Long = encoded.size.toLong() - (if (constructed) 0 else 2)
 	override fun writeExtra(stream: OutputStream) {

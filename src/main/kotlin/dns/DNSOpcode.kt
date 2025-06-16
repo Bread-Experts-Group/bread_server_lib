@@ -10,6 +10,6 @@ enum class DNSOpcode(val code: Int) {
 	OTHER(-1);
 
 	companion object {
-		val mapping = entries.associateBy(DNSOpcode::code)
+		val mapping: Map<Int, DNSOpcode> = entries.associateBy(DNSOpcode::code)
 	}
 }

@@ -6,6 +6,6 @@ enum class WebSocketControlType(val code: Int) {
 	DISCONNECT(0x02);
 
 	companion object {
-		val mapping = entries.associateBy(WebSocketControlType::code)
+		val mapping: Map<Int, WebSocketControlType> = entries.associateBy(WebSocketControlType::code)
 	}
 }

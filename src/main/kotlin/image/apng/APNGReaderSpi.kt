@@ -20,12 +20,18 @@ class APNGReaderSpi : ImageReaderSpi() {
 	}
 
 	override fun canDecodeInput(source: Any?): Boolean {
-		TODO("Not yet implemented")
+		if (source !is ImageInputStream) return false
+		if (source !is InputStream) return false
+		return true
 	}
 
 	override fun createReaderInstance(extension: Any?): ImageReader = APNGReader(this)
 
 	override fun getDescription(locale: Locale?): String {
-		TODO("Not yet implemented")
+		val baseName = "org.bread_experts_group.resource.ImageReaderResource"
+		val bundle =
+			if (locale != null) ResourceBundle.getBundle(baseName, locale)
+			else ResourceBundle.getBundle(baseName)
+		return bundle.getString("apng_reader_spi_description")
 	}
 }

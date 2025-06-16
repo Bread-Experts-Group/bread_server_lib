@@ -8,6 +8,6 @@ enum class PNGAdaptiveFilterType(val code: Int) {
 	PAETH(4);
 
 	companion object {
-		val mapping = entries.associateBy(PNGAdaptiveFilterType::code)
+		val mapping: Map<Int, PNGAdaptiveFilterType> = entries.associateBy(PNGAdaptiveFilterType::code)
 	}
 }

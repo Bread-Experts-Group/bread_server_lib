@@ -8,6 +8,6 @@ enum class HTTPVersion(val tag: String) {
 	HTTP_3("HTTP/3");
 
 	companion object {
-		val mapping = entries.associateBy(HTTPVersion::tag)
+		val mapping: Map<String, HTTPVersion> = entries.associateBy(HTTPVersion::tag)
 	}
 }

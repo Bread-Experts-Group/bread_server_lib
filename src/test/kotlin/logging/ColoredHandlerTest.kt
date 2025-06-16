@@ -1,8 +1,6 @@
-package logging
+package org.bread_experts_group.logging
 
 import org.bread_experts_group.command_line.ArgumentParsingError
-import org.bread_experts_group.logging.ColoredHandler
-import org.bread_experts_group.logging.ColoredLevel
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
 import org.bread_experts_group.logging.ansi_colorspace.ANSI256Color
@@ -10,15 +8,16 @@ import org.bread_experts_group.logging.ansi_colorspace.ANSITrueColor
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import java.util.logging.Level
+import java.util.logging.Logger
 import kotlin.random.Random
 import kotlin.random.nextUBytes
 
 class ColoredHandlerTest {
-	val logger = ColoredHandler.newLogger("Colored Logger Tests")
+	val logger: Logger = ColoredHandler.newLogger("Colored Logger Tests")
 
 	@OptIn(ExperimentalUnsignedTypes::class)
 	@Test
-	fun publish() = assertDoesNotThrow {
+	fun publish(): Unit = assertDoesNotThrow {
 		logger.info("Hello world!")
 		logger.log(Level.INFO, Exception()) { "Exception message, no cause" }
 		logger.log(Level.INFO, Exception(Exception(Exception()))) { "Exception message, chained cause" }

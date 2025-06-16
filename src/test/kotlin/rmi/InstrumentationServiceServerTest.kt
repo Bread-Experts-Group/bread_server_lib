@@ -1,12 +1,12 @@
-package rmi
+package  org.bread_experts_group.rmi
 
 import org.bread_experts_group.logging.ColoredHandler
-import org.bread_experts_group.rmi.InstrumentationServiceServer
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
+import java.util.logging.Logger
 
 class InstrumentationServiceServerTest {
-	val logger = ColoredHandler.newLogger("Remote Method Invocation Tests")
+	val logger: Logger = ColoredHandler.newLogger("Remote Method Invocation Tests")
 
 	@Test
 	fun threads() {

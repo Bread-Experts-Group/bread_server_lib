@@ -36,8 +36,8 @@ class BankedFileReader(
 		timestampPath,
 		StandardOpenOption.CREATE, StandardOpenOption.READ
 	)
-	val memoryBank = readMemoryBank(bank)
-	val timestamps = buildList {
+	val memoryBank: MutableList<String> = readMemoryBank(bank)
+	val timestamps: List<ULong> = buildList {
 		timestamp.position(10)
 		while (timestamp.position() < timestamp.size()) {
 			val initialPosition = timestamp.position()
@@ -55,9 +55,9 @@ class BankedFileReader(
 		ColoredLevel(name, ANSI16Color(ANSI16.MAGENTA), value, resourceBundle)
 	}
 
-	var nanos = 0L
-	val savedLevels = mutableMapOf<ULong, Level>()
-	val messages = mutableListOf<String>()
+	var nanos: Long = 0L
+	val savedLevels: MutableMap<ULong, Level> = mutableMapOf<ULong, Level>()
+	val messages: MutableList<String> = mutableListOf<String>()
 	fun nextRecord(): LogRecord {
 		val initialPosition = content.position()
 		val data = ByteBuffer.allocate(90)

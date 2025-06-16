@@ -4,6 +4,6 @@ enum class PNGFilterType(val code: Int) {
 	ADAPTIVE(0);
 
 	companion object {
-		val mapping = entries.associateBy(PNGFilterType::code)
+		val mapping: Map<Int, PNGFilterType> = entries.associateBy(PNGFilterType::code)
 	}
 }

@@ -16,7 +16,7 @@ class X509ASN1CertificateSigningRequest(
 	keyPair: KeyPair,
 	names: List<String>
 ) {
-	val certificationRequest = ASN1Sequence(
+	val certificationRequest: ASN1Sequence = ASN1Sequence(
 		ASN1Integer(0),
 		ASN1Sequence(
 			ASN1Set(
@@ -65,7 +65,7 @@ class X509ASN1CertificateSigningRequest(
 		)
 	)
 
-	val csr = ASN1Sequence(
+	val csr: ASN1Sequence = ASN1Sequence(
 		certificationRequest,
 		ASN1Sequence(
 			ECDSA_WITH_SHA_512,

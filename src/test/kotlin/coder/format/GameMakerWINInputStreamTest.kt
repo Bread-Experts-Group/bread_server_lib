@@ -1,4 +1,4 @@
-package coder.format
+package org.bread_experts_group.coder.format
 
 import org.bread_experts_group.coder.format.gamemaker_win.GameMakerWINInputStream
 import org.bread_experts_group.coder.format.gamemaker_win.bytecode.*
@@ -17,6 +17,7 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.PrintStream
 import java.nio.file.Files
+import java.util.logging.Logger
 import kotlin.io.path.writeBytes
 import kotlin.test.Test
 
@@ -24,10 +25,10 @@ class GameMakerWINInputStreamTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/gamemaker/data.win"
 	)
-	val logger = ColoredHandler.newLogger("GameMaker WIN InputStream Tests")
+	val logger: Logger = ColoredHandler.newLogger("GameMaker WIN InputStream Tests")
 
 	@Test
-	fun readParsed() = assertDoesNotThrow {
+	fun readParsed(): Unit = assertDoesNotThrow {
 		val tempFile = Files.createTempFile("test", ".win")
 		tempFile.writeBytes(testFile!!.readAllBytes())
 		val fileStream = FileInputStream(tempFile.toFile())

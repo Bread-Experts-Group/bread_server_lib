@@ -1,4 +1,5 @@
-import org.bread_experts_group.truncateSI
+package org.bread_experts_group
+
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

@@ -289,7 +289,7 @@ class RIFFAudioFormatChunk(
 		EXTENSIBLE(0xFFFE);
 
 		companion object {
-			val mapping = entries.associateBy(AudioEncoding::code)
+			val mapping: Map<Int, RIFFAudioFormatChunk.AudioEncoding> = entries.associateBy(AudioEncoding::code)
 		}
 	}
 }

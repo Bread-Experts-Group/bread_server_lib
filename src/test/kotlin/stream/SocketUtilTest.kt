@@ -1,6 +1,5 @@
-package stream
+package org.bread_experts_group.stream
 
-import org.bread_experts_group.stream.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream

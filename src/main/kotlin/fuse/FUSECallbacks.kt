@@ -37,7 +37,6 @@ open class FUSECallbacks {
 		if (returnCode != 0) throw kotlin.IllegalStateException("fuse_reply_err errno $returnCode")
 	}
 
-	@Suppress("unused")
 	open fun init(userdata: MemorySegment, connectionInfo: MemorySegment) {
 		logger.info("[init] ${userdata.debugString()} / ${connectionInfo.debugString()}")
 	}
@@ -61,7 +60,7 @@ open class FUSECallbacks {
 
 	/**
 	 * @return Directory entry data via [replyBuffer] or an error via [replyError].
-	 * @see DirectoryEntries
+	 * @see FUSEDirectoryEntries
 	 */
 	@Suppress("unused")
 	open fun readdir(handle: MemorySegment, inode: Long, size: Long, offset: Long, fileInfo: MemorySegment) {

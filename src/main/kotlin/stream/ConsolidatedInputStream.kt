@@ -5,7 +5,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class ConsolidatedInputStream : InputStream() {
-	val streams = ArrayDeque<InputStream>()
+	val streams: ArrayDeque<InputStream> = ArrayDeque()
 
 	override fun available(): Int = streams.sumOf { it.available() }
 	override fun readAllBytes(): ByteArray {
