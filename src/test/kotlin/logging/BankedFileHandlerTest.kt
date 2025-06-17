@@ -6,7 +6,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.deleteIfExists
 
 class BankedFileHandlerTest {
-	private val logger = ColoredHandler.newLogger("Banked File Handler Tests")
+	private val logger = ColoredHandler.newLoggerResourced("tests.banked_file_handler")
 	private val handler = BankedFileHandler(
 		Path("./testBank"),
 		Path("./testContent"),

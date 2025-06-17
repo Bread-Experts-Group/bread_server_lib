@@ -12,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class HuffmanBranchTest {
-	val logger: Logger = ColoredHandler.newLogger("Huffman Branch Tests")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.huffman")
 	val testEn: InputStream =
 		HuffmanBranchTest::class.java.classLoader.getResourceAsStream("coder/format/huffman/test_en.txt")!!
 	val testJa: InputStream =

@@ -18,7 +18,7 @@ data class KeyPairFile(
 	val publicKey: File,
 	val privateKey: File
 ) : Destroyable {
-	val logger: Logger = ColoredHandler.newLogger("Key Pair Files")
+	val logger: Logger = ColoredHandler.newLoggerResourced("key_pair_files")
 
 	fun ensurePermissions() {
 		ensureDestruction()

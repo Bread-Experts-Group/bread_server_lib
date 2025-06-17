@@ -1,6 +1,7 @@
 package org.bread_experts_group.http.html
 
 import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.resource.DirectoryListingResource
 import java.io.File
 import java.io.IOException
 import java.nio.file.*
@@ -18,7 +19,7 @@ import kotlin.io.path.*
 import kotlin.random.Random
 
 object DirectoryListing {
-	private val logger = ColoredHandler.newLogger("HTML Directory Listing")
+	private val logger = ColoredHandler.newLoggerResourced("html_directory_listing")
 	private val watcher = FileSystems.getDefault().newWatchService()
 	private val directoryListingCache = mutableMapOf<File, MutableMap<Locale, CachedList>>()
 	private val reverseCache = mutableMapOf<WatchKey, File>()
@@ -97,10 +98,7 @@ object DirectoryListing {
 		store: File, file: File,
 		locale: Locale = Locale.getDefault()
 	): String = buildString {
-		val bundle = ResourceBundle.getBundle(
-			"org.bread_experts_group.resource.DirectoryListingResource",
-			locale
-		)
+		val bundle = DirectoryListingResource.get(locale)
 		logger.finer { "Computing directory listing for $file, store: $store" }
 		val dateTimeFormatter = DateTimeFormatter
 			.ofLocalizedDateTime(FormatStyle.FULL)

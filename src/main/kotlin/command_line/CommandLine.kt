@@ -11,7 +11,7 @@ fun readArgs(
 	vararg flags: Flag<*>
 ): ArgumentContainer = readArgs(args, flags.toList(), projectName, projectUsage)
 
-private val logger = ColoredHandler.newLogger("Program Argument Retrieval")
+private val logger = ColoredHandler.newLoggerResourced("program_argument_retrieval")
 
 fun readArgs(
 	args: Array<String>,

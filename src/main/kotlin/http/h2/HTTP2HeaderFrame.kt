@@ -315,7 +315,7 @@ class HTTP2HeaderFrame(
 																_1111111111110.edge(true, '}')
 															}
 															_111111111111.branch(true).also { _1111111111111 ->
-																ColoredHandler.newLogger("HTTP2 Header Frame")
+																ColoredHandler.newLoggerResourced("http2header")
 																	.severe("TODO _1111111111111 branch")
 															}
 														}

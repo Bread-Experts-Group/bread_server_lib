@@ -2,6 +2,7 @@ package org.bread_experts_group.logging
 
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
+import org.bread_experts_group.resource.LoggerResource
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
@@ -12,7 +13,7 @@ import kotlin.io.path.deleteIfExists
 import kotlin.test.assertEquals
 
 class BankedFileReaderTest {
-	val logger: Logger = ColoredHandler.newLogger("Banked File Reader Tests")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.banked_file_reader")
 	val plaintextSizeTarget: Int = 1000000
 
 	@Test
@@ -24,8 +25,9 @@ class BankedFileReaderTest {
 		)
 		var writeTimes = 0
 		val plainTextSize: Int
+		val loggerName = LoggerResource.get().getString("tests.banked_file_reader")
 		run {
-			val plaintextLogger = Logger.getLogger("Banked File Reader Tests [Pln]")
+			val plaintextLogger = Logger.getLogger("$loggerName [Pln]")
 			plaintextLogger.useParentHandlers = false
 			val logStream = ByteArrayOutputStream()
 			val logStreamHandler = ColoredHandler(towards = PrintStream(logStream))
@@ -49,7 +51,7 @@ class BankedFileReaderTest {
 		logger.info("Wrote [$writeTimes] times")
 		val bankedSize: Long
 		run {
-			val bankedLogger = Logger.getLogger("Banked File Reader Tests [Bnk]")
+			val bankedLogger = Logger.getLogger("$loggerName [Bnk]")
 			bankedLogger.useParentHandlers = false
 			bankedLogger.addHandler(handler)
 			repeat(writeTimes) {

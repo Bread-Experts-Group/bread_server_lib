@@ -13,7 +13,7 @@ import kotlin.random.Random
 import kotlin.random.nextUBytes
 
 class ColoredHandlerTest {
-	val logger: Logger = ColoredHandler.newLogger("Colored Logger Tests")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.colored_handler")
 
 	@OptIn(ExperimentalUnsignedTypes::class)
 	@Test

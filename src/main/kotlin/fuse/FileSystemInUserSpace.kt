@@ -16,7 +16,7 @@ class FileSystemInUserSpace(
 ) : AutoCloseable {
 	private var isClosed = false
 	private val localArena = Arena.ofAuto()
-	private val fuseLogger: Logger = ColoredHandler.newLogger("FUSE")
+	private val fuseLogger: Logger = ColoredHandler.newLoggerResourced("fuse")
 	private val fuseSession: MemorySegment
 	private val fuseSessionLoop: Thread
 

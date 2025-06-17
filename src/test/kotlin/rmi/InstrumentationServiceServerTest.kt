@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import java.util.logging.Logger
 
 class InstrumentationServiceServerTest {
-	val logger: Logger = ColoredHandler.newLogger("Remote Method Invocation Tests")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.rmi")
 
 	@Test
 	fun threads() {

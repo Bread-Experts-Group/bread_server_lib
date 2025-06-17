@@ -7,8 +7,8 @@ import java.util.*
  * Translator
  * @since 2.19.0
  */
-@Suppress("unused", "ClassName")
-class DirectoryListingResource_en : ListResourceBundle() {
+@Suppress("unused")
+class DirectoryListingResource : ListResourceBundle() {
 	override fun getContents(): Array<out Array<out Any>> = arrayOf(
 		arrayOf("files", "File(s)"),
 		arrayOf("folders", "Folder(s)"),
@@ -24,4 +24,11 @@ class DirectoryListingResource_en : ListResourceBundle() {
 		arrayOf("outside_of_store", "Outside of store"),
 		arrayOf("this_is_symlink", "This is a symbolic link"),
 	)
+
+	companion object {
+		fun get(locale: Locale? = null): ResourceBundle {
+			val baseName = "org.bread_experts_group.resource.DirectoryListingResource"
+			return if (locale != null) getBundle(baseName, locale) else getBundle(baseName)
+		}
+	}
 }

@@ -9,7 +9,7 @@ import java.util.logging.Logger
 
 open class FUSECallbacks {
 	private val localArena = Arena.ofAuto()
-	private val logger: Logger = ColoredHandler.newLogger("FUSE Callbacks")
+	private val logger: Logger = ColoredHandler.newLoggerResourced("fuse_callbacks")
 
 	protected fun replyBuffer(req: MemorySegment, buf: MemorySegment) {
 		val returnCode = nativeFuseReplyEntry.invokeExact(req, buf, buf.byteSize()) as Int

@@ -1,5 +1,6 @@
 package org.bread_experts_group.image.gif
 
+import org.bread_experts_group.resource.ImageReaderResource
 import java.io.InputStream
 import java.util.*
 import javax.imageio.ImageReader
@@ -27,11 +28,6 @@ class GIFReaderSpi : ImageReaderSpi() {
 
 	override fun createReaderInstance(extension: Any?): ImageReader = GIFReader(this)
 
-	override fun getDescription(locale: Locale?): String {
-		val baseName = "org.bread_experts_group.resource.ImageReaderResource"
-		val bundle =
-			if (locale != null) ResourceBundle.getBundle(baseName, locale)
-			else ResourceBundle.getBundle(baseName)
-		return bundle.getString("gif_reader_spi_description")
-	}
+	override fun getDescription(locale: Locale?): String = ImageReaderResource.get()
+		.getString("gif_reader_spi_description")
 }

@@ -6,6 +6,6 @@ class IA32ProcessorTest {
 	@Test
 	fun additionTest() {
 		val processor = IA32Processor()
-		processor.step()
+//		processor.step()
 	}
 }

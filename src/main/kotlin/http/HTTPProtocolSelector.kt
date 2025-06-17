@@ -6,6 +6,7 @@ import org.bread_experts_group.http.h2.setting.HTTP2SettingEnableServerPush
 import org.bread_experts_group.http.h2.setting.HTTP2SettingInitialWindowSize
 import org.bread_experts_group.http.h2.setting.HTTP2SettingMaxConcurrentStreams
 import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.resource.LoggerResource
 import org.bread_experts_group.stream.ConsolidatedBlockingInputStream
 import org.bread_experts_group.stream.readString
 import org.bread_experts_group.stream.scanDelimiter
@@ -28,7 +29,7 @@ class HTTPProtocolSelector(
 		const val HTTP2_PREFACE: String = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 	}
 
-	val logger: Logger = ColoredHandler.newLogger("HTTP Protocol Selector ($version)")
+	val logger: Logger = ColoredHandler.newLogger(LoggerResource.get().getString("http_selector") + " ($version)")
 	val requestBacklog: LinkedBlockingQueue<Result<HTTPRequest>> = LinkedBlockingQueue<Result<HTTPRequest>>()
 	val responseBacklog: LinkedBlockingQueue<Result<HTTPResponse>> = LinkedBlockingQueue<Result<HTTPResponse>>()
 

@@ -2,6 +2,7 @@ package org.bread_experts_group.logging
 
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
+import org.bread_experts_group.resource.LoggerResource
 import java.io.PrintStream
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -36,6 +37,11 @@ class ColoredHandler(
 			it.addHandler(ColoredHandler())
 			it.level = level
 		}
+
+		fun newLoggerResourced(
+			key: String,
+			level: Level = Logger.getLogger("").level
+		): Logger = newLogger(LoggerResource.get().getString(key))
 
 		val recentlyLogged: MutableSet<Long> = mutableSetOf<Long>()
 	}

@@ -33,7 +33,7 @@ class IA32Processor : Processor {
 	}
 
 	val decoding: DecodingUtil = DecodingUtil(this)
-	val logger: Logger = ColoredHandler.newLogger("Processor")
+	val logger: Logger = ColoredHandler.newLoggerResourced("processor")
 
 	// General Purpose
 	val a: Register = Register(this.logger, "a", 0u)
@@ -261,7 +261,9 @@ class IA32Processor : Processor {
 			}
 
 			0x0Fu -> this.instructionMap[(0x0Fu shl 8) or this.decoding.readFetch().toUInt()]
-				?: throw IllegalArgumentException("Missing two-byte opcode (0F) for ${hex(this.cir)} [${hex(this.ip.rx)}]")
+				?: throw IllegalArgumentException(
+					"Missing two-byte opcode (0F) for ${hex(this.cir)} [${hex(this.ip.rx)}]"
+				)
 
 			0xF2u -> {
 				this.readingOffPrefix = 0xF2u
@@ -277,7 +279,8 @@ class IA32Processor : Processor {
 				if (this.readingOffPrefix > 0u) {
 					(this.instructionMap[(this.readingOffPrefix shl 8) or this.cir.toUInt()]
 						?: throw IllegalArgumentException(
-							"Missing two-byte opcode (${hex(this.readingOffPrefix)}) for ${hex(this.cir)} [${hex(this.ip.rx)}]"
+							"Missing two-byte opcode (${hex(this.readingOffPrefix)}) for " +
+									"${hex(this.cir)} [${hex(this.ip.rx)}]"
 						)).also { this.readingOffPrefix = 0u }
 				} else {
 					this.instructionMap[this.cir.toUInt()]
@@ -285,16 +288,7 @@ class IA32Processor : Processor {
 				}
 			}
 		}
-		this.logger.warning(
-			"{} {}: {}".format(
-				this.cs.hex(this.ip.rx - 1u),
-				hex(this.cir),
-				instruction.getDisassembly(this)
-			)
-		)
-		if (this.ip.rx == (0x7E11u).toULong()) {
-			this.logger.warning("A@)")
-		}
+		this.logger.warning { "${this.cs.hex(this.ip.rx - 1u)} ${hex(this.cir)}: ${instruction.getDisassembly(this)}" }
 		instruction.handle(this)
 		this.segment = this.ds
 		this.operandSizeOverride = false

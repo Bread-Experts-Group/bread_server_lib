@@ -19,7 +19,7 @@ import kotlin.io.path.outputStream
 
 
 class HTTPProtocolSelectorTest {
-	val logger: Logger = ColoredHandler.newLogger("HTTP Protocol Selection Tests")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.http_protocol_selection")
 	val tlsContext: SSLContext
 	val remoteClient: HttpClient
 

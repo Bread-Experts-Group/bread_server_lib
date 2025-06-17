@@ -14,7 +14,7 @@ class ISOBMFFInputStreamTest {
 		"coder/format/isobmff/ac01.mp4"
 	)
 	val testStream: ISOBMFFInputStream = ISOBMFFInputStream(testFile!!)
-	val logger: Logger = ColoredHandler.newLogger("ISOBMFF InputStream Tests")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.isobmff")
 
 	@Test
 	fun readParsed(): Unit = assertDoesNotThrow {

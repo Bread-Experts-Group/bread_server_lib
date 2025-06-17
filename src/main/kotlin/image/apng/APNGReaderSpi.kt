@@ -1,5 +1,6 @@
 package org.bread_experts_group.image.apng
 
+import org.bread_experts_group.resource.ImageReaderResource
 import java.io.InputStream
 import java.util.*
 import javax.imageio.ImageReader
@@ -27,11 +28,6 @@ class APNGReaderSpi : ImageReaderSpi() {
 
 	override fun createReaderInstance(extension: Any?): ImageReader = APNGReader(this)
 
-	override fun getDescription(locale: Locale?): String {
-		val baseName = "org.bread_experts_group.resource.ImageReaderResource"
-		val bundle =
-			if (locale != null) ResourceBundle.getBundle(baseName, locale)
-			else ResourceBundle.getBundle(baseName)
-		return bundle.getString("apng_reader_spi_description")
-	}
+	override fun getDescription(locale: Locale?): String = ImageReaderResource.get()
+		.getString("apng_reader_spi_description")
 }

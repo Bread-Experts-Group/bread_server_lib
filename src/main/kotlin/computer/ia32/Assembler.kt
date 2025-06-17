@@ -6,7 +6,7 @@ import java.io.InputStreamReader
 import java.util.logging.Logger
 
 class Assembler(assemblyStream: InputStream) {
-	private val logger: Logger = ColoredHandler.newLogger("IA32 Assembler")
+	private val logger: Logger = ColoredHandler.newLoggerResourced("ia_32_assembler")
 	private val assemblyStream: InputStreamReader = InputStreamReader(assemblyStream)
 	private val baseDelimiters: CharArray = charArrayOf(' ', '\r', '\n', '\t')
 	private fun readToken(vararg delimiters: Char = this.baseDelimiters): String {

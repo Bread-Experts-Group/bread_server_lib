@@ -18,7 +18,7 @@ import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
 class BreadExpertsSocketUtilTest {
-	val logger: Logger = ColoredHandler.newLogger("Bread Experts Group Private Socket Utilities Test")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.private_socket_util")
 	val sampleSize: Int = 10000
 
 	var longWriteCalls: Int = 0

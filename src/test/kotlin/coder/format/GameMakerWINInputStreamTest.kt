@@ -25,7 +25,7 @@ class GameMakerWINInputStreamTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/gamemaker/data.win"
 	)
-	val logger: Logger = ColoredHandler.newLogger("GameMaker WIN InputStream Tests")
+	val logger: Logger = ColoredHandler.newLoggerResourced("tests.gamemaker")
 
 	@Test
 	fun readParsed(): Unit = assertDoesNotThrow {

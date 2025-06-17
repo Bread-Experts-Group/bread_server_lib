@@ -7,7 +7,7 @@ import java.lang.invoke.MethodHandle
 import java.util.logging.Logger
 import kotlin.jvm.optionals.getOrNull
 
-private val nativeLogger: Logger = ColoredHandler.newLogger("Foreign Function Interface")
+private val nativeLogger: Logger = ColoredHandler.newLoggerResourced("ffi")
 
 abstract class NativeObjectNotFoundException(name: String) : IOException(name)
 class NativeLibraryNotFoundException(library: String) : NativeObjectNotFoundException(library)
