@@ -6,15 +6,11 @@ import org.bread_experts_group.coder.format.riff.chunk.RIFFAudioFormatChunk
 import org.bread_experts_group.coder.format.riff.chunk.RIFFChunk
 import org.bread_experts_group.coder.format.riff.chunk.RIFFContainerChunk
 import org.bread_experts_group.coder.format.riff.chunk.RIFFTextChunk
+import org.bread_experts_group.stream.le
 import org.bread_experts_group.stream.read16
 import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.InputStream
-import java.lang.Short
-import kotlin.String
-import kotlin.let
-import kotlin.text.decodeToString
-import kotlin.toUInt
 
 class RIFFInputStream(
 	from: InputStream
@@ -25,7 +21,7 @@ class RIFFInputStream(
 		val tag = readString(4)
 		return RIFFChunk(
 			tag,
-			Integer.reverseBytes(read32()).let {
+			read32().le().let {
 				if (it < 0)
 					throw DecodingException("[$tag] Size is too big [${it.toUInt()}]!")
 				val data = readNBytes(it)
@@ -84,12 +80,12 @@ class RIFFInputStream(
 		textChunk("ITCH")
 		this.addParser("fmt ") { stream, chunk ->
 			RIFFAudioFormatChunk(
-				RIFFAudioFormatChunk.AudioEncoding.mapping.getValue(Short.reverseBytes(stream.read16()).toInt()),
-				Short.reverseBytes(stream.read16()).toInt(),
-				Integer.reverseBytes(stream.read32()),
-				Integer.reverseBytes(stream.read32()),
-				Short.reverseBytes(stream.read16()).toInt(),
-				Short.reverseBytes(stream.read16()).toInt(),
+				RIFFAudioFormatChunk.AudioEncoding.mapping.getValue(stream.read16().le().toInt()),
+				stream.read16().le().toInt(),
+				stream.read32().le(),
+				stream.read32().le(),
+				stream.read16().le().toInt(),
+				stream.read16().le().toInt(),
 				stream.readAllBytes()
 			)
 		}

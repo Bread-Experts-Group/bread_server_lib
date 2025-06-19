@@ -11,7 +11,8 @@ class SMTPRequest(
 
 	companion object {
 		fun read(stream: InputStream): SMTPRequest {
-			val message = stream.scanDelimiter("\r\n")
+			val reader = stream.reader()
+			val message = reader.scanDelimiter("\r\n")
 			val parseMessage = message.uppercase()
 			val (command, restMessage) = when (val commandStr = parseMessage.substringBefore(' ')) {
 				"MAIL" -> if (parseMessage.substringBefore(':') == "MAIL FROM")

@@ -30,21 +30,22 @@ class IRCMessage(
 
 	companion object {
 		fun read(stream: InputStream): IRCMessage {
-			var initialA = Char(stream.read())
+			val reader = stream.reader()
+			var initialA = Char(reader.read())
 			val tags = if (initialA == '@') buildMap {
-				val readTags = stream.scanDelimiter(" ")
+				val readTags = reader.scanDelimiter(" ")
 				readTags.split(';').forEach {
 					val (key, value) = it.split('=')
 					this[key] = value
 				}
-				initialA = Char(stream.read())
+				initialA = Char(reader.read())
 			} else emptyMap()
 			val source = if (initialA == ':') {
-				val read = stream.scanDelimiter(" ")
-				initialA = Char(stream.read())
+				val read = reader.scanDelimiter(" ")
+				initialA = Char(reader.read())
 				read
 			} else ""
-			val (command, arguments) = stream.scanDelimiter("\r\n").split(' ', limit = 2)
+			val (command, arguments) = reader.scanDelimiter("\r\n").split(' ', limit = 2)
 			return IRCMessage(tags, source, initialA + command, arguments)
 		}
 	}

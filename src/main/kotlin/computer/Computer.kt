@@ -1,7 +1,6 @@
 package org.bread_experts_group.computer
 
 import org.bread_experts_group.computer.BinaryUtil.readBinary
-import org.bread_experts_group.computer.bios.BIOSProvider
 import org.bread_experts_group.computer.disc.iso9960.ISO9660Disc
 import org.bread_experts_group.computer.io.BreadModPollingVirtualKeyboard
 import org.bread_experts_group.computer.io.Diagnostics

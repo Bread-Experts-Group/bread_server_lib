@@ -3,10 +3,15 @@ package org.bread_experts_group.stream
 import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.io.Reader
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.nio.charset.Charset
+
+fun Short.le(): Short = java.lang.Short.reverseBytes(this)
+fun Int.le(): Int = Integer.reverseBytes(this)
+fun Long.le(): Long = java.lang.Long.reverseBytes(this)
 
 fun InputStream.read16(): Short = this.read16u().toShort()
 fun InputStream.read16u(): UShort = ((this.read() shl 8) or this.read()).toUShort()
@@ -31,7 +36,7 @@ fun OutputStream.write64u(data: ULong): Unit = this.write64(data.toLong())
 fun OutputStream.writeInet(data: InetAddress): Unit = data.address.forEach { this.write(it.toInt()) }
 fun OutputStream.writeString(s: String, c: Charset = Charsets.UTF_8): Unit = this.write(s.toByteArray(c))
 
-fun InputStream.scanDelimiter(lookFor: String): String {
+fun Reader.scanDelimiter(lookFor: String): String {
 	var bucket = ""
 	var pool = ""
 	while (bucket.length < lookFor.length) {

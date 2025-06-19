@@ -1,16 +1,13 @@
 package org.bread_experts_group.coder.format.riff.chunk
 
-import org.bread_experts_group.formatDurationTime
+import org.bread_experts_group.formatTime
+import org.bread_experts_group.stream.le
 import org.bread_experts_group.stream.write16
 import org.bread_experts_group.stream.write32
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
-import java.lang.Short
-import kotlin.ByteArray
-import kotlin.Int
-import kotlin.Long
-import kotlin.String
-import kotlin.let
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class RIFFAudioFormatChunk(
 	val encoding: AudioEncoding,
@@ -25,16 +22,16 @@ class RIFFAudioFormatChunk(
 			"${sampleRate / 1000.0} kHz, $byteRate bytes/s, $bitsPerSample-bit, $blockAlign block alignment" +
 			(if (data.isNotEmpty()) ", ${data.size} bytes misc data" else "") + (parent?.let { parent ->
 		val dataChunk = parent.chunks.firstOrNull { it.tag == "data" } ?: return@let ""
-		", ${formatDurationTime(dataChunk.data.size.toDouble() / byteRate)}"
+		", ${(dataChunk.data.size.toDouble() / byteRate).toDuration(DurationUnit.SECONDS).formatTime()}"
 	} ?: "") + ']'
 
 	val encoded: ByteArray = ByteArrayOutputStream().use {
-		it.write16(Short.reverseBytes(this.encoding.code.toShort()).toInt())
-		it.write16(Short.reverseBytes(this.numberOfChannels.toShort()).toInt())
-		it.write32(Integer.reverseBytes(this.sampleRate))
-		it.write32(Integer.reverseBytes(this.byteRate))
-		it.write16(Short.reverseBytes(this.blockAlign.toShort()).toInt())
-		it.write16(Short.reverseBytes(this.bitsPerSample.toShort()).toInt())
+		it.write16((this.encoding.code.toShort().le()).toInt())
+		it.write16((this.numberOfChannels.toShort().le()).toInt())
+		it.write32(this.sampleRate.le())
+		it.write32(this.byteRate.le())
+		it.write16((this.blockAlign.toShort().le()).toInt())
+		it.write16((this.bitsPerSample.toShort().le()).toInt())
 		it.write(this.data)
 		it.toByteArray()
 	}

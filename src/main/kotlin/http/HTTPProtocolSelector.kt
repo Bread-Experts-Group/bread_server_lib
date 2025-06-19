@@ -35,9 +35,10 @@ class HTTPProtocolSelector(
 
 	private fun versionInitialization(from: InputStream) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
+			val reader = from.reader()
 			fun decodeHeaders(): Map<String, String> = buildMap {
 				while (true) {
-					val read = from.scanDelimiter("\r\n").split(':', limit = 2)
+					val read = reader.scanDelimiter("\r\n").split(':', limit = 2)
 					if (read.size != 2) break
 					set(read[0].lowercase(), if (read[1][0] == ' ') read[1].substring(1) else read[1])
 				}
@@ -49,10 +50,10 @@ class HTTPProtocolSelector(
 					if (headers.getValue("transfer-encoding") != "chunked")
 						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
 					while (true) {
-						val length = from.scanDelimiter("\r\n").toInt(16)
+						val length = reader.scanDelimiter("\r\n").toInt(16)
 						if (length == 0) break
 						data.streams.add(from.readNBytes(length).inputStream())
-						from.scanDelimiter("\r\n")
+						reader.scanDelimiter("\r\n")
 					}
 				} else if (headers.contains("content-length")) data.streams.add(
 					from.readNBytes(headers.getValue("content-length").toInt()).inputStream()
@@ -63,13 +64,13 @@ class HTTPProtocolSelector(
 			Thread.ofVirtual().name("HTTP/0.9-1.1 Backlogger").start {
 				while (true) {
 					if (server) {
-						val method = HTTPMethod.safeMapping[from.scanDelimiter(" ")] ?: HTTPMethod.OTHER
+						val method = HTTPMethod.safeMapping[reader.scanDelimiter(" ")] ?: HTTPMethod.OTHER
 						val path = URI(
-							from
+							reader
 								.scanDelimiter(" ")
 								.replace(Regex("%(?![0-9a-fA-F]{2})"), "%25")
 						)
-						from.scanDelimiter("\r\n").let {
+						reader.scanDelimiter("\r\n").let {
 							val version = HTTPVersion.mapping[it]
 							when (version) {
 								null -> throw DecodingException("Client sent a bad HTTP version [$it]")
@@ -92,7 +93,7 @@ class HTTPProtocolSelector(
 							)
 						)
 					} else {
-						from.scanDelimiter(" ").let {
+						reader.scanDelimiter(" ").let {
 							val version = HTTPVersion.mapping[it]
 							when (version) {
 								null -> throw DecodingException("Server sent a bad HTTP version [$it]")
@@ -103,7 +104,7 @@ class HTTPProtocolSelector(
 								else -> version
 							}
 						}
-						val code = from.scanDelimiter("\r\n").let {
+						val code = reader.scanDelimiter("\r\n").let {
 							val parsed = it.split(' ', limit = 2)[0].toIntOrNull()
 							if (parsed == null) throw DecodingException("Server sent bad status code [$it]")
 							parsed

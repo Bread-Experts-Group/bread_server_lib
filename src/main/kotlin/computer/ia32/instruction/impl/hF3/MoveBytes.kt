@@ -32,9 +32,9 @@ class MoveBytes : Instruction(0xF3A4u, "rep movs") {
 		}
 	}
 
-	override fun handle(p: IA32Processor): Unit = when (p.operandSize) {
-		AddressingLength.R32 -> this.handle(p, p.c::ex, p.si::ex, p.di::ex)
-		AddressingLength.R16 -> this.handle(p, p.c::x, p.si::x, p.di::x)
+	override fun handle(processor: IA32Processor): Unit = when (processor.operandSize) {
+		AddressingLength.R32 -> this.handle(processor, processor.c::ex, processor.si::ex, processor.di::ex)
+		AddressingLength.R16 -> this.handle(processor, processor.c::x, processor.si::x, processor.di::x)
 		else -> throw UnsupportedOperationException()
 	}
 }

@@ -4,13 +4,10 @@ import org.bread_experts_group.coder.format.gamemaker_win.GameMakerWINInputStrea
 import org.bread_experts_group.coder.format.gamemaker_win.bytecode.*
 import org.bread_experts_group.coder.format.gamemaker_win.chunk.*
 import org.bread_experts_group.coder.format.gamemaker_win.structure.GameMakerWINBytecode
-import org.bread_experts_group.formatDurationTime
+import org.bread_experts_group.formatTime
 import org.bread_experts_group.hex
 import org.bread_experts_group.logging.ColoredHandler
-import org.bread_experts_group.stream.read16
-import org.bread_experts_group.stream.read16ui
-import org.bread_experts_group.stream.read32
-import org.bread_experts_group.stream.read64
+import org.bread_experts_group.stream.*
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -20,6 +17,8 @@ import java.nio.file.Files
 import java.util.logging.Logger
 import kotlin.io.path.writeBytes
 import kotlin.test.Test
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class GameMakerWINInputStreamTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
@@ -35,7 +34,7 @@ class GameMakerWINInputStreamTest {
 		val testStream = GameMakerWINInputStream(fileStream)
 		val dialA = System.currentTimeMillis()
 		val read = testStream.readAllParsed()
-		logger.info(formatDurationTime((System.currentTimeMillis() - dialA) / 1000.0))
+		logger.info((System.currentTimeMillis() - dialA).toDuration(DurationUnit.MILLISECONDS).formatTime())
 		logger.info(read.toString())
 		logger.info("Attempting disassembly")
 		val chunks = (read.first() as GameMakerWINContainerChunk).chunks
@@ -78,7 +77,7 @@ class GameMakerWINInputStreamTest {
 			fun resolveReference(b2: Int, b3: Int) {
 				val environment = GameMakerWINEnvironment.mapping.getValue(((b2 shl 8) or b3))
 				val types = variableMap.getOrPut(environment) { mutableMapOf() }
-				val identifier = java.lang.Short.reverseBytes(fileStream.read16())
+				val identifier = fileStream.read16().le()
 				val type = GameMakerWINVariableType.mapping.getValue(fileStream.read16ui())
 				val variables = types.getOrPut(type) { mutableMapOf() }
 				disassemblyOutput.print("$environment.$type:${hex(identifier.toUShort())}: ")
@@ -133,13 +132,13 @@ class GameMakerWINInputStreamTest {
 								GameMakerWINDatatype.VARIABLE -> resolveReference(b2, b3)
 
 								GameMakerWINDatatype.DOUBLE ->
-									disassemblyOutput.println(Double.fromBits(java.lang.Long.reverseBytes(fileStream.read64())))
+									disassemblyOutput.println(Double.fromBits(fileStream.read64().le()))
 
 								GameMakerWINDatatype.STRING ->
-									disassemblyOutput.println("\"${strings[Integer.reverseBytes(fileStream.read32())]}\"")
+									disassemblyOutput.println("\"${strings[fileStream.read32().le()]}\"")
 
 								GameMakerWINDatatype.INTEGER ->
-									disassemblyOutput.println(hex(Integer.reverseBytes(fileStream.read32()).toUInt()))
+									disassemblyOutput.println(hex(fileStream.read32().le().toUInt()))
 
 								GameMakerWINDatatype.SHORT ->
 									disassemblyOutput.println((b2 shl 8) or b3)
@@ -152,7 +151,7 @@ class GameMakerWINInputStreamTest {
 					}
 
 					GameMakerWINOpcodeVariant.CALL -> when (opcode) {
-						GameMakerWINOpcode.CALL -> disassemblyOutput.println(strings[Integer.reverseBytes(fileStream.read32())])
+						GameMakerWINOpcode.CALL -> disassemblyOutput.println(strings[fileStream.read32().le()])
 						GameMakerWINOpcode.CALL_CLOSURE -> disassemblyOutput.println("?")
 						else -> disassemblyOutput.println("??")
 					}

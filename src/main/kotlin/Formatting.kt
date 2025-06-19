@@ -1,7 +1,8 @@
 package org.bread_experts_group
 
 import java.util.*
-import kotlin.time.Duration.Companion.seconds
+import kotlin.math.pow
+import kotlin.time.Duration
 
 fun hexLen(s: String, n: Int): String = "0x${s.uppercase().padStart(n, '0')}"
 fun hex(value: Long): String = hexLen(value.toString(16), 16)
@@ -13,20 +14,44 @@ fun hex(value: UShort): String = hexLen(value.toString(16), 4)
 fun hex(value: Byte): String = hexLen(value.toString(16), 2)
 fun hex(value: UByte): String = hexLen(value.toString(16), 2)
 
-val siKeys: List<String> = listOf(" k", " M", " G", " T", " P", " E")
-val siIntervals: List<Long> = listOf(0.0, 1000.0, 1e+6, 1e+9, 1e+12, 1e+15, 1e+18).map { it.toLong() }
-fun truncateSI(n: Long, decimals: Int = 2): String {
-	val intIdx = siIntervals.indexOf(siIntervals.firstOrNull { it > n } ?: siIntervals.last())
-	val interval = siIntervals[intIdx - 1]
+val si: List<Pair<String, Double>> = listOf(
+	"Q" to 10.0.pow(30.0),
+	"R" to 10.0.pow(27.0),
+	"Y" to 10.0.pow(24.0),
+	"Z" to 10.0.pow(21.0),
+	"E" to 10.0.pow(18.0),
+	"P" to 10.0.pow(15.0),
+	"T" to 10.0.pow(12.0),
+	"G" to 10.0.pow(9.0),
+	"M" to 10.0.pow(6.0),
+	"k" to 10.0.pow(3.0),
+	"h" to 10.0.pow(2.0),
+	"da" to 10.0.pow(1.0),
+	"" to 1.0,
+	"d" to 10.0.pow(-1.0),
+	"c" to 10.0.pow(-2.0),
+	"m" to 10.0.pow(-3.0),
+	"μ" to 10.0.pow(-6.0),
+	"n" to 10.0.pow(-9.0),
+	"p" to 10.0.pow(-12.0),
+	"f" to 10.0.pow(-15.0),
+	"a" to 10.0.pow(-18.0),
+	"z" to 10.0.pow(-21.0),
+	"y" to 10.0.pow(-24.0),
+	"r" to 10.0.pow(-27.0),
+	"q" to 10.0.pow(-30.0)
+)
+
+fun Double.formatMetric(decimals: Int = 2): String {
+	val (sign, divisor) = si.firstOrNull { this >= it.second } ?: si.last()
 	return String.format(
-		"%.0${decimals}f${siKeys.getOrNull(intIdx - 2) ?: ""}",
-		if (interval > 0) (n.toDouble() / interval) else n.toDouble()
+		"%.0${decimals}f $sign",
+		this / divisor
 	)
 }
 
 // Thank you, Donato Wolfisberg @ https://stackoverflow.com/a/74301065
-fun formatDurationTime(durationSeconds: Double): String =
-	durationSeconds.seconds.toComponents { hours, minutes, seconds, ns ->
+fun Duration.formatTime(): String = this.toComponents { hours, minutes, seconds, ns ->
 	String.format(
 		Locale.getDefault(),
 		"%02d:%02d:%05.5f",

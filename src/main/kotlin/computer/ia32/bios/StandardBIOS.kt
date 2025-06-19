@@ -1,15 +1,16 @@
-package org.bread_experts_group.computer.bios
+package org.bread_experts_group.computer.ia32.bios
 
+import org.bread_experts_group.computer.BIOSProvider
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.Computer
-import org.bread_experts_group.computer.bios.h10.TeletypeOutput
-import org.bread_experts_group.computer.bios.h13.ExtendedRead
-import org.bread_experts_group.computer.bios.h13.InstallationCheck
-import org.bread_experts_group.computer.bios.h13.Read
-import org.bread_experts_group.computer.bios.h13.ResetDiskSystem
-import org.bread_experts_group.computer.bios.h16.GetKeystroke
-import org.bread_experts_group.computer.bios.h19.BootstrapLoader
 import org.bread_experts_group.computer.ia32.IA32Processor
+import org.bread_experts_group.computer.ia32.bios.h10.TeletypeOutput
+import org.bread_experts_group.computer.ia32.bios.h13.ExtendedRead
+import org.bread_experts_group.computer.ia32.bios.h13.InstallationCheck
+import org.bread_experts_group.computer.ia32.bios.h13.Read
+import org.bread_experts_group.computer.ia32.bios.h13.ResetDiskSystem
+import org.bread_experts_group.computer.ia32.bios.h16.GetKeystroke
+import org.bread_experts_group.computer.ia32.bios.h19.BootstrapLoader
 
 class StandardBIOS : BIOSProvider {
 	val teletype: TeletypeOutput = TeletypeOutput()

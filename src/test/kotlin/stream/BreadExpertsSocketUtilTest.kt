@@ -1,6 +1,6 @@
 package org.bread_experts_group.stream
 
-import org.bread_experts_group.formatDurationTime
+import org.bread_experts_group.formatTime
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -13,7 +13,7 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.random.Random
 import kotlin.random.nextULong
-import kotlin.time.DurationUnit
+import kotlin.time.Duration
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
@@ -31,18 +31,18 @@ class BreadExpertsSocketUtilTest {
 		longWriteCalls = 0
 		val written = mutableListOf<Long>()
 		val randomStream = ByteArrayOutputStream()
-		var writeTime = 0.0
+		var writeTime = Duration.ZERO
 		repeat(sampleSize) {
 			val toWrite = Random.nextLong(range.start, range.last)
 			written.add(toWrite)
-			writeTime += measureTime { randomStream.writeExtensibleLongCounted(toWrite) }.toDouble(DurationUnit.SECONDS)
+			writeTime += measureTime { randomStream.writeExtensibleLongCounted(toWrite) }
 		}
 		val randomStreamInput = randomStream.toByteArray().inputStream()
-		var readTime = 0.0
+		var readTime = Duration.ZERO
 		written.forEach {
 			val t = measureTimedValue { randomStreamInput.readExtensibleLong() }
 			assertEquals(it, t.value)
-			readTime += t.duration.toDouble(DurationUnit.SECONDS)
+			readTime += t.duration
 		}
 		var worstCase = 1
 		var remainder = max(abs(range.start), abs(range.last)) ushr 6
@@ -54,8 +54,8 @@ class BreadExpertsSocketUtilTest {
 			"Random tests [$range]: ${randomStream.size()} bytes | " +
 					"Unpacked: ${longWriteCalls * Long.SIZE_BYTES} bytes | " +
 					"Worst case: ${longWriteCalls * worstCase} bytes | " +
-					"Read Time [${formatDurationTime(readTime)}] | " +
-					"Write Time [${formatDurationTime(writeTime)}]"
+					"Read Time [${readTime.formatTime()}] | " +
+					"Write Time [${writeTime.formatTime()}]"
 		}
 	}
 
@@ -110,19 +110,18 @@ class BreadExpertsSocketUtilTest {
 		uLongWriteCalls = 0
 		val written = mutableListOf<ULong>()
 		val randomStream = ByteArrayOutputStream()
-		var writeTime = 0.0
+		var writeTime = Duration.ZERO
 		repeat(sampleSize) {
 			val toWrite = Random.nextULong(range.start, range.last)
 			written.add(toWrite)
 			writeTime += measureTime { randomStream.writeExtensibleULongCounted(toWrite) }
-				.toDouble(DurationUnit.SECONDS)
 		}
 		val randomStreamInput = randomStream.toByteArray().inputStream()
-		var readTime = 0.0
+		var readTime = Duration.ZERO
 		written.forEach {
 			val t = measureTimedValue { randomStreamInput.readExtensibleULong() }
 			assertEquals(it, t.value)
-			readTime += t.duration.toDouble(DurationUnit.SECONDS)
+			readTime += t.duration
 		}
 		var worstCase = 0
 		var remainder = max(range.start, range.last)
@@ -134,8 +133,8 @@ class BreadExpertsSocketUtilTest {
 			"URandom tests [$range]: ${randomStream.size()} bytes | " +
 					"Unpacked: ${uLongWriteCalls * Long.SIZE_BYTES} bytes | " +
 					"Worst case: ${uLongWriteCalls * worstCase} bytes | " +
-					"Read Time [${formatDurationTime(readTime)}] | " +
-					"Write Time [${formatDurationTime(writeTime)}]"
+					"Read Time [${readTime.formatTime()}] | " +
+					"Write Time [${writeTime.formatTime()}]"
 		}
 	}
 

@@ -1,9 +1,6 @@
 package org.bread_experts_group.coder.format.riff.chunk
 
-import org.bread_experts_group.stream.Tagged
-import org.bread_experts_group.stream.Writable
-import org.bread_experts_group.stream.write32
-import org.bread_experts_group.stream.writeString
+import org.bread_experts_group.stream.*
 import java.io.OutputStream
 
 open class RIFFChunk(
@@ -16,7 +13,7 @@ open class RIFFChunk(
 	override fun computeSize(): Long = data.size.toLong()
 	override fun write(stream: OutputStream) {
 		stream.writeString(tag)
-		stream.write32(Integer.reverseBytes(computeSize().toInt()))
+		stream.write32(computeSize().toInt().le())
 		stream.write(data)
 	}
 }

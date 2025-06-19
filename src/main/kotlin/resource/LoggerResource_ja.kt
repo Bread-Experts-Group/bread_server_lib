@@ -15,6 +15,7 @@ class LoggerResource_ja : ListResourceBundle() {
 		arrayOf("tests.banked_file_handler", "区分ファイル処理テスト"),
 		arrayOf("tests.banked_file_reader", "区分ファイル読み取りテスト"),
 		arrayOf("tests.colored_handler", "色付きロガーテスト"),
+		arrayOf("tests.elf", "ELF・InputStream・テスト"),
 		arrayOf("tests.rmi", "外部関数呼び出しテスト"),
 		arrayOf("tests.isobmff", "ISOBMFF・InputStream・テスト"),
 		arrayOf("tests.http_protocol_selection", "HTTPプロトコル選択テスト"),

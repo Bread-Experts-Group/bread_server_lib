@@ -16,6 +16,7 @@ class LoggerResource : ListResourceBundle() {
 		arrayOf("tests.banked_file_reader", "Banked File Reader Tests"),
 		arrayOf("tests.colored_handler", "Colored Logger Tests"),
 		arrayOf("tests.rmi", "Remote Method Invocation Tests"),
+		arrayOf("tests.elf", "ELF InputStream Tests"),
 		arrayOf("tests.isobmff", "ISOBMFF InputStream Tests"),
 		arrayOf("tests.http_protocol_selection", "HTTP Protocol Selection Tests"),
 		arrayOf("tests.private_socket_util", "Bread Experts Group Private Socket Utilities Test"),

@@ -1,4 +1,4 @@
-package org.bread_experts_group.computer.bios
+package org.bread_experts_group.computer.ia32.bios
 
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.register.FlagsRegister

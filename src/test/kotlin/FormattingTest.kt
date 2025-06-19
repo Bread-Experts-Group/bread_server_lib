@@ -5,15 +5,17 @@ import org.junit.jupiter.api.Test
 
 class FormattingTest {
 	@Test
-	fun truncateSITest() {
-		assertEquals("1.00", truncateSI(1))
-		assertEquals("10.00", truncateSI(10))
-		assertEquals("100.00", truncateSI(100))
-		assertEquals("1.00 k", truncateSI(1000))
-		assertEquals("10.00 k", truncateSI(10000))
-		assertEquals("100.00 k", truncateSI(100000))
-		assertEquals("1.00 M", truncateSI(1000000))
-		assertEquals("10.00 M", truncateSI(10000000))
-		assertEquals("100.00 M", truncateSI(100000000))
+	fun formatSITest() {
+		assertEquals("0.00 q", 0.0.formatMetric())
+		assertEquals("1.00 ", 1.0.formatMetric())
+		assertEquals("1.00 da", 10.0.formatMetric())
+		assertEquals("1.00 h", 100.0.formatMetric())
+		assertEquals("1.00 k", 1000.0.formatMetric())
+		assertEquals("10.00 k", 10000.0.formatMetric())
+		assertEquals("100.00 k", 100000.0.formatMetric())
+		assertEquals("1.00 M", 1000000.0.formatMetric())
+		assertEquals("10.00 M", 10000000.0.formatMetric())
+		assertEquals("100.00 M", 100000000.0.formatMetric())
+		assertEquals("1.00 G", 1000000000.0.formatMetric())
 	}
 }

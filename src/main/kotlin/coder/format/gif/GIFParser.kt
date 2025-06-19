@@ -3,6 +3,7 @@ package org.bread_experts_group.coder.format.gif
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.gif.block.*
 import org.bread_experts_group.stream.ConsolidatedInputStream
+import org.bread_experts_group.stream.le
 import org.bread_experts_group.stream.read16
 import org.bread_experts_group.stream.readString
 import java.awt.Color
@@ -46,8 +47,8 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 		}
 		// Logical Screen Descriptor
 		run {
-			val width = java.lang.Short.reverseBytes(from.read16()).toInt()
-			val height = java.lang.Short.reverseBytes(from.read16()).toInt()
+			val width = from.read16().le().toInt()
+			val height = from.read16().le().toInt()
 			val packed = from.read()
 			val backgroundColorIndex = from.read()
 			val pixelAspectRatio = from.read()
@@ -87,10 +88,10 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 
 	init {
 		addParser(0x2C) { stream, block ->
-			val x = java.lang.Short.reverseBytes(from.read16()).toInt()
-			val y = java.lang.Short.reverseBytes(from.read16()).toInt()
-			val width = java.lang.Short.reverseBytes(from.read16()).toInt()
-			val height = java.lang.Short.reverseBytes(from.read16()).toInt()
+			val x = from.read16().le().toInt()
+			val y = from.read16().le().toInt()
+			val width = from.read16().le().toInt()
+			val height = from.read16().le().toInt()
 			val packed = from.read()
 
 			val localColorTable = (packed and 0b10000000) != 0
@@ -118,7 +119,7 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 
 				0xF9 -> {
 					val packed = stream.read()
-					val delayTime = java.lang.Short.reverseBytes(stream.read16()) * 10L
+					val delayTime = read16().le() * 10L
 					val transparentColorIndex = stream.read()
 					from.read() // Terminator
 					GIFGraphicControlExtensionBlock(
