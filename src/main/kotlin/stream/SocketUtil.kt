@@ -1,12 +1,12 @@
 package org.bread_experts_group.stream
 
-import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.Reader
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
+import java.nio.channels.FileChannel
 import java.nio.charset.Charset
 
 fun Short.le(): Short = java.lang.Short.reverseBytes(this)
@@ -28,6 +28,7 @@ fun InputStream.readInet6(): Inet6Address = Inet6Address.getByAddress(this.readN
 fun InputStream.readString(n: Int, c: Charset = Charsets.UTF_8): String = this.readNBytes(n).toString(c)
 
 fun OutputStream.write16(data: Int): Unit = this.write(data shr 8).also { this.write(data) }
+fun OutputStream.write16(data: Short): Unit = this.write16(data.toInt())
 fun OutputStream.write24(data: Int): Unit = this.write(data shr 16).also { this.write16(data) }
 fun OutputStream.write32(data: Int): Unit = this.write(data shr 24).also { this.write24(data) }
 fun OutputStream.write32(data: Long): Unit = this.write32(data.toInt())
@@ -52,10 +53,10 @@ fun Reader.scanDelimiter(lookFor: String): String {
 	return pool
 }
 
-fun <R> FileInputStream.resetPosition(offset: Long, run: FileInputStream.() -> R): R {
-	val save = this.channel.position()
-	this.channel.position(offset)
+fun <R> FileChannel.resetPosition(offset: Long, run: FileChannel.() -> R): R {
+	val save = this.position()
+	this.position(offset)
 	val returned = run()
-	this.channel.position(save)
+	this.position(save)
 	return returned
 }

@@ -12,7 +12,6 @@ import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.flag.LogicalArithmeticFlagOperations
 import org.bread_experts_group.computer.ia32.instruction.type.operand.ModRM
 import java.io.OutputStream
-import java.util.logging.Logger
 
 /**
  * Opcode: `31 /r` |
@@ -44,17 +43,29 @@ class ModRMRegisterXOR : Instruction(0x31u, "xor"), ModRM, LogicalArithmeticFlag
 
 	override val registerType: RegisterType = RegisterType.GENERAL_PURPOSE
 	override val arguments: Int = 2
-	override fun acceptable(logger: Logger, from: ArrayDeque<String>): Boolean {
-		val memRM = from[0].asmMemRM(logger)
-		val register = from[1].asmRegister(logger)
+	override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
+		val memRM = from[0].asmMemRM(assembler)
+		val register = from[1].asmRegister(assembler)
 		return memRM != null && register != null
 	}
 
-	override fun produce(logger: Logger, mode: Assembler.BitMode, into: OutputStream, from: ArrayDeque<String>) {
-		if (mode != Assembler.BitMode.BITS_16) TODO(mode.name)
-		into.write(0x31)
-		val memRM = from.removeFirst().asmMemRM(logger)!!
-		val register = from.removeFirst().asmRegister(logger)!!
-		into.write(modRmByte(memRM, register))
+	override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
+		val memRM = from.removeFirst().asmMemRM(assembler)!!
+		val register = from.removeFirst().asmRegister(assembler)!!
+		when (assembler.mode) {
+			Assembler.BitMode.BITS_16 -> {
+				if (memRM.mode != assembler.mode || register.mode != assembler.mode) TODO("$memRM, $register")
+				into.write(0x31)
+				into.write(modRmByte(memRM, register))
+			}
+
+			Assembler.BitMode.BITS_32 -> {
+				if (memRM.mode != assembler.mode || register.mode != assembler.mode) TODO("$memRM, $register")
+				into.write(0x31)
+				into.write(modRmByte(memRM, register))
+			}
+
+			else -> throw UnsupportedOperationException()
+		}
 	}
 }

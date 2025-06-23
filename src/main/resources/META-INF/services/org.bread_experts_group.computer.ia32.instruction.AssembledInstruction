@@ -1,2 +1,3 @@
 org.bread_experts_group.computer.ia32.instruction.impl.ModRMRegisterXOR
 org.bread_experts_group.computer.ia32.instruction.impl.group.hFF.IncrementModRM
+org.bread_experts_group.computer.ia32.instruction.impl.intr.FireSoftwareInterrupt

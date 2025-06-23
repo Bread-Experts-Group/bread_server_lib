@@ -26,6 +26,9 @@ tasks.test {
 }
 kotlin {
 	jvmToolchain(21)
+	compilerOptions {
+		freeCompilerArgs.add("-Xcontext-parameters")
+	}
 }
 tasks.register<Jar>("dokkaJavadocJar") {
 	dependsOn(tasks.dokkaGeneratePublicationJavadoc)
@@ -120,5 +123,6 @@ tasks.kotlinSourcesJar {
 	dependsOn(generateBuildInfo)
 	dependsOn(tasks.compileJava)
 }
-tasks.compileKotlin { dependsOn(generateBuildInfo) }
-tasks.publish { dependsOn(tasks.test) }
+tasks.compileKotlin {
+	dependsOn(generateBuildInfo)
+}

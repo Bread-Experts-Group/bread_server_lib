@@ -1,7 +1,12 @@
 package org.bread_experts_group.computer.ia32.instruction.impl
 
+import org.bread_experts_group.command_line.stringToInt
+import org.bread_experts_group.command_line.stringToIntOrNull
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.ia32.IA32Processor
+import org.bread_experts_group.computer.ia32.assembler.Assembler
+import org.bread_experts_group.computer.ia32.assembler.AssemblerRegister.Companion.asmRegister
+import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
 import org.bread_experts_group.computer.ia32.instruction.InstructionCluster
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
@@ -9,6 +14,9 @@ import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate1
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate32
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate8
 import org.bread_experts_group.computer.ia32.register.Register
+import org.bread_experts_group.stream.le
+import org.bread_experts_group.stream.write32
+import java.io.OutputStream
 import kotlin.reflect.KMutableProperty0
 
 class MoveImmediateIntoRegisterDefinitions : InstructionCluster {
@@ -24,7 +32,7 @@ class MoveImmediateIntoRegisterDefinitions : InstructionCluster {
 		val r32n: String,
 		val r16n: String,
 		val register: Register
-	) : Instruction(opcode, "mov"), Immediate32, Immediate16 {
+	) : Instruction(opcode, "mov"), Immediate32, Immediate16, AssembledInstruction {
 		override fun operands(processor: IA32Processor): String = when (processor.operandSize) {
 			AddressingLength.R32 -> "${this.r32n}, ${hex(processor.imm32())}"
 			AddressingLength.R16 -> "${this.r16n}, ${hex(processor.imm16())}"
@@ -35,6 +43,22 @@ class MoveImmediateIntoRegisterDefinitions : InstructionCluster {
 			AddressingLength.R32 -> this.register.tex = processor.imm32()
 			AddressingLength.R16 -> this.register.tx = processor.imm16()
 			else -> throw UnsupportedOperationException()
+		}
+
+		override val arguments: Int = 2
+		override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
+			if (assembler.mode != Assembler.BitMode.BITS_32) TODO(assembler.mode.name)
+			val register = from[0].asmRegister(assembler)
+			if (register == null || register.registerName != this.register.name) return false
+			val immediate = stringToIntOrNull()(from[1])
+			return immediate != null
+		}
+
+		override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
+			if (assembler.mode != Assembler.BitMode.BITS_32) TODO(assembler.mode.name)
+			from.removeFirst()
+			into.write(opcode.toInt())
+			into.write32(stringToInt()(from.removeFirst()).le())
 		}
 	}
 

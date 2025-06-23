@@ -1,7 +1,9 @@
 package org.bread_experts_group.computer.ia32.assembler
 
 import org.bread_experts_group.command_line.stringToLong
+import org.bread_experts_group.computer.ia32.IA32Processor.Companion.dummyProcessor
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
+import org.bread_experts_group.computer.ia32.instruction.InstructionCluster
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.scanDelimiter
@@ -10,23 +12,12 @@ import java.io.StringReader
 import java.util.ServiceLoader
 import java.util.logging.Logger
 import kotlin.collections.ArrayDeque
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.associateBy
-import kotlin.collections.filter
-import kotlin.collections.first
-import kotlin.collections.forEach
-import kotlin.collections.getValue
-import kotlin.collections.groupBy
-import kotlin.collections.isNotEmpty
-import kotlin.collections.mutableMapOf
-import kotlin.collections.set
-import kotlin.collections.toList
 
 class Assembler(private val assemblyStream: StringReader) {
-	private val logger: Logger = ColoredHandler.Companion.newLoggerResourced("ia_32_assembler")
+	val logger: Logger = ColoredHandler.Companion.newLoggerResourced("ia_32_assembler")
 
 	enum class BitMode(val bits: Int) {
+		BITS_8(8),
 		BITS_16(16),
 		BITS_32(32),
 		BITS_64(64);
@@ -37,14 +28,24 @@ class Assembler(private val assemblyStream: StringReader) {
 	}
 
 	private var labels: MutableMap<String, ULong> = mutableMapOf()
-	private var position: ULong = 0u
-	private var mode: BitMode = BitMode.BITS_32
+	var position: ULong = 0u
+	var mode: BitMode = BitMode.BITS_32
+
+	fun readLabel(label: String): ULong {
+		if (!label.startsWith('@')) throw IllegalArgumentException("label does not start with @")
+		val actualLabel = label.substring(1)
+		val position = this.labels[actualLabel]
+		if (position == null) throw IllegalArgumentException("unknown label @\"$actualLabel\"")
+		return position
+	}
 
 	fun assemble(): ByteArray {
 		val assembled = ByteArrayOutputStream()
 		val instructions = ServiceLoader.load(AssembledInstruction::class.java).groupBy {
 			(it as Instruction).mnemonic
-		}
+		} + ServiceLoader.load(InstructionCluster::class.java)
+			.flatMap { it.getInstructions(dummyProcessor) }.mapNotNull { it as? AssembledInstruction }
+			.groupBy { (it as Instruction).mnemonic }
 		val stl = stringToLong()
 		var line = 1
 		fun assemblerError(error: Throwable) {
@@ -71,9 +72,11 @@ class Assembler(private val assemblyStream: StringReader) {
 						try {
 							val sized = instructions.getValue(token).filter { it.arguments == queue.size }
 							if (sized.isEmpty()) assemblerError("\"$token\": too many arguments [${queue.size}]")
-							val acceptable = sized.filter { it.acceptable(logger, queue) }
+							val acceptable = sized.filter { it.acceptable(this, queue) }
 							if (acceptable.isEmpty()) assemblerError("\"$token\": none acceptable for arguments")
-							acceptable.first().produce(logger, mode, assembled, queue)
+							val before = assembled.size()
+							acceptable.first().produce(this, assembled, queue)
+							this.position += (assembled.size() - before).toULong()
 						} catch (e: Throwable) {
 							assemblerError(e)
 						}

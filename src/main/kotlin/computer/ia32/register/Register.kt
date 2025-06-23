@@ -2,7 +2,11 @@ package org.bread_experts_group.computer.ia32.register
 
 import java.util.logging.Logger
 
-open class Register(val logger: Logger, val name: String, prx: ULong) {
+open class Register(
+	val logger: Logger,
+	val name: String,
+	prx: ULong
+) {
 	open var rx: ULong = prx
 		set(value) {
 			if (field == value) return

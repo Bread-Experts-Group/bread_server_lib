@@ -26,6 +26,10 @@ import kotlin.reflect.KProperty0
  * @author Miko Elbrecht
  */
 class IA32Processor : Processor {
+	companion object {
+		val dummyProcessor = IA32Processor()
+	}
+
 	override lateinit var computer: Computer
 	override fun step() {
 		this.fetch()

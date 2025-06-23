@@ -3,6 +3,7 @@ package org.bread_experts_group.coder.format.elf
 import org.bread_experts_group.coder.DecodingException
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.elf.header.*
+import org.bread_experts_group.coder.format.elf.header.writer.ELFContextuallyWritable
 import org.bread_experts_group.stream.le
 import org.bread_experts_group.stream.read16
 import org.bread_experts_group.stream.read32
@@ -13,12 +14,15 @@ import java.io.InputStream
 @OptIn(ExperimentalUnsignedTypes::class)
 class ELFInputStream(
 	from: FileInputStream
-) : Parser<Nothing?, ELFGeneralHeader, FileInputStream>("Executable and Linkable Format", from) {
-	private val preread = ArrayDeque<ELFGeneralHeader>()
+) : Parser<Nothing?, ELFContextuallyWritable, FileInputStream>("Executable and Linkable Format", from) {
+	private val preread = ArrayDeque<ELFContextuallyWritable>()
+
+	companion object {
+		val goodSignature = ubyteArrayOf(0x7Fu, 0x45u, 0x4Cu, 0x46u).toByteArray()
+	}
 
 	init {
 		val signature = from.readNBytes(4)
-		val goodSignature = ubyteArrayOf(0x7Fu, 0x45u, 0x4Cu, 0x46u).toByteArray()
 		require(signature.contentEquals(goodSignature)) {
 			"ELF signature mismatch; [${signature.toHexString()} =/= ${goodSignature.toHexString()}]"
 		}
@@ -29,7 +33,7 @@ class ELFInputStream(
 		val bits = ELFHeaderBits.mapping[bitsRaw]
 		if (bits == null) throw DecodingException("Unknown ELF bits [$bitsRaw]")
 		val endianRaw = from.read()
-		val endian = ELFHeaderEndian.mapping[bitsRaw]
+		val endian = ELFHeaderEndian.mapping[endianRaw]
 		if (endian == null) throw DecodingException("Unknown ELF endian [$endianRaw]")
 
 		fun Short.re() = if (endian == ELFHeaderEndian.LITTLE) this.le() else this
@@ -40,22 +44,14 @@ class ELFInputStream(
 			else this.read64().re()
 
 		val version = from.read()
-		if (version != 1) logger.warning("Unknown ELF version [$version]")
+		if (version != 1) logger.warning("Unknown ELF version(1) [$version]")
 		val abiRaw = from.read()
-		val abi = ELFApplicationBinaryInterface.mapping[abiRaw]
-		if (abi == null) logger.warning("Unknown ELF ABI [$abiRaw]")
 		val abiVersion = from.read()
 		from.skip(7)
 		val typeRaw = from.read16().re().toInt()
-		val type =
-			if (typeRaw >= ELFObjectType.PROCESSOR_RAW.code) ELFObjectType.PROCESSOR_RAW
-			else if (typeRaw >= ELFObjectType.OPERATING_SYSTEM_RAW.code) ELFObjectType.OPERATING_SYSTEM_RAW
-			else ELFObjectType.mapping[typeRaw]
-		if (type == null) throw DecodingException("Unknown ELF object type [$typeRaw]")
 		val isaRaw = from.read16().re().toInt()
-		val isa = ELFInstructionSetArchitecture.mapping[isaRaw]
-		if (isa == null) logger.warning("Unknown ELF ISA [$isaRaw]")
 		val version2 = from.read32().re()
+		if (version2 != 1) logger.warning("Unknown ELF version(2) [$version2]")
 		val entry = from.readBits().let { if (it == 0L) null else it }
 		val programHeaderOffset = from.readBits()
 		val sectionHeaderOffset = from.readBits()
@@ -71,88 +67,82 @@ class ELFInputStream(
 				bits,
 				endian,
 				version,
-				abi,
 				abiRaw,
 				abiVersion,
-				type,
 				typeRaw,
-				isa,
 				isaRaw,
 				version2,
 				entry,
-				isaFlags,
-				sectionNamesIndex
+				isaFlags
 			)
 		)
 		from.channel.position(programHeaderOffset)
 		(0 until programHeaderEntries).forEach { _ ->
 			val local = from.readNBytes(programHeaderEntrySize).inputStream()
-			val typeRaw = local.read32().re()
-			val type =
-				if (typeRaw >= ELFProgramHeaderType.PT_PROCESSOR_RAW.code)
-					ELFProgramHeaderType.PT_PROCESSOR_RAW
-				else if (typeRaw >= ELFProgramHeaderType.PT_OPERATING_SYSTEM_RAW.code)
-					ELFProgramHeaderType.PT_OPERATING_SYSTEM_RAW
-				else ELFProgramHeaderType.mapping[typeRaw]
-			if (type == null) throw DecodingException("Unknown ELF program header entry type [$typeRaw]")
+			val rawType = local.read32().re()
 			if (bits == ELFHeaderBits.BIT_64) {
-				val flagsRaw = local.read32().re()
-				val flags = ELFProgramHeaderFlags.entries.filter { (flagsRaw and it.position) != 0 }.toSet()
+				val rawFlags = local.read32().re()
 				val fileOffset = local.read64().re()
 				val virtualAddress = local.read64().re()
 				val physicalAddress = local.read64().re()
-				val fileSize = local.read64().re() // TODO read off
+				val fileSize = local.read64().re()
+				if (fileSize > Int.MAX_VALUE) throw DecodingException("Size too large!")
 				val memorySize = local.read64().re()
 				val alignment = local.read64().re()
 				preread.add(
 					ELFProgramHeader(
-						type, typeRaw,
-						flags, flagsRaw,
-						fileOffset, virtualAddress, physicalAddress,
-						byteArrayOf(), memorySize,
-						if (alignment !in 0..1) alignment else null
+						rawType,
+						rawFlags,
+						virtualAddress,
+						physicalAddress,
+						fileOffset,
+						fileSize,
+						memorySize,
+						alignment
 					)
 				)
 			} else {
 				val fileOffset = local.read32().re().toLong()
 				val virtualAddress = local.read32().re().toLong()
 				val physicalAddress = local.read32().re().toLong()
-				val fileSize = local.read32().re().toLong() // TODO read off
+				val fileSize = local.read32().re().toLong()
+				if (fileSize > Int.MAX_VALUE) throw DecodingException("Size too large!")
 				val memorySize = local.read32().re().toLong()
 				val flagsRaw = local.read32().re()
-				val flags = ELFProgramHeaderFlags.entries.filter { (flagsRaw and it.position) != 0 }.toSet()
 				val alignment = local.read32().re().toLong()
 				preread.add(
 					ELFProgramHeader(
-						type, typeRaw,
-						flags, flagsRaw,
-						fileOffset, virtualAddress, physicalAddress,
-						byteArrayOf(), memorySize,
-						if (alignment !in 0..1) alignment else null
+						rawType,
+						flagsRaw,
+						virtualAddress,
+						physicalAddress,
+						fileOffset,
+						fileSize,
+						memorySize,
+						alignment
 					)
 				)
 			}
 		}
 		from.channel.position(sectionHeaderOffset)
-		(0 until sectionHeaderEntries).forEach { _ ->
+		for (index in 0 until sectionHeaderEntries) {
 			val local = from.readNBytes(sectionHeaderEntrySize).inputStream()
 			val nameOffset = local.read32().re()
 			val typeRaw = local.read32().re()
-			val type =
-				if (typeRaw >= ELFSectionHeaderType.SHT_OPERATING_SYSTEM_RAW.code)
-					ELFSectionHeaderType.SHT_OPERATING_SYSTEM_RAW
-				else ELFSectionHeaderType.mapping[typeRaw]
-			if (type == null) throw DecodingException("Unknown ELF section header entry type [$typeRaw]")
 			val flagsRaw = local.readBits()
-			val flags = ELFSectionHeaderFlags.entries.filter { (flagsRaw and it.position.toLong()) != 0L }.toSet()
+			val virtualAddress = local.readBits()
+			val fileOffset = local.readBits()
+			val fileSize = local.readBits()
+			if (fileSize > Int.MAX_VALUE) throw DecodingException("Size too large!")
 			preread.add(
-				ELFSectionHeader(
+				ELFWrittenSectionHeader(
+					index == sectionNamesIndex,
 					nameOffset,
-					type, typeRaw,
-					flags,
-					local.readBits(),
-					local.readBits(),
-					local.readBits(),
+					typeRaw,
+					flagsRaw,
+					virtualAddress,
+					fileOffset,
+					fileSize,
 					local.read32().re(),
 					local.read32().re(),
 					local.readBits(),
@@ -162,6 +152,6 @@ class ELFInputStream(
 		}
 	}
 
-	override fun responsibleStream(of: ELFGeneralHeader): FileInputStream = from
-	override fun readBase(): ELFGeneralHeader = preread.removeFirstOrNull() ?: throw EndOfStream()
+	override fun responsibleStream(of: ELFContextuallyWritable): FileInputStream = from
+	override fun readBase(): ELFContextuallyWritable = preread.removeFirstOrNull() ?: throw EndOfStream()
 }

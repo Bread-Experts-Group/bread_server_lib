@@ -20,6 +20,7 @@ class LoggerResource_ja : ListResourceBundle() {
 		arrayOf("tests.isobmff", "ISOBMFF・InputStream・テスト"),
 		arrayOf("tests.http_protocol_selection", "HTTPプロトコル選択テスト"),
 		arrayOf("tests.private_socket_util", "パン専門家グループ・ソケットユーティリティテスト（内部用）"),
+		arrayOf("tests.ia_32_assembler", "IA-32アセンブラテスト"),
 		arrayOf("fuse", "ユーザー空間内のファイルシステム"),
 		arrayOf("fuse_callbacks", "ユーザー空間内のファイルシステム用コールバック"),
 		arrayOf("ffi", "外部関数インターフェイス"),

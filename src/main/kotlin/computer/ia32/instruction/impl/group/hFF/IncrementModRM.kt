@@ -11,7 +11,6 @@ import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.flag.ArithmeticAdditionFlagOperations
 import org.bread_experts_group.computer.ia32.instruction.type.operand.ModRM
 import java.io.OutputStream
-import java.util.logging.Logger
 
 class IncrementModRM : Instruction(0u, "inc"), ModRM, ArithmeticAdditionFlagOperations, AssembledInstruction {
 	override fun operands(processor: IA32Processor): String = processor.rmD().regMem
@@ -36,13 +35,13 @@ class IncrementModRM : Instruction(0u, "inc"), ModRM, ArithmeticAdditionFlagOper
 
 	override val registerType: RegisterType = RegisterType.GENERAL_PURPOSE
 	override val arguments: Int = 1
-	override fun acceptable(logger: Logger, from: ArrayDeque<String>): Boolean {
-		return from[0].asmMemRM(logger) != null
+	override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
+		return from[0].asmMemRM(assembler) != null
 	}
 
-	override fun produce(logger: Logger, mode: Assembler.BitMode, into: OutputStream, from: ArrayDeque<String>) {
+	override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
 		into.write(0xFF)
-		val register = from.removeFirst().asmMemRM(logger)!!
+		val register = from.removeFirst().asmMemRM(assembler)!!
 		if (register.address != null) TODO("mem")
 		var selected: UByte = 0b11000000u
 		selected = selected or (register.register!!.regBits() shl 3)
