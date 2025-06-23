@@ -48,11 +48,11 @@ class ELFInputStream(
 		val abiRaw = from.read()
 		val abiVersion = from.read()
 		from.skip(7)
-		val typeRaw = from.read16().re().toInt()
+		val objectTypeRaw = from.read16().re().toInt()
 		val isaRaw = from.read16().re().toInt()
 		val version2 = from.read32().re()
 		if (version2 != 1) logger.warning("Unknown ELF version(2) [$version2]")
-		val entry = from.readBits().let { if (it == 0L) null else it }
+		val entryPoint = from.readBits().let { if (it == 0L) null else it }
 		val programHeaderOffset = from.readBits()
 		val sectionHeaderOffset = from.readBits()
 		val isaFlags = from.read32().re()
@@ -69,10 +69,10 @@ class ELFInputStream(
 				version,
 				abiRaw,
 				abiVersion,
-				typeRaw,
+				objectTypeRaw,
 				isaRaw,
 				version2,
-				entry,
+				entryPoint,
 				isaFlags
 			)
 		)
@@ -108,12 +108,12 @@ class ELFInputStream(
 				val fileSize = local.read32().re().toLong()
 				if (fileSize > Int.MAX_VALUE) throw DecodingException("Size too large!")
 				val memorySize = local.read32().re().toLong()
-				val flagsRaw = local.read32().re()
+				val rawFlags = local.read32().re()
 				val alignment = local.read32().re().toLong()
 				preread.add(
 					ELFProgramHeader(
 						rawType,
-						flagsRaw,
+						rawFlags,
 						virtualAddress,
 						physicalAddress,
 						fileOffset,
@@ -128,8 +128,8 @@ class ELFInputStream(
 		for (index in 0 until sectionHeaderEntries) {
 			val local = from.readNBytes(sectionHeaderEntrySize).inputStream()
 			val nameOffset = local.read32().re()
-			val typeRaw = local.read32().re()
-			val flagsRaw = local.readBits()
+			val rawType = local.read32().re()
+			val rawFlags = local.readBits()
 			val virtualAddress = local.readBits()
 			val fileOffset = local.readBits()
 			val fileSize = local.readBits()
@@ -138,8 +138,8 @@ class ELFInputStream(
 				ELFWrittenSectionHeader(
 					index == sectionNamesIndex,
 					nameOffset,
-					typeRaw,
-					flagsRaw,
+					rawType,
+					rawFlags,
 					virtualAddress,
 					fileOffset,
 					fileSize,
