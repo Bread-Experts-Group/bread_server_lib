@@ -12,7 +12,7 @@ class IA32AssemblerTest {
 	val logger = ColoredHandler.newLoggerResourced("tests.ia_32_assembler")
 
 	@Test
-	fun assemble16() {
+	fun assemble32() {
 		val ascii = "Hello World!\n"
 		val entry = 0x080480CCL
 		val assembler = Assembler(
