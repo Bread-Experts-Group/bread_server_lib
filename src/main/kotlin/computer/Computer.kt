@@ -33,6 +33,9 @@ class Computer(
 	)
 
 	fun requestMemoryAt(address: ULong): UByte {
+		this.memory.firstOrNull { it.effectiveAddress != null && it.effectiveAddress + it.capacity >= address }?.let {
+			return it[(address - it.effectiveAddress!!).toInt()]
+		}
 		var count = 0u
 		val module = this.memory.firstOrNull { count += it.capacity; count > address }
 			?: return UByte.MIN_VALUE
@@ -40,6 +43,10 @@ class Computer(
 	}
 
 	fun setMemoryAt(address: ULong, data: UByte) {
+		this.memory.firstOrNull { it.effectiveAddress != null && it.effectiveAddress + it.capacity >= address }?.let {
+			it[(address - it.effectiveAddress!!).toInt()] = data
+			return
+		}
 		var count = 0u
 		val module = this.memory.firstOrNull { count += it.capacity; count > address }
 			?: throw IndexOutOfBoundsException("Memory address out of bounds, $address while setting $data")

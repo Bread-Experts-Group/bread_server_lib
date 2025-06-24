@@ -7,11 +7,12 @@ package org.bread_experts_group.computer
  *
  * **TODO**: Use an array solution with support for [UInt]s.
  * @param capacity The capacity of the memory module.
+ * @param effectiveAddress The address on which this memory segment begins for the computer (not set for contiguous).
  * @throws IllegalArgumentException If the capacity is negative.
  * @since 1.0.0
  * @author Miko Elbrecht
  */
-class MemoryModule(val capacity: UInt) {
+class MemoryModule(val capacity: UInt, val effectiveAddress: ULong? = null) {
 	@OptIn(ExperimentalUnsignedTypes::class)
 	private var memory: UByteArray = UByteArray(this.capacity.toInt()) {
 		(0x00u).toUByte()

@@ -37,7 +37,7 @@ class IA32Processor : Processor {
 	}
 
 	val decoding: DecodingUtil = DecodingUtil(this)
-	val logger: Logger = ColoredHandler.newLoggerResourced("processor")
+	val logger: Logger = ColoredHandler.newLoggerResourced("ia32_processor")
 
 	// General Purpose
 	val a: Register = Register(this.logger, "a", 0u)
