@@ -6,13 +6,14 @@ import org.bread_experts_group.coder.format.elf.header.writer.ELFWriter
 import org.bread_experts_group.computer.ia32.assembler.Assembler
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.FileOutputStream
 
 class IA32AssemblerTest {
 	val logger = ColoredHandler.newLoggerResourced("tests.ia_32_assembler")
 
 	@Test
-	fun assemble32() {
+	fun assemble32() = assertDoesNotThrow {
 		val ascii = "Hello World!\n"
 		val entry = 0x080480CCL
 		val assembler = Assembler(
