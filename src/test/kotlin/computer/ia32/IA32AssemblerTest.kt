@@ -58,8 +58,8 @@ class IA32AssemblerTest {
 				entry,
 				0,
 				0,
-				9,
-				9,
+				assembled.size.toLong(),
+				assembled.size.toLong(),
 				0x1000
 			)
 		)
