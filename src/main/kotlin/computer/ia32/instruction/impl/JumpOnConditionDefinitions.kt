@@ -3,6 +3,7 @@ package org.bread_experts_group.computer.ia32.instruction.impl
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.assembler.Assembler
+import org.bread_experts_group.computer.ia32.assembler.BitMode
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
 import org.bread_experts_group.computer.ia32.instruction.InstructionCluster
@@ -10,8 +11,6 @@ import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate16
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate32
 import org.bread_experts_group.computer.ia32.register.FlagsRegister.FlagType
-import org.bread_experts_group.stream.le
-import org.bread_experts_group.stream.write32
 import java.io.OutputStream
 
 class JumpOnConditionDefinitions : InstructionCluster {
@@ -51,17 +50,15 @@ class JumpOnConditionDefinitions : InstructionCluster {
 		}
 
 		override val arguments: Int = 1
-		override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
-			assembler.readLabel(from.first())
-			return true
-		}
+		override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean =
+			assembler.readLabel(from.first()) != null
 
 		override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
 			if (opcode != 0xE9u) TODO(opcode.toString(16))
-			if (assembler.mode != Assembler.BitMode.BITS_32) TODO(assembler.mode.name)
-			val offset = (assembler.readLabel(from.removeFirst()) - assembler.position).toInt() - 5
+			if (assembler.mode != BitMode.BITS_32) TODO(assembler.mode.name)
+			val (label, write) = assembler.readLabel(from.removeFirst())!!
 			into.write(opcode.toInt())
-			into.write32(offset.le())
+			if (write) assembler.writeForMode(into, ((label - assembler.position).toLong() - 5).toULong())
 		}
 	}
 

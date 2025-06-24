@@ -1,11 +1,10 @@
 package org.bread_experts_group.computer.ia32.instruction.impl
 
-import org.bread_experts_group.command_line.stringToInt
-import org.bread_experts_group.command_line.stringToIntOrNull
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.assembler.Assembler
 import org.bread_experts_group.computer.ia32.assembler.AssemblerRegister.Companion.asmRegister
+import org.bread_experts_group.computer.ia32.assembler.BitMode
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
 import org.bread_experts_group.computer.ia32.instruction.InstructionCluster
@@ -14,8 +13,6 @@ import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate1
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate32
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate8
 import org.bread_experts_group.computer.ia32.register.Register
-import org.bread_experts_group.stream.le
-import org.bread_experts_group.stream.write32
 import java.io.OutputStream
 import kotlin.reflect.KMutableProperty0
 
@@ -47,18 +44,27 @@ class MoveImmediateIntoRegisterDefinitions : InstructionCluster {
 
 		override val arguments: Int = 2
 		override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
-			if (assembler.mode != Assembler.BitMode.BITS_32) TODO(assembler.mode.name)
+			if (assembler.mode != BitMode.BITS_32) TODO(assembler.mode.name)
 			val register = from[0].asmRegister(assembler)
 			if (register == null || register.registerName != this.register.name) return false
-			val immediate = stringToIntOrNull()(from[1])
-			return immediate != null
+			return assembler.readImmediate(
+				from[1],
+				if (from[1].startsWith('-')) Int.MIN_VALUE..Int.MAX_VALUE.toLong()
+				else 0..(Int.MAX_VALUE * 2L)
+			) != null
 		}
 
 		override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
-			if (assembler.mode != Assembler.BitMode.BITS_32) TODO(assembler.mode.name)
+			if (assembler.mode != BitMode.BITS_32) TODO(assembler.mode.name)
 			from.removeFirst()
 			into.write(opcode.toInt())
-			into.write32(stringToInt()(from.removeFirst()).le())
+			val immediateToken = from.removeFirst()
+			val (immediate, write) = assembler.readImmediate(
+				immediateToken,
+				if (immediateToken.startsWith('-')) Int.MIN_VALUE..Int.MAX_VALUE.toLong()
+				else 0..(Int.MAX_VALUE * 2L)
+			)!!
+			if (write) assembler.writeForMode(into, immediate)
 		}
 	}
 

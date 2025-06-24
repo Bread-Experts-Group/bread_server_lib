@@ -13,18 +13,28 @@ class IA32AssemblerTest {
 
 	@Test
 	fun assemble16() {
+		val ascii = "Hello World!\n"
+		val entry = 0x080480CCL
 		val assembler = Assembler(
 			buildString {
 				appendLine("bits 32")
-				appendLine("org 0x080480CC")
-				appendLine("test32:")
-				appendLine(" mov eax, 1")
-				appendLine(" mov ebx, 16#CAFE#")
+				appendLine("org $entry")
+				appendLine("hello_world:")
+				appendLine(" mov eax, 4")
+				appendLine(" mov ebx, 1")
+				appendLine(" mov ecx, @hello_world_literal")
+				appendLine(" mov edx, ${ascii.length}")
 				appendLine(" int 0x80")
-			}.reader()
+				appendLine("exit:")
+				appendLine(" mov eax, 1")
+				appendLine(" xor ebx, ebx")
+				appendLine(" int 0x80")
+				appendLine("hello_world_literal:")
+				appendLine(" defutf \"$ascii\"")
+			}.reader().buffered()
 		)
 		val assembled = assembler.assemble()
-		logger.info("R: ${assembled.toHexString()}")
+		logger.info("Assembly: ${assembled.toHexString()}")
 		val elfWriter = ELFWriter(
 			ELFHeader(
 				ELFHeaderBits.BIT_32,
@@ -35,7 +45,7 @@ class IA32AssemblerTest {
 				ELFObjectType.ET_EXEC.code,
 				ELFInstructionSetArchitecture.X86.code,
 				1,
-				0x080480CC,
+				entry,
 				0
 			)
 		)
@@ -44,7 +54,7 @@ class IA32AssemblerTest {
 			ELFProgramHeader(
 				ELFProgramHeaderType.PT_LOAD.code,
 				setOf(ELFProgramHeaderFlags.PF_R, ELFProgramHeaderFlags.PF_X),
-				0x080480CC,
+				entry,
 				0,
 				0,
 				9,
@@ -57,7 +67,7 @@ class IA32AssemblerTest {
 				".text",
 				ELFSectionHeaderType.SHT_PROGBITS.code,
 				setOf(ELFSectionHeaderFlags.SHF_EXECINSTR, ELFSectionHeaderFlags.SHF_ALLOC),
-				0x080480CC,
+				entry,
 				0,
 				assembled.size.toLong(),
 				0,

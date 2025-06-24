@@ -30,6 +30,26 @@ fun stringToLongOrNull(between: LongRange = Long.MIN_VALUE..Long.MAX_VALUE): (St
 	}
 }
 
+fun stringToULong(between: ULongRange = ULong.MIN_VALUE..ULong.MAX_VALUE): (String) -> ULong {
+	val effector = stringToLong()
+	return {
+		val uLong = effector(it).toULong()
+		if (uLong !in between) throw IllegalArgumentException("[$uLong] out of range, must be between [$between]")
+		uLong
+	}
+}
+
+fun stringToULongOrNull(between: ULongRange = ULong.MIN_VALUE..ULong.MAX_VALUE): (String) -> ULong? {
+	val effector = stringToULong(between)
+	return {
+		try {
+			effector(it)
+		} catch (_: Exception) {
+			null
+		}
+	}
+}
+
 fun stringToInt(between: IntRange = Integer.MIN_VALUE..Integer.MAX_VALUE): (String) -> Int {
 	val effector = stringToLong(between.start.toLong()..between.last)
 	return { effector(it).toInt() }

@@ -4,6 +4,7 @@ import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.assembler.Assembler
 import org.bread_experts_group.computer.ia32.assembler.AssemblerMemRM.Companion.asmMemRM
 import org.bread_experts_group.computer.ia32.assembler.AssemblerRegister.Companion.asmRegister
+import org.bread_experts_group.computer.ia32.assembler.BitMode
 import org.bread_experts_group.computer.ia32.assembler.modRmByte
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
@@ -53,13 +54,13 @@ class ModRMRegisterXOR : Instruction(0x31u, "xor"), ModRM, LogicalArithmeticFlag
 		val memRM = from.removeFirst().asmMemRM(assembler)!!
 		val register = from.removeFirst().asmRegister(assembler)!!
 		when (assembler.mode) {
-			Assembler.BitMode.BITS_16 -> {
+			BitMode.BITS_16 -> {
 				if (memRM.mode != assembler.mode || register.mode != assembler.mode) TODO("$memRM, $register")
 				into.write(0x31)
 				into.write(modRmByte(memRM, register))
 			}
 
-			Assembler.BitMode.BITS_32 -> {
+			BitMode.BITS_32 -> {
 				if (memRM.mode != assembler.mode || register.mode != assembler.mode) TODO("$memRM, $register")
 				into.write(0x31)
 				into.write(modRmByte(memRM, register))

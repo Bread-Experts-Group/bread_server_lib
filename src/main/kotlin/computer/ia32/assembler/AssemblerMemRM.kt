@@ -5,7 +5,7 @@ import org.bread_experts_group.computer.ia32.assembler.AssemblerRegister.Compani
 class AssemblerMemRM(
 	val address: ULong?,
 	val register: AssemblerRegister?,
-	val mode: Assembler.BitMode
+	val mode: BitMode
 ) {
 	companion object {
 		fun String.asmMemRM(assembler: Assembler): AssemblerMemRM? {
