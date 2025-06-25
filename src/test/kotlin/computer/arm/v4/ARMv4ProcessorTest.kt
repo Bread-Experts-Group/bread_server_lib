@@ -14,7 +14,7 @@ class ARMv4ProcessorTest {
 		StandardBIOS()
 	)
 	val romStream = this::class.java.classLoader.getResourceAsStream(
-		"computer/arm/v4/Pokemon - Emerald Version (USA, Europe).gba"
+		"computer/arm/v4/BtnTest.gba"
 	)!!
 
 	@Test
