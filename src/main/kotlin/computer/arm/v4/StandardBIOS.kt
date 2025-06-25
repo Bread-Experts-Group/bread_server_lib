@@ -8,7 +8,7 @@ class StandardBIOS : BIOSProvider {
 		val processor = computer.processor as ARMv4Processor
 		processor.computer = computer
 		processor.biosHooks[0u] = { processor ->
-			processor.pc.value = 0x08000000u
+			processor.pc.value = 0x08000008u
 		}
 	}
 }

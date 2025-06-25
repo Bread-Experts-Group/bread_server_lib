@@ -46,25 +46,63 @@ class ARMv4Processor : Processor {
 	}
 
 	fun fetchThumb(): UShort {
-		return this.computer.requestMemoryAt16(this.pc.value.toULong()).also { this.pc.value += 2u }
+		return this.computer.requestMemoryAt16(this.pc.value.toULong() - 4u).also { this.pc.value += 2u }
 	}
 
 	fun fetchArm(): UInt {
-		return this.computer.requestMemoryAt32(this.pc.value.toULong()).also { this.pc.value += 4u }
+		return this.computer.requestMemoryAt32(this.pc.value.toULong() - 8u).also { this.pc.value += 4u }
 	}
 
 	fun decodeThumb(fetched: UShort): String {
-		TODO(hex(fetched))
+		val disassembly = StringBuilder(hex(this.pc.value - 2u))
+		disassembly.append(":[")
+		disassembly.append(fetched.toString(2).padStart(16, '0'))
+		disassembly.append('/')
+		disassembly.append(hex(fetched))
+		disassembly.append(']')
+		val extFetched = fetched.toUInt()
+		when ((extFetched shr 13) and 0b111u) {
+			0b010u -> {
+				val maskA = extFetched and 0b0001111100000000u
+				if (maskA == 0b0000011100000000u) TODO("BX/XCHG")
+				val maskB = extFetched and 0b0001110000000000u
+				if (maskB == 0b0000000000000000u) TODO("DP Reg")
+				if (maskB == 0b0000010000000000u) TODO("SpDP Reg")
+				val maskC = extFetched and 0b0001100000000000u
+				if (maskC == 0b0000100000000000u) {
+					disassembly.append(" ldr ")
+					val rd = registers[((extFetched shr 8) and 0b111u).toInt()]
+					disassembly.append(rd.name)
+					disassembly.append(", ")
+					val imm8 = (extFetched and 0b11111111u) * 4u
+					disassembly.append("[pc, #")
+					disassembly.append(hex(imm8))
+					disassembly.append("] (")
+					val addr = pc.value + imm8
+					disassembly.append(hex(addr))
+					disassembly.append(") (")
+					rd.value = computer.requestMemoryAt32(addr.toULong())
+					disassembly.append(hex(rd.value))
+					disassembly.append(')')
+					return disassembly.toString()
+				}
+				val maskD = extFetched and 0b0001000000000000u
+				if (maskD == 0b0001000000000000u) TODO("LR Reg")
+				TODO("Delta")
+			}
+
+			else -> throw NotImplementedError(disassembly.toString())
+		}
 	}
 
 	fun decodeArm(fetched: UInt): String {
-		val conditional = InstructionConditionalExecutionSuffix.mapping.getValue(fetched shr 28)
 		val disassembly = StringBuilder(hex(this.pc.value - 4u))
 		disassembly.append(":[")
 		disassembly.append(fetched.toString(2).padStart(32, '0'))
 		disassembly.append('/')
 		disassembly.append(hex(fetched))
 		disassembly.append(':')
+		val conditional = InstructionConditionalExecutionSuffix.mapping.getValue(fetched shr 28)
 		val ok = when (conditional) {
 			InstructionConditionalExecutionSuffix.EQ -> this.status.getFlag(StatusRegister.FlagType.ZERO)
 			InstructionConditionalExecutionSuffix.NE -> !this.status.getFlag(StatusRegister.FlagType.ZERO)
@@ -113,7 +151,20 @@ class ARMv4Processor : Processor {
 				if (maskA == 0b00000001001000000000000001110000u) TODO("Swf Brk $disassembly")
 				if (maskA == 0b00000001011000000000000000010000u) TODO("Clz $disassembly")
 				if (maskA == 0b00000001001000000000000000110000u) TODO("BL XCHG IS $disassembly")
-				if (maskA == 0b00000001001000000000000000010000u) TODO("B XCHG IS $disassembly")
+				if (maskA == 0b00000001001000000000000000010000u) {
+					val target = registers[(fetched and 0b1111u).toInt()]
+					disassembly.append(" bx")
+					disassembly.append(conditional.assemblerName)
+					disassembly.append(' ')
+					disassembly.append(target.name)
+					disassembly.append(" (")
+					disassembly.append(hex(target.value))
+					disassembly.append(')')
+					val instruction = target.value
+					status.setFlag(StatusRegister.FlagType.THUMB_MODE, instruction and 1u == 1u)
+					pc.value = instruction and 0xFFFFFFFEu
+					return disassembly.toString()
+				}
 				val maskB = fetched and 0b00000001101100000000000011110000u
 				if (maskB == 0b00000001001000000000000000000000u) {
 					val statusBits = (fetched shr 16) and 0b1111u
