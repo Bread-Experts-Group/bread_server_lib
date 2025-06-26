@@ -4,8 +4,8 @@ import org.bread_experts_group.computer.Computer
 import org.bread_experts_group.computer.MemoryModule
 import kotlin.test.Test
 
-class Mos6502ProcessorTest {
-	val processor: Mos6502Processor = Mos6502Processor()
+class MOS6502ProcessorTest {
+	val processor: MOS6502Processor = MOS6502Processor()
 	val memoryModule: MemoryModule = MemoryModule(32u * 2048u)
 	val romModule: MemoryModule = MemoryModule(64u * 1024u)
 	val computer: Computer = Computer(
@@ -17,7 +17,7 @@ class Mos6502ProcessorTest {
 
 	@Test
 	fun test() {
-		var address = romModule.effectiveAddress!!
+		var address = 0uL
 		while (true) {
 			val next = romStream.read()
 			if (next == -1) break

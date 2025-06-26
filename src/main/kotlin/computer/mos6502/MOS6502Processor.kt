@@ -8,7 +8,7 @@ import org.bread_experts_group.computer.mos6502.register.StatusRegister
 import org.bread_experts_group.hex
 import java.util.concurrent.CountDownLatch
 
-class Mos6502Processor : Processor {
+class MOS6502Processor : Processor {
 	override lateinit var computer: Computer
 	val byteRegisters = arrayOf(
 		ByteRegister("a", 0u),

@@ -5,7 +5,7 @@ import org.bread_experts_group.computer.Computer
 
 class DummyBIOS : BIOSProvider {
 	override fun initialize(computer: Computer) {
-		val processor = computer.processor as Mos6502Processor
+		val processor = computer.processor as MOS6502Processor
 		processor.computer = computer
 	}
 }
