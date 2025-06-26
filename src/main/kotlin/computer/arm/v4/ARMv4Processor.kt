@@ -53,6 +53,49 @@ class ARMv4Processor : Processor {
 		return this.computer.requestMemoryAt32(this.pc.value.toULong() - 8u).also { this.pc.value += 4u }
 	}
 
+	fun checkConditional(cond: InstructionConditionalExecutionSuffix) = when (cond) {
+		InstructionConditionalExecutionSuffix.EQ -> this.status.getFlag(StatusRegister.FlagType.ZERO)
+		InstructionConditionalExecutionSuffix.NE -> !this.status.getFlag(StatusRegister.FlagType.ZERO)
+		InstructionConditionalExecutionSuffix.CS -> this.status.getFlag(StatusRegister.FlagType.CARRY)
+		InstructionConditionalExecutionSuffix.CC -> !this.status.getFlag(StatusRegister.FlagType.CARRY)
+		InstructionConditionalExecutionSuffix.MI -> this.status.getFlag(StatusRegister.FlagType.NEGATIVE)
+		InstructionConditionalExecutionSuffix.PL -> !this.status.getFlag(StatusRegister.FlagType.NEGATIVE)
+		InstructionConditionalExecutionSuffix.VS -> this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
+		InstructionConditionalExecutionSuffix.VC -> !this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
+		InstructionConditionalExecutionSuffix.HI ->
+			this.status.getFlag(StatusRegister.FlagType.CARRY) &&
+					!this.status.getFlag(StatusRegister.FlagType.ZERO)
+
+		InstructionConditionalExecutionSuffix.LS ->
+			!this.status.getFlag(StatusRegister.FlagType.CARRY) ||
+					this.status.getFlag(StatusRegister.FlagType.ZERO)
+
+		InstructionConditionalExecutionSuffix.GE ->
+			this.status.getFlag(StatusRegister.FlagType.NEGATIVE) ==
+					this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
+
+		InstructionConditionalExecutionSuffix.LT ->
+			this.status.getFlag(StatusRegister.FlagType.NEGATIVE) !=
+					this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
+
+		InstructionConditionalExecutionSuffix.GT ->
+			!this.status.getFlag(StatusRegister.FlagType.ZERO) &&
+					(this.status.getFlag(StatusRegister.FlagType.NEGATIVE) ==
+							this.status.getFlag(StatusRegister.FlagType.OVERFLOW))
+
+		InstructionConditionalExecutionSuffix.LE ->
+			this.status.getFlag(StatusRegister.FlagType.ZERO) ||
+					(this.status.getFlag(StatusRegister.FlagType.NEGATIVE) !=
+							this.status.getFlag(StatusRegister.FlagType.OVERFLOW))
+
+		InstructionConditionalExecutionSuffix.AL -> true
+	}
+
+	fun carryFrom(n: UInt, m: UInt) = n.toULong() + m > UInt.MAX_VALUE
+	fun overflowFrom(n: UInt, m: UInt): Boolean =
+		(((n xor m) and 0x80000000u) == 0u) &&
+				(((n xor (n + m)) and 0x80000000u) != 0u)
+
 	fun decodeThumb(fetched: UShort): String {
 		val disassembly = StringBuilder(hex(this.pc.value - 2u))
 		disassembly.append(":[")
@@ -62,12 +105,86 @@ class ARMv4Processor : Processor {
 		disassembly.append(']')
 		val extFetched = fetched.toUInt()
 		when ((extFetched shr 13) and 0b111u) {
+			0b000u -> {
+				val maskA = extFetched and 0b0001110000000000u
+				if (maskA == 0b0001100000000000u) TODO("Add/sub reg $disassembly")
+				if (maskA == 0b0001110000000000u) {
+					val rd = registers[(extFetched and 0b111u).toInt()]
+					val rn = registers[((extFetched shr 3) and 0b111u).toInt()]
+					val imm = (extFetched shr 6) and 0b111u
+					if ((maskA shr 9) and 1u == 1u) TODO("!!! $disassembly")
+					disassembly.append(" add ")
+					disassembly.append(rd.name)
+					disassembly.append(", ")
+					disassembly.append(rn.name)
+					disassembly.append(", #")
+					disassembly.append(hex(imm))
+					rd.value = rn.value + imm
+					status.setFlag(StatusRegister.FlagType.NEGATIVE, rd.value and 0x80000000u != 0u)
+					status.setFlag(StatusRegister.FlagType.ZERO, rd.value == 0u)
+					status.setFlag(StatusRegister.FlagType.CARRY, carryFrom(rn.value, imm))
+					status.setFlag(StatusRegister.FlagType.OVERFLOW, overflowFrom(rn.value, imm))
+					return disassembly.toString()
+				}
+				if ((extFetched shr 11) and 0b11u != 0b00u) TODO("!*! $disassembly")
+				val imm = ((extFetched shr 6) and 0b11111u).toInt()
+				val rm = registers[((extFetched shr 3) and 0b111u).toInt()]
+				val rd = registers[(extFetched and 0b111u).toInt()]
+				disassembly.append(" lsl ")
+				disassembly.append(rd.name)
+				disassembly.append(", ")
+				disassembly.append(rm.name)
+				disassembly.append(", ")
+				disassembly.append('#')
+				disassembly.append(hex(imm))
+				if (imm != 0)
+					status.setFlag(StatusRegister.FlagType.CARRY, (rm.value and (1u shl (32 - imm))) != 0u)
+				rd.value = rm.value shl imm
+				status.setFlag(StatusRegister.FlagType.NEGATIVE, rd.value and 0x80000000u != 0u)
+				status.setFlag(StatusRegister.FlagType.ZERO, rd.value == 0u)
+				return disassembly.toString()
+			}
+
+			0b001u -> {
+				val rdn = registers[((extFetched shr 8) and 0b111u).toInt()]
+				val imm = extFetched and 0b11111111u
+				when ((extFetched shr 11) and 0b11u) {
+					0b00u -> {
+						disassembly.append(" mov ")
+						disassembly.append(rdn.name)
+						disassembly.append(", #")
+						disassembly.append(hex(imm))
+						rdn.value = imm
+						status.setFlag(StatusRegister.FlagType.NEGATIVE, imm and 0x80000000u != 0u)
+						status.setFlag(StatusRegister.FlagType.ZERO, imm == 0u)
+					}
+
+					else -> TODO("ASCM Imm, $rdn, $imm, $disassembly")
+				}
+				return disassembly.toString()
+			}
+
 			0b010u -> {
 				val maskA = extFetched and 0b0001111100000000u
-				if (maskA == 0b0000011100000000u) TODO("BX/XCHG")
+				if (maskA == 0b0000011100000000u) TODO("BX/XCHG $disassembly")
 				val maskB = extFetched and 0b0001110000000000u
-				if (maskB == 0b0000000000000000u) TODO("DP Reg")
-				if (maskB == 0b0000010000000000u) TODO("SpDP Reg")
+				if (maskB == 0b0000000000000000u) TODO("DP Reg $disassembly")
+				if (maskB == 0b0000010000000000u) {
+					val rm = registers[(((extFetched shr 3) and 0b111u) or ((extFetched shr 3) and 0b1000u)).toInt()]
+					val rd = registers[((extFetched and 0b111u) or ((extFetched shr 4) and 0b1000u)).toInt()]
+					when ((extFetched shr 8) and 0b11u) {
+						0b10u -> {
+							disassembly.append(" mov ")
+							disassembly.append(rd.name)
+							disassembly.append(", ")
+							disassembly.append(rm.name)
+							rd.value = rm.value
+						}
+
+						else -> TODO("SpDP $disassembly")
+					}
+					return disassembly.toString()
+				}
 				val maskC = extFetched and 0b0001100000000000u
 				if (maskC == 0b0000100000000000u) {
 					disassembly.append(" ldr ")
@@ -87,8 +204,55 @@ class ARMv4Processor : Processor {
 					return disassembly.toString()
 				}
 				val maskD = extFetched and 0b0001000000000000u
-				if (maskD == 0b0001000000000000u) TODO("LR Reg")
-				TODO("Delta")
+				if (maskD == 0b0001000000000000u) TODO("LR Reg $disassembly")
+				TODO("Delta $disassembly")
+			}
+
+			0b011u -> {
+				if ((extFetched shr 11) and 0b11u != 0b00u) TODO("!*! $disassembly")
+				val imm = (extFetched shr 6) and 0b11111u
+				val rn = registers[((extFetched shr 3) and 0b111u).toInt()]
+				val rd = registers[(extFetched and 0b111u).toInt()]
+				disassembly.append(" str ")
+				disassembly.append(rd.name)
+				disassembly.append(", ")
+				disassembly.append('[')
+				disassembly.append(rn.name)
+				disassembly.append(" + #")
+				disassembly.append(hex(imm))
+				disassembly.append(" * 4 (")
+				val addr = (imm * 4u) + rn.value
+				disassembly.append(hex(addr))
+				disassembly.append(")] (")
+				disassembly.append(hex(rd.value))
+				disassembly.append(')')
+				computer.setMemoryAt32(addr.toULong(), rd.value)
+				return disassembly.toString()
+			}
+
+			0b110u -> {
+				val maskA = extFetched and 0b0001111100000000u
+				if (maskA == 0b0001111100000000u) TODO("Int $disassembly")
+				val maskB = extFetched and 0b0001000000000000u
+				if (maskB == 0b0001000000000000u) {
+					disassembly.append(" b")
+					val condition = InstructionConditionalExecutionSuffix.mapping.getValue(
+						(extFetched shr 8) and 0b1111u
+					)
+					disassembly.append(condition.assemblerName)
+					val imm = (extFetched and 0b11111111u).toByte().toInt() shl 1
+					disassembly.append(" #")
+					disassembly.append(hex(imm))
+					if (checkConditional(condition)) pc.value = (pc.value.toInt() + imm).toUInt()
+					return disassembly.toString()
+				}
+				if (maskB == 0b0000000000000000u) TODO("ls $disassembly")
+				TODO("Delta $disassembly")
+			}
+
+			0b111u -> {
+				// Pg 330
+				TODO("$disassembly, ${hex(fetchThumb())}")
 			}
 
 			else -> throw NotImplementedError(disassembly.toString())
@@ -103,44 +267,7 @@ class ARMv4Processor : Processor {
 		disassembly.append(hex(fetched))
 		disassembly.append(':')
 		val conditional = InstructionConditionalExecutionSuffix.mapping.getValue(fetched shr 28)
-		val ok = when (conditional) {
-			InstructionConditionalExecutionSuffix.EQ -> this.status.getFlag(StatusRegister.FlagType.ZERO)
-			InstructionConditionalExecutionSuffix.NE -> !this.status.getFlag(StatusRegister.FlagType.ZERO)
-			InstructionConditionalExecutionSuffix.CS -> this.status.getFlag(StatusRegister.FlagType.CARRY)
-			InstructionConditionalExecutionSuffix.CC -> !this.status.getFlag(StatusRegister.FlagType.CARRY)
-			InstructionConditionalExecutionSuffix.MI -> this.status.getFlag(StatusRegister.FlagType.NEGATIVE)
-			InstructionConditionalExecutionSuffix.PL -> !this.status.getFlag(StatusRegister.FlagType.NEGATIVE)
-			InstructionConditionalExecutionSuffix.VS -> this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
-			InstructionConditionalExecutionSuffix.VC -> !this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
-			InstructionConditionalExecutionSuffix.HI ->
-				this.status.getFlag(StatusRegister.FlagType.CARRY) &&
-						!this.status.getFlag(StatusRegister.FlagType.ZERO)
-
-			InstructionConditionalExecutionSuffix.LS ->
-				!this.status.getFlag(StatusRegister.FlagType.CARRY) ||
-						this.status.getFlag(StatusRegister.FlagType.ZERO)
-
-			InstructionConditionalExecutionSuffix.GE ->
-				this.status.getFlag(StatusRegister.FlagType.NEGATIVE) ==
-						this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
-
-			InstructionConditionalExecutionSuffix.LT ->
-				this.status.getFlag(StatusRegister.FlagType.NEGATIVE) !=
-						this.status.getFlag(StatusRegister.FlagType.OVERFLOW)
-
-			InstructionConditionalExecutionSuffix.GT ->
-				!this.status.getFlag(StatusRegister.FlagType.ZERO) &&
-						(this.status.getFlag(StatusRegister.FlagType.NEGATIVE) ==
-								this.status.getFlag(StatusRegister.FlagType.OVERFLOW))
-
-			InstructionConditionalExecutionSuffix.LE ->
-				this.status.getFlag(StatusRegister.FlagType.ZERO) ||
-						(this.status.getFlag(StatusRegister.FlagType.NEGATIVE) !=
-								this.status.getFlag(StatusRegister.FlagType.OVERFLOW))
-
-			InstructionConditionalExecutionSuffix.AL -> true
-		}
-		if (!ok) {
+		if (!checkConditional(conditional)) {
 			disassembly.append("✗]")
 			return disassembly.toString()
 		}

@@ -6,10 +6,17 @@ import org.junit.jupiter.api.Test
 
 class ARMv4ProcessorTest {
 	val processor: ARMv4Processor = ARMv4Processor()
-	val memoryModule: MemoryModule = MemoryModule(386u * 1024u)
-	val romModule: MemoryModule = MemoryModule(32u * 1024u * 1024u, 0x08000000u)
+
+	// Video
+	val paletteModule: MemoryModule = MemoryModule(0x3FFu, 0x05000000u)
+
+	// ROM
+	val romModule: MemoryModule = MemoryModule(0x1FFFFFFu, 0x08000000u)
 	val computer: Computer = Computer(
-		listOf(memoryModule, romModule),
+		listOf(
+			paletteModule,
+			romModule
+		),
 		processor,
 		StandardBIOS()
 	)
