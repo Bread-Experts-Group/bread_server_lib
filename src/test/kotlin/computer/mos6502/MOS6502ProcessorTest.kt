@@ -25,7 +25,8 @@ class MOS6502ProcessorTest {
 			address++
 		}
 
-		computer.reset()
+		computer.bios.initialize(computer)
+//		computer.reset()
 		while (true) {
 			computer.step()
 			Thread.sleep(100)

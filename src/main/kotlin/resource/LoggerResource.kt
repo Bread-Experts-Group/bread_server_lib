@@ -33,7 +33,8 @@ class LoggerResource : ListResourceBundle() {
 		arrayOf("rmi", "Remote Method Invocation"),
 		arrayOf("http2header", "HTTP2 Header Frame"),
 		arrayOf("http_selector", "HTTP Protocol Selector"),
-		arrayOf("parser", "Parser")
+		arrayOf("parser", "Parser"),
+		arrayOf("mos6502_processor", "6502 Processor")
 	)
 
 	companion object {

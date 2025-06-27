@@ -33,6 +33,7 @@ class LoggerResource_ja : ListResourceBundle() {
 		arrayOf("rmi", "外部関数呼び出し"),
 		arrayOf("http2header", "HTTP/2ヘッダーフレーム"),
 		arrayOf("http_selector", "HTTPプロトコル選択"),
-		arrayOf("parser", "パーサー")
+		arrayOf("parser", "パーサー"),
+		arrayOf("mos6502_processor", "MOS 6502プロセッサー")
 	)
 }
