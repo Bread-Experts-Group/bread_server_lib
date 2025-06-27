@@ -19,15 +19,15 @@ class TeletypeOutput : BIOSInterruptProvider {
 	private val interruptReturn = InterruptReturn()
 	override fun handle(processor: IA32Processor) {
 		interruptReturn.handle(processor)
-		if (this.x == Companion.ROWS) {
+		if (this.x == ROWS) {
 			this.y++
 			this.x = 0u
 		}
-		if (this.y == Companion.COLS) {
-			for (pos in Companion.COLOR_ADDR..Companion.COLOR_ADDR + (TeletypeOutput.RES_D * 2u) step 2) {
+		if (this.y == COLS) {
+			for (pos in COLOR_ADDR..COLOR_ADDR + (RES_D * 2u) step 2) {
 				processor.computer.setMemoryAt16(
 					pos,
-					processor.computer.requestMemoryAt16(pos + TeletypeOutput.ROWS_D)
+					processor.computer.requestMemoryAt16(pos + ROWS_D)
 				)
 			}
 			this.y--
@@ -40,7 +40,7 @@ class TeletypeOutput : BIOSInterruptProvider {
 			return
 		}
 		processor.computer.setMemoryAt16(
-			Companion.COLOR_ADDR + (((this.y * Companion.ROWS) + this.x) * 2u),
+			COLOR_ADDR + (((this.y * ROWS) + this.x) * 2u),
 			((processor.a.l shl 8) or 0xFu).toUShort()
 		)
 		this.x++

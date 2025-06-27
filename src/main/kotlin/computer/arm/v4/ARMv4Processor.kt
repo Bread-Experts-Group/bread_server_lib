@@ -31,9 +31,10 @@ class ARMv4Processor : Processor {
 		Register("r11", 0u),
 		Register("r12", 0u),
 		Register("sp", 0u),
-		Register("r14", 0u),
+		Register("lr", 0u),
 		Register("pc", 0u)
 	)
+	val lr = registers[14]
 	val pc = registers[15]
 	val status = StatusRegister()
 	val logger: Logger = ColoredHandler.newLoggerResourced("arm_v4_processor")
@@ -107,7 +108,9 @@ class ARMv4Processor : Processor {
 		when ((extFetched shr 13) and 0b111u) {
 			0b000u -> {
 				val maskA = extFetched and 0b0001110000000000u
-				if (maskA == 0b0001100000000000u) TODO("Add/sub reg $disassembly")
+				if (maskA == 0b0001100000000000u) {
+					TODO("Add/sub reg $disassembly")
+				}
 				if (maskA == 0b0001110000000000u) {
 					val rd = registers[(extFetched and 0b111u).toInt()]
 					val rn = registers[((extFetched shr 3) and 0b111u).toInt()]
@@ -251,8 +254,24 @@ class ARMv4Processor : Processor {
 			}
 
 			0b111u -> {
-				// Pg 330
-				TODO("$disassembly, ${hex(fetchThumb())}")
+				if ((extFetched shr 11) and 0b11u != 0b10u) TODO("bad first half $disassembly")
+				lr.value = pc.value + ((extFetched and 0b11111111111u) shl 12)
+
+				val secondHalf = fetchThumb()
+				disassembly.append(":[${hex(secondHalf)}]")
+				val secondHalfExt = secondHalf.toUInt()
+				val secondH = (secondHalfExt shr 11) and 0b11u
+				if (secondH == 0b11u) {
+					disassembly.append(" b ")
+					val savedPC = pc.value
+					pc.value = lr.value + ((secondHalfExt and 0b11111111111u) shl 1)
+					lr.value = savedPC or 1u
+					disassembly.append('#')
+					disassembly.append(hex(pc.value))
+					return disassembly.toString()
+				}
+				if (secondH == 0b01u) TODO("BLX $disassembly")
+				TODO("Delta $disassembly")
 			}
 
 			else -> throw NotImplementedError(disassembly.toString())

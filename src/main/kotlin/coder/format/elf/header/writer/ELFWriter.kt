@@ -1,7 +1,7 @@
 package org.bread_experts_group.coder.format.elf.header.writer
 
 import org.bread_experts_group.coder.format.DiscreteWriter
-import org.bread_experts_group.coder.format.elf.ELFInputStream
+import org.bread_experts_group.coder.format.elf.ELFParser
 import org.bread_experts_group.coder.format.elf.header.*
 import org.bread_experts_group.stream.*
 import java.io.ByteArrayOutputStream
@@ -30,7 +30,7 @@ class ELFWriter(private val header: ELFHeader) : DiscreteWriter() {
 	var data = ByteArray(0)
 
 	override fun writeFull(stream: OutputStream) = context(stream, header) {
-		stream.write(ELFInputStream.Companion.goodSignature)
+		stream.write(ELFParser.Companion.goodSignature)
 		stream.write(header.bits.code)
 		stream.write(header.endian.code)
 		stream.write(header.version)

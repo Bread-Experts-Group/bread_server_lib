@@ -21,10 +21,10 @@ class PNGParser(from: InputStream) : Parser<String, PNGChunk, InputStream>("Port
 	override fun responsibleStream(of: PNGChunk): InputStream = of.data.inputStream()
 
 	override fun readBase(): PNGChunk {
-		val length = from.read32()
-		val chunkType = from.readString(4)
-		val chunkData = from.readNBytes(length)
-		from.readNBytes(4)
+		val length = fqIn.read32()
+		val chunkType = fqIn.readString(4)
+		val chunkData = fqIn.readNBytes(length)
+		fqIn.readNBytes(4)
 		return PNGChunk(chunkType, chunkData)
 	}
 

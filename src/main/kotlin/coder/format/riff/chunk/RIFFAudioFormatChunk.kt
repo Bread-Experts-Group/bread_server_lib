@@ -21,7 +21,7 @@ class RIFFAudioFormatChunk(
 	override fun toString(): String = "RIFFChunk.\"$tag\"[$encoding, $numberOfChannels channel(s), " +
 			"${sampleRate / 1000.0} kHz, $byteRate bytes/s, $bitsPerSample-bit, $blockAlign block alignment" +
 			(if (data.isNotEmpty()) ", ${data.size} bytes misc data" else "") + (parent?.let { parent ->
-		val dataChunk = parent.chunks.firstOrNull { it.tag == "data" } ?: return@let ""
+		val dataChunk = parent.firstOrNull { it.tag == "data" } ?: return@let ""
 		", ${(dataChunk.data.size.toDouble() / byteRate).toDuration(DurationUnit.SECONDS).formatTime()}"
 	} ?: "") + ']'
 
@@ -286,7 +286,7 @@ class RIFFAudioFormatChunk(
 		EXTENSIBLE(0xFFFE);
 
 		companion object {
-			val mapping: Map<Int, RIFFAudioFormatChunk.AudioEncoding> = entries.associateBy(AudioEncoding::code)
+			val mapping: Map<Int, AudioEncoding> = entries.associateBy(AudioEncoding::code)
 		}
 	}
 }

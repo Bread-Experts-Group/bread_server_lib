@@ -22,7 +22,7 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 	}
 
 	private fun readColorTable(size: Int) = List(size) {
-		Color(from.read(), from.read(), from.read())
+		Color(fqIn.read(), fqIn.read(), fqIn.read())
 	}
 
 	@OptIn(ExperimentalContracts::class)
@@ -73,13 +73,13 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 		}
 	}
 
-	override fun responsibleStream(of: GIFBlock): InputStream = from
-	override fun readBase(): GIFBlock = preread.removeFirstOrNull() ?: GIFBlock(from.read().toByte(), byteArrayOf())
+	override fun responsibleStream(of: GIFBlock): InputStream = fqIn
+	override fun readBase(): GIFBlock = preread.removeFirstOrNull() ?: GIFBlock(fqIn.read().toByte(), byteArrayOf())
 
 	private fun readBlocks(): ConsolidatedInputStream {
 		val consolidated = ConsolidatedInputStream()
 		while (true) {
-			val data = from.readNBytes(from.read())
+			val data = fqIn.readNBytes(fqIn.read())
 			if (data.isEmpty()) break
 			consolidated.streams.add(data.inputStream())
 		}
@@ -119,7 +119,7 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 
 				0xF9 -> {
 					val packed = stream.read()
-					val delayTime = read16().le() * 10L
+					val delayTime = fqIn.read16().le() * 10L
 					val transparentColorIndex = stream.read()
 					from.read() // Terminator
 					GIFGraphicControlExtensionBlock(

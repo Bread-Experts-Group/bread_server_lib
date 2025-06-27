@@ -4,15 +4,12 @@ import org.bread_experts_group.coder.DecodingException
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.elf.header.*
 import org.bread_experts_group.coder.format.elf.header.writer.ELFContextuallyWritable
-import org.bread_experts_group.stream.le
-import org.bread_experts_group.stream.read16
-import org.bread_experts_group.stream.read32
-import org.bread_experts_group.stream.read64
+import org.bread_experts_group.stream.*
 import java.io.FileInputStream
 import java.io.InputStream
 
 @OptIn(ExperimentalUnsignedTypes::class)
-class ELFInputStream(
+class ELFParser(
 	from: FileInputStream
 ) : Parser<Nothing?, ELFContextuallyWritable, FileInputStream>("Executable and Linkable Format", from) {
 	private val preread = ArrayDeque<ELFContextuallyWritable>()
@@ -152,6 +149,7 @@ class ELFInputStream(
 		}
 	}
 
-	override fun responsibleStream(of: ELFContextuallyWritable): FileInputStream = from
-	override fun readBase(): ELFContextuallyWritable = preread.removeFirstOrNull() ?: throw EndOfStream()
+	override fun responsibleStream(of: ELFContextuallyWritable): FileInputStream = rawStream
+	override fun readBase(): ELFContextuallyWritable = preread.removeFirstOrNull()
+		?: throw FailQuickInputStream.EndOfStream()
 }

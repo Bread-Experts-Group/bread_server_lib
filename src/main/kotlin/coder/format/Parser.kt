@@ -10,8 +10,9 @@ import java.util.logging.Logger
 
 abstract class Parser<I, O, S : InputStream>(
 	format: String,
-	protected val from: S
-) : FailQuickInputStream(from) where O : Tagged<I>, O : Writable {
+	protected val rawStream: S
+) where O : Tagged<I>, O : Writable {
+	protected val fqIn: InputStream = FailQuickInputStream(rawStream)
 	protected val logger: Logger = ColoredHandler.newLogger("$format ${LoggerResource.get().getString("parser")}")
 	protected val parsers: MutableMap<I, (S, O) -> O> = mutableMapOf<I, (S, O) -> O>()
 	fun addParser(identifier: I, parser: (S, O) -> O) {
@@ -20,6 +21,9 @@ abstract class Parser<I, O, S : InputStream>(
 			throw IllegalArgumentException("Parser for identifier \"$identifier\" already exists")
 		parsers[identifier] = parser
 	}
+
+	private var next: O? = refineNext()
+	fun hasRemaining(): Boolean = next != null
 
 	protected abstract fun responsibleStream(of: O): S
 	protected abstract fun readBase(): O
@@ -32,12 +36,14 @@ abstract class Parser<I, O, S : InputStream>(
 		} ?: of
 	}
 
-	fun readParsed(): O = refineBase(readBase())
+	private fun refineNext(): O = refineBase(readBase())
+	fun readParsed(): O {
+		val current = next!!
+		next = refineNext()
+		return current
+	}
 
 	fun readAllParsed(): List<O> = buildList {
-		try {
-			while (true) add(readParsed())
-		} catch (_: EndOfStream) {
-		}
+		while (hasRemaining()) add(readParsed())
 	}
 }

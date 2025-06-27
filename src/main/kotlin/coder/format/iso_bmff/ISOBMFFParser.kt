@@ -9,18 +9,18 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class ISOBMFFInputStream(
+class ISOBMFFParser(
 	from: InputStream
 ) : Parser<String, ISOBMFFBox, InputStream>("ISO Base Media File Format", from) {
 	override fun responsibleStream(of: ISOBMFFBox): InputStream = of.data.inputStream()
 
 	override fun readBase(): ISOBMFFBox {
-		var size = this.read32ul() - 8
-		val name = this.readString(4)
-		if (size == 1L) size = this.read64()
+		var size = fqIn.read32ul() - 8
+		val name = fqIn.readString(4)
+		if (size == 1L) size = fqIn.read64()
 		if (size > Int.MAX_VALUE) throw DecodingException("Size is too big [${size.toULong()}]!")
-		val data = if (size == 0L) this.readAllBytes()
-		else this.readNBytes(size.toInt())
+		val data = if (size == 0L) fqIn.readAllBytes()
+		else fqIn.readNBytes(size.toInt())
 		return ISOBMFFBox(name, data)
 	}
 
@@ -28,7 +28,7 @@ class ISOBMFFInputStream(
 		this.addParser(name) { stream, chunk ->
 			ISOBMFFContainerBox(
 				chunk.tag,
-				ISOBMFFInputStream(stream).readAllParsed()
+				ISOBMFFParser(stream).readAllParsed()
 			)
 		}
 	}

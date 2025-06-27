@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.iso_bmff.ISOBMFFInputStream
+import org.bread_experts_group.coder.format.iso_bmff.ISOBMFFParser
 import org.bread_experts_group.coder.format.iso_bmff.box.ISOBMFFBox
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.FailQuickInputStream
@@ -13,7 +13,7 @@ class ISOBMFFInputStreamTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/isobmff/ac01.mp4"
 	)
-	val testStream: ISOBMFFInputStream = ISOBMFFInputStream(testFile!!)
+	val testStream: ISOBMFFParser = ISOBMFFParser(testFile!!)
 	val logger: Logger = ColoredHandler.newLoggerResourced("tests.isobmff")
 
 	@Test

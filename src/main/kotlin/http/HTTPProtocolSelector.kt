@@ -7,13 +7,11 @@ import org.bread_experts_group.http.h2.setting.HTTP2SettingInitialWindowSize
 import org.bread_experts_group.http.h2.setting.HTTP2SettingMaxConcurrentStreams
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.resource.LoggerResource
-import org.bread_experts_group.stream.ConsolidatedBlockingInputStream
-import org.bread_experts_group.stream.readString
-import org.bread_experts_group.stream.scanDelimiter
-import org.bread_experts_group.stream.writeString
+import org.bread_experts_group.stream.*
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.URI
+import java.nio.charset.CodingErrorAction
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.logging.Logger
@@ -35,10 +33,16 @@ class HTTPProtocolSelector(
 
 	private fun versionInitialization(from: InputStream) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
-			val reader = from.reader()
+			val asciiD = Charsets.US_ASCII.newDecoder()
+				.onUnmappableCharacter(CodingErrorAction.REPLACE)
+				.onMalformedInput(CodingErrorAction.REPLACE)
+			val latinD = Charsets.ISO_8859_1.newDecoder()
+				.onUnmappableCharacter(CodingErrorAction.REPLACE)
+				.onMalformedInput(CodingErrorAction.REPLACE)
+
 			fun decodeHeaders(): Map<String, String> = buildMap {
 				while (true) {
-					val read = reader.scanDelimiter("\r\n").split(':', limit = 2)
+					val read = latinD.next(from, CRLF).split(':', limit = 2)
 					if (read.size != 2) break
 					set(read[0].lowercase(), if (read[1][0] == ' ') read[1].substring(1) else read[1])
 				}
@@ -50,10 +54,10 @@ class HTTPProtocolSelector(
 					if (headers.getValue("transfer-encoding") != "chunked")
 						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
 					while (true) {
-						val length = reader.scanDelimiter("\r\n").toInt(16)
+						val length = asciiD.next(from, CRLF).toInt(16)
 						if (length == 0) break
 						data.streams.add(from.readNBytes(length).inputStream())
-						reader.scanDelimiter("\r\n")
+						asciiD.next(from, CRLF)
 					}
 				} else if (headers.contains("content-length")) data.streams.add(
 					from.readNBytes(headers.getValue("content-length").toInt()).inputStream()
@@ -64,13 +68,13 @@ class HTTPProtocolSelector(
 			Thread.ofVirtual().name("HTTP/0.9-1.1 Backlogger").start {
 				while (true) {
 					if (server) {
-						val method = HTTPMethod.safeMapping[reader.scanDelimiter(" ")] ?: HTTPMethod.OTHER
+						val method = asciiD.next(from, SP)
+							.let { HTTPMethod.safeMapping[it] ?: HTTPMethod.OTHER }
 						val path = URI(
-							reader
-								.scanDelimiter(" ")
+							asciiD.next(from, SP)
 								.replace(Regex("%(?![0-9a-fA-F]{2})"), "%25")
 						)
-						reader.scanDelimiter("\r\n").let {
+						asciiD.next(from, CRLF).let {
 							val version = HTTPVersion.mapping[it]
 							when (version) {
 								null -> throw DecodingException("Client sent a bad HTTP version [$it]")
@@ -93,7 +97,7 @@ class HTTPProtocolSelector(
 							)
 						)
 					} else {
-						reader.scanDelimiter(" ").let {
+						asciiD.next(from, SP).let {
 							val version = HTTPVersion.mapping[it]
 							when (version) {
 								null -> throw DecodingException("Server sent a bad HTTP version [$it]")
@@ -104,7 +108,7 @@ class HTTPProtocolSelector(
 								else -> version
 							}
 						}
-						val code = reader.scanDelimiter("\r\n").let {
+						val code = asciiD.next(from, CRLF).let {
 							val parsed = it.split(' ', limit = 2)[0].toIntOrNull()
 							if (parsed == null) throw DecodingException("Server sent bad status code [$it]")
 							parsed
@@ -248,7 +252,7 @@ class HTTPProtocolSelector(
 			to.writeString("${request.method.name} ${request.path} ${version.tag}\r\n")
 			request.headers.forEach { (key, value) -> to.writeString("$key:$value\r\n") }
 			to.writeString("\r\n")
-			request.data.transferTo(to)
+			request.data.transferTo(to).also { to.flush() }
 		}
 
 		HTTPVersion.HTTP_2 -> TODO("HTTP/2")

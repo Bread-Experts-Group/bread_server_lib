@@ -3,25 +3,25 @@ package org.bread_experts_group.coder.format.gamemaker_win
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.gamemaker_win.chunk.*
 import org.bread_experts_group.coder.format.gamemaker_win.structure.*
-import org.bread_experts_group.coder.format.riff.RIFFInputStream
+import org.bread_experts_group.coder.format.riff.RIFFParser
 import org.bread_experts_group.stream.*
 import java.io.FileInputStream
 
-class GameMakerWINInputStream(
+class GameMakerWINParser(
 	from: FileInputStream
 ) : Parser<String, GameMakerWINChunk, FileInputStream>("GameMaker WIN File Format", from) {
-	override fun responsibleStream(of: GameMakerWINChunk): FileInputStream = from
+	override fun responsibleStream(of: GameMakerWINChunk): FileInputStream = rawStream
 
 	override fun readBase(): GameMakerWINChunk {
-		val name = this.readString(4)
-		val size = this.read32().le()
-		val element = GameMakerWINChunk(name, from.channel.position())
+		val name = fqIn.readString(4)
+		val size = fqIn.read32().le()
+		val element = GameMakerWINChunk(name, rawStream.channel.position())
 		element.length = size
-		from.channel.position(element.offset + size)
+		rawStream.channel.position(element.offset + size)
 		return element
 	}
 
-	override fun refineBase(of: GameMakerWINChunk): GameMakerWINChunk = from.channel.resetPosition(of.offset) {
+	override fun refineBase(of: GameMakerWINChunk): GameMakerWINChunk = rawStream.channel.resetPosition(of.offset) {
 		val refined = super.refineBase(of)
 		refined.length = of.length
 		refined
@@ -36,7 +36,7 @@ class GameMakerWINInputStream(
 			GameMakerWINContainerChunk(
 				chunk.tag,
 				chunk.offset,
-				GameMakerWINInputStream(stream).readAllParsed()
+				GameMakerWINParser(stream).readAllParsed()
 			)
 		}
 		this.addParser("STRG") { stream, chunk ->
@@ -162,7 +162,7 @@ class GameMakerWINInputStream(
 				stream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINAudio(
 						stream.channel.position(),
-						RIFFInputStream(
+						RIFFParser(
 							stream.readNBytes(stream.read32().le()).inputStream()
 						).readAllParsed()
 					)

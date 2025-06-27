@@ -12,20 +12,20 @@ import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.InputStream
 
-class RIFFInputStream(
+open class RIFFParser(
 	from: InputStream
 ) : Parser<String, RIFFChunk, InputStream>("Resource Interchange File Format", from) {
 	override fun responsibleStream(of: RIFFChunk): InputStream = of.data.inputStream()
 
 	override fun readBase(): RIFFChunk {
-		val tag = readString(4)
+		val tag = fqIn.readString(4)
 		return RIFFChunk(
 			tag,
-			read32().le().let {
+			fqIn.read32().le().let {
 				if (it < 0)
 					throw DecodingException("[$tag] Size is too big [${it.toUInt()}]!")
-				val data = readNBytes(it)
-				if (it % 2L != 0L) read()
+				val data = fqIn.readNBytes(it)
+				if (it % 2L != 0L) fqIn.read()
 				data
 			}
 		)
@@ -36,9 +36,8 @@ class RIFFInputStream(
 			val containerChunk = RIFFContainerChunk(
 				chunk.tag,
 				stream.readString(4),
-				RIFFInputStream(stream).readAllParsed()
+				RIFFParser(stream)
 			)
-			containerChunk.chunks.forEach { it.parent = containerChunk }
 			containerChunk
 		}
 	}

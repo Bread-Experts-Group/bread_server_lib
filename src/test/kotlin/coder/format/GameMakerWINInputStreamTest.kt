@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.gamemaker_win.GameMakerWINInputStream
+import org.bread_experts_group.coder.format.gamemaker_win.GameMakerWINParser
 import org.bread_experts_group.coder.format.gamemaker_win.bytecode.*
 import org.bread_experts_group.coder.format.gamemaker_win.chunk.*
 import org.bread_experts_group.coder.format.gamemaker_win.structure.GameMakerWINBytecode
@@ -31,7 +31,7 @@ class GameMakerWINInputStreamTest {
 		val tempFile = Files.createTempFile("test", ".win")
 		tempFile.writeBytes(testFile!!.readAllBytes())
 		val fileStream = FileInputStream(tempFile.toFile())
-		val testStream = GameMakerWINInputStream(fileStream)
+		val testStream = GameMakerWINParser(fileStream)
 		val dialA = System.currentTimeMillis()
 		val read = testStream.readAllParsed()
 		logger.info((System.currentTimeMillis() - dialA).toDuration(DurationUnit.MILLISECONDS).formatTime())

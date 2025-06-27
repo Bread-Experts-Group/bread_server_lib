@@ -5,14 +5,14 @@ import org.bread_experts_group.coder.format.asn1.element.*
 import java.io.InputStream
 import java.math.BigInteger
 
-class ASN1InputStream(
+class ASN1Parser(
 	from: InputStream
 ) : Parser<Int, ASN1Element, InputStream>("Abstract Syntax Notation One", from) {
 	override fun responsibleStream(of: ASN1Element): InputStream = of.data.inputStream()
 
 	override fun readBase(): ASN1Element = ASN1Element(
-		this.read(),
-		this.readNBytes(this.read())
+		fqIn.read(),
+		fqIn.readNBytes(fqIn.read())
 	)
 
 	init {
@@ -41,8 +41,8 @@ class ASN1InputStream(
 				}.toTypedArray()
 			)
 		}
-		addParser(16) { stream, _ -> ASN1Set(ASN1InputStream(stream).readAllParsed()) }
-		addParser(17) { stream, _ -> ASN1Sequence(ASN1InputStream(stream).readAllParsed()) }
-		addParser(48) { stream, _ -> ASN1Sequence(ASN1InputStream(stream).readAllParsed()) }
+		addParser(16) { stream, _ -> ASN1Set(ASN1Parser(stream).readAllParsed()) }
+		addParser(17) { stream, _ -> ASN1Sequence(ASN1Parser(stream).readAllParsed()) }
+		addParser(48) { stream, _ -> ASN1Sequence(ASN1Parser(stream).readAllParsed()) }
 	}
 }

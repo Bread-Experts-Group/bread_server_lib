@@ -1,7 +1,7 @@
 package org.bread_experts_group.jws
 
 import org.bread_experts_group.coder.fixed.json.JSONConvertible
-import org.bread_experts_group.coder.format.asn1.ASN1InputStream
+import org.bread_experts_group.coder.format.asn1.ASN1Parser
 import org.bread_experts_group.coder.format.asn1.element.ASN1Integer
 import org.bread_experts_group.coder.format.asn1.element.ASN1Sequence
 import org.bread_experts_group.jws.JSONWebKey.Companion.to32Bytes
@@ -35,7 +35,7 @@ data class JSONWebSignatureSignedData(
 			val signatureB64 = Signature.getInstance("SHA256withECDSA").let {
 				it.initSign(keyPair.private)
 				it.update("$protectedB64.$payloadB64".toByteArray())
-				val seq = ASN1InputStream(ByteArrayInputStream(it.sign())).readAllParsed()
+				val seq = ASN1Parser(ByteArrayInputStream(it.sign())).readAllParsed()
 					.first() as ASN1Sequence
 				encoder.encodeToString(
 					((seq.elements[0] as ASN1Integer).value).to32Bytes() +

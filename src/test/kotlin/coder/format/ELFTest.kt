@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.elf.ELFInputStream
+import org.bread_experts_group.coder.format.elf.ELFParser
 import org.bread_experts_group.coder.format.elf.header.ELFHeader
 import org.bread_experts_group.coder.format.elf.header.ELFProgramHeader
 import org.bread_experts_group.coder.format.elf.header.ELFWrittenSectionHeader
@@ -28,7 +28,7 @@ class ELFTest {
 	val logger: Logger = ColoredHandler.Companion.newLoggerResourced("tests.elf")
 
 	fun readFrom(fileStream: FileInputStream): List<ELFContextuallyWritable> {
-		val testStream = ELFInputStream(fileStream)
+		val testStream = ELFParser(fileStream)
 		return testStream.readAllParsed()
 	}
 

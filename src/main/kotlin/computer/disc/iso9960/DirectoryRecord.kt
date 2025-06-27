@@ -31,7 +31,7 @@ class DirectoryRecord(
 		stream.channel.position(this.extentPointer.toLong() * parent.logicalBlockSize)
 		return buildList {
 			try {
-				while (true) this.add(Companion.readRecord(stream))
+				while (true) this.add(readRecord(stream))
 			} catch (_: Exception) {
 			}
 		}
