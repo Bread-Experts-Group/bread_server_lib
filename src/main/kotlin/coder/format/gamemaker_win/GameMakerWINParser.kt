@@ -27,6 +27,8 @@ class GameMakerWINParser(
 		refined
 	}
 
+	override var next: GameMakerWINChunk? = refineNext()
+
 	private fun FileInputStream.readString(at: Long): String = this.channel.resetPosition(at) {
 		this@readString.readString(this@readString.read32().le())
 	}

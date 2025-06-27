@@ -152,4 +152,6 @@ class ELFParser(
 	override fun responsibleStream(of: ELFContextuallyWritable): FileInputStream = rawStream
 	override fun readBase(): ELFContextuallyWritable = preread.removeFirstOrNull()
 		?: throw FailQuickInputStream.EndOfStream()
+
+	override var next: ELFContextuallyWritable? = refineNext()
 }

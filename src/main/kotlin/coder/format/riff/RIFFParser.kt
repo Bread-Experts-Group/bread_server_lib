@@ -31,6 +31,8 @@ open class RIFFParser(
 		)
 	}
 
+	override var next: RIFFChunk? = refineNext()
+
 	fun containerChunk(identifier: String) {
 		this.addParser(identifier) { stream, chunk ->
 			val containerChunk = RIFFContainerChunk(

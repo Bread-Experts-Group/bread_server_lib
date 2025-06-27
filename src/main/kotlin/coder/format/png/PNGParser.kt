@@ -28,6 +28,8 @@ class PNGParser(from: InputStream) : Parser<String, PNGChunk, InputStream>("Port
 		return PNGChunk(chunkType, chunkData)
 	}
 
+	override var next: PNGChunk? = refineNext()
+
 	init {
 		addParser("IHDR") { stream, chunk ->
 			val width = stream.read32()

@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 plugins {
-	kotlin("jvm") version "2.2.0-RC3"
+	kotlin("jvm") version "2.2.0"
 	id("org.jetbrains.dokka") version "2.0.0"
 	id("org.jetbrains.dokka-javadoc") version "2.0.0"
 	`maven-publish`
@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.43.0"
+version = "2.44.0"
 
 repositories {
 	mavenCentral()

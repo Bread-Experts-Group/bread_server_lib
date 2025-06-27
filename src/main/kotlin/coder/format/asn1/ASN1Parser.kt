@@ -15,6 +15,8 @@ class ASN1Parser(
 		fqIn.readNBytes(fqIn.read())
 	)
 
+	override var next: ASN1Element? = refineNext()
+
 	init {
 		addParser(1) { stream, _ -> ASN1Boolean(stream.read() == 0xFF) }
 		addParser(2) { stream, _ -> ASN1Integer(BigInteger(stream.readAllBytes())) }

@@ -20,7 +20,7 @@ import kotlin.test.Test
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-class GameMakerWINInputStreamTest {
+class GameMakerWINParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/gamemaker/data.win"
 	)

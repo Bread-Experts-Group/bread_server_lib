@@ -11,13 +11,14 @@ import java.util.*
 class LoggerResource_ja : ListResourceBundle() {
 	override fun getContents(): Array<out Array<out Any>> = arrayOf(
 		arrayOf("tests.huffman", "ハフマン分岐テスト"),
-		arrayOf("tests.gamemaker", "GameMaker・WIN・InputStream・テスト"),
+		arrayOf("tests.gamemaker", "GameMaker・WINパーサーテスト"),
 		arrayOf("tests.banked_file_handler", "区分ファイル処理テスト"),
 		arrayOf("tests.banked_file_reader", "区分ファイル読み取りテスト"),
 		arrayOf("tests.colored_handler", "色付きロガーテスト"),
-		arrayOf("tests.elf", "ELF・InputStream・テスト"),
+		arrayOf("tests.elf", "ELFパーサーテスト"),
 		arrayOf("tests.rmi", "外部関数呼び出しテスト"),
-		arrayOf("tests.isobmff", "ISOBMFF・InputStream・テスト"),
+		arrayOf("tests.isobmff", "ISOBMFFパーサーテスト"),
+		arrayOf("tests.gif", "GIFパーサーテスト"),
 		arrayOf("tests.http_protocol_selection", "HTTPプロトコル選択テスト"),
 		arrayOf("tests.private_socket_util", "パン専門家グループ・ソケットユーティリティテスト（内部用）"),
 		arrayOf("tests.ia_32_assembler", "IA-32アセンブラテスト"),
