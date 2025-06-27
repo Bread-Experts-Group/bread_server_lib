@@ -19,6 +19,7 @@ class LoggerResource_ja : ListResourceBundle() {
 		arrayOf("tests.rmi", "外部関数呼び出しテスト"),
 		arrayOf("tests.isobmff", "ISOBMFFパーサーテスト"),
 		arrayOf("tests.gif", "GIFパーサーテスト"),
+		arrayOf("tests.png", "PNGパーサーテスト"),
 		arrayOf("tests.http_protocol_selection", "HTTPプロトコル選択テスト"),
 		arrayOf("tests.private_socket_util", "パン専門家グループ・ソケットユーティリティテスト（内部用）"),
 		arrayOf("tests.ia_32_assembler", "IA-32アセンブラテスト"),

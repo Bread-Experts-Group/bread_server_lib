@@ -19,6 +19,7 @@ class LoggerResource : ListResourceBundle() {
 		arrayOf("tests.elf", "ELF Parser Tests"),
 		arrayOf("tests.isobmff", "ISOBMFF Parser Tests"),
 		arrayOf("tests.gif", "GIF Parser Tests"),
+		arrayOf("tests.png", "PNG Parser Tests"),
 		arrayOf("tests.http_protocol_selection", "HTTP Protocol Selection Tests"),
 		arrayOf("tests.private_socket_util", "Bread Experts Group Private Socket Utilities Tests"),
 		arrayOf("tests.ia_32_assembler", "IA-32 Assembler Tests"),

@@ -24,8 +24,6 @@ class ISOBMFFParser(
 		return ISOBMFFBox(name, data)
 	}
 
-	override var next: ISOBMFFBox? = refineNext()
-
 	fun containerBox(name: String) {
 		this.addParser(name) { stream, chunk ->
 			ISOBMFFContainerBox(
@@ -104,4 +102,6 @@ class ISOBMFFParser(
 			}
 		}
 	}
+
+	override var next: ISOBMFFBox? = refineNext()
 }
