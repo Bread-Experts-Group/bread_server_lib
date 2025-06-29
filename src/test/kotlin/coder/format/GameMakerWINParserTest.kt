@@ -33,7 +33,7 @@ class GameMakerWINParserTest {
 		val fileStream = FileInputStream(tempFile.toFile())
 		val testStream = GameMakerWINParser(fileStream)
 		val dialA = System.currentTimeMillis()
-		val read = testStream.readAllParsed()
+		val read = testStream.toList()
 		logger.info((System.currentTimeMillis() - dialA).toDuration(DurationUnit.MILLISECONDS).formatTime())
 		logger.info(read.toString())
 		logger.info("Attempting disassembly")

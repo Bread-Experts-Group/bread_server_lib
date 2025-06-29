@@ -4,7 +4,7 @@ import java.io.OutputStream
 import java.time.ZonedDateTime
 
 class ISOMBFFMovieHeaderBoxV1(
-	val flags: Int,
+	override val flags: Int,
 	val creationTime: ZonedDateTime,
 	val modificationTime: ZonedDateTime,
 	val timescale: Int,
@@ -15,10 +15,12 @@ class ISOMBFFMovieHeaderBoxV1(
 	val matrix: IntArray,
 	val predefined: ByteArray,
 	val nextTrackID: Int
-) : ISOBMFFBox("mvhd", byteArrayOf()) {
-	override fun toString(): String = "ISOBMFFBox.\"$tag\"[flags: $flags, $creationTime, $modificationTime" +
+) : ISOBMFFBox("mvhd", byteArrayOf()), ISOBMFFFullBox {
+	override val version: Int = 0
+	override fun toString(): String = "ISOBMFFBox.\"$tag\"[$creationTime, $modificationTime" +
 			", timescale: 1/$timescale of a second, duration: $duration [${duration * (1.0 / timescale)}s]" +
-			", preferredRate: $preferredRate, preferredVolume: $preferredVolume, nextTrackID: $nextTrackID]"
+			", preferredRate: $preferredRate, preferredVolume: $preferredVolume, nextTrackID: $nextTrackID]" +
+			fullBoxString()
 
 	override fun computeSize(): Long = TODO("V0 Size")
 	override fun write(stream: OutputStream) {

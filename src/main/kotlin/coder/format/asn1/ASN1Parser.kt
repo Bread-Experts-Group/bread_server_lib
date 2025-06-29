@@ -41,9 +41,9 @@ class ASN1Parser(
 				}.toTypedArray()
 			)
 		}
-		addParser(16) { stream, _ -> ASN1Set(ASN1Parser(stream).readAllParsed()) }
-		addParser(17) { stream, _ -> ASN1Sequence(ASN1Parser(stream).readAllParsed()) }
-		addParser(48) { stream, _ -> ASN1Sequence(ASN1Parser(stream).readAllParsed()) }
+		addParser(16) { stream, _ -> ASN1Set(ASN1Parser(stream).toList()) }
+		addParser(17) { stream, _ -> ASN1Sequence(ASN1Parser(stream).toList()) }
+		addParser(48) { stream, _ -> ASN1Sequence(ASN1Parser(stream).toList()) }
 	}
 
 	override var next: ASN1Element? = refineNext()

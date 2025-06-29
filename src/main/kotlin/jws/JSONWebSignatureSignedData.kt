@@ -35,7 +35,7 @@ data class JSONWebSignatureSignedData(
 			val signatureB64 = Signature.getInstance("SHA256withECDSA").let {
 				it.initSign(keyPair.private)
 				it.update("$protectedB64.$payloadB64".toByteArray())
-				val seq = ASN1Parser(ByteArrayInputStream(it.sign())).readAllParsed()
+				val seq = ASN1Parser(ByteArrayInputStream(it.sign())).toList()
 					.first() as ASN1Sequence
 				encoder.encodeToString(
 					((seq.elements[0] as ASN1Integer).value).to32Bytes() +

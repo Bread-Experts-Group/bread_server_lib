@@ -29,7 +29,7 @@ class ELFTest {
 
 	fun readFrom(fileStream: FileInputStream): List<ELFContextuallyWritable> {
 		val testStream = ELFParser(fileStream)
-		return testStream.readAllParsed()
+		return testStream.toList()
 	}
 
 	fun logAll(fileStream: FileInputStream, allRead: List<ELFContextuallyWritable>) {

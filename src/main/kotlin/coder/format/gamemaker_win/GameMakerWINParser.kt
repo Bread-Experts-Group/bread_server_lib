@@ -36,7 +36,7 @@ class GameMakerWINParser(
 			GameMakerWINContainerChunk(
 				chunk.tag,
 				chunk.offset,
-				GameMakerWINParser(stream).readAllParsed()
+				GameMakerWINParser(stream).toList()
 			)
 		}
 		this.addParser("STRG") { stream, chunk ->
@@ -164,7 +164,7 @@ class GameMakerWINParser(
 						stream.channel.position(),
 						RIFFParser(
 							stream.readNBytes(stream.read32().le()).inputStream()
-						).readAllParsed()
+						).toList()
 					)
 				}
 			})

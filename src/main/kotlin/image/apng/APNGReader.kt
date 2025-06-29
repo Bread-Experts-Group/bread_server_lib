@@ -181,7 +181,7 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 				is InputStream -> this.input as InputStream
 				else -> throw UnsupportedOperationException(this.input::class.java.canonicalName)
 			}
-		).readAllParsed().fold(mutableListOf<PNGChunk>()) { acc, chunk ->
+		).toList().fold(mutableListOf<PNGChunk>()) { acc, chunk ->
 			if ((chunk.tag == "IDAT" || chunk.tag == "fdAT") && acc.lastOrNull()?.tag == chunk.tag) {
 				val last = acc.removeLast()
 				acc += PNGChunk(chunk.tag, last.data + chunk.data)

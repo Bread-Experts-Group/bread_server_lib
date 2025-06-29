@@ -8,13 +8,11 @@ class ArgumentContainer(val of: Map<String, Any>) {
 
 	inline fun <reified T> gets(name: String): List<T>? {
 		@Suppress("HardCodedStringLiteral", "UNCHECKED_CAST") val list = of[name] as List<T>?
-		name as T?
 		return list
 	}
 
 	inline fun <reified T> getsRequired(name: String): List<T> {
 		@Suppress("HardCodedStringLiteral", "UNCHECKED_CAST") val list = of[name] as List<T>
-		name as T
 		return list
 	}
 

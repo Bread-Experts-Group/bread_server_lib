@@ -31,7 +31,7 @@ class GIFReader(spi: GIFReaderSpi) : ImageReader(spi) {
 				is InputStream -> this.input as InputStream
 				else -> throw UnsupportedOperationException(this.input::class.java.canonicalName)
 			}
-		).readAllParsed()
+		).toList()
 		var (canvas, globalColors) = (parsed.first() as GIFLogicalScreenDescriptorBlock).run {
 			Triple(
 				BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB),

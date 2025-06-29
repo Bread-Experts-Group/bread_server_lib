@@ -11,7 +11,7 @@ import java.util.logging.Logger
 abstract class Parser<I, O, S : InputStream>(
 	format: String,
 	protected val rawStream: S
-) : AutoCloseable where O : Tagged<I>, O : Writable {
+) : AutoCloseable, Iterable<O> where O : Tagged<I>, O : Writable {
 	protected val fqIn: InputStream = FailQuickInputStream(rawStream)
 	protected val logger: Logger = ColoredHandler.newLogger("$format ${LoggerResource.get().getString("parser")}")
 	protected val parsers: MutableMap<I, (S, O) -> O> = mutableMapOf<I, (S, O) -> O>()
@@ -23,8 +23,6 @@ abstract class Parser<I, O, S : InputStream>(
 	}
 
 	abstract var next: O?
-	fun hasRemaining(): Boolean = next != null
-
 	protected abstract fun responsibleStream(of: O): S
 	protected abstract fun readBase(): O
 	protected open fun refineBase(of: O): O {
@@ -42,17 +40,17 @@ abstract class Parser<I, O, S : InputStream>(
 		null
 	}
 
-	fun readParsed(): O {
-		val current = next!!
-		next = refineNext()
-		return current
-	}
-
-	fun readAllParsed(): List<O> = buildList {
-		while (hasRemaining()) add(readParsed())
-	}
-
 	override fun close() {
 		fqIn.close()
+	}
+
+	override fun iterator(): Iterator<O> = object : Iterator<O> {
+		override fun next(): O {
+			val current = next!!
+			next = refineNext()
+			return current
+		}
+
+		override fun hasNext(): Boolean = next != null
 	}
 }

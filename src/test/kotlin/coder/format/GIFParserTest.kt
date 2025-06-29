@@ -1,6 +1,7 @@
 package org.bread_experts_group.coder.format
 
 import org.bread_experts_group.coder.format.gif.GIFParser
+import org.bread_experts_group.dumpLog
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.InputStream
@@ -16,9 +17,6 @@ class GIFParserTest {
 
 	@Test
 	fun readParsed(): Unit = assertDoesNotThrow {
-		while (testStream.hasRemaining()) {
-			val parsed = testStream.readParsed()
-			logger.info(parsed.toString())
-		}
+		testStream.forEach { it.dumpLog(logger) }
 	}
 }

@@ -1,13 +1,14 @@
 package org.bread_experts_group.coder.format.iso_bmff.box
 
+import org.bread_experts_group.coder.format.iso_bmff.ISOBMFFParser
 import java.io.OutputStream
 
-class ISOBMFFContainerBox(
+open class ISOBMFFContainerBox(
 	tag: String,
-	val boxes: List<ISOBMFFBox>
-) : ISOBMFFBox(tag, byteArrayOf()) {
-	override fun toString(): String = "ISOBMFFContainerBox.\"$tag\"[${boxes.size}][\n" +
-			boxes.joinToString(",\n") { it.toString().replace("\n", "\n\t") } + "\n]"
+	private val boxes: ISOBMFFParser
+) : ISOBMFFBox(tag, byteArrayOf()), Iterable<ISOBMFFBox> {
+	override fun iterator(): Iterator<ISOBMFFBox> = boxes.iterator()
+	override fun toString(): String = "ISOBMFFContainerBox.\"$tag\""
 
 	override fun computeSize(): Long = boxes.sumOf { it.computeSize() }
 	override fun write(stream: OutputStream) {
