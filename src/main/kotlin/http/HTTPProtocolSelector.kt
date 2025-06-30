@@ -92,8 +92,10 @@ class HTTPProtocolSelector(
 						var currentBlockSize = headers.getValue("content-length").toULong()
 						override fun available(): Int = currentBlockSize.coerceAtMost(Int.MAX_VALUE.toULong()).toInt()
 						override fun read(): Int =
-							if (currentBlockSize > 0uL) from.read()
-							else {
+							if (currentBlockSize > 0uL) {
+								currentBlockSize--
+								from.read()
+							} else {
 								if (fromLock.availablePermits() == 0) fromLock.release()
 								-1
 							}
