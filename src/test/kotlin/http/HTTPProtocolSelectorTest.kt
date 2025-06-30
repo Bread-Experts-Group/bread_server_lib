@@ -115,13 +115,23 @@ class HTTPProtocolSelectorTest {
 	fun testNextResponse(socket: Socket, version: HTTPVersion) {
 		val selector = HTTPProtocolSelector(version, socket.inputStream, socket.outputStream, false)
 		selector.sendRequest(HTTPRequest(HTTPMethod.GET, URI.create("/")))
-		logger.info("Response: ${selector.nextResponse()}")
+		val response = selector.nextResponse()
+		logger.info("Response: $response")
+		response.onSuccess {
+			logger.info(it.data.readAllBytes().decodeToString())
+		}
 	}
 
 	@Test
 	fun nextResponseHTTP11(): Unit = assertDoesNotThrow {
-		val socket = Socket()
-		socket.connect(InetSocketAddress("google.com", 80), 5000)
-		testNextResponse(socket, HTTPVersion.HTTP_1_1)
+		fun site(s: String) {
+			val socket = Socket()
+			socket.connect(InetSocketAddress(s, 80), 5000)
+			testNextResponse(socket, HTTPVersion.HTTP_1_1)
+			socket.close()
+		}
+
+		site("google.com")
+		site("cloudflare.com")
 	}
 }

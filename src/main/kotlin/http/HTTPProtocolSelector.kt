@@ -14,6 +14,7 @@ import java.net.URI
 import java.nio.charset.CodingErrorAction
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.Semaphore
 import java.util.logging.Logger
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -33,6 +34,7 @@ class HTTPProtocolSelector(
 
 	private fun versionInitialization(from: InputStream) = when (version) {
 		HTTPVersion.HTTP_0_9, HTTPVersion.HTTP_1_0, HTTPVersion.HTTP_1_1 -> {
+			val fromLock = Semaphore(1)
 			val asciiD = Charsets.US_ASCII.newDecoder()
 				.onUnmappableCharacter(CodingErrorAction.REPLACE)
 				.onMalformedInput(CodingErrorAction.REPLACE)
@@ -53,20 +55,56 @@ class HTTPProtocolSelector(
 				if (headers.contains("transfer-encoding")) {
 					if (headers.getValue("transfer-encoding") != "chunked")
 						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
-					while (true) {
-						val length = asciiD.next(from, CRLF).toInt(16)
-						if (length == 0) break
-						data.streams.add(from.readNBytes(length).inputStream())
-						asciiD.next(from, CRLF)
-					}
+					data.streams.add(
+						object : InputStream() {
+							init {
+								fromLock.acquire()
+							}
+
+							var currentBlockSize = -1
+								get() {
+									if (field == -1) field = asciiD.next(from, CRLF).toInt(16)
+									return field
+								}
+
+							override fun available(): Int = currentBlockSize
+							override fun read(): Int {
+								if (currentBlockSize == 0) {
+									if (fromLock.availablePermits() == 0) fromLock.release()
+									return -1
+								}
+								currentBlockSize--
+								val next = from.read()
+								if (currentBlockSize == 0) {
+									currentBlockSize = -1
+									asciiD.next(from, CRLF)
+								}
+								return next
+							}
+						}
+					)
 				} else if (headers.contains("content-length")) data.streams.add(
-					from.readNBytes(headers.getValue("content-length").toInt()).inputStream()
+					object : InputStream() {
+						init {
+							fromLock.acquire()
+						}
+
+						var currentBlockSize = headers.getValue("content-length").toULong()
+						override fun available(): Int = currentBlockSize.coerceAtMost(Int.MAX_VALUE.toULong()).toInt()
+						override fun read(): Int =
+							if (currentBlockSize > 0uL) from.read()
+							else {
+								if (fromLock.availablePermits() == 0) fromLock.release()
+								-1
+							}
+					}
 				)
 				return data
 			}
 
 			Thread.ofVirtual().name("HTTP/0.9-1.1 Backlogger").start {
 				while (true) {
+					fromLock.acquire()
 					if (server) {
 						val method = asciiD.next(from, SP)
 							.let { HTTPMethod.safeMapping[it] ?: HTTPMethod.OTHER }
@@ -86,6 +124,7 @@ class HTTPProtocolSelector(
 							}
 						}
 						val headers = decodeHeaders()
+						fromLock.release()
 						requestBacklog.add(
 							Result.success(
 								HTTPRequest(
@@ -114,6 +153,7 @@ class HTTPProtocolSelector(
 							parsed
 						}
 						val headers = decodeHeaders()
+						fromLock.release()
 						responseBacklog.add(
 							Result.success(
 								HTTPResponse(

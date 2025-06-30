@@ -58,6 +58,7 @@
           <option value="DuplicatedCode" />
           <option value="LongLine" />
           <option value="IncorrectFormatting" />
+          <option value="HardCodedStringLiteral" />
         </list>
       </option>
     </inspection_tool>
