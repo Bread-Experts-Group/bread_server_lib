@@ -16,6 +16,7 @@ import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.Semaphore
 import java.util.logging.Logger
+import kotlin.math.min
 
 @OptIn(ExperimentalStdlibApi::class)
 class HTTPProtocolSelector(
@@ -98,7 +99,7 @@ class HTTPProtocolSelector(
 
 							override fun read(b: ByteArray, off: Int, len: Int): Int {
 								if (currentBlockSize == 0L) return unlock()
-								val readAll = from.read(b, off, len)
+								val readAll = from.read(b, off, min(len, available()))
 								currentBlockSize -= readAll.toLong()
 								retrieveNext()
 								return readAll
@@ -131,7 +132,7 @@ class HTTPProtocolSelector(
 
 						override fun read(b: ByteArray, off: Int, len: Int): Int {
 							if (currentBlockSize == 0uL) return unlock()
-							val readAll = from.read(b, off, len)
+							val readAll = from.read(b, off, min(len, available()))
 							currentBlockSize -= readAll.toULong()
 							return readAll
 						}

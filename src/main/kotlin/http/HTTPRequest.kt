@@ -12,7 +12,7 @@ open class HTTPRequest(
 	val headers: Map<String, String> = headers.mapKeys { it.key.lowercase() }
 
 	override fun toString(): String = "(<Req>) $method $path " + buildString {
-		append("[HEAD#: ${headers.size}]")
+		append("[DATA#: ${data.available()}] [HEAD#: ${headers.size}]")
 		headers.forEach { append("\n${it.key}: ${it.value}") }
 	}
 }

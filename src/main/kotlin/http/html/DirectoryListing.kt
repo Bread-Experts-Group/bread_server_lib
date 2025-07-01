@@ -74,6 +74,7 @@ object DirectoryListing {
 				next.cancel()
 				reverseCache.remove(next)
 				directoryListingCache.remove(reverse)
+				directoryStatistics.remove(reverse)
 				var parent = reverse.parent
 				while (parent != null) {
 					// Invalidate upper caches in case a directory size was cached
