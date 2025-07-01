@@ -57,36 +57,68 @@ class HTTPProtocolSelector(
 						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
 					data.streams.add(
 						object : InputStream() {
+							var locked = true
+
 							init {
 								fromLock.acquire()
 							}
 
-							var currentBlockSize = -1
+							fun unlock(): Int {
+								if (locked) {
+									fromLock.release()
+									locked = false
+								}
+								return -1
+							}
+
+							fun retrieveNext() {
+								if (currentBlockSize == 0L) {
+									currentBlockSize = -1
+									asciiD.next(from, CRLF)
+								}
+							}
+
+							var currentBlockSize = -1L
 								get() {
-									if (field == -1) field = asciiD.next(from, CRLF).toInt(16)
+									if (field == -1L) field = asciiD.next(from, CRLF).toLong(16)
 									return field
 								}
 
 							override fun available(): Int = currentBlockSize
+								.coerceAtMost(Int.MAX_VALUE.toLong())
+								.toInt()
+
 							override fun read(): Int {
-								if (currentBlockSize == 0) {
-									if (fromLock.availablePermits() == 0) fromLock.release()
-									return -1
-								}
+								if (currentBlockSize == 0L) return unlock()
 								currentBlockSize--
 								val next = from.read()
-								if (currentBlockSize == 0) {
-									currentBlockSize = -1
-									asciiD.next(from, CRLF)
-								}
+								retrieveNext()
 								return next
+							}
+
+							override fun read(b: ByteArray, off: Int, len: Int): Int {
+								if (currentBlockSize == 0L) return unlock()
+								val readAll = from.read(b, off, len)
+								currentBlockSize -= readAll.toLong()
+								retrieveNext()
+								return readAll
 							}
 						}
 					)
 				} else if (headers.contains("content-length")) data.streams.add(
 					object : InputStream() {
+						var locked = true
+
 						init {
 							fromLock.acquire()
+						}
+
+						fun unlock(): Int {
+							if (locked) {
+								fromLock.release()
+								locked = false
+							}
+							return -1
 						}
 
 						var currentBlockSize = headers.getValue("content-length").toULong()
@@ -95,10 +127,14 @@ class HTTPProtocolSelector(
 							if (currentBlockSize > 0uL) {
 								currentBlockSize--
 								from.read()
-							} else {
-								if (fromLock.availablePermits() == 0) fromLock.release()
-								-1
-							}
+							} else unlock()
+
+						override fun read(b: ByteArray, off: Int, len: Int): Int {
+							if (currentBlockSize == 0uL) return unlock()
+							val readAll = from.read(b, off, len)
+							currentBlockSize -= readAll.toULong()
+							return readAll
+						}
 					}
 				)
 				return data

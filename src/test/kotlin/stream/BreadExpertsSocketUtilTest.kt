@@ -1,6 +1,5 @@
 package org.bread_experts_group.stream
 
-import org.bread_experts_group.formatTime
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -54,8 +53,8 @@ class BreadExpertsSocketUtilTest {
 			"Random tests [$range]: ${randomStream.size()} bytes | " +
 					"Unpacked: ${longWriteCalls * Long.SIZE_BYTES} bytes | " +
 					"Worst case: ${longWriteCalls * worstCase} bytes | " +
-					"Read Time [${readTime.formatTime()}] | " +
-					"Write Time [${writeTime.formatTime()}]"
+					"Read Time [$readTime] | " +
+					"Write Time [$writeTime]"
 		}
 	}
 
@@ -133,8 +132,8 @@ class BreadExpertsSocketUtilTest {
 			"URandom tests [$range]: ${randomStream.size()} bytes | " +
 					"Unpacked: ${uLongWriteCalls * Long.SIZE_BYTES} bytes | " +
 					"Worst case: ${uLongWriteCalls * worstCase} bytes | " +
-					"Read Time [${readTime.formatTime()}] | " +
-					"Write Time [${writeTime.formatTime()}]"
+					"Read Time [$readTime] | " +
+					"Write Time [$writeTime]"
 		}
 	}
 

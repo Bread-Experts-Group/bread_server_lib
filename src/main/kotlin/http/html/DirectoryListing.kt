@@ -1,11 +1,9 @@
 package org.bread_experts_group.http.html
 
+import org.bread_experts_group.io.retrieveBasicAttributes
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.resource.DirectoryListingResource
-import java.io.File
-import java.io.IOException
 import java.nio.file.*
-import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.ZoneId
@@ -15,15 +13,40 @@ import java.time.format.DecimalStyle
 import java.time.format.FormatStyle
 import java.time.format.ResolverStyle
 import java.util.*
+import java.util.stream.Collectors
 import kotlin.io.path.*
 import kotlin.random.Random
 
 object DirectoryListing {
 	private val logger = ColoredHandler.newLoggerResourced("html_directory_listing")
 	private val watcher = FileSystems.getDefault().newWatchService()
-	private val directoryListingCache = mutableMapOf<File, MutableMap<Locale, CachedList>>()
-	private val reverseCache = mutableMapOf<WatchKey, File>()
+	private val directoryListingCache = mutableMapOf<Path, MutableMap<Locale, CachedList>>()
+	private val directoryStatistics = mutableMapOf<Path, ComputedDirectoryStatistics>()
+	private val reverseCache = mutableMapOf<WatchKey, Path>()
 	private val hasher = MessageDigest.getInstance("MD5")
+
+	fun computeDirectoryStatistics(path: Path): ComputedDirectoryStatistics = directoryStatistics.getOrPut(path) {
+		val stat = ComputedDirectoryStatistics()
+		runCatching {
+			Files.list(path)
+				.parallel()
+				.map { file -> file to file.retrieveBasicAttributes() }
+				.forEach { (file, attr) ->
+					if (attr.isSymbolicLink) return@forEach
+					if (attr.isDirectory) {
+						stat.merge(computeDirectoryStatistics(file))
+						stat.directories.increment()
+					} else {
+						stat.files.increment()
+						stat.calculatedSize.add(attr.size())
+					}
+				}
+		}.onFailure {
+			stat.errored.increment()
+			if (it is FileSystemException) stat.unreadable.increment()
+		}
+		stat
+	}
 
 	data class CachedList(
 		val data: String,
@@ -51,12 +74,13 @@ object DirectoryListing {
 				next.cancel()
 				reverseCache.remove(next)
 				directoryListingCache.remove(reverse)
-				var parent = reverse.parentFile
+				var parent = reverse.parent
 				while (parent != null) {
 					// Invalidate upper caches in case a directory size was cached
+					directoryStatistics.remove(parent)
 					val wasRemoved = directoryListingCache.remove(parent)
 					if (wasRemoved != null) reverseCache.filterNotTo(reverseCache) { it.value.name == parent.name }
-					parent = parent.parentFile
+					parent = parent.parent
 				}
 			}
 		}
@@ -64,14 +88,14 @@ object DirectoryListing {
 
 	val base64Encoder: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
 	fun getDirectoryListingHTML(
-		store: File, file: File,
+		store: Path, file: Path,
 		locale: Locale = Locale.getDefault()
 	): CachedList {
 		logger.finer { "Getting directory listing for $file, store: $store" }
 		val cache = directoryListingCache[file]?.get(locale)
 		if (cache != null) return cache
 		val computed = computeDirectoryListingHTML(store, file, locale)
-		val watchKey = file.toPath().register(
+		val watchKey = file.register(
 			watcher,
 			StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE,
 			StandardWatchEventKinds.ENTRY_MODIFY
@@ -95,7 +119,7 @@ object DirectoryListing {
 	val directoryListingFile: String = base64Encoder.encodeToString(Random.nextBytes(32)) + ".css"
 
 	fun computeDirectoryListingHTML(
-		store: File, file: File,
+		store: Path, file: Path,
 		locale: Locale = Locale.getDefault()
 	): String = buildString {
 		val bundle = DirectoryListingResource.get(locale)
@@ -111,135 +135,102 @@ object DirectoryListing {
 		append("<table><thead><th>${bundle.getString("name")}</th><th>${bundle.getString("size")}")
 		append("</th><th>${bundle.getString("last_modification")}</th></thead><tbody>")
 		val trailer = run {
+			val store = file.fileStore()
 			val sizeStat = buildString {
 				append(" [ ")
-				append(truncateSizeHTML(file.usableSpace) + " / ")
-				append(truncateSizeHTML(file.freeSpace) + " / ")
-				append(truncateSizeHTML(file.totalSpace) + " ]")
+				append(truncateSizeHTML(store.usableSpace) + " / ")
+				append(truncateSizeHTML(store.unallocatedSpace) + " / ")
+				append(truncateSizeHTML(store.totalSpace) + " ]")
 			}
 			val createdAt = Instant.ofEpochMilli(System.currentTimeMillis())
 				.atZone(ZoneId.systemDefault())
 				.format(dateTimeFormatter)
 			"$sizeStat [${createdAt}]</caption></tbody></table></body></html>"
 		}
-		if (!file.canonicalPath.startsWith(store.canonicalPath)) {
+		if (!file.startsWith(store)) {
 			append("<tr><td>${bundle.getString("outside_of_store")}</tr></tbody>")
 			append("<caption>")
-			append(file.canonicalPath)
+			append(file.pathString)
 			append(trailer)
 			return@buildString
 		}
-		val storeParent = store.parentFile
-		val files = file.listFiles()
-		if (files != null) {
-			if (files.isNotEmpty()) {
-				files.sortByDescending { it.lastModified() }
-				files.sortByDescending { it.isDirectory }
-				files.forEach { file ->
-					val thisPath = file.toPath()
-					val (classes, title) = run {
-						val titles = mutableListOf<String>()
-						val classes = mutableListOf<String>()
-						if (!Files.isReadable(thisPath)) {
-							classes.add("dotted")
-							titles.add(bundle.getString("unreadable"))
-						}
-						if (Files.isSymbolicLink(thisPath)) {
-							classes.add("symlink")
-							titles.add(bundle.getString("this_is_symlink"))
-						}
-						(if (classes.isNotEmpty()) "class=\"${classes.joinToString(" ")}\"" else "") to
-								(if (titles.isNotEmpty()) "title=\"${titles.joinToString(", ")}\"" else "")
+		val storeParent = store.parent
+		Files.list(file)
+			.parallel()
+			.map { file -> file to file.retrieveBasicAttributes() }
+			.map { (file, attr) ->
+				val localBuilder = StringBuilder()
+				val (classes, title) = run {
+					val titles = mutableListOf<String>()
+					val classes = mutableListOf<String>()
+//						if (!readable) {
+//							classes.add("dotted")
+//							titles.add(bundle.getString("unreadable"))
+//						}
+					if (attr.isSymbolicLink) {
+						classes.add("symlink")
+						titles.add(bundle.getString("this_is_symlink"))
 					}
-					if (thisPath.isDirectory()) {
-						var errored = 0
-						var unreadable = 0
-						var calculatedSize = 0L
-						var files = 0
-						var loops = 0
-						var directories = 0
-						Files.walkFileTree(
-							thisPath,
-							setOf(FileVisitOption.FOLLOW_LINKS),
-							Int.MAX_VALUE,
-							object : FileVisitor<Path> {
-								override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
-									when (exc) {
-										is FileSystemLoopException -> loops++
-										is AccessDeniedException -> unreadable++
-										else -> {
-											errored++
-											logger.warning { "Support needed for [${exc::class.java.canonicalName}]!" }
-										}
-									}
-									return FileVisitResult.SKIP_SUBTREE
-								}
-
-								override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-									files++
-									calculatedSize += file.fileSize()
-									return FileVisitResult.CONTINUE
-								}
-
-								override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
-									if (!dir.isReadable()) {
-										unreadable++
-										return FileVisitResult.SKIP_SUBTREE
-									}
-									return FileVisitResult.CONTINUE
-								}
-
-								override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
-									if (thisPath != dir) directories++
-									return FileVisitResult.CONTINUE
-								}
-							}
-						)
-						if (thisPath.isReadable())
-							append("<tr><td><a $classes $title href=\"${thisPath.name}/\">${thisPath.name}</a>/</td>")
-						else append("<tr><td><u $classes $title>${thisPath.name}</u>/</td>")
-						append("<td>${truncateSizeHTML(calculatedSize)} [")
-						val entryCount = if (files + directories > 0) buildList {
-							if (files > 0) add("$files ${bundle.getString("files").lowercase()}")
-							if (directories > 0) add("$directories ${bundle.getString("folders").lowercase()}")
-						}.joinToString(", ") else bundle.getString("empty").lowercase()
-						if (errored + unreadable + loops > 0) {
-							append("<u class=\"dotted\" title=\"")
-							append(
-								buildList {
-									if (errored > 0)
-										add("$errored ${bundle.getString("tree_errors").lowercase()}")
-									if (unreadable > 0)
-										add("$unreadable ${bundle.getString("unreadable").lowercase()}")
-									if (loops > 0)
-										add("$loops ${bundle.getString("loops").lowercase()}")
-								}.joinToString(", ")
-							)
-							append("\">$entryCount</u>")
-						} else append(entryCount)
-						append("]</td>")
-					} else {
-						if (thisPath.isReadable())
-							append("<tr><td><a $classes $title href=\"${thisPath.name}\">${thisPath.name}</a>")
-						else append("<tr><td><u $classes $title>${thisPath.name}</u>")
-						append("</td><td>${truncateSizeHTML(thisPath.fileSize())}</td>")
-					}
-					val mod = Instant.ofEpochMilli(thisPath.getLastModifiedTime().toMillis())
-						.atZone(ZoneId.systemDefault())
-						.format(dateTimeFormatter)
-					append("<td>$mod</td></tr>")
+					(if (classes.isNotEmpty()) "class=\"${classes.joinToString(" ")}\"" else "") to
+							(if (titles.isNotEmpty()) "title=\"${titles.joinToString(", ")}\"" else "")
 				}
-			} else append("<tr><td>${bundle.getString("folder_empty")}</td><td>-1</td><td>-1</td></tr>")
-		} else append("<tr><td>${bundle.getString("folder_inaccessible")}</td><td>-1</td><td>-1</td></tr>")
+				if (attr.isDirectory) {
+					val stat = computeDirectoryStatistics(file)
+//						if (readable)
+					localBuilder.append("<tr><td><a $classes $title href=\"${file.name}/\">${file.name}</a>/</td>")
+//						else append("<tr><td><u $classes $title>${file.name}</u>/</td>")
+					localBuilder.append("<td>${truncateSizeHTML(stat.calculatedSize.sum())} [")
+					val filesSum = stat.files.sum()
+					val directoriesSum = stat.directories.sum()
+					val entryCount = if (filesSum + directoriesSum > 0) buildList {
+						if (filesSum > 0) add("${stat.files} ${bundle.getString("files").lowercase()}")
+						if (directoriesSum > 0) add("$directoriesSum ${bundle.getString("folders").lowercase()}")
+					}.joinToString(", ") else bundle.getString("empty").lowercase()
+					val erroredSum = stat.errored.sum()
+					val unreadableSum = stat.unreadable.sum()
+					val loopsSum = stat.loops.sum()
+					if (erroredSum + unreadableSum + loopsSum > 0) {
+						localBuilder.append("<u class=\"dotted\" title=\"")
+						localBuilder.append(
+							buildList {
+								if (erroredSum > 0)
+									add("$erroredSum ${bundle.getString("tree_errors").lowercase()}")
+								if (unreadableSum > 0)
+									add("$unreadableSum ${bundle.getString("unreadable").lowercase()}")
+								if (loopsSum > 0)
+									add("$loopsSum ${bundle.getString("loops").lowercase()}")
+							}.joinToString(", ")
+						)
+						localBuilder.append("\">$entryCount</u>")
+					} else localBuilder.append(entryCount)
+					localBuilder.append("]</td>")
+				} else {
+//						if (readable)
+					localBuilder.append("<tr><td><a $classes $title href=\"${file.name}\">${file.name}</a>")
+//						else append("<tr><td><u $classes $title>${file.name}</u>")
+					localBuilder.append("</td><td>${truncateSizeHTML(attr.size())}</td>")
+				}
+				val mod = Instant.ofEpochMilli(attr.lastModifiedTime().toMillis())
+					.atZone(ZoneId.systemDefault())
+					.format(dateTimeFormatter)
+				localBuilder.append("<td>$mod</td></tr>")
+				localBuilder to attr
+			}
+			.sorted { (_, attrA), (_, attrB) ->
+				val dir = attrB.isDirectory.compareTo(attrA.isDirectory)
+				if (dir != 0) return@sorted dir
+				attrB.lastModifiedTime().compareTo(attrA.lastModifiedTime())
+			}
+			.collect(Collectors.toList()).forEach { append(it.first) }
 		append("<caption>")
-		val parentInvariantPath = "${storeParent.invariantSeparatorsPath}/"
+		val parentInvariantPath = "${storeParent.invariantSeparatorsPathString}/"
 		append(parentInvariantPath)
-		val accessible = file.invariantSeparatorsPath.substring(parentInvariantPath.length)
+		val accessible = file.invariantSeparatorsPathString.substring(parentInvariantPath.length)
 		var completeCaption = ""
 		var backReferences = ""
 		accessible.split('/').also {
 			val markerList = buildList {
-				var localPath = storeParent.toPath()
+				var localPath = storeParent
 				it.forEach { path ->
 					localPath = localPath.resolve(path)
 					if (localPath.isSymbolicLink())

@@ -4,7 +4,6 @@ import org.bread_experts_group.coder.format.gamemaker_win.GameMakerWINParser
 import org.bread_experts_group.coder.format.gamemaker_win.bytecode.*
 import org.bread_experts_group.coder.format.gamemaker_win.chunk.*
 import org.bread_experts_group.coder.format.gamemaker_win.structure.GameMakerWINBytecode
-import org.bread_experts_group.formatTime
 import org.bread_experts_group.hex
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.*
@@ -34,7 +33,7 @@ class GameMakerWINParserTest {
 		val testStream = GameMakerWINParser(fileStream)
 		val dialA = System.currentTimeMillis()
 		val read = testStream.toList()
-		logger.info((System.currentTimeMillis() - dialA).toDuration(DurationUnit.MILLISECONDS).formatTime())
+		logger.info((System.currentTimeMillis() - dialA).toDuration(DurationUnit.MILLISECONDS).toString())
 		logger.info(read.toString())
 		logger.info("Attempting disassembly")
 		val chunks = (read.first() as GameMakerWINContainerChunk).chunks

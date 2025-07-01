@@ -9,7 +9,7 @@ class FUSEDirectoryEntries : ArrayList<FUSEDirectoryEntry>() {
 			this@FUSEDirectoryEntries.forEach {
 				add(
 					Pair(
-						arena.allocateUtf8String(it.name),
+						arena.allocateFrom(it.name),
 						it.stat.toBuffer(arena)
 					)
 				)

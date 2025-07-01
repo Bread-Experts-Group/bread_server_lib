@@ -24,7 +24,7 @@ class FileSystemInUserSpace(
 		if (mountFile.exists()) throw IllegalStateException("FUSE target must not exist!")
 		Files.createDirectory(mountFile.toPath())
 		val argumentsDataSegment = this.localArena.allocate(argumentsActualStructure)
-		argdHandle.set(argumentsDataSegment, 0L, this.localArena.allocateUtf8String("fuse_remote_microserver"))
+		argdHandle.set(argumentsDataSegment, 0L, this.localArena.allocateFrom("fuse_remote_microserver"))
 		val argumentsSegment = this.localArena.allocate(fuseArgumentsStructure)
 		argcHandle.set(argumentsSegment, 1)
 		argvHandle.set(argumentsSegment, argumentsDataSegment)
@@ -137,7 +137,7 @@ class FileSystemInUserSpace(
 		fuseLogger.info { "Created fuse session: ${fuseSession.debugString()}" }
 
 		val path = mountFile.canonicalPath
-		val pathSegment = this.localArena.allocateUtf8String(path)
+		val pathSegment = this.localArena.allocateFrom(path)
 		fuseLogger.info { "fuse_session_mount call for path \"$path\"" }
 		val code = nativeFuseMount.invokeExact(fuseSession, pathSegment) as Int
 		if (code == 0) fuseLogger.info { "fuse_session_mount completed successfully for the path \"$path\"" }
