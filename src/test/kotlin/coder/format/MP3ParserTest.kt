@@ -11,16 +11,18 @@ import kotlin.io.path.writeBytes
 
 class MP3ParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
-		"coder/format/mp3/c418_death.mp3"
+		"coder/format/mp3/01.mp3"
 	)
 	val testStream: MP3Parser = MP3Parser(testFile!!)
 	val logger = ColoredHandler.newLoggerResourced("tests.mp3")
 
 	@Test
 	fun readParsed() {
+		var i = 0
 		testStream.forEach {
 			when (it) {
 				is MP3ID3Frame -> {
+					logger.info(it.id3.toString())
 					val frames = it.id3.toList()
 					frames.forEach { frame -> logger.info(frame.toString()) }
 					frames.firstNotNullOfOrNull { frame -> frame as? ID3PictureFrame }?.let { frame ->
@@ -29,7 +31,11 @@ class MP3ParserTest {
 					}
 				}
 
-				else -> logger.info("$it")
+				else -> {
+					if (i > 250) return@forEach
+					i++
+					logger.info("$it")
+				}
 			}
 		}
 	}

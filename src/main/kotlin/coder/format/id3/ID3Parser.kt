@@ -19,18 +19,21 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 	private var preFrame: ID3Header?
 	override var fqIn: FailQuickInputStream = super.fqIn
 
+	override fun toString(): String = "ID3Parser[$unsupported]"
+
 	init {
 		val tag = fqIn.readString(3)
 		if (tag != "ID3") throw DecodingException("Not an ID3 stream")
 		val major = fqIn.read()
+		val minor = fqIn.read()
+		val flags = fqIn.read()
+		var size = 0
+		for (i in 3 downTo 0) size = size or (fqIn.read() shl (7 * i))
 		if (major != 3) {
 			preFrame = null
 			unsupported = major
+			fqIn.skip(size.toLong())
 		} else {
-			val minor = fqIn.read()
-			val flags = fqIn.read()
-			var size = 0
-			for (i in 3 downTo 0) size = size or (fqIn.read() shl (7 * i))
 			fqIn = FailQuickInputStream(fqIn.readNBytes(size).inputStream())
 			preFrame = ID3Header(major, minor, flags)
 		}
