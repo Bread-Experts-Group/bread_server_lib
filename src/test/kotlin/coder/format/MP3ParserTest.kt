@@ -1,6 +1,7 @@
 package org.bread_experts_group.coder.format
 
 import org.bread_experts_group.coder.format.mp3.MP3Parser
+import org.bread_experts_group.coder.format.mp3.frame.MP3ID3Frame
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Test
 import java.io.InputStream
@@ -14,6 +15,11 @@ class MP3ParserTest {
 
 	@Test
 	fun readParsed() {
-		logger.info("${testStream.next?.header}")
+		testStream.forEach {
+			when (it) {
+				is MP3ID3Frame -> logger.info(it.id3.toList().toString())
+				else -> logger.info("$it")
+			}
+		}
 	}
 }

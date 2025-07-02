@@ -12,7 +12,7 @@ abstract class Parser<I, O, S : InputStream>(
 	format: String,
 	protected val rawStream: S
 ) : AutoCloseable, Iterable<O> where O : Tagged<I>, O : Writable {
-	protected val fqIn: InputStream = FailQuickInputStream(rawStream)
+	protected open val fqIn: FailQuickInputStream = FailQuickInputStream(rawStream)
 	protected val logger: Logger = ColoredHandler.newLogger("$format ${LoggerResource.get().getString("parser")}")
 	protected val parsers: MutableMap<I, (S, O) -> O> = mutableMapOf<I, (S, O) -> O>()
 	fun addParser(identifier: I, parser: (S, O) -> O) {
@@ -24,7 +24,7 @@ abstract class Parser<I, O, S : InputStream>(
 
 	abstract var next: O?
 	protected abstract fun responsibleStream(of: O): S
-	protected abstract fun readBase(): O
+	protected abstract fun readBase(): O?
 	protected open fun refineBase(of: O): O {
 		val parser = this.parsers[of.tag]
 		return parser?.invoke(responsibleStream(of), of)?.also {
@@ -34,10 +34,12 @@ abstract class Parser<I, O, S : InputStream>(
 		} ?: of
 	}
 
-	protected fun refineNext(): O? = try {
-		refineBase(readBase())
-	} catch (_: FailQuickInputStream.EndOfStream) {
-		null
+	protected fun refineNext(): O? {
+		return try {
+			refineBase(readBase() ?: return refineNext())
+		} catch (_: FailQuickInputStream.EndOfStream) {
+			null
+		}
 	}
 
 	override fun close() {

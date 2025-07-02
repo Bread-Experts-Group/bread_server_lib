@@ -1,4 +1,4 @@
-package org.bread_experts_group.coder.format.mp3.header
+package org.bread_experts_group.coder.format.mp3.frame.header
 
 enum class LayerDescription {
 	RESERVED, LAYER_3, LAYER_2, LAYER_1;

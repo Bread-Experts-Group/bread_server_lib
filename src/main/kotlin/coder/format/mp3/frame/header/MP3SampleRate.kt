@@ -1,4 +1,4 @@
-package org.bread_experts_group.coder.format.mp3.header
+package org.bread_experts_group.coder.format.mp3.frame.header
 
 class MP3SampleRate(val index: Int, val versionID: MPEGAudioVersionID) {
 	val raw: Int = when (versionID) {

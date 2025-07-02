@@ -1,4 +1,4 @@
-package org.bread_experts_group.coder.format.mp3.header
+package org.bread_experts_group.coder.format.mp3.frame.header
 
 enum class ChannelMode {
 	STEREO, JOINT_STEREO, DUAL_CHANNEL, SINGLE_CHANNEL;

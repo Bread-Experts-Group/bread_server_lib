@@ -1,4 +1,4 @@
-package org.bread_experts_group.coder.format.mp3.header
+package org.bread_experts_group.coder.format.mp3.frame.header
 
 enum class MPEGAudioVersionID {
 	VERSION_2_5, RESERVED, VERSION_2, VERSION_1;
