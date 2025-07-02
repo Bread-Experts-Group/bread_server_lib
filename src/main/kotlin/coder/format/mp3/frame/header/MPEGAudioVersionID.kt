@@ -1,22 +1,11 @@
 package org.bread_experts_group.coder.format.mp3.frame.header
 
-enum class MPEGAudioVersionID {
-	VERSION_2_5, RESERVED, VERSION_2, VERSION_1;
+import org.bread_experts_group.coder.Mappable
 
-	companion object {
-		fun get(index: Int): MPEGAudioVersionID = when (index) {
-			0 -> VERSION_2_5
-			1 -> RESERVED
-			2 -> VERSION_2
-			3 -> VERSION_1
-			else -> throw IllegalStateException()
-		}
-	}
+enum class MPEGAudioVersionID(override val id: Int, override val tag: String) : Mappable<MPEGAudioVersionID, Int> {
+	VERSION_2_5(0, "v2.5"),
+	VERSION_2(2, "v2"),
+	VERSION_1(3, "v1");
 
-	override fun toString(): String = when (this) {
-		RESERVED -> "Reserved"
-		VERSION_1 -> "Version 1"
-		VERSION_2 -> "Version 2"
-		VERSION_2_5 -> "Version 2.5"
-	}
+	override fun toString(): String = stringForm()
 }

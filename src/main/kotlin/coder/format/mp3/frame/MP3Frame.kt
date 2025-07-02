@@ -6,5 +6,5 @@ class MP3Frame(
 	val header: MP3Header,
 	val data: ByteArray
 ) : MP3BaseFrame() {
-	override fun toString(): String = "$header, Size: ${data.size}"
+	override fun toString(): String = "MP3Frame[$header][#${data.size}]"
 }

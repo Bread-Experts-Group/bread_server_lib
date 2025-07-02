@@ -1,22 +1,11 @@
 package org.bread_experts_group.coder.format.mp3.frame.header
 
-enum class LayerDescription {
-	RESERVED, LAYER_3, LAYER_2, LAYER_1;
+import org.bread_experts_group.coder.Mappable
 
-	companion object {
-		fun get(index: Int): LayerDescription = when (index) {
-			0 -> RESERVED
-			1 -> LAYER_3
-			2 -> LAYER_2
-			3 -> LAYER_1
-			else -> throw IllegalStateException()
-		}
-	}
+enum class LayerDescription(override val id: Int, override val tag: String) : Mappable<LayerDescription, Int> {
+	LAYER_3(1, "Layer III"),
+	LAYER_2(2, "Layer II"),
+	LAYER_1(3, "Layer I");
 
-	override fun toString(): String = when (this) {
-		RESERVED -> "Reserved"
-		LAYER_1 -> "Layer I"
-		LAYER_2 -> "Layer II"
-		LAYER_3 -> "Layer III"
-	}
+	override fun toString(): String = stringForm()
 }

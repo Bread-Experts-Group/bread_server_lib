@@ -29,6 +29,31 @@ fun InputStream.read64u(): ULong = ((this.read32().toULong() shl 32) or this.rea
 fun InputStream.readInet4(): Inet4Address = Inet4Address.getByAddress(this.readNBytes(4)) as Inet4Address
 fun InputStream.readInet6(): Inet6Address = Inet6Address.getByAddress(this.readNBytes(16)) as Inet6Address
 fun InputStream.readString(n: Int, c: Charset = Charsets.UTF_8): String = this.readNBytes(n).toString(c)
+fun InputStream.readString(c: Charset = Charsets.UTF_8): String {
+	val enc = ByteArrayOutputStream()
+	while (true) when (c) {
+		Charsets.UTF_32 -> {
+			val next = this.read32ul()
+			if (next == 0L) break
+			enc.write32(next)
+		}
+
+		Charsets.UTF_16 -> {
+			val next = this.read16ui()
+			if (next == 0) break
+			enc.write16(next)
+		}
+
+		Charsets.ISO_8859_1 -> {
+			val next = this.read()
+			if (next == 0) break
+			enc.write(next)
+		}
+
+		else -> throw UnsupportedOperationException(c.displayName())
+	}
+	return enc.toByteArray().toString(c)
+}
 
 fun OutputStream.write16(data: Int): Unit = this.write(data shr 8).also { this.write(data) }
 fun OutputStream.write16(data: Short): Unit = this.write16(data.toInt())

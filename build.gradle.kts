@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.47.2"
+version = "2.48.0"
 
 repositories {
 	mavenCentral()
@@ -25,7 +25,7 @@ tasks.test {
 	maxHeapSize = "20G"
 }
 kotlin {
-	jvmToolchain(24)
+	jvmToolchain(21)
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
 	}

@@ -1,5 +1,6 @@
 package org.bread_experts_group.coder.format.mp3
 
+import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.id3.ID3Parser
 import org.bread_experts_group.coder.format.mp3.frame.MP3BaseFrame
@@ -21,17 +22,19 @@ class MP3Parser(from: InputStream) : Parser<Nothing?, MP3BaseFrame, InputStream>
 		val header3 = consolidatoryStream.read()
 		val header4 = consolidatoryStream.read()
 
-		val versionId = MPEGAudioVersionID.get((header2 and 0b00011000) shr 3)
-		val layerDescription = LayerDescription.get((header2 and 0b00000110) shr 1)
-		val bitrate = MP3Bitrate((header3 and 0b11110000) shr 4, versionId, layerDescription)
-		val sampleRate = MP3SampleRate((header3 and 0b00001100) shr 2, versionId)
-		val padding = ((header3 and 0b00000010) shr 1) == 1
-		val channelMode = ChannelMode.get((header4 and 0b11000000) shr 6)
-		val emphasis = MP3Emphasis.get(header4 and 0b00000001)
+		val versionId = MPEGAudioVersionID.entries.id((header2 and 0b00011000) shr 3)
+		val layerDescription = LayerDescription.entries.id((header2 and 0b00000110) shr 1)
+		val bitrate = mp3Bitrate(header3 shr 4, versionId, layerDescription)
+		val sampleRate = mp3SampleRate((header3 and 0b00001100) shr 2, versionId)
+		val padding = (header3 and 0b00000010) != 0
+		val channelMode = ChannelMode.entries.id(header4 shr 6)
+		val emphasis = MP3Emphasis.entries.id(header4 and 0b00000001)
 
-		val frameSize = if (layerDescription == LayerDescription.LAYER_1)
-			((12 * bitrate.raw / (sampleRate.raw / 1000.0) + if (padding) 1 else 0) * 4).toInt() else
-			(144 * bitrate.raw / (sampleRate.raw / 1000.0) + if (padding) 1 else 0).toInt()
+		val frameSize =
+			if (layerDescription == LayerDescription.LAYER_1)
+				((12 * bitrate / (sampleRate / 1000.0) + if (padding) 1 else 0) * 4).toInt()
+			else
+				(144 * bitrate / (sampleRate / 1000.0) + if (padding) 1 else 0).toInt()
 
 		val header = MP3Header(
 			versionId,
@@ -42,7 +45,7 @@ class MP3Parser(from: InputStream) : Parser<Nothing?, MP3BaseFrame, InputStream>
 			padding,
 			(header3 and 0b00000001) == 1,
 			channelMode,
-			"${(header4 and 0b00110000) shr 4} (todo)",
+			ModeExtension.entries.id((header4 and 0b00110000) shr 4),
 			((header4 and 0b00000100) shr 2) == 1,
 			((header4 and 0b00000010) shr 1) == 1,
 			emphasis

@@ -1,22 +1,12 @@
 package org.bread_experts_group.coder.format.mp3.frame.header
 
-enum class ChannelMode {
-	STEREO, JOINT_STEREO, DUAL_CHANNEL, SINGLE_CHANNEL;
+import org.bread_experts_group.coder.Mappable
 
-	companion object {
-		fun get(index: Int): ChannelMode = when (index) {
-			0 -> STEREO
-			1 -> JOINT_STEREO
-			2 -> DUAL_CHANNEL
-			3 -> SINGLE_CHANNEL
-			else -> throw IllegalStateException()
-		}
-	}
+enum class ChannelMode(override val id: Int, override val tag: String) : Mappable<ChannelMode, Int> {
+	STEREO(0, "Stereo"),
+	JOINT_STEREO(1, "Joint Stereo"),
+	DUAL_CHANNEL(2, "Dual Channel"),
+	SINGLE_CHANNEL(3, "Single Channel");
 
-	override fun toString(): String = when (this) {
-		STEREO -> "Stereo"
-		JOINT_STEREO -> "Joint stereo (Stereo)"
-		DUAL_CHANNEL -> "Dual channel (2 mono channels)"
-		SINGLE_CHANNEL -> "Single channel (mono)"
-	}
+	override fun toString(): String = stringForm()
 }

@@ -1,22 +1,11 @@
 package org.bread_experts_group.coder.format.mp3.frame.header
 
-enum class MP3Emphasis {
-	NONE, FIFTY_FIFTEEN_MS, RESERVED, CCIT_J_17;
+import org.bread_experts_group.coder.Mappable
 
-	companion object {
-		fun get(index: Int): MP3Emphasis = when (index) {
-			0 -> NONE
-			1 -> FIFTY_FIFTEEN_MS
-			2 -> RESERVED
-			3 -> CCIT_J_17
-			else -> throw IllegalStateException()
-		}
-	}
+enum class MP3Emphasis(override val id: Int, override val tag: String) : Mappable<MP3Emphasis, Int> {
+	NONE(0, "No Emphasis"),
+	FIFTY_FIFTEEN(1, "50/15"),
+	CCIT_J_17(3, "CCIT J.17");
 
-	override fun toString(): String = when (this) {
-		NONE -> "None"
-		FIFTY_FIFTEEN_MS -> "50/15 ms"
-		RESERVED -> "Reserved"
-		CCIT_J_17 -> "CCIT J.17"
-	}
+	override fun toString(): String = stringForm()
 }
