@@ -21,10 +21,12 @@ class GameMakerWINParser(
 		return element
 	}
 
-	override fun refineBase(of: GameMakerWINChunk): GameMakerWINChunk = rawStream.channel.resetPosition(of.offset) {
-		val refined = super.refineBase(of)
-		refined.length = of.length
-		refined
+	override fun refineBase(of: GameMakerWINChunk, vararg parameters: Any): GameMakerWINChunk {
+		return rawStream.channel.resetPosition(of.offset) {
+			val refined = super.refineBase(of)
+			refined.length = of.length
+			refined
+		}
 	}
 
 	private fun FileInputStream.readString(at: Long): String = this.channel.resetPosition(at) {

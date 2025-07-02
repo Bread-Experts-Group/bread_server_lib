@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.format.id3.frame
 
-class ID3PictureFrame(
+class ID3PictureFrame3(
 	tag: String,
 	flags: Int,
 	val encoding: ID3TextEncoding,

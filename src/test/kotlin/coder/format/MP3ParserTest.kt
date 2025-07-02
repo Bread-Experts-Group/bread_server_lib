@@ -1,6 +1,7 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.id3.frame.ID3PictureFrame
+import org.bread_experts_group.coder.format.id3.frame.ID3PictureFrame2
+import org.bread_experts_group.coder.format.id3.frame.ID3PictureFrame3
 import org.bread_experts_group.coder.format.mp3.MP3Parser
 import org.bread_experts_group.coder.format.mp3.frame.MP3ID3Frame
 import org.bread_experts_group.logging.ColoredHandler
@@ -25,9 +26,12 @@ class MP3ParserTest {
 					logger.info(it.id3.toString())
 					val frames = it.id3.toList()
 					frames.forEach { frame -> logger.info(frame.toString()) }
-					frames.firstNotNullOfOrNull { frame -> frame as? ID3PictureFrame }?.let { frame ->
+					frames.firstNotNullOfOrNull { frame -> frame as? ID3PictureFrame3 }?.let { frame ->
 						Path("./apic.${frame.mimeType.substringAfter('/')}")
 							.writeBytes(frame.data)
+					}
+					frames.firstNotNullOfOrNull { frame -> frame as? ID3PictureFrame2 }?.let { frame ->
+						Path("./pic.${frame.imageType}").writeBytes(frame.data)
 					}
 				}
 
