@@ -3,16 +3,18 @@ package org.bread_experts_group.coder.format.mp3
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.mp3.header.*
 import org.bread_experts_group.hex
-import org.bread_experts_group.stream.readString
+import org.bread_experts_group.stream.ConsolidatedInputStream
 import java.io.InputStream
 
 class MP3Parser(from: InputStream) : Parser<Nothing?, MP3Frame, InputStream>("MPEG 3", from) {
-	override var next: MP3Frame? = readBase()
+	private val consolidatoryStream = ConsolidatedInputStream()
 	override fun readBase(): MP3Frame {
-		fqIn.read() // read past the sync word to get to the actual data in the header
-		val header2 = fqIn.read()
-		val header3 = fqIn.read()
-		val header4 = fqIn.read()
+		val sync = consolidatoryStream.read()
+		val header2 = consolidatoryStream.read()
+		if ((((header2 and 0b11100000) shl 3) or sync) != 0b11111111111)
+			throw IllegalStateException("MP3 header misalignment [$sync, $header2]")
+		val header3 = consolidatoryStream.read()
+		val header4 = consolidatoryStream.read()
 
 		val versionId = MPEGAudioVersionID.get((header2 and 0b00011000) shr 3)
 		val layerDescription = LayerDescription.get((header2 and 0b00000110) shr 1)
@@ -39,31 +41,40 @@ class MP3Parser(from: InputStream) : Parser<Nothing?, MP3Frame, InputStream>("MP
 		return MP3Frame(header, ByteArray(0))
 	}
 
-	val id3Header: ID3Header
+	val id3Header: ID3Header?
 
 	init {
-		val identifier = fqIn.readString(3)
-		val version = "${fqIn.read()}.${fqIn.read()}"
-		val flags = fqIn.read()
-		val unsynchronisation = (flags shr 7) == 1
-		val extended = (flags shr 6) == 1
-		val experimental = (flags shr 5) == 1
-		var size = 0
+		consolidatoryStream.streams.addFirst(fqIn)
+		val id3Scan = fqIn.readNBytes(3)
+		if (id3Scan.decodeToString() == "ID3") {
+			val version = "${consolidatoryStream.read()}.${consolidatoryStream.read()}"
+			val flags = consolidatoryStream.read()
+			val unSynchronisation = (flags shr 7) == 1
+			val extended = (flags shr 6) == 1
+			val experimental = (flags shr 5) == 1
+			var size = 0
 
-		for (i in 3 downTo 0) {
-			val read = fqIn.read()
-			size = size or ((read and 0b01111111) shl (i * 7))
+			for (i in 3 downTo 0) {
+				val read = consolidatoryStream.read()
+				size = size or ((read and 0b01111111) shl (i * 7))
+			}
+
+			val offsetInt = size + 10
+			val hexOffset = hex(offsetInt)
+
+			id3Header = ID3Header(
+				version, unSynchronisation, extended, experimental,
+				size, hexOffset, offsetInt
+			)
+
+			consolidatoryStream.readNBytes(offsetInt - 10)
+			logger.info(id3Header.toString())
+		} else {
+			consolidatoryStream.streams.addFirst(id3Scan.inputStream())
+			id3Header = null
 		}
-
-		val offsetInt = size + 10
-		val hexOffset = hex(offsetInt)
-
-		id3Header =
-			ID3Header(identifier, version, unsynchronisation, extended, experimental, size, hexOffset, offsetInt)
-
-		fqIn.readNBytes(offsetInt - 10)
-		logger.info(id3Header.toString())
 	}
 
-	override fun responsibleStream(of: MP3Frame): InputStream = of.data.inputStream()
+	override fun responsibleStream(of: MP3Frame): InputStream = fqIn
+	override var next: MP3Frame? = readBase()
 }

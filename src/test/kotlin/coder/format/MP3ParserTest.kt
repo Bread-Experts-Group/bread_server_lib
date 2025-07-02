@@ -3,7 +3,6 @@ package org.bread_experts_group.coder.format
 import org.bread_experts_group.coder.format.mp3.MP3Parser
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.InputStream
 
 class MP3ParserTest {
@@ -15,6 +14,6 @@ class MP3ParserTest {
 
 	@Test
 	fun readParsed() {
-//		logger.info("${testStream.next?.header}")
+		logger.info("${testStream.next?.header}")
 	}
 }

@@ -1,9 +1,8 @@
 package org.bread_experts_group.coder.format.mp3
 
 class ID3Header(
-	val identifier: String,
 	val version: String,
-	val unsynchronisation: Boolean,
+	val unSynchronisation: Boolean,
 	val extended: Boolean,
 	val experimental: Boolean,
 	val headerSize: Int,
@@ -12,7 +11,7 @@ class ID3Header(
 ) {
 	override fun toString(): String =
 		"[ID3 Header] Version: $version," +
-				" Unsynchronisation: $unsynchronisation," +
+				" UnSynchronisation: $unSynchronisation," +
 				" Extended: $extended," +
 				" Experimental: $experimental," +
 				" Header size: $headerSize" +
