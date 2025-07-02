@@ -12,7 +12,7 @@ import kotlin.io.path.writeBytes
 
 class MP3ParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
-		"coder/format/mp3/01.mp3"
+		"coder/format/mp3/08 Hydelic - Butterfly Effect.mp3"
 	)
 	val testStream: MP3Parser = MP3Parser(testFile!!)
 	val logger = ColoredHandler.newLoggerResourced("tests.mp3")

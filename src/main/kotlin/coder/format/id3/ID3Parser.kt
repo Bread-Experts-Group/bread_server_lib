@@ -37,7 +37,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		}
 	}
 
-	override fun responsibleStream(of: ID3Frame<*>): InputStream = of.data.inputStream()
+	override fun responsibleStream(of: ID3Frame<*>): InputStream = FailQuickInputStream(of.data.inputStream())
 	override fun readBase(): ID3Frame<*>? {
 		if (unsupported) throw DecodingException("ID3 major version is unsupported [$version]")
 		preFrame.also { preFrame = null }?.let { return it }
@@ -116,6 +116,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		textFrame("TPE2", 3)
 		textFrame("TCOP", 3)
 		textFrame("TSSE", 3)
+		textFrame("TYER", 3)
 		textFrame("TP1", 2)
 		textFrame("TP2", 2)
 		textFrame("TCM", 2)

@@ -31,26 +31,29 @@ fun InputStream.readInet6(): Inet6Address = Inet6Address.getByAddress(this.readN
 fun InputStream.readString(n: Int, c: Charset = Charsets.UTF_8): String = this.readNBytes(n).toString(c)
 fun InputStream.readString(c: Charset = Charsets.UTF_8): String {
 	val enc = ByteArrayOutputStream()
-	while (true) when (c) {
-		Charsets.UTF_32 -> {
-			val next = this.read32ul()
-			if (next == 0L) break
-			enc.write32(next)
-		}
+	try {
+		while (true) when (c) {
+			Charsets.UTF_32 -> {
+				val next = this.read32ul()
+				if (next == 0L) break
+				enc.write32(next)
+			}
 
-		Charsets.UTF_16 -> {
-			val next = this.read16ui()
-			if (next == 0) break
-			enc.write16(next)
-		}
+			Charsets.UTF_16 -> {
+				val next = this.read16ui()
+				if (next == 0) break
+				enc.write16(next)
+			}
 
-		Charsets.ISO_8859_1 -> {
-			val next = this.read()
-			if (next == 0) break
-			enc.write(next)
-		}
+			Charsets.ISO_8859_1 -> {
+				val next = this.read()
+				if (next == 0) break
+				enc.write(next)
+			}
 
-		else -> throw UnsupportedOperationException(c.displayName())
+			else -> throw UnsupportedOperationException(c.displayName())
+		}
+	} catch (_: FailQuickInputStream.EndOfStream) {
 	}
 	return enc.toByteArray().toString(c)
 }

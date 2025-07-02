@@ -25,5 +25,7 @@ enum class ID3PictureType(
 	BRIGHT_COLORED_FISH(0x11, "Bright Colored Fish (What?)"),
 	ILLUSTRATION(0x12, "Illustration"),
 	BAND_LOGOTYPE(0x13, "Band Logotype"),
-	PUBLISHER_LOGOTYPE(0x14, "Publisher Logotype")
+	PUBLISHER_LOGOTYPE(0x14, "Publisher Logotype");
+
+	override fun toString(): String = stringForm()
 }
