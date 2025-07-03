@@ -14,9 +14,11 @@ class VirtualFileChannel(private var from: ByteArray) : SeekableByteChannel {
 
 	override fun read(dst: ByteBuffer): Int {
 		ensureOpen()
-		val start = dst.position()
-		dst.put(from)
-		return dst.position() - start
+		if (position >= from.size) return -1
+		val deposit = min(from.size - position, dst.remaining())
+		dst.put(from, position, deposit)
+		position += deposit
+		return deposit
 	}
 
 	override fun write(src: ByteBuffer): Int {

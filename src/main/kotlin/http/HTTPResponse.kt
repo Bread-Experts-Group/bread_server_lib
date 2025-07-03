@@ -1,5 +1,6 @@
 package org.bread_experts_group.http
 
+import org.bread_experts_group.stream.LongStream
 import java.io.InputStream
 import java.time.Instant
 import java.time.ZoneOffset
@@ -25,7 +26,9 @@ class HTTPResponse(
 					ZoneOffset.UTC
 				)
 			)
-			it["content-length"] = data.available().toString()
+			it["content-length"] =
+				if (data is LongStream) data.longAvailable().toString()
+				else data.available().toString()
 			it["strict-transport-security"] = "max-age=31536000; includeSubDomains; preload"
 			it["alt-svc"] = "h2=\":443\", http/1.1=\":443\""
 			// Defaults

@@ -30,7 +30,7 @@ class BufferedByteChannelInputStream(
 		}
 		buffer.limit(min(min(length, Int.MAX_VALUE.toLong()).toInt(), buffer.capacity()))
 		val read = of.read(buffer)
-		if (read == -1) TODO("Alpha")
+		if (read == -1) throw FailQuickInputStream.EndOfStream()
 		length -= read
 		if (length == 0L && currentRegion < regions.lastIndex) length = -1
 		buffer.flip()
