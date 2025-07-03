@@ -15,6 +15,7 @@ class BufferedByteChannelInputStream(
 	private val buffer = ByteBuffer.allocate(4096)
 	private var currentRegion: Int = 0
 	private var length: Long = -1
+	private var totalLength: Long = regions.sumOf { (it.second - it.first) + 1 }
 
 	init {
 		buffer.limit(0)
@@ -32,12 +33,13 @@ class BufferedByteChannelInputStream(
 		val read = of.read(buffer)
 		if (read == -1) throw FailQuickInputStream.EndOfStream()
 		length -= read
+		totalLength -= read
 		if (length == 0L && currentRegion < regions.lastIndex) length = -1
 		buffer.flip()
 	}
 
-	override fun longAvailable(): Long = length
-	override fun available(): Int = length.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+	override fun longAvailable(): Long = totalLength
+	override fun available(): Int = longAvailable().coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
 	override fun read(): Int = if (buffer.hasRemaining()) buffer.get().toInt()
 	else if (length == 0L) -1
 	else {
