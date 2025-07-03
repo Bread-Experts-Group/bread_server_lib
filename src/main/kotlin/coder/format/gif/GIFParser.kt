@@ -77,7 +77,7 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 	override fun readBase(): GIFBlock = preread.removeFirstOrNull() ?: GIFBlock(fqIn.read().toByte(), byteArrayOf())
 
 	private fun readBlocks(): ConsolidatedInputStream {
-		val consolidated = ConsolidatedInputStream()
+		val consolidated = ConsolidatedInputStream(false)
 		while (true) {
 			val data = fqIn.readNBytes(fqIn.read())
 			if (data.isEmpty()) break

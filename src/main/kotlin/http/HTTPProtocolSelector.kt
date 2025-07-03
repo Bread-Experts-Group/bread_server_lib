@@ -51,8 +51,8 @@ class HTTPProtocolSelector(
 				}
 			}
 
-			fun decodeData(headers: Map<String, String>): ConsolidatedBlockingInputStream {
-				val data = ConsolidatedBlockingInputStream()
+			fun decodeData(headers: Map<String, String>): ConsolidatedInputStream {
+				val data = ConsolidatedInputStream(true)
 				if (headers.contains("transfer-encoding")) {
 					if (headers.getValue("transfer-encoding") != "chunked")
 						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
@@ -226,7 +226,7 @@ class HTTPProtocolSelector(
 				)
 			}
 			Thread.ofVirtual().name("HTTP/2 Backlogger").start {
-				val streams = mutableMapOf<Int, ConsolidatedBlockingInputStream>()
+				val streams = mutableMapOf<Int, ConsolidatedInputStream>()
 				val headerBlocks = mutableMapOf<Int, MutableMap<String, String>>()
 				var dynamic = listOf<Pair<String, String>>()
 
@@ -269,7 +269,7 @@ class HTTPProtocolSelector(
 							val blocks = headerBlocks.getOrPut(frame.identifier) { mutableMapOf() }
 							blocks += frame.block
 							if (frame.flags.contains(HTTP2HeaderFrameFlag.END_OF_HEADERS)) {
-								val stream = streams.getOrPut(frame.identifier) { ConsolidatedBlockingInputStream() }
+								val stream = streams.getOrPut(frame.identifier) { ConsolidatedInputStream(true) }
 								requestBacklog.add(
 									Result.success(
 										HTTP2Request(
@@ -292,7 +292,7 @@ class HTTPProtocolSelector(
 						}
 
 						is HTTP2DataFrame -> {
-							val stream = streams.getOrPut(frame.identifier) { ConsolidatedBlockingInputStream() }
+							val stream = streams.getOrPut(frame.identifier) { ConsolidatedInputStream(true) }
 							stream.streams += frame.data.inputStream()
 							HTTP2WindowUpdateFrame(frame.identifier, frame.data.size)
 								.also { logger.fine("< $it") }

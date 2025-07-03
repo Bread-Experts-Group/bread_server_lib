@@ -11,7 +11,7 @@ import org.bread_experts_group.stream.ConsolidatedInputStream
 import java.io.InputStream
 
 class MP3Parser(from: InputStream) : Parser<Nothing?, MP3BaseFrame, InputStream>("MPEG 3", from) {
-	private val consolidatoryStream = ConsolidatedInputStream()
+	private val consolidatoryStream = ConsolidatedInputStream(false)
 	private var preFrame: MP3ID3Frame? = null
 	override fun readBase(): MP3BaseFrame {
 		preFrame.also { preFrame = null }?.let { return it }
