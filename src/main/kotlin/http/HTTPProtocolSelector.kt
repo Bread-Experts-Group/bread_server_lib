@@ -57,7 +57,7 @@ class HTTPProtocolSelector(
 					if (headers.getValue("transfer-encoding") != "chunked")
 						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
 					data.streams.add(
-						object : InputStream() {
+						object : InputStream(), LongStream {
 							var locked = true
 
 							init {
@@ -85,6 +85,7 @@ class HTTPProtocolSelector(
 									return field
 								}
 
+							override fun longAvailable(): Long = currentBlockSize
 							override fun available(): Int = currentBlockSize
 								.coerceAtMost(Int.MAX_VALUE.toLong())
 								.toInt()
@@ -107,7 +108,7 @@ class HTTPProtocolSelector(
 						}
 					)
 				} else if (headers.contains("content-length")) data.streams.add(
-					object : InputStream() {
+					object : InputStream(), LongStream {
 						var locked = true
 
 						init {
@@ -123,7 +124,12 @@ class HTTPProtocolSelector(
 						}
 
 						var currentBlockSize = headers.getValue("content-length").toULong()
-						override fun available(): Int = currentBlockSize.coerceAtMost(Int.MAX_VALUE.toULong()).toInt()
+						override fun longAvailable(): Long =
+							currentBlockSize.coerceAtMost(Long.MAX_VALUE.toULong()).toLong()
+
+						override fun available(): Int =
+							currentBlockSize.coerceAtMost(Int.MAX_VALUE.toULong()).toInt()
+
 						override fun read(): Int =
 							if (currentBlockSize > 0uL) {
 								currentBlockSize--
