@@ -5,10 +5,18 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.LinkedBlockingDeque
 
-class ConsolidatedInputStream(blocking: Boolean) : InputStream() {
+class ConsolidatedInputStream(blocking: Boolean) : InputStream(), LongStream {
 	val streams: LinkedBlockingDeque<InputStream> = LinkedBlockingDeque<InputStream>()
 
-	override fun available(): Int = streams.sumOf { it.available() }
+	override fun longAvailable(): Long = streams.sumOf {
+		when (it) {
+			is LongStream -> it.longAvailable()
+			else -> it.available().toLong()
+		}
+	}
+
+	override fun available(): Int = longAvailable().coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+
 	override fun readAllBytes(): ByteArray {
 		val output = ByteArrayOutputStream()
 		this.transferTo(output)
@@ -24,6 +32,7 @@ class ConsolidatedInputStream(blocking: Boolean) : InputStream() {
 	private val retrieveMethod =
 		if (blocking) LinkedBlockingDeque<InputStream>::takeFirst
 		else LinkedBlockingDeque<InputStream>::pollFirst
+
 	override fun read(): Int {
 		val nextStream = retrieveMethod(streams)
 		if (nextStream == null) return -1
@@ -31,5 +40,9 @@ class ConsolidatedInputStream(blocking: Boolean) : InputStream() {
 		if (read == -1) return this.read()
 		streams.putFirst(nextStream)
 		return read
+	}
+
+	override fun read(b: ByteArray, off: Int, len: Int): Int {
+		return super.read(b, off, len)
 	}
 }

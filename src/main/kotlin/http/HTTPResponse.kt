@@ -1,6 +1,8 @@
 package org.bread_experts_group.http
 
+import org.bread_experts_group.buildDate
 import org.bread_experts_group.stream.LongStream
+import org.bread_experts_group.version
 import java.io.InputStream
 import java.time.Instant
 import java.time.ZoneOffset
@@ -19,7 +21,7 @@ class HTTPResponse(
 			disallowedHeaders.forEach { h ->
 				if (it.contains(h)) throw IllegalArgumentException("Do not set $h header!")
 			}
-			it["server"] = "BEG-BSL"
+			it["server"] = "BEG-BSL ${version()} @ ${buildDate()}"
 			it["date"] = DateTimeFormatter.RFC_1123_DATE_TIME.format(
 				ZonedDateTime.ofInstant(
 					Instant.now(),
@@ -30,7 +32,6 @@ class HTTPResponse(
 				if (data is LongStream) data.longAvailable().toString()
 				else data.available().toString()
 			it["strict-transport-security"] = "max-age=31536000; includeSubDomains; preload"
-			it["alt-svc"] = "h2=\":443\", http/1.1=\":443\""
 			// Defaults
 			it.putIfAbsent("x-frame-options", "DENY")
 			it.putIfAbsent("x-content-type-options", "nosniff")
@@ -62,7 +63,6 @@ class HTTPResponse(
 	}
 
 	companion object {
-		val disallowedHeaders: List<String> =
-			listOf("Server", "Date", "Content-Length", "Strict-Transport-Security", "Alt-Svc")
+		val disallowedHeaders: List<String> = listOf("Server", "Date", "Content-Length", "Strict-Transport-Security")
 	}
 }
