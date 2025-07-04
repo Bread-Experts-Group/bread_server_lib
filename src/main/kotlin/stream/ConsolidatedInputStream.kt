@@ -46,11 +46,12 @@ class ConsolidatedInputStream(blocking: Boolean) : InputStream(), LongStream {
 		var read = 0
 		while (read < len) {
 			val nextStream = retrieveMethod(streams)
-			if (nextStream == null) return if (read == 0) -1 else read
+			if (nextStream == null) if (read == 0) return -1 else break
 			val partialRead = nextStream.read(b, off + read, len - read)
-			if (partialRead != -1) streams.putFirst(nextStream)
+			if (partialRead == -1) continue
+			streams.putFirst(nextStream)
 			read += partialRead
 		}
-		return 0
+		return read
 	}
 }
