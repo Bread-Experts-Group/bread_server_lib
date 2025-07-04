@@ -52,7 +52,7 @@ class HTTPProtocolSelector(
 			}
 
 			fun decodeData(headers: Map<String, String>): ConsolidatedInputStream {
-				val data = ConsolidatedInputStream(true)
+				val data = ConsolidatedInputStream(false)
 				if (headers.contains("transfer-encoding")) {
 					if (headers.getValue("transfer-encoding") != "chunked")
 						throw UnsupportedOperationException("TE: ${headers.getValue("transfer-encoding")}")
