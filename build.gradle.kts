@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "2.51.4"
+version = "2.51.5"
 
 repositories {
 	mavenCentral()

@@ -43,6 +43,12 @@ class ConsolidatedInputStream(blocking: Boolean) : InputStream(), LongStream {
 	}
 
 	override fun read(b: ByteArray, off: Int, len: Int): Int {
-		return super.read(b, off, len)
+		var read = 0
+		while (read < len) {
+			val nextStream = retrieveMethod(streams)
+			if (nextStream == null) return if (read == 0) -1 else read
+			read += nextStream.read(b, off + read, len - read)
+		}
+		return 0
 	}
 }
