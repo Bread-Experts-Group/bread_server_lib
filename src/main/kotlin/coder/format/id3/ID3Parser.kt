@@ -17,7 +17,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 	private var preFrame: ID3Header?
 	override var fqIn: FailQuickInputStream = super.fqIn
 
-	override fun toString(): String = "ID3Parser[${!unsupported}/v$version]"
+	override fun toString(): String = super.toString() + "[${!unsupported}/v$version]"
 
 	init {
 		val tag = fqIn.readString(3)
@@ -85,55 +85,20 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		}, major)
 	}
 
-	fun textFrame(id: String, major: Int) {
-		addParser(id, major) { stream, frame ->
+	init {
+		addPredicateParser({ it[0] == 'T' }) { stream, frame ->
 			val encoding = ID3TextEncoding.entries.id(stream.read())
 			ID3TextFrame(
 				frame.tag, frame.flags.raw().toInt(),
 				encoding, stream.readString(encoding.charset)
 			)
 		}
-	}
-
-	fun urlFrame3(id: String) {
-		addParser(id, 3) { stream, frame ->
+		addPredicateParser({ it[0] == 'W' }) { stream, frame ->
 			ID3URLLinkFrame(
 				frame.tag, frame.flags.raw().toInt(),
 				URI(stream.readString(Charsets.ISO_8859_1))
 			)
 		}
-	}
-
-	init {
-		textFrame("TIT2", 3)
-		textFrame("TPE1", 3)
-		textFrame("TRCK", 3)
-		textFrame("TALB", 3)
-		textFrame("TPOS", 3)
-		textFrame("TDRC", 3)
-		textFrame("TCON", 3)
-		textFrame("TENC", 3)
-		textFrame("TPE2", 3)
-		textFrame("TCOP", 3)
-		textFrame("TSSE", 3)
-		textFrame("TYER", 3)
-		textFrame("TP1", 2)
-		textFrame("TP2", 2)
-		textFrame("TCM", 2)
-		textFrame("TAL", 2)
-		textFrame("TPA", 2)
-		textFrame("TYE", 2)
-		textFrame("TCO", 2)
-		textFrame("TRK", 2)
-		textFrame("TT2", 2)
-		urlFrame3("WCOM")
-		urlFrame3("WCOP")
-		urlFrame3("WOAF")
-		urlFrame3("WOAR")
-		urlFrame3("WOAS")
-		urlFrame3("WORS")
-		urlFrame3("WPAY")
-		urlFrame3("WPUB")
 		addParser("POPM", 3) { stream, frame ->
 			ID3PopularimeterFrame(
 				frame.tag, frame.flags.raw().toInt(),

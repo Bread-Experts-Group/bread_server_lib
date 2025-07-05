@@ -3,7 +3,7 @@ package org.bread_experts_group.coder.format.id3.frame
 import org.bread_experts_group.coder.Mappable
 
 enum class ID3PictureType(
-	override val id: Int, override val tag: String
+	override var id: Int, override val tag: String
 ) : Mappable<ID3PictureType, Int> {
 	OTHER(0x00, "Generic"),
 	FILE_ICON_32_32(0x01, "32x32 File Icon"),

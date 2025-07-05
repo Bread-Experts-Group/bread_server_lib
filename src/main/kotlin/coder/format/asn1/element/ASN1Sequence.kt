@@ -1,24 +1,27 @@
 package org.bread_experts_group.coder.format.asn1.element
 
+import org.bread_experts_group.coder.format.asn1.ASN1Parser
 import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 
-data class ASN1Sequence(
-	val elements: List<ASN1Element>
-) : ASN1Element(48, byteArrayOf()) {
+open class ASN1Sequence(
+	tag: ASN1ElementIdentifier,
+	data: ByteArray
+) : ASN1Element(tag, data), Iterable<ASN1Element> {
 	constructor(
 		vararg elements: ASN1Element
-	) : this(listOf(*elements))
+	) : this(
+		ASN1ElementIdentifier(
+			ASN1ElementClass.UNIVERSAL,
+			ASN1ElementConstruction.CONSTRUCTED,
+			ASN1Tag.SEQUENCE
+		),
+		ByteArrayOutputStream().use { dataOut ->
+			elements.forEach { it.write(dataOut) }
+			dataOut.toByteArray()
+		}
+	)
 
-	override fun toString(): String = "ASN1Sequence[${elements.size}]$elements"
-
-	val encoded: ByteArray = ByteArrayOutputStream(elements.size * 2).use {
-		elements.forEach { element -> element.write(it) }
-		it.toByteArray()
-	}
-
-	override fun computeSize(): Long = encoded.size.toLong()
-	override fun writeExtra(stream: OutputStream) {
-		stream.write(encoded)
-	}
+	private val parser = ASN1Parser(data.inputStream())
+	override fun iterator(): Iterator<ASN1Element> = parser.iterator()
+	override fun toString(): String = "$tag[#${data.size}]"
 }

@@ -5,36 +5,41 @@ import org.bread_experts_group.stream.Writable
 import java.io.OutputStream
 
 open class ASN1Element(
-	override val tag: Int,
-	open val data: ByteArray
-) : Writable, Tagged<Int> {
-	override fun toString(): String = "ASN1Element.$tag[${data.size}]"
+	override val tag: ASN1ElementIdentifier,
+	open val data: ByteArray = byteArrayOf()
+) : Writable, Tagged<ASN1ElementIdentifier> {
+	constructor(
+		t: Int,
+		d: ByteArray
+	) : this(
+		ASN1ElementIdentifier(
+			ASN1ElementClass.CONTEXT_SPECIFIC,
+			ASN1ElementConstruction.PRIMITIVE,
+			ASN1Tag.NULL
+		), d
+	)
+
+	override fun toString(): String = "ASN1Element.$tag[#${data.size}]"
 
 	override fun computeSize(): Long = data.size.toLong()
 	final override fun write(stream: OutputStream) {
-		stream.write(tag)
-		writeExtra(stream)
-		stream.writeLength(computeSize().toInt())
-	}
-
-	protected fun OutputStream.writeLength(size: Int) {
-		when {
-			size < 0x80 -> this.write(size)
-			size <= 0xFF -> {
-				this.write(0x81)
-				this.write(size)
+		tag.write(stream)
+		val size = computeSize()
+		if (size < 0x80) stream.write(size.toInt())
+		else {
+			var remainder = size
+			var bytes = 0
+			while (remainder > 0) {
+				bytes++
+				remainder = remainder shr 8
 			}
-
-			else -> {
-				this.write(0x82)
-				this.write((size shr 8) and 0xFF)
-				this.write(size and 0xFF)
+			remainder = size
+			stream.write(0x80 + bytes)
+			while (remainder > 0) {
+				stream.write((remainder and 0b11111111).toInt())
+				remainder = remainder shr 8
 			}
 		}
-	}
-
-	open fun writeExtra(stream: OutputStream) {
-		stream.writeLength(data.size)
 		stream.write(data)
 	}
 }

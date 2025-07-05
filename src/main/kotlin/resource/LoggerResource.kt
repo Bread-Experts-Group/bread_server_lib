@@ -24,7 +24,7 @@ class LoggerResource : ListResourceBundle() {
 		arrayOf("tests.http_protocol_selection", "HTTP Protocol Selection Tests"),
 		arrayOf("tests.private_socket_util", "Bread Experts Group Private Socket Utilities Tests"),
 		arrayOf("tests.ia_32_assembler", "IA-32 Assembler Tests"),
-		arrayOf("fuse", "Filesystem in Userspace"),
+		arrayOf("protocol/posix/fuse", "Filesystem in Userspace"),
 		arrayOf("fuse_callbacks", "Filesystem in Userspace Callbacks"),
 		arrayOf("ffi", "Foreign Function Interface"),
 		arrayOf("html_directory_listing", "HTML Directory Listing"),

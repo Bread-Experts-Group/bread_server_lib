@@ -8,7 +8,6 @@ import java.nio.file.attribute.*
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
-import java.security.spec.ECGenParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.logging.Logger
@@ -41,10 +40,10 @@ data class KeyPairFile(
 		else null
 }
 
-fun KeyPairFile?.read(algorithm: String = "secp256r1"): KeyPair {
+fun KeyPairFile?.read(keyFactoryAlgorithm: String = "Ed25519"): KeyPair {
 	val saveToFiles = this != null && !(this.publicKey.exists() && this.privateKey.exists())
 	return if (this != null && !saveToFiles) {
-		val keyFactory = KeyFactory.getInstance("EC")
+		val keyFactory = KeyFactory.getInstance(keyFactoryAlgorithm)
 		this.ensurePermissions()
 		KeyPair(
 			keyFactory.generatePublic(
@@ -55,8 +54,8 @@ fun KeyPairFile?.read(algorithm: String = "secp256r1"): KeyPair {
 			)
 		)
 	} else {
-		val newKeyPair = KeyPairGenerator.getInstance("EC").let {
-			it.initialize(ECGenParameterSpec(algorithm))
+		val newKeyPair = KeyPairGenerator.getInstance(keyFactoryAlgorithm).let {
+//			it.initialize(ECGenParameterSpec(algorithm))
 			it.generateKeyPair()
 		}
 		if (saveToFiles) {

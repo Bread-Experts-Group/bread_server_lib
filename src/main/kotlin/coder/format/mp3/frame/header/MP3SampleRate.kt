@@ -23,6 +23,4 @@ fun mp3SampleRate(index: Int, versionID: MPEGAudioVersionID) = when (versionID) 
 		2 -> 8000
 		else -> throw DecodingException("$versionID: unsupported $index")
 	}
-
-	else -> throw DecodingException("$versionID: unsupported")
 }

@@ -1,49 +1,81 @@
 package org.bread_experts_group.coder.format.asn1
 
+import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.format.Parser
 import org.bread_experts_group.coder.format.asn1.element.*
+import org.bread_experts_group.stream.read16ui
 import java.io.InputStream
 import java.math.BigInteger
 
 class ASN1Parser(
 	from: InputStream
-) : Parser<Int, ASN1Element, InputStream>("Abstract Syntax Notation One", from) {
+) : Parser<ASN1ElementIdentifier, ASN1Element, InputStream>("Abstract Syntax Notation One", from) {
 	override fun responsibleStream(of: ASN1Element): InputStream = of.data.inputStream()
 
 	override fun readBase(): ASN1Element = ASN1Element(
-		fqIn.read(),
-		fqIn.readNBytes(fqIn.read())
+		fqIn.read().let {
+			ASN1ElementIdentifier(
+				ASN1ElementClass.entries.id(it shr 6),
+				ASN1ElementConstruction.entries.id((it shr 5) and 0b1),
+				ASN1Tag.entries.id(it and 0b11111)
+			)
+		},
+		fqIn.readNBytes(
+			fqIn.read().let {
+				if (it < 0x80) it
+				else when (val bytes = it and (0x80).inv()) {
+					1 -> fqIn.read()
+					2 -> fqIn.read16ui()
+					else -> throw IllegalArgumentException(bytes.toString())
+				}
+			}
+		)
 	)
 
 	init {
-		addParser(1) { stream, _ -> ASN1Boolean(stream.read() == 0xFF) }
-		addParser(2) { stream, _ -> ASN1Integer(BigInteger(stream.readAllBytes())) }
-		addParser(3) { stream, _ -> ASN1BitString(stream.readAllBytes()) }
-		addParser(4) { stream, _ -> ASN1OctetString(stream.readAllBytes()) }
-		addParser(5) { stream, _ -> ASN1Null() }
-		addParser(6) { stream, _ ->
-			ASN1ObjectIdentifier(
-				buildList {
-					val firstByte = stream.read()
-					add(firstByte / 40)
-					add(firstByte % 40)
-
-					var value = 0
-					while (true) {
-						val b = stream.read()
-						if (b == -1) break
-						value = (value shl 7) or (b and 0x7F)
-						if ((b and 0x80) == 0) {
-							add(value)
-							value = 0
-						}
-					}
-				}.toTypedArray()
-			)
+		addPredicateParser({ it.tag == ASN1Tag.BOOLEAN }) { stream, _ -> ASN1Boolean(stream.read() == 0xFF) }
+		addPredicateParser({ it.tag == ASN1Tag.INTEGER }) { stream, element -> ASN1Integer(BigInteger(element.data)) }
+		addPredicateParser({ it.tag == ASN1Tag.UTF8_STRING }) { stream, element ->
+			ASN1String(element.tag, stream.readAllBytes().toString(Charsets.UTF_8))
 		}
-		addParser(16) { stream, _ -> ASN1Set(ASN1Parser(stream).toList()) }
-		addParser(17) { stream, _ -> ASN1Sequence(ASN1Parser(stream).toList()) }
-		addParser(48) { stream, _ -> ASN1Sequence(ASN1Parser(stream).toList()) }
+		addPredicateParser({ it.tag == ASN1Tag.PRINTABLE_STRING }) { stream, element ->
+			ASN1String(element.tag, stream.readAllBytes().toString(Charsets.ISO_8859_1))
+		}
+		addPredicateParser({ it.tag == ASN1Tag.IA5_STRING }) { stream, element ->
+			ASN1String(element.tag, stream.readAllBytes().toString(Charsets.US_ASCII))
+		}
+		addPredicateParser({ it.tag == ASN1Tag.SEQUENCE }) { stream, element ->
+			ASN1Sequence(element.tag, element.data)
+		}
+		addPredicateParser({ it.tag == ASN1Tag.SET }) { stream, element ->
+			ASN1Set(element.tag, element.data)
+		}
+		addPredicateParser({ it.tag == ASN1Tag.UTC_TIME }) { stream, element ->
+			ASN1UTCTime(element.tag, element.data.toString(Charsets.US_ASCII))
+		}
+	}
+
+	init {
+//		addParser(6) { stream, _ ->
+//			ASN1ObjectIdentifier(
+//				buildList {
+//					val firstByte = stream.read()
+//					add(firstByte / 40)
+//					add(firstByte % 40)
+//
+//					var value = 0
+//					while (true) {
+//						val b = stream.read()
+//						if (b == -1) break
+//						value = (value shl 7) or (b and 0x7F)
+//						if ((b and 0x80) == 0) {
+//							add(value)
+//							value = 0
+//						}
+//					}
+//				}.toTypedArray()
+//			)
+//		}
 	}
 
 	override var next: ASN1Element? = refineNext()

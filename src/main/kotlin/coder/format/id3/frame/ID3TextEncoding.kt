@@ -4,7 +4,7 @@ import org.bread_experts_group.coder.Mappable
 import java.nio.charset.Charset
 
 enum class ID3TextEncoding(
-	override val id: Int, override val tag: String,
+	override var id: Int, override val tag: String,
 	val charset: Charset
 ) : Mappable<ID3TextEncoding, Int> {
 	ISO_8859_1(0, "ISO-8859-1", Charsets.ISO_8859_1),
