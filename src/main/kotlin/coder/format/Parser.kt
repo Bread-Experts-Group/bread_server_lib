@@ -56,11 +56,11 @@ abstract class Parser<T, O, S : InputStream>(
 	protected abstract fun responsibleStream(of: O): S
 	protected abstract fun readBase(): O?
 	protected open fun refineBase(of: O, vararg parameters: Any): O {
-		val (parser, additionalParam) = this.parsers[of.tag]
+		val (parser, additionalParam) = (this.parsers[of.tag]
 			?: this.predicateParsers.firstNotNullOfOrNull { (predicate, group) ->
 				if (predicate.test(of.tag)) group
 				else null
-			}
+			})
 			?: if (throwOnUnknown) throw DecodingException("No parser for [$of] / ${parameters.toList()}")
 			else return of
 		return parser(responsibleStream(of), of, additionalParam, parameters).also {

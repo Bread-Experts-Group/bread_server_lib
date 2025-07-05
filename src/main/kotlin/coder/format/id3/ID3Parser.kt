@@ -14,7 +14,7 @@ import java.util.*
 class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("ID3", from) {
 	private var unsupported = false
 	private var version: Int = 0
-	private var preFrame: ID3Header?
+	private var preFrame: ID3Header? = null
 	override var fqIn: FailQuickInputStream = super.fqIn
 
 	override fun toString(): String = super.toString() + "[${!unsupported}/v$version]"
@@ -28,7 +28,6 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		var size = 0
 		for (i in 3 downTo 0) size = size or (fqIn.read() shl (7 * i))
 		if (version !in 2..3) {
-			preFrame = null
 			unsupported = true
 			fqIn.skip(size.toLong())
 		} else {
@@ -37,7 +36,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		}
 	}
 
-	override fun responsibleStream(of: ID3Frame<*>): InputStream = FailQuickInputStream(of.data.inputStream())
+	override fun responsibleStream(of: ID3Frame<*>): InputStream = of.data.inputStream()
 	override fun readBase(): ID3Frame<*>? {
 		if (unsupported) throw DecodingException("ID3 major version is unsupported [$version]")
 		preFrame.also { preFrame = null }?.let { return it }
@@ -75,16 +74,6 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		return super.refineBase(of, version)
 	}
 
-	override fun addParser(identifier: String, parser: (InputStream, ID3Frame<*>) -> ID3Frame<*>) =
-		throw UnsupportedOperationException()
-
-	fun addParser(identifier: String, major: Int, parser: (InputStream, ID3Frame<*>) -> ID3Frame<*>) {
-		super.addParserParameterized(identifier, { stream, frame, args, params ->
-			if (params[0] != args[0]) throw DecodingException("Parser encountered bad version [${params[0]}]")
-			parser(stream, frame)
-		}, major)
-	}
-
 	init {
 		addPredicateParser({ it[0] == 'T' }) { stream, frame ->
 			val encoding = ID3TextEncoding.entries.id(stream.read())
@@ -99,7 +88,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				URI(stream.readString(Charsets.ISO_8859_1))
 			)
 		}
-		addParser("POPM", 3) { stream, frame ->
+		addParser("POPM") { stream, frame ->
 			ID3PopularimeterFrame(
 				frame.tag, frame.flags.raw().toInt(),
 				stream.readString(Charsets.ISO_8859_1),
@@ -107,7 +96,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				stream.readAllBytes().let { if (it.size == 0) BigInteger.ZERO else BigInteger(it) }
 			)
 		}
-		addParser("COMM", 3) { stream, frame ->
+		addParser("COMM") { stream, frame ->
 			val encoding = ID3TextEncoding.entries.id(stream.read())
 			ID3CommentFrame(
 				frame.tag, frame.flags.raw().toInt(),
@@ -116,7 +105,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				stream.readString(encoding.charset)
 			)
 		}
-		addParser("USLT", 3) { stream, frame ->
+		addParser("USLT") { stream, frame ->
 			val encoding = ID3TextEncoding.entries.id(stream.read())
 			ID3CommentFrame(
 				frame.tag, frame.flags.raw().toInt(),
@@ -125,7 +114,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				stream.readString(encoding.charset)
 			)
 		}
-		addParser("APIC", 3) { stream, frame ->
+		addParser("APIC") { stream, frame ->
 			val encoding = ID3TextEncoding.entries.id(stream.read())
 			ID3PictureFrame3(
 				frame.tag, frame.flags.raw().toInt(),
@@ -135,7 +124,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				stream.readAllBytes()
 			)
 		}
-		addParser("PIC", 2) { stream, frame ->
+		addParser("PIC") { stream, frame ->
 			val encoding = ID3TextEncoding.entries.id(stream.read())
 			ID3PictureFrame2(
 				frame.tag, frame.flags.raw().toInt(),
