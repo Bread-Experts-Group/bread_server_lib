@@ -46,3 +46,4 @@ bin/
 
 local.properties
 /src/test/resources/gamemaker/**
+/src/test/out/
