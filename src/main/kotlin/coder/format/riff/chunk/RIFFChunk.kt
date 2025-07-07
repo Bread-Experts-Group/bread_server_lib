@@ -8,7 +8,7 @@ open class RIFFChunk(
 	val data: ByteArray
 ) : Writable, Tagged<String> {
 	var parent: RIFFContainerChunk? = null
-	override fun toString(): String = "RIFFChunk.\"$tag\"[${data.size}]"
+	override fun toString(): String = "RIFFChunk.\"$tag\"[#${data.size}]"
 
 	override fun computeSize(): Long = data.size.toLong()
 	override fun write(stream: OutputStream) {

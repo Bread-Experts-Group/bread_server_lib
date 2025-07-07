@@ -17,6 +17,8 @@ open class FailQuickInputStream(private val from: InputStream) : LongInputStream
 		return read
 	}
 
+	override fun readAllBytes(): ByteArray = from.readAllBytes()
+
 	override fun close() {
 		from.close()
 	}

@@ -10,7 +10,7 @@ import java.io.InputStream
 import java.util.function.Predicate
 import java.util.logging.Logger
 
-private typealias ParserGroup<S, O> = Pair<(S, O, Array<out Any>, Array<out Any>) -> O, Array<out Any>>
+private typealias ParserGroup<O> = Pair<(InputStream, O, Array<out Any>, Array<out Any>) -> O, Array<out Any>>
 
 abstract class Parser<T, O, S : InputStream>(
 	private val format: String,
@@ -19,21 +19,21 @@ abstract class Parser<T, O, S : InputStream>(
 
 	protected open val fqIn = FailQuickInputStream(rawStream)
 	protected val logger: Logger = ColoredHandler.newLogger("$format ${LoggerResource.get().getString("parser")}")
-	protected val parsers = mutableMapOf<T, ParserGroup<S, O>>()
-	protected val predicateParsers = mutableMapOf<Predicate<T>, ParserGroup<S, O>>()
+	protected val parsers = mutableMapOf<T, ParserGroup<O>>()
+	protected val predicateParsers = mutableMapOf<Predicate<T>, ParserGroup<O>>()
 	private var throwOnUnknown = false
 	fun throwOnUnknown() = this.also { it.throwOnUnknown = true }
 
-	open fun addParser(identifier: T, parser: (S, O) -> O) {
+	open fun addParser(identifier: T, parser: (InputStream, O) -> O) {
 		addParserParameterized(identifier, { stream, o, _, _ -> parser(stream, o) })
 	}
 
-	open fun addPredicateParser(predicate: Predicate<T>, parser: (S, O) -> O) {
+	open fun addPredicateParser(predicate: Predicate<T>, parser: (InputStream, O) -> O) {
 		addPredicateParserParameterized(predicate, { stream, o, _, _ -> parser(stream, o) })
 	}
 
 	open fun addPredicateParserParameterized(
-		predicate: Predicate<T>, parser: (S, O, Array<out Any>, Array<out Any>) -> O,
+		predicate: Predicate<T>, parser: (InputStream, O, Array<out Any>, Array<out Any>) -> O,
 		vararg additional: Any
 	) {
 		logger.fine { "Registering parser [$parser] for predicate [$predicate]" }
@@ -43,7 +43,7 @@ abstract class Parser<T, O, S : InputStream>(
 	}
 
 	open fun addParserParameterized(
-		identifier: T, parser: (S, O, Array<out Any>, Array<out Any>) -> O,
+		identifier: T, parser: (InputStream, O, Array<out Any>, Array<out Any>) -> O,
 		vararg additional: Any
 	) {
 		logger.fine { "Registering parser [$parser] for identifier [$identifier]" }
@@ -63,7 +63,7 @@ abstract class Parser<T, O, S : InputStream>(
 			})
 			?: if (throwOnUnknown) throw DecodingException("No parser for [$of] / ${parameters.toList()}")
 			else return of
-		return parser(responsibleStream(of), of, additionalParam, parameters).also {
+		return parser(FailQuickInputStream(responsibleStream(of)), of, additionalParam, parameters).also {
 			this.logger.fine {
 				"Parsed chunk [${of.javaClass.canonicalName}] into [${it.javaClass.canonicalName}] from [$parser]"
 			}

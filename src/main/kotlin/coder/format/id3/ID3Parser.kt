@@ -79,7 +79,12 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 			val encoding = ID3TextEncoding.entries.id(stream.read())
 			ID3TextFrame(
 				frame.tag, frame.flags.raw().toInt(),
-				encoding, stream.readString(encoding.charset)
+				encoding, buildList {
+					try {
+						while (true) add(stream.readString(encoding.charset))
+					} catch (_: FailQuickInputStream.EndOfStream) {
+					}
+				}.toTypedArray()
 			)
 		}
 		addPredicateParser({ it[0] == 'W' }) { stream, frame ->

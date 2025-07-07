@@ -29,8 +29,8 @@ class GameMakerWINParser(
 		}
 	}
 
-	private fun FileInputStream.readString(at: Long): String = this.channel.resetPosition(at) {
-		this@readString.readString(this@readString.read32().le())
+	private fun readString(at: Long): String = rawStream.channel.resetPosition(at) {
+		rawStream.readString(rawStream.read32().le())
 	}
 
 	init {
@@ -38,24 +38,24 @@ class GameMakerWINParser(
 			GameMakerWINContainerChunk(
 				chunk.tag,
 				chunk.offset,
-				GameMakerWINParser(stream).toList()
+				GameMakerWINParser(rawStream).toList()
 			)
 		}
 		this.addParser("STRG") { stream, chunk ->
 			val strings = stream.read32().le()
 			GameMakerWINStringsChunk(chunk.offset, List(strings) {
-				stream.readString(stream.read32().le().toLong())
+				readString(stream.read32().le().toLong())
 			})
 		}
 		this.addParser("TAGS") { stream, chunk ->
 			val version = stream.read32().le()
 			if (version != 1) throw UnsupportedOperationException("TAGS version [$version]")
 			GameMakerWINTagsChunk(chunk.offset, List(stream.read32().le()) {
-				stream.readString(stream.read32().le() - 4L)
+				readString(stream.read32().le() - 4L)
 			}, List(stream.read32().le()) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					stream.read32().le() to List(stream.read32().le()) {
-						stream.readString(stream.read32().le() - 4L)
+						readString(stream.read32().le() - 4L)
 					}
 				}
 			}.toMap())
@@ -63,9 +63,9 @@ class GameMakerWINParser(
 		this.addParser("TXTR") { stream, chunk ->
 			val textures = stream.read32().le()
 			GameMakerWINTexturesChunk(chunk.offset, List(textures) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINTexture(
-						stream.channel.position(),
+						rawStream.channel.position(),
 						stream.read32().le().toLong(),
 						stream.read32().le().toLong(),
 						stream.read32().le().toLong(),
@@ -80,13 +80,13 @@ class GameMakerWINParser(
 		this.addParser("EXTN") { stream, chunk ->
 			val extensions = stream.read32().le()
 			GameMakerWINExtensionsChunk(chunk.offset, List(extensions) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINExtension(
-						stream.channel.position(),
-						stream.readString(stream.read32().le() - 4L),
-						stream.readString(stream.read32().le() - 4L),
-						stream.readString(stream.read32().le() - 4L),
-						stream.readString(stream.read32().le() - 4L),
+						rawStream.channel.position(),
+						readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le(),
 						stream.read32().le(),
 					)
@@ -96,9 +96,9 @@ class GameMakerWINParser(
 		this.addParser("OBJT") { stream, chunk ->
 			val objects = stream.read32().le()
 			GameMakerWINObjectsChunk(chunk.offset, List(objects) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINObject(
-						stream.channel.position()
+						rawStream.channel.position()
 					)
 				}
 			})
@@ -106,9 +106,9 @@ class GameMakerWINParser(
 		this.addParser("SHDR") { stream, chunk ->
 			val shaders = stream.read32().le()
 			GameMakerWINShadersChunk(chunk.offset, List(shaders) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINShader(
-						stream.channel.position()
+						rawStream.channel.position()
 					)
 				}
 			})
@@ -116,9 +116,9 @@ class GameMakerWINParser(
 		this.addParser("ROOM") { stream, chunk ->
 			val shaders = stream.read32().le()
 			GameMakerWINRoomsChunk(chunk.offset, List(shaders) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINRoom(
-						stream.channel.position()
+						rawStream.channel.position()
 					)
 				}
 			})
@@ -126,14 +126,14 @@ class GameMakerWINParser(
 		this.addParser("CODE") { stream, chunk ->
 			val shaders = stream.read32().le()
 			GameMakerWINBytecodeChunk(chunk.offset, List(shaders) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINBytecode(
-						stream.channel.position(),
-						stream.readString(stream.read32().le() - 4L),
+						rawStream.channel.position(),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le().toLong(),
 						stream.read16().le().toInt(),
 						stream.read16().le().toInt(),
-						stream.channel.position() + stream.read32().le()
+						rawStream.channel.position() + stream.read32().le()
 					)
 				}
 			})
@@ -141,15 +141,15 @@ class GameMakerWINParser(
 		this.addParser("SOND") { stream, chunk ->
 			val sounds = stream.read32().le()
 			GameMakerWINSoundsChunk(chunk.offset, List(sounds) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINSoundReference(
-						stream.readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le(),
 						stream.read32().le().let {
 							if (it == 0) ""
-							else stream.readString(stream.read32().le() - 4L)
+							else readString(stream.read32().le() - 4L)
 						},
-						stream.readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le(),
 						Float.fromBits(stream.read32().le()),
 						Float.fromBits(stream.read32().le()),
@@ -161,9 +161,9 @@ class GameMakerWINParser(
 		this.addParser("AUDO") { stream, chunk ->
 			val audios = stream.read32().le()
 			GameMakerWINAudiosChunk(chunk.offset, List(audios) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINAudio(
-						stream.channel.position(),
+						rawStream.channel.position(),
 						RIFFParser(
 							stream.readNBytes(stream.read32().le()).inputStream()
 						).toList()
@@ -176,12 +176,12 @@ class GameMakerWINParser(
 			if (version != 1) throw UnsupportedOperationException("TGIN version [$version]")
 			val textureGroups = stream.read32().le()
 			GameMakerWINTextureGroupsChunk(chunk.offset, List(textureGroups) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINTextureGroup(
-						stream.channel.position(),
-						stream.readString(stream.read32().le() - 4L),
-						stream.readString(stream.read32().le() - 4L),
-						stream.readString(stream.read32().le() - 4L),
+						rawStream.channel.position(),
+						readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le(),
 						stream.read32().le().toLong(),
 						stream.read32().le().toLong(),
@@ -195,10 +195,10 @@ class GameMakerWINParser(
 		this.addParser("SPRT") { stream, chunk ->
 			val sprites = stream.read32().le()
 			GameMakerWINSpritesChunk(chunk.offset, List(sprites) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINSprite(
-						stream.channel.position(),
-						stream.readString(stream.read32().le() - 4L),
+						rawStream.channel.position(),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le(),
 						stream.read32().le(),
 						stream.read32().le(),
@@ -222,7 +222,7 @@ class GameMakerWINParser(
 			val images = stream.read32().le()
 			GameMakerWINImagesChunk(chunk.offset, List(images) { _ ->
 				GameMakerWINImageReference(
-					stream.readString(stream.read32().le() - 4L),
+					readString(stream.read32().le() - 4L),
 					stream.read32().le().toLong()
 				)
 			})
@@ -230,15 +230,15 @@ class GameMakerWINParser(
 		this.addParser("FEAT") { stream, chunk ->
 			val features = stream.read32().le()
 			GameMakerWINFeaturesChunk(chunk.offset, List(features) {
-				stream.readString(stream.read32().le() - 4L)
+				readString(stream.read32().le() - 4L)
 			})
 		}
 		this.addParser("SCPT") { stream, chunk ->
 			val scripts = stream.read32().le()
 			GameMakerWINScriptsChunk(chunk.offset, List(scripts) {
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINScriptReference(
-						stream.readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le()
 					)
 				}
@@ -248,8 +248,8 @@ class GameMakerWINParser(
 			val functions = stream.read32().le()
 			GameMakerWINFunctionsChunk(chunk.offset, List(functions) { _ ->
 				GameMakerWINFunctionReference(
-					stream.channel.position(),
-					stream.readString(stream.read32().le() - 4L),
+					rawStream.channel.position(),
+					readString(stream.read32().le() - 4L),
 					stream.read32().le().toLong(),
 					stream.read32().le().toLong()
 				)
@@ -260,11 +260,11 @@ class GameMakerWINParser(
 			stream.read32().le()
 			val maxLocals = stream.read32().le()
 			GameMakerWINVariablesChunk(chunk.offset, maxLocals, buildList {
-				while (stream.channel.position() < (chunk.offset + chunk.length) - 12) {
+				while (rawStream.channel.position() < (chunk.offset + chunk.length) - 12) {
 					add(
 						GameMakerWINVariableReference(
-							stream.channel.position(),
-							stream.readString(stream.read32().le() - 4L),
+							rawStream.channel.position(),
+							readString(stream.read32().le() - 4L),
 							stream.read32().le(),
 							stream.read32().le(),
 							stream.read32().le().toLong(),
@@ -296,18 +296,18 @@ class GameMakerWINParser(
 				stream.read32().le(),
 				stream.read32().le(),
 				List(stream.read32().le()) {
-					stream.readString(stream.read32().le() - 4L) to
-							stream.readString(stream.read32().le() - 4L)
+					readString(stream.read32().le() - 4L) to
+							readString(stream.read32().le() - 4L)
 				}.toMap()
 			)
 		}
 //		this.addParser("AGRP") { stream, chunk ->
 //			val groups = stream.read32().le()
 //			GameMakerWINAudioGroupsChunk(chunk.offset, List(groups) { _ ->
-//				stream.channel.resetPosition(stream.read32().le().toLong()) {
+//				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 //					GameMakerWINAudioGroup(
-//						stream.channel.position(),
-//						stream.readString(stream.read32().le() - 4L)
+//						rawStream.channel.position(),
+//						readString(stream.read32().le() - 4L)
 //					)
 //				}
 //			})
@@ -315,10 +315,10 @@ class GameMakerWINParser(
 		this.addParser("FONT") { stream, chunk ->
 			val fonts = stream.read32().le()
 			GameMakerWINFontsChunk(chunk.offset, List(fonts) { _ ->
-				stream.channel.resetPosition(stream.read32().le().toLong()) {
+				rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 					GameMakerWINFont(
-						stream.readString(stream.read32().le() - 4L),
-						stream.readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
+						readString(stream.read32().le() - 4L),
 						stream.read32().le(),
 						stream.read32().le(),
 						stream.read32().le(),
@@ -335,8 +335,8 @@ class GameMakerWINParser(
 						stream.read32().le(),
 						buildList {
 							val last = stream.read32().le()
-							while (stream.channel.position() < last) {
-								stream.channel.resetPosition(stream.read32().le().toLong()) {
+							while (rawStream.channel.position() < last) {
+								rawStream.channel.resetPosition(stream.read32().le().toLong()) {
 									add(
 										GameMakerWINFontGlyph(
 											stream.read16().le().toUShort(),

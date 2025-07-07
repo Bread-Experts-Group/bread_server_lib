@@ -2,10 +2,8 @@ package org.bread_experts_group.coder.format.riff
 
 import org.bread_experts_group.coder.DecodingException
 import org.bread_experts_group.coder.format.Parser
-import org.bread_experts_group.coder.format.riff.chunk.RIFFAudioFormatChunk
-import org.bread_experts_group.coder.format.riff.chunk.RIFFChunk
-import org.bread_experts_group.coder.format.riff.chunk.RIFFContainerChunk
-import org.bread_experts_group.coder.format.riff.chunk.RIFFTextChunk
+import org.bread_experts_group.coder.format.id3.ID3Parser
+import org.bread_experts_group.coder.format.riff.chunk.*
 import org.bread_experts_group.stream.le
 import org.bread_experts_group.stream.read16
 import org.bread_experts_group.stream.read32
@@ -46,7 +44,7 @@ open class RIFFParser(
 		this.addParser(identifier) { stream, chunk ->
 			RIFFTextChunk(
 				identifier,
-				stream.readAllBytes().decodeToString()
+				stream.readString(Charsets.ISO_8859_1)
 			)
 		}
 	}
@@ -54,6 +52,7 @@ open class RIFFParser(
 	init {
 		containerChunk("RIFF")
 		containerChunk("LIST")
+		textChunk("ITRK")
 		textChunk("IARL")
 		textChunk("IART")
 		textChunk("ICMS")
@@ -77,7 +76,7 @@ open class RIFFParser(
 		textChunk("ISRC")
 		textChunk("ISRF")
 		textChunk("ITCH")
-		this.addParser("fmt ") { stream, chunk ->
+		addParser("fmt ") { stream, chunk ->
 			RIFFAudioFormatChunk(
 				RIFFAudioFormatChunk.AudioEncoding.mapping.getValue(stream.read16().le().toInt()),
 				stream.read16().le().toInt(),
@@ -88,6 +87,7 @@ open class RIFFParser(
 				stream.readAllBytes()
 			)
 		}
+		addParser("id3 ") { stream, chunk -> RIFFID3Chunk(ID3Parser(stream)) }
 	}
 
 	override var next: RIFFChunk? = refineNext()
