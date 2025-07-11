@@ -1,6 +1,6 @@
 package org.bread_experts_group.image.gif
 
-import org.bread_experts_group.coder.DecodingException
+import org.bread_experts_group.coder.format.parse.InvalidInputException
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
@@ -63,7 +63,7 @@ class GIFLZWDecoder(
 					prevEntry + prevEntry.first()
 				}
 
-				else -> throw DecodingException("unknown code $code")
+				else -> throw InvalidInputException("unknown code $code")
 			}
 
 			outputStream.write(entry)

@@ -11,10 +11,18 @@ import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.Charset
 import java.nio.charset.CharsetDecoder
+import java.util.zip.CRC32
 
 fun Short.le(): Short = java.lang.Short.reverseBytes(this)
 fun Int.le(): Int = Integer.reverseBytes(this)
 fun Long.le(): Long = java.lang.Long.reverseBytes(this)
+fun Int.maskI(): Int = (1 shl this) - 1
+fun Int.maskL(): Long = (1L shl this) - 1
+fun ByteArray.crc32(): Long {
+	val crc = CRC32()
+	crc.update(this)
+	return crc.value
+}
 
 fun InputStream.read16(): Short = this.read16u().toShort()
 fun InputStream.read16u(): UShort = ((this.read() shl 8) or this.read()).toUShort()
@@ -45,7 +53,7 @@ fun InputStream.readString(c: Charset = Charsets.UTF_8): String {
 				enc.write16(next)
 			}
 
-			Charsets.ISO_8859_1 -> {
+			Charsets.ISO_8859_1, Charsets.UTF_8 -> {
 				val next = this.read()
 				if (next == 0) break
 				enc.write(next)
@@ -53,8 +61,7 @@ fun InputStream.readString(c: Charset = Charsets.UTF_8): String {
 
 			else -> throw UnsupportedOperationException(c.displayName())
 		}
-	} catch (e: FailQuickInputStream.EndOfStream) {
-		if (enc.size() == 0) throw e
+	} catch (_: FailQuickInputStream.EndOfStream) {
 	}
 	return enc.toByteArray().toString(c)
 }

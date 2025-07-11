@@ -1,8 +1,8 @@
 package org.bread_experts_group.computer.ia32
 
-import org.bread_experts_group.coder.format.elf.header.*
-import org.bread_experts_group.coder.format.elf.header.writer.ELFSectionHeaderWritable
-import org.bread_experts_group.coder.format.elf.header.writer.ELFWriter
+import org.bread_experts_group.coder.format.parse.elf.header.*
+import org.bread_experts_group.coder.format.parse.elf.header.writer.ELFSectionHeaderWritable
+import org.bread_experts_group.coder.format.parse.elf.header.writer.ELFWriter
 import org.bread_experts_group.computer.ia32.assembler.Assembler
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Test

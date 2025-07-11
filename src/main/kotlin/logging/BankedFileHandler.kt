@@ -1,11 +1,11 @@
 package org.bread_experts_group.logging
 
-import org.bread_experts_group.coder.format.BitInputStream
-import org.bread_experts_group.coder.format.BitOutputStream
-import org.bread_experts_group.coder.format.huffman.HuffmanBranch
-import org.bread_experts_group.stream.readExtensibleULong
-import org.bread_experts_group.stream.writeExtensibleLong
-import org.bread_experts_group.stream.writeExtensibleULong
+import org.bread_experts_group.coder.format.parse.BitInputStream
+import org.bread_experts_group.coder.format.parse.BitOutputStream
+import org.bread_experts_group.coder.format.parse.huffman.HuffmanBranch
+import org.bread_experts_group.stream.readExtensibleULongV1
+import org.bread_experts_group.stream.writeExtensibleLongV1
+import org.bread_experts_group.stream.writeExtensibleULongV1
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -46,7 +46,7 @@ class BankedFileHandler(
 				val backed = ByteBuffer.allocate(11)
 				bank.read(backed)
 				val data = backed.array().inputStream()
-				val size = data.readExtensibleULong()
+				val size = data.readExtensibleULongV1()
 				if (size > Int.MAX_VALUE.toUInt())
 					throw UnsupportedOperationException("Size is too big! [$size]")
 				val compressionMethod = data.read()
@@ -91,7 +91,7 @@ class BankedFileHandler(
 	init {
 		val timestampBacked = ByteBuffer.allocate(10)
 		val timestampData = timestampBacked.array().inputStream()
-		timeIndex = timestampData.readExtensibleULong()
+		timeIndex = timestampData.readExtensibleULongV1()
 		timestamp.position(10)
 	}
 
@@ -111,7 +111,7 @@ class BankedFileHandler(
 				} else null
 			} ?: (plaintext to 0)
 			val output = ByteArrayOutputStream()
-			output.writeExtensibleULong(array.size.toULong())
+			output.writeExtensibleULongV1(array.size.toULong())
 			output.write(compression)
 			output.write(array)
 			bank.write(ByteBuffer.wrap(output.toByteArray()))
@@ -125,11 +125,11 @@ class BankedFileHandler(
 			recentSeconds = seconds
 			timestamp.position(0)
 			val idStream = ByteArrayOutputStream()
-			idStream.writeExtensibleULong(timeIndex++)
+			idStream.writeExtensibleULongV1(timeIndex++)
 			timestamp.write(ByteBuffer.wrap(idStream.toByteArray()))
 			timestamp.position(timestamp.size().coerceAtLeast(10))
 			val timeData = ByteArrayOutputStream()
-			timeData.writeExtensibleULong(seconds)
+			timeData.writeExtensibleULongV1(seconds)
 			timestamp.write(ByteBuffer.wrap(timeData.toByteArray()))
 		}
 		return timeIndex - 1u
@@ -143,13 +143,13 @@ class BankedFileHandler(
 		if (closed) throw IllegalStateException("BankedFileHandler closed")
 		val output = ByteArrayOutputStream()
 		val timeIndex = timestamp(record.instant.epochSecond.toULong())
-		output.writeExtensibleULong(timeIndex)
+		output.writeExtensibleULongV1(timeIndex)
 		val nanos = record.instant.nano
-		output.writeExtensibleLong((nanos - recentNanos).toLong())
+		output.writeExtensibleLongV1((nanos - recentNanos).toLong())
 		recentNanos = nanos
 		val bankedLevelName = bankedWord(record.level.name)
 		if (specifiedLevelDetails.contains(bankedLevelName)) {
-			output.writeExtensibleULong(bankedLevelName shl 1)
+			output.writeExtensibleULongV1(bankedLevelName shl 1)
 		} else {
 			if (
 				record.level.resourceBundleName != null &&
@@ -159,14 +159,14 @@ class BankedFileHandler(
 					false
 				}
 			) {
-				output.writeExtensibleULong((bankedWord(record.level.resourceBundleName) shl 1) or 1u)
-				output.writeExtensibleULong(bankedLevelName)
-			} else output.writeExtensibleULong(bankedLevelName shl 1)
-			output.writeExtensibleLong(record.level.intValue().toLong())
+				output.writeExtensibleULongV1((bankedWord(record.level.resourceBundleName) shl 1) or 1u)
+				output.writeExtensibleULongV1(bankedLevelName)
+			} else output.writeExtensibleULongV1(bankedLevelName shl 1)
+			output.writeExtensibleLongV1(record.level.intValue().toLong())
 			specifiedLevelDetails.add(bankedLevelName)
 		}
-		output.writeExtensibleULong(bankedWord(record.loggerName))
-		output.writeExtensibleLong(record.longThreadID)
+		output.writeExtensibleULongV1(bankedWord(record.loggerName))
+		output.writeExtensibleLongV1(record.longThreadID)
 		val recordIndex = writtenMessages.indexOf(record.message)
 		if (recordIndex == -1) {
 			val broken = buildList {
@@ -181,10 +181,10 @@ class BankedFileHandler(
 					from = next
 				}
 			}
-			output.writeExtensibleULong(broken.size.toULong() shl 1)
-			broken.forEach { output.writeExtensibleULong(bankedWord(it)) }
+			output.writeExtensibleULongV1(broken.size.toULong() shl 1)
+			broken.forEach { output.writeExtensibleULongV1(bankedWord(it)) }
 			writtenMessages.add(record.message)
-		} else output.writeExtensibleULong((recordIndex.toULong() shl 1) or 1u)
+		} else output.writeExtensibleULongV1((recordIndex.toULong() shl 1) or 1u)
 		content.write(ByteBuffer.wrap(output.toByteArray()))
 	}
 

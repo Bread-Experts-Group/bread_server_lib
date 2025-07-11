@@ -1,6 +1,6 @@
 package org.bread_experts_group.protocol.http
 
-import org.bread_experts_group.coder.DecodingException
+import org.bread_experts_group.coder.format.parse.InvalidInputException
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.protocol.http.h2.*
 import org.bread_experts_group.protocol.http.h2.setting.HTTP2SettingEnableServerPush
@@ -117,9 +117,9 @@ class HTTPProtocolSelector(
 						asciiD.next(from, CRLF).let {
 							val version = HTTPVersion.mapping[it]
 							when (version) {
-								null -> throw DecodingException("Client sent a bad HTTP version [$it]")
+								null -> throw InvalidInputException("Client sent a bad HTTP version [$it]")
 								!in HTTPVersion.HTTP_0_9..HTTPVersion.HTTP_1_1 -> {
-									throw DecodingException("Client sent unsupported HTTP version [$version]")
+									throw InvalidInputException("Client sent unsupported HTTP version [$version]")
 								}
 
 								else -> version
@@ -141,9 +141,9 @@ class HTTPProtocolSelector(
 						asciiD.next(from, SP).let {
 							val version = HTTPVersion.mapping[it]
 							when (version) {
-								null -> throw DecodingException("Server sent a bad HTTP version [$it]")
+								null -> throw InvalidInputException("Server sent a bad HTTP version [$it]")
 								!in HTTPVersion.HTTP_0_9..HTTPVersion.HTTP_1_1 -> {
-									throw DecodingException("Server sent unsupported HTTP version [$version]")
+									throw InvalidInputException("Server sent unsupported HTTP version [$version]")
 								}
 
 								else -> version
@@ -151,7 +151,7 @@ class HTTPProtocolSelector(
 						}
 						val code = asciiD.next(from, CRLF).let {
 							val parsed = it.split(' ', limit = 2)[0].toIntOrNull()
-							if (parsed == null) throw DecodingException("Server sent bad status code [$it]")
+							if (parsed == null) throw InvalidInputException("Server sent bad status code [$it]")
 							parsed
 						}
 						val headers = decodeHeaders()
@@ -178,7 +178,7 @@ class HTTPProtocolSelector(
 		HTTPVersion.HTTP_2 -> {
 			if (server) {
 				val readPreface = from.readString(HTTP2_PREFACE.length)
-				if (readPreface != HTTP2_PREFACE) throw DecodingException(
+				if (readPreface != HTTP2_PREFACE) throw InvalidInputException(
 					"Client sent bad HTTP/2 preface;\n" +
 							"Expected: 0x" + HTTP2_PREFACE.toByteArray().joinToString("") {
 						it.toString(16).padStart(2, '0').uppercase()
@@ -207,7 +207,9 @@ class HTTPProtocolSelector(
 					when (frame) {
 						is HTTP2SettingsFrame -> {
 							if (!frame.flags.contains(HTTP2SettingsFrameFlag.ACKNOWLEDGED)) {
-								if (clientSettingsOK) throw DecodingException("Already parsed HTTP/2 settings")
+								if (clientSettingsOK) throw _root_ide_package_.kotlin.IllegalStateException(
+									"Already parsed HTTP/2 settings"
+								)
 								// TODO: Parse settings in accordance with frame
 								clientSettingsOK = true
 								HTTP2SettingsFrame(

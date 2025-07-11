@@ -1,9 +1,9 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.gamemaker_win.GameMakerWINParser
-import org.bread_experts_group.coder.format.gamemaker_win.bytecode.*
-import org.bread_experts_group.coder.format.gamemaker_win.chunk.*
-import org.bread_experts_group.coder.format.gamemaker_win.structure.GameMakerWINBytecode
+import org.bread_experts_group.coder.format.parse.gamemaker_win.GameMakerWINParser
+import org.bread_experts_group.coder.format.parse.gamemaker_win.bytecode.*
+import org.bread_experts_group.coder.format.parse.gamemaker_win.chunk.*
+import org.bread_experts_group.coder.format.parse.gamemaker_win.structure.GameMakerWINBytecode
 import org.bread_experts_group.hex
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.*
@@ -27,8 +27,12 @@ class GameMakerWINParserTest {
 
 	@Test
 	fun readParsed(): Unit = assertDoesNotThrow {
+		if (testFile == null) {
+			logger.info("No test file present")
+			return@assertDoesNotThrow
+		}
 		val tempFile = Files.createTempFile("test", ".win")
-		tempFile.writeBytes(testFile!!.readAllBytes())
+		tempFile.writeBytes(testFile.readAllBytes())
 		val fileStream = FileInputStream(tempFile.toFile())
 		val testStream = GameMakerWINParser(fileStream)
 		val dialA = System.currentTimeMillis()

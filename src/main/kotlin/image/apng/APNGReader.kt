@@ -1,10 +1,8 @@
 package org.bread_experts_group.image.apng
 
-import org.bread_experts_group.coder.format.png.PNGAdaptiveFilterType
-import org.bread_experts_group.coder.format.png.PNGBlendOperation
-import org.bread_experts_group.coder.format.png.PNGDisposeOperation
-import org.bread_experts_group.coder.format.png.PNGParser
-import org.bread_experts_group.coder.format.png.chunk.*
+import org.bread_experts_group.coder.Flaggable.Companion.allPresent
+import org.bread_experts_group.coder.format.parse.png.*
+import org.bread_experts_group.coder.format.parse.png.chunk.*
 import org.bread_experts_group.image.AnimatedMetadata
 import org.bread_experts_group.stream.DataInputProxyStream
 import java.awt.AlphaComposite
@@ -40,10 +38,10 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 
 	private fun imageTypeForHeader(header: PNGHeaderChunk): Int = when {
 		header.bitDepth < 8 -> BufferedImage.TYPE_BYTE_BINARY
-		header.palette -> BufferedImage.TYPE_BYTE_INDEXED
-		header.color && header.alpha -> BufferedImage.TYPE_INT_ARGB
-		header.color -> BufferedImage.TYPE_INT_RGB
-		header.bitDepth == 8 && !header.color -> BufferedImage.TYPE_BYTE_GRAY
+		header.flags.allPresent(PNGHeaderFlags.PALETTE) -> BufferedImage.TYPE_BYTE_INDEXED
+		header.flags.allPresent(PNGHeaderFlags.TRUE_COLOR, PNGHeaderFlags.ALPHA) -> BufferedImage.TYPE_INT_ARGB
+		header.flags.allPresent(PNGHeaderFlags.TRUE_COLOR) -> BufferedImage.TYPE_INT_RGB
+		header.bitDepth == 8 && !header.flags.allPresent(PNGHeaderFlags.TRUE_COLOR) -> BufferedImage.TYPE_BYTE_GRAY
 		else -> throw IllegalArgumentException("Unsupported set $header")
 	}
 
@@ -68,7 +66,7 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 			else -> TODO(imageType.toString())
 		}
 		val channels = bufferedImage.raster.sampleModel.numBands + when {
-			imageType == BufferedImage.TYPE_BYTE_GRAY && header.alpha -> 1
+			imageType == BufferedImage.TYPE_BYTE_GRAY && header.flags.allPresent(PNGHeaderFlags.ALPHA) -> 1
 			else -> 0
 		}
 		var lastStride = ByteArray((width * header.bitDepth * channels) / 8)
@@ -112,7 +110,8 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 						val grayscale = pixel.get().toInt() and 0xFF
 						rgb[i] = Color(
 							grayscale, grayscale, grayscale,
-							if (header.alpha) pixel.get().toInt() and 0xFF else 255
+							if (header.flags.allPresent(PNGHeaderFlags.ALPHA)) pixel.get().toInt() and 0xF
+							else 255
 						).rgb
 					}
 
@@ -182,6 +181,7 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 				else -> throw UnsupportedOperationException(this.input::class.java.canonicalName)
 			}
 		).toList().fold(mutableListOf<PNGChunk>()) { acc, chunk ->
+			val chunk = chunk.resultSafe
 			if ((chunk.tag == "IDAT" || chunk.tag == "fdAT") && acc.lastOrNull()?.tag == chunk.tag) {
 				val last = acc.removeLast()
 				acc += PNGChunk(chunk.tag, last.data + chunk.data)
@@ -236,6 +236,7 @@ class APNGReader(spi: APNGReaderSpi) : ImageReader(spi) {
 						}
 
 						PNGDisposeOperation.APNG_DISPOSE_OP_PREVIOUS -> canvas = precopy!!
+						else -> throw NotImplementedError(control.dispose.toString())
 					}
 					graphics.dispose()
 					readImages.add(IIOImage(copy, listOf(), AnimatedMetadata(control.delayMillis)))

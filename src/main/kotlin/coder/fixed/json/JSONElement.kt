@@ -1,6 +1,7 @@
 package org.bread_experts_group.coder.fixed.json
 
-import org.bread_experts_group.coder.DecodingException
+import org.bread_experts_group.coder.ParsingException
+import org.bread_experts_group.coder.format.parse.InvalidInputException
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -21,7 +22,7 @@ sealed class JSONElement {
 		}
 
 		@Deprecated("Use TrackingBufferedReader.readChar instead", ReplaceWith("readChar()"))
-		override fun read(): Int = throw DecodingException("Not designated for normal use")
+		override fun read(): Int = throw IllegalStateException()
 	}
 
 	fun <T> asObject(init: JSONObject.() -> T): T = (this as JSONObject).init()
@@ -31,7 +32,7 @@ sealed class JSONElement {
 	fun <T> asArray(init: JSONArray.() -> T): T = (this as JSONArray).init()
 
 	companion object {
-		abstract class BoundsExit(char: Char) : DecodingException("JSON element entry '$char'")
+		abstract class BoundsExit(char: Char) : ParsingException("JSON element entry '$char'")
 		class ObjectExit : BoundsExit('}')
 		class ArrayExit : BoundsExit(']')
 
@@ -63,7 +64,7 @@ sealed class JSONElement {
 						}
 						JSONNumber(BigDecimal(concatenated))
 					} else if (entry.isWhitespace() || entry == ',') continue
-					else throw DecodingException("JSON element entry '$entry'")
+					else throw InvalidInputException("JSON element entry '$entry'")
 				}
 			}
 		}

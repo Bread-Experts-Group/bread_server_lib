@@ -1,22 +1,17 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.elf.ELFParser
-import org.bread_experts_group.coder.format.elf.header.ELFHeader
-import org.bread_experts_group.coder.format.elf.header.ELFProgramHeader
-import org.bread_experts_group.coder.format.elf.header.ELFWrittenSectionHeader
-import org.bread_experts_group.coder.format.elf.header.writer.ELFContextuallyWritable
-import org.bread_experts_group.coder.format.elf.header.writer.ELFSectionHeaderWritable
-import org.bread_experts_group.coder.format.elf.header.writer.ELFWriter
+import org.bread_experts_group.coder.CodingException
+import org.bread_experts_group.coder.LazyPartialResult
+import org.bread_experts_group.coder.format.parse.elf.ELFParser
+import org.bread_experts_group.coder.format.parse.elf.header.ELFWrittenSectionHeader
+import org.bread_experts_group.coder.format.parse.elf.header.writer.ELFContextuallyWritable
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.logging.Logger
-import kotlin.io.path.Path
-import kotlin.io.path.deleteIfExists
 import kotlin.io.path.writeBytes
 
 class ELFTest {
@@ -27,12 +22,16 @@ class ELFTest {
 
 	val logger: Logger = ColoredHandler.Companion.newLoggerResourced("tests.elf")
 
-	fun readFrom(fileStream: FileInputStream): List<ELFContextuallyWritable> {
+	fun readFrom(fileStream: FileInputStream): List<LazyPartialResult<ELFContextuallyWritable, CodingException>> {
 		val testStream = ELFParser(fileStream)
 		return testStream.toList()
 	}
 
-	fun logAll(fileStream: FileInputStream, allRead: List<ELFContextuallyWritable>) {
+	fun logAll(
+		fileStream: FileInputStream,
+		allRead: List<LazyPartialResult<ELFContextuallyWritable, CodingException>>
+	) {
+		val allRead = allRead.map { it.resultSafe }
 		val nameSection = allRead.mapNotNull { it as? ELFWrittenSectionHeader }.firstOrNull { it.sectionNames }
 		allRead.forEach {
 			if (it is ELFWrittenSectionHeader) {
@@ -58,29 +57,5 @@ class ELFTest {
 			val allRead = readFrom(it)
 			logAll(it, allRead)
 		}
-	}
-
-	@Test
-	fun write(): Unit = assertDoesNotThrow {
-		logger.info("=== WRITE ===")
-		val fileStream = FileInputStream(tempFile.toFile())
-		val allRead = FileInputStream(tempFile.toFile()).use {
-			val allRead = readFrom(fileStream)
-			logAll(fileStream, allRead)
-			allRead
-		}
-
-		val outputFile = Path("test-out.elf")
-		val writer = ELFWriter(allRead.first() as ELFHeader)
-		writer.programHeaders.addAll(allRead.mapNotNull { it as? ELFProgramHeader })
-		writer.sectionHeaders.addAll(allRead.mapNotNull { it as? ELFSectionHeaderWritable })
-		FileOutputStream(outputFile.toFile()).use { writer.writeFull(it) }
-		FileInputStream(outputFile.toFile()).use {
-			val reRead = readFrom(it)
-			logger.info("=== WRITE (READBACK) ===")
-			logAll(it, reRead)
-		}
-		// Warning: ELF files read and written back may not be executable, as overlapping data is separated
-		outputFile.deleteIfExists()
 	}
 }

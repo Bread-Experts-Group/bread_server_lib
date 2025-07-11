@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.iso_bmff.ISOBMFFParser
+import org.bread_experts_group.coder.format.parse.iso_bmff.ISOBMFFParser
 import org.bread_experts_group.dumpLog
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.assertDoesNotThrow

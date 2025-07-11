@@ -3,8 +3,8 @@ package org.bread_experts_group.logging
 import org.bread_experts_group.logging.BankedFileHandler.Companion.readMemoryBank
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16
 import org.bread_experts_group.logging.ansi_colorspace.ANSI16Color
-import org.bread_experts_group.stream.readExtensibleLong
-import org.bread_experts_group.stream.readExtensibleULong
+import org.bread_experts_group.stream.readExtensibleLongV1
+import org.bread_experts_group.stream.readExtensibleULongV1
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Path
@@ -44,7 +44,7 @@ class BankedFileReader(
 			val backed = ByteBuffer.allocate(10)
 			timestamp.read(backed)
 			val data = backed.array().inputStream()
-			add(data.readExtensibleULong())
+			add(data.readExtensibleULongV1())
 			timestamp.position(initialPosition + (backed.capacity() - data.available()))
 		}
 	}
@@ -63,32 +63,32 @@ class BankedFileReader(
 		val data = ByteBuffer.allocate(90)
 		content.read(data)
 		val stream = data.array().inputStream()
-		val time = timestamps[stream.readExtensibleULong().toInt()].let {
-			nanos += stream.readExtensibleLong()
+		val time = timestamps[stream.readExtensibleULongV1().toInt()].let {
+			nanos += stream.readExtensibleLongV1()
 			Instant.ofEpochSecond(
 				it.toLong(),
 				nanos
 			)
 		}
-		val levelDescriptor = stream.readExtensibleULong()
+		val levelDescriptor = stream.readExtensibleULongV1()
 		val levelIndex = levelDescriptor shr 1
 		val level = if (levelDescriptor and 1u == 1uL) {
-			val nameIndex = stream.readExtensibleULong()
+			val nameIndex = stream.readExtensibleULongV1()
 			createLevel(
 				memoryBank[nameIndex.toInt()],
 				memoryBank[levelIndex.toInt()],
-				stream.readExtensibleLong().toInt()
+				stream.readExtensibleLongV1().toInt()
 			).also { savedLevels[nameIndex] = it }
 		} else {
 			savedLevels[levelIndex] ?: createLevel(
 				memoryBank[levelIndex.toInt()],
 				null,
-				stream.readExtensibleLong().toInt()
+				stream.readExtensibleLongV1().toInt()
 			).also { savedLevels[levelIndex] = it }
 		}
-		val loggerName = memoryBank[stream.readExtensibleULong().toInt()]
-		val threadID = stream.readExtensibleLong()
-		val messageDescriptor = stream.readExtensibleULong()
+		val loggerName = memoryBank[stream.readExtensibleULongV1().toInt()]
+		val threadID = stream.readExtensibleLongV1()
+		val messageDescriptor = stream.readExtensibleULongV1()
 		val messageLength = (messageDescriptor shr 1).toInt()
 		content.position(initialPosition + (data.capacity() - stream.available()))
 		val message = if (messageDescriptor and 1u == 0uL) {
@@ -98,7 +98,7 @@ class BankedFileReader(
 			content.read(messageData)
 			val message = buildString {
 				repeat(messageLength) {
-					append(memoryBank[messageStream.readExtensibleULong().toInt()])
+					append(memoryBank[messageStream.readExtensibleULongV1().toInt()])
 					append(' ')
 				}
 			}

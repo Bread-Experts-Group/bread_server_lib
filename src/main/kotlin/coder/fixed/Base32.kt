@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.fixed
 
-import org.bread_experts_group.coder.DecodingException
+import org.bread_experts_group.coder.format.parse.InvalidInputException
 
 object Base32 {
 	private val BASE_32_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
@@ -11,7 +11,7 @@ object Base32 {
 		var bitsLeft = 0
 		for (c in base32.uppercase()) {
 			if (c == '=') break
-			val value = BASE_32_SET[c] ?: throw DecodingException("Invalid Base32 character: $c")
+			val value = BASE_32_SET[c] ?: throw InvalidInputException("Invalid Base32 character: $c")
 			buffer = (buffer shl 5) or value
 			bitsLeft += 5
 

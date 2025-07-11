@@ -1,8 +1,9 @@
 package org.bread_experts_group.coder.format.huffman
 
-import org.bread_experts_group.coder.format.BitInputStream
-import org.bread_experts_group.coder.format.BitOutputStream
-import org.bread_experts_group.coder.format.huffman.HuffmanBranch.Companion.export
+import org.bread_experts_group.coder.format.parse.BitInputStream
+import org.bread_experts_group.coder.format.parse.BitOutputStream
+import org.bread_experts_group.coder.format.parse.huffman.HuffmanBranch
+import org.bread_experts_group.coder.format.parse.huffman.HuffmanBranch.Companion.export
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.ByteArrayOutputStream

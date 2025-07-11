@@ -1,10 +1,10 @@
 package org.bread_experts_group.image.gif
 
-import org.bread_experts_group.coder.format.gif.GIFDisposalMethod
-import org.bread_experts_group.coder.format.gif.GIFParser
-import org.bread_experts_group.coder.format.gif.block.GIFGraphicControlExtensionBlock
-import org.bread_experts_group.coder.format.gif.block.GIFImageDescriptor
-import org.bread_experts_group.coder.format.gif.block.GIFLogicalScreenDescriptorBlock
+import org.bread_experts_group.coder.format.parse.gif.GIFDisposalMethod
+import org.bread_experts_group.coder.format.parse.gif.GIFParser
+import org.bread_experts_group.coder.format.parse.gif.block.GIFGraphicControlExtensionBlock
+import org.bread_experts_group.coder.format.parse.gif.block.GIFImageDescriptor
+import org.bread_experts_group.coder.format.parse.gif.block.GIFLogicalScreenDescriptorBlock
 import org.bread_experts_group.image.AnimatedMetadata
 import org.bread_experts_group.stream.DataInputProxyStream
 import java.awt.AlphaComposite

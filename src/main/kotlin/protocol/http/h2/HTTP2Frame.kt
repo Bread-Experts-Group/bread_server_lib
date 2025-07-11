@@ -1,6 +1,6 @@
 package org.bread_experts_group.protocol.http.h2
 
-import org.bread_experts_group.coder.DecodingException
+import org.bread_experts_group.coder.ParsingException
 import org.bread_experts_group.hex
 import org.bread_experts_group.stream.*
 import java.io.InputStream
@@ -12,9 +12,9 @@ sealed class HTTP2Frame(
 ) : Writable {
 	override fun toString(): String = "(HTTP/2, Frame) ${type.name}, ${hex(identifier)}"
 
-	class HTTP2ProtocolError(reason: String) : DecodingException(reason)
-	class HTTP2FrameSizeError(reason: String) : DecodingException(reason)
-	class HTTP2FlowControlError(reason: String) : DecodingException(reason)
+	class HTTP2ProtocolError(reason: String) : ParsingException(reason)
+	class HTTP2FrameSizeError(reason: String) : ParsingException(reason)
+	class HTTP2FlowControlError(reason: String) : ParsingException(reason)
 
 	abstract fun collectFlags(): Int
 	override fun write(stream: OutputStream) {

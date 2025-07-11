@@ -1,6 +1,6 @@
 package org.bread_experts_group.crypto.x509
 
-import org.bread_experts_group.coder.format.asn1.element.*
+import org.bread_experts_group.coder.format.parse.asn1.element.*
 import java.math.BigInteger
 import java.security.KeyPair
 import java.security.Signature

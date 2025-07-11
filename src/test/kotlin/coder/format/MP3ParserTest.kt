@@ -1,9 +1,9 @@
 package org.bread_experts_group.coder.format
 
-import org.bread_experts_group.coder.format.id3.frame.ID3PictureFrame2
-import org.bread_experts_group.coder.format.id3.frame.ID3PictureFrame3
-import org.bread_experts_group.coder.format.mp3.MP3Parser
-import org.bread_experts_group.coder.format.mp3.frame.MP3ID3Frame
+import org.bread_experts_group.coder.format.parse.id3.frame.ID3PictureFrame2
+import org.bread_experts_group.coder.format.parse.id3.frame.ID3PictureFrame3
+import org.bread_experts_group.coder.format.parse.mp3.MP3Parser
+import org.bread_experts_group.coder.format.parse.mp3.frame.MP3ID3Frame
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.testBase
 import org.junit.jupiter.api.Test
@@ -13,7 +13,7 @@ import kotlin.io.path.writeBytes
 
 class MP3ParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
-		"coder/format/mp3/01.mp3"
+		"coder/format/parse/mp3/01.mp3"
 	)
 	val testStream: MP3Parser = MP3Parser(testFile!!)
 	val logger = ColoredHandler.newLoggerResourced("tests.mp3")

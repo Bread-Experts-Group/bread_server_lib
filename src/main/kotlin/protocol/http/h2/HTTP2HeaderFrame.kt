@@ -1,7 +1,7 @@
 package org.bread_experts_group.protocol.http.h2
 
-import org.bread_experts_group.coder.format.BitInputStream
-import org.bread_experts_group.coder.format.huffman.HuffmanBranch
+import org.bread_experts_group.coder.format.parse.BitInputStream
+import org.bread_experts_group.coder.format.parse.huffman.HuffmanBranch
 import org.bread_experts_group.hex
 import org.bread_experts_group.logging.ColoredHandler
 import org.bread_experts_group.stream.read32ul

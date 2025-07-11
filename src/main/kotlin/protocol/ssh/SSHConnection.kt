@@ -1,6 +1,6 @@
 package org.bread_experts_group.protocol.ssh
 
-import org.bread_experts_group.coder.DecodingException
+import org.bread_experts_group.coder.format.parse.InvalidInputException
 import org.bread_experts_group.crypto.KeyPairFile
 import org.bread_experts_group.crypto.read
 import org.bread_experts_group.protocol.ssh.packet.*
@@ -20,7 +20,6 @@ import java.security.spec.X509EncodedKeySpec
 import java.security.spec.XECPublicKeySpec
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.Semaphore
-
 
 class SSHConnection(from: InputStream, to: OutputStream) {
 	val backlog: LinkedBlockingQueue<Result<SSHBasePacket>> = LinkedBlockingQueue<Result<SSHBasePacket>>()
@@ -50,7 +49,9 @@ class SSHConnection(from: InputStream, to: OutputStream) {
 		Thread.ofVirtual().name("SSH-2.0 Backlogger").start {
 			val version = from.scanPattern(CRLF).decodeToString()
 			backlog.add(Result.success(SSHBannerPacket(version)))
-			if (!version.startsWith("SSH-2.0")) throw DecodingException("Client sent bad SSH header; $version")
+			if (!version.startsWith("SSH-2.0")) throw InvalidInputException(
+				"Client sent bad SSH header; $version"
+			)
 			to.writeString("SSH-2.0-BreadExpertsGroup${version()}\r\n")
 
 			state = SSHConnectionState.KEY_EXCHANGE_NEGOTIATION
