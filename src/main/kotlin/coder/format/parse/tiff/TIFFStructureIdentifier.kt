@@ -2,6 +2,7 @@ package org.bread_experts_group.coder.format.parse.tiff
 
 import org.bread_experts_group.coder.Mappable
 
+// Thank you, https://exiv2.org/tags.html
 enum class TIFFStructureIdentifier(
 	override val id: Int,
 	override val tag: String
@@ -46,6 +47,7 @@ enum class TIFFStructureIdentifier(
 	COLOR_SPACE(0xA001, "Color Space (Exif.Photo.ColorSpace)"),
 	WIDTH_DIMENSION(0xA002, "X Dimension, Pixel (Exif.Photo.PixelXDimension)"),
 	HEIGHT_DIMENSION(0xA003, "Y Dimension, Pixel (Exif.Photo.PixelYDimension)"),
+	INTEROPERABILITY(0xA005, "Interoperability (Exif.Photo.InteroperabilityTag)"),
 	WIDTH_FOCAL_PLANE_DIMENSION(0xA20E, "X Dimension, Focal Plane (Exif.Photo.FocalPlaneXResolution)"),
 	HEIGHT_FOCAL_PLANE_DIMENSION(0xA20F, "Y Dimension, Focal Plane (Exif.Photo.FocalPlaneYResolution)"),
 	FOCAL_PLANE_UNIT(0xA210, "Focal Plane Resolution Unit (Exif.Photo.FocalPlaneResolutionUnit)"),

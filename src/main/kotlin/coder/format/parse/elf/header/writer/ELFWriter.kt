@@ -6,6 +6,7 @@ import org.bread_experts_group.coder.format.parse.elf.header.*
 import org.bread_experts_group.stream.*
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.util.*
 import kotlin.math.max
 
 class ELFWriter(private val header: ELFHeader) : DiscreteWriter() {
@@ -84,7 +85,7 @@ class ELFWriter(private val header: ELFHeader) : DiscreteWriter() {
 			ELFSectionHeaderWritable(
 				"",
 				ELFSectionHeaderType.UNUSED.code,
-				setOf(),
+				EnumSet.noneOf(ELFSectionHeaderFlags::class.java),
 				0,
 				0,
 				0,
@@ -110,7 +111,7 @@ class ELFWriter(private val header: ELFHeader) : DiscreteWriter() {
 			ELFSectionHeaderWritable(
 				".shstrtab",
 				ELFSectionHeaderType.SHT_STRTAB.code,
-				setOf(),
+				EnumSet.noneOf(ELFSectionHeaderFlags::class.java),
 				0,
 				stringsPosition.toLong(),
 				strings.size.toLong(),

@@ -84,7 +84,7 @@ class ELFParser(
 				val virtualAddress = local.read64().re()
 				val physicalAddress = local.read64().re()
 				val fileSize = local.read64().re()
-				if (fileSize > Int.MAX_VALUE) throw UnsupportedOperationException("Size too large!")
+				if (fileSize > Int.MAX_VALUE) throw NotImplementedError("Size too large!")
 				val memorySize = local.read64().re()
 				val alignment = local.read64().re()
 				preread.add(
@@ -104,7 +104,7 @@ class ELFParser(
 				val virtualAddress = local.read32().re().toLong()
 				val physicalAddress = local.read32().re().toLong()
 				val fileSize = local.read32().re().toLong()
-				if (fileSize > Int.MAX_VALUE) throw UnsupportedOperationException("Size too large!")
+				if (fileSize > Int.MAX_VALUE) throw NotImplementedError("Size too large!")
 				val memorySize = local.read32().re().toLong()
 				val rawFlags = local.read32().re()
 				val alignment = local.read32().re().toLong()
@@ -131,7 +131,7 @@ class ELFParser(
 			val virtualAddress = local.readBits()
 			val fileOffset = local.readBits()
 			val fileSize = local.readBits()
-			if (fileSize > Int.MAX_VALUE) throw UnsupportedOperationException("Size too large!")
+			if (fileSize > Int.MAX_VALUE) throw NotImplementedError("Size too large!")
 			preread.add(
 				ELFWrittenSectionHeader(
 					index == sectionNamesIndex,

@@ -61,7 +61,8 @@ fun InputStream.readString(c: Charset = Charsets.UTF_8): String {
 
 			else -> throw UnsupportedOperationException(c.displayName())
 		}
-	} catch (_: FailQuickInputStream.EndOfStream) {
+	} catch (e: FailQuickInputStream.EndOfStream) {
+		if (enc.size() == 0) throw e
 	}
 	return enc.toByteArray().toString(c)
 }

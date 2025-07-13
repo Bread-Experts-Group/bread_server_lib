@@ -1,6 +1,8 @@
 package org.bread_experts_group.coder.format.parse.elf.header
 
-enum class ELFSectionHeaderFlags(val position: Long) {
+import org.bread_experts_group.coder.Flaggable
+
+enum class ELFSectionHeaderFlags(override val position: Long) : Flaggable {
 	SHF_WRITE(0x1),
 	SHF_ALLOC(0x2),
 	SHF_EXECINSTR(0x4),

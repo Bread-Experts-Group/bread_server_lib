@@ -2,11 +2,12 @@ package org.bread_experts_group.coder.format.parse.elf.header.writer
 
 import org.bread_experts_group.coder.format.parse.elf.header.ELFSectionHeader
 import org.bread_experts_group.coder.format.parse.elf.header.ELFSectionHeaderFlags
+import java.util.*
 
 open class ELFSectionHeaderWritable(
 	val name: String?,
 	rawType: Int,
-	flags: Set<ELFSectionHeaderFlags>,
+	flags: EnumSet<ELFSectionHeaderFlags>,
 	virtualAddress: Long,
 	contentsPosition: Long,
 	contentsLength: Long,

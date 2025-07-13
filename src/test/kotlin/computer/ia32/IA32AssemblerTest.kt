@@ -8,6 +8,7 @@ import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.FileOutputStream
+import java.util.*
 
 class IA32AssemblerTest {
 	val logger = ColoredHandler.newLoggerResourced("tests.ia_32_assembler")
@@ -54,7 +55,7 @@ class IA32AssemblerTest {
 		elfWriter.programHeaders.add(
 			ELFProgramHeader(
 				ELFProgramHeaderType.PT_LOAD.code,
-				setOf(ELFProgramHeaderFlags.PF_R, ELFProgramHeaderFlags.PF_X),
+				EnumSet.of(ELFProgramHeaderFlags.PF_R, ELFProgramHeaderFlags.PF_X),
 				entry,
 				0,
 				0,
@@ -67,7 +68,7 @@ class IA32AssemblerTest {
 			ELFSectionHeaderWritable(
 				".text",
 				ELFSectionHeaderType.SHT_PROGBITS.code,
-				setOf(ELFSectionHeaderFlags.SHF_EXECINSTR, ELFSectionHeaderFlags.SHF_ALLOC),
+				EnumSet.of(ELFSectionHeaderFlags.SHF_EXECINSTR, ELFSectionHeaderFlags.SHF_ALLOC),
 				entry,
 				0,
 				assembled.size.toLong(),

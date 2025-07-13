@@ -6,6 +6,7 @@ import org.bread_experts_group.coder.format.parse.InvalidInputException
 import org.bread_experts_group.coder.format.parse.elf.header.writer.ELFContextuallyWritable
 import org.bread_experts_group.coder.format.parse.elf.header.writer.ELFWriter
 import java.io.OutputStream
+import java.util.*
 
 class ELFProgramHeader(
 	val rawType: Int,
@@ -24,7 +25,7 @@ class ELFProgramHeader(
 
 	constructor(
 		rawType: Int,
-		flags: Set<ELFProgramHeaderFlags>,
+		flags: EnumSet<ELFProgramHeaderFlags>,
 		virtualAddress: Long,
 		physicalAddress: Long,
 		contentsPosition: Long,

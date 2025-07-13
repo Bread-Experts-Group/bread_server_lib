@@ -26,7 +26,7 @@ open class PNGChunk(
 	}
 
 	override fun computeSize(): Long = data.size.toLong()
-	override fun toString(): String = "PNGChunk.\"$tag\"[${computeSize()}][" +
+	override fun toString(): String = "PNGChunk.\"$tag\"[#${computeSize()}][" +
 			(if (critical) "CRITICAL" else "ANCILLARY") +
 			(if (specification) ",SPECIFICATION" else ",PRIVATE-USE") +
 			(if (reserved) ",RESERVED" else "") +

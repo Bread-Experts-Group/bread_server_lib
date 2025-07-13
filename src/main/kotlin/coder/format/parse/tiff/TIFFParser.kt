@@ -12,7 +12,6 @@ import org.bread_experts_group.hex
 import org.bread_experts_group.stream.*
 import java.io.InputStream
 
-// Thank you, https://exiv2.org/tags.html
 class TIFFParser(
 	from: ByteArray,
 	basis: TIFFParser? = null,

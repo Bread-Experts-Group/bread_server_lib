@@ -86,7 +86,7 @@ class GIFReader(spi: GIFReaderSpi) : ImageReader(spi) {
 						IIOImage(
 							copy,
 							null,
-							if (control != null) AnimatedMetadata(control.delayTime) else null
+							if (control != null) AnimatedMetadata(control.delay) else null
 						)
 					)
 				}

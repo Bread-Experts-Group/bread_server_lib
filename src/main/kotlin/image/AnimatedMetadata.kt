@@ -3,9 +3,11 @@ package org.bread_experts_group.image
 import org.w3c.dom.Node
 import javax.imageio.metadata.IIOMetadata
 import javax.imageio.metadata.IIOMetadataNode
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 class AnimatedMetadata(
-	private val delayMillis: Long
+	private val delay: Duration
 ) : IIOMetadata(
 	false,
 	"org.bread_experts_group.animated_1.0.0",
@@ -17,7 +19,7 @@ class AnimatedMetadata(
 		if (formatName != this.nativeMetadataFormatName) throw IllegalArgumentException("Unknown format [$formatName]")
 		return IIOMetadataNode().apply {
 			appendChild(IIOMetadataNode("delayMillis").apply {
-				nodeValue = delayMillis.toString()
+				nodeValue = delay.toLong(DurationUnit.MILLISECONDS).toString()
 			})
 		}
 	}

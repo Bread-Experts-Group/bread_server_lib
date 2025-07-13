@@ -4,12 +4,13 @@ import org.bread_experts_group.coder.format.parse.png.PNGCompressionType
 import org.bread_experts_group.coder.format.parse.png.PNGFilterType
 import org.bread_experts_group.coder.format.parse.png.PNGHeaderFlags
 import org.bread_experts_group.coder.format.parse.png.PNGInterlaceType
+import java.util.*
 
 class PNGHeaderChunk(
 	val width: Int,
 	val height: Int,
 	val bitDepth: Int,
-	val flags: Set<PNGHeaderFlags>,
+	val flags: EnumSet<PNGHeaderFlags>,
 	val compressionType: PNGCompressionType,
 	val filterType: PNGFilterType,
 	val interlaceType: PNGInterlaceType

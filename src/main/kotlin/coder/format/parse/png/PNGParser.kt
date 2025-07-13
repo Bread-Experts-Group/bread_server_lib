@@ -1,6 +1,5 @@
 package org.bread_experts_group.coder.format.parse.png
 
-import org.bread_experts_group.coder.Flaggable.Companion.allPresent
 import org.bread_experts_group.coder.Flaggable.Companion.from
 import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.SaveSingle
@@ -18,6 +17,8 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.zip.InflaterInputStream
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 @OptIn(ExperimentalUnsignedTypes::class)
 class PNGParser(
@@ -88,23 +89,40 @@ class PNGParser(
 			"bKGD", "hIST", "tRNS", "eXIf", "pHYs", "tIME" -> unsafeToAppear.add(base.tag)
 
 			"IDAT", "fdAT" -> {
-				mustAppear.remove("IDAT")
-				unsafeToAppear.remove("fdAT")
-				val internalComposite = ByteArrayOutputStream(base.data.size)
-				internalComposite.write(base.data)
-				do {
+				val consolidated = mutableListOf<PNGChunk>()
+				while (true) {
 					val next = internalReadBase(compound)
 					if (next == null) return@run null
 					if (next.tag != base.tag) {
 						savedNext = next
 						break
 					}
-					internalComposite.write(next.data)
-				} while (next.tag == base.tag)
-				if (base.tag == "IDAT") unsafeToAppear.addAll(
-					arrayOf("IDAT", "acTL", "bKGD", "hIST", "tRNS", "eXIf", "pHYs", "sPLT")
+					consolidated.add(next)
+				}
+				val localDecrement = if (base.tag == "IDAT") {
+					mustAppear.remove("IDAT")
+					unsafeToAppear.remove("fdAT")
+					unsafeToAppear.addAll(
+						arrayOf("IDAT", "acTL", "bKGD", "hIST", "tRNS", "eXIf", "pHYs", "sPLT")
+					)
+					0
+				} else 4
+				var offset = base.data.size
+				val composite = ByteArray(consolidated.sumOf { it.data.size - localDecrement } + offset)
+				System.arraycopy(
+					base.data, 0,
+					composite, 0,
+					base.data.size
 				)
-				base = PNGChunk(base.tag, internalComposite.toByteArray())
+				consolidated.forEach {
+					System.arraycopy(
+						it.data, localDecrement,
+						composite, offset,
+						it.data.size - localDecrement
+					)
+					offset += it.data.size - localDecrement
+				}
+				base = PNGChunk(base.tag, composite)
 			}
 
 			"IEND" -> {
@@ -217,7 +235,7 @@ class PNGParser(
 				else ((numerator.toDouble() / denominator) * 1000L).toLong()
 			PNGFrameControlChunk(
 				sequence, width, height, x, y,
-				delayMillis,
+				delayMillis.toDuration(DurationUnit.MILLISECONDS),
 				PNGDisposeOperation.entries.id(stream.read()),
 				PNGBlendOperation.entries.id(stream.read())
 			)
@@ -240,11 +258,11 @@ class PNGParser(
 			PNGSignificantBitsChunk(
 				ByteArrayOutputStream().use { out ->
 					out.write(stream.read()) // R / W
-					if (header.flags.allPresent(PNGHeaderFlags.TRUE_COLOR)) {
+					if (header.flags.contains(PNGHeaderFlags.TRUE_COLOR)) {
 						out.write(stream.read()) // G
 						out.write(stream.read()) // B
 					}
-					if (header.flags.allPresent(PNGHeaderFlags.ALPHA))
+					if (header.flags.contains(PNGHeaderFlags.ALPHA))
 						out.write(stream.read()) // A
 					out.toByteArray()
 				}
@@ -259,7 +277,7 @@ class PNGParser(
 			val mask = header.bitDepth.maskI()
 			PNGBackgroundChunk(
 				when {
-					header.flags.allPresent(PNGHeaderFlags.PALETTE) -> {
+					header.flags.contains(PNGHeaderFlags.PALETTE) -> {
 						if (!this::palette.isInitialized) {
 							compound.addThrown(RefinementException("PLTE not defined"))
 							return@addParser chunk
@@ -272,7 +290,7 @@ class PNGParser(
 						palette.colors[index]
 					}
 
-					header.flags.allPresent(PNGHeaderFlags.TRUE_COLOR) -> Color(
+					header.flags.contains(PNGHeaderFlags.TRUE_COLOR) -> Color(
 						(stream.read16ui() and mask) / (mask.toFloat()),
 						(stream.read16ui() and mask) / (mask.toFloat()),
 						(stream.read16ui() and mask) / (mask.toFloat())
@@ -291,7 +309,7 @@ class PNGParser(
 				return@addParser chunk
 			}
 
-			if (header.flags.allPresent(PNGHeaderFlags.PALETTE)) PNGTransparencyPaletteChunk(
+			if (header.flags.contains(PNGHeaderFlags.PALETTE)) PNGTransparencyPaletteChunk(
 				buildList {
 					while (stream.available() > 0) {
 						add(stream.read() / 255f)
@@ -301,7 +319,7 @@ class PNGParser(
 				val mask = header.bitDepth.maskI()
 				PNGTransparencySingleChunk(
 					when {
-						header.flags.allPresent(PNGHeaderFlags.TRUE_COLOR) -> Color(
+						header.flags.contains(PNGHeaderFlags.TRUE_COLOR) -> Color(
 							(stream.read16ui() and mask) / (mask.toFloat()),
 							(stream.read16ui() and mask) / (mask.toFloat()),
 							(stream.read16ui() and mask) / (mask.toFloat())
@@ -359,7 +377,11 @@ class PNGParser(
 		addParser("tEXt") { stream, _, _ ->
 			PNGTextChunk(
 				stream.readString(Charsets.ISO_8859_1),
-				stream.readString(Charsets.ISO_8859_1)
+				try {
+					stream.readString(Charsets.ISO_8859_1)
+				} catch (_: FailQuickInputStream.EndOfStream) {
+					""
+				}
 			)
 		}
 		addParser("zTXt") { stream, _, compound ->

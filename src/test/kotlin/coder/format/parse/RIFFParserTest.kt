@@ -1,4 +1,4 @@
-package org.bread_experts_group.coder.format
+package org.bread_experts_group.coder.format.parse
 
 import org.bread_experts_group.coder.format.parse.riff.RIFFParser
 import org.bread_experts_group.coder.format.parse.riff.chunk.RIFFAudioFormatChunk

@@ -11,6 +11,8 @@ import java.awt.Color
 import java.io.InputStream
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphics Interchange Format", from) {
 	private val preread = ArrayDeque<GIFBlock>()
@@ -126,7 +128,7 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 					val transparentColorIndex = stream.read()
 					from.read() // Terminator
 					GIFGraphicControlExtensionBlock(
-						delayTime,
+						delayTime.toDuration(DurationUnit.MILLISECONDS),
 						if (packed and 1 == 0) null else transparentColorIndex,
 						GIFDisposalMethod.mapping.getValue((packed and 0b00011100) ushr 2),
 						(packed ushr 1) and 1 == 1

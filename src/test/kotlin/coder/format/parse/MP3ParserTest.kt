@@ -1,4 +1,4 @@
-package org.bread_experts_group.coder.format
+package org.bread_experts_group.coder.format.parse
 
 import org.bread_experts_group.coder.format.parse.id3.frame.ID3PictureFrame2
 import org.bread_experts_group.coder.format.parse.id3.frame.ID3PictureFrame3
@@ -13,7 +13,7 @@ import kotlin.io.path.writeBytes
 
 class MP3ParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
-		"coder/format/parse/mp3/01.mp3"
+		"coder/format/mp3/8dd8d4dc-7803-4257-a252-30e72d9d6c55.mp3"
 	)
 	val testStream: MP3Parser = MP3Parser(testFile!!)
 	val logger = ColoredHandler.newLoggerResourced("tests.mp3")
@@ -22,16 +22,17 @@ class MP3ParserTest {
 	fun readParsed() = assertDoesNotThrow {
 		var i = 0
 		testStream.forEach {
-			when (it) {
+			val frame = it.resultSafe
+			when (frame) {
 				is MP3ID3Frame -> {
-					logger.info(it.id3.toString())
-					val frames = it.id3.toList()
+					logger.info(frame.id3.toString())
+					val frames = frame.id3.toList()
 					frames.forEach { frame -> logger.info(frame.toString()) }
-					frames.firstNotNullOfOrNull { frame -> frame as? ID3PictureFrame3 }?.let { frame ->
+					frames.firstNotNullOfOrNull { frame -> frame.resultSafe as? ID3PictureFrame3 }?.let { frame ->
 						testBase.resolve("apic.${frame.mimeType.substringAfter('/')}")
 							.writeBytes(frame.data)
 					}
-					frames.firstNotNullOfOrNull { frame -> frame as? ID3PictureFrame2 }?.let { frame ->
+					frames.firstNotNullOfOrNull { frame -> frame.resultSafe as? ID3PictureFrame2 }?.let { frame ->
 						testBase.resolve("pic.${frame.imageType}").writeBytes(frame.data)
 					}
 				}

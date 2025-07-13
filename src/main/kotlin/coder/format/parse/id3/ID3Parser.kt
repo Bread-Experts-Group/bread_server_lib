@@ -20,6 +20,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 	override var fqIn: FailQuickInputStream = super.fqIn
 
 	override fun toString(): String = super.toString() + "[${!unsupported}/v$version]"
+	fun readZeroPadded() = (3 downTo 0).fold(0) { acc, i -> acc or (fqIn.read() shl (7 * i)) }
 
 	init {
 		val tag = fqIn.readString(3)
@@ -27,9 +28,8 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		version = fqIn.read()
 		val minor = fqIn.read()
 		val flags = fqIn.read()
-		var size = 0
-		for (i in 3 downTo 0) size = size or (fqIn.read() shl (7 * i))
-		if (version !in 2..3) {
+		val size = readZeroPadded()
+		if (version !in 2..4) {
 			unsupported = true
 			fqIn.skip(size.toLong())
 		} else {
@@ -43,6 +43,19 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 		if (unsupported) throw InvalidInputException("ID3 major version is unsupported [$version]")
 		preFrame.also { preFrame = null }?.let { return it }
 		return when (version) {
+			4 -> {
+				val frameID = fqIn.readString(4)
+				val size = readZeroPadded()
+				val flags = fqIn.read16ui()
+				if (size < 1) return null
+				ID3Frame(
+					frameID,
+					ID3GenericFlags.entries,
+					flags,
+					fqIn.readNBytes(size)
+				)
+			}
+
 			3 -> {
 				val frameID = fqIn.readString(4)
 				val size = fqIn.read32()
@@ -68,7 +81,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				)
 			}
 
-			else -> throw IllegalStateException("Unsupported version [$version]")
+			else -> throw NotImplementedError("Unsupported version [$version]")
 		}
 	}
 

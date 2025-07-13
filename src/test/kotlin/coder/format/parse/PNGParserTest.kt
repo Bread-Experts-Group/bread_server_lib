@@ -1,6 +1,5 @@
-package org.bread_experts_group.coder.format
+package org.bread_experts_group.coder.format.parse
 
-import org.bread_experts_group.coder.format.parse.InvalidInputException
 import org.bread_experts_group.coder.format.parse.png.PNGParser
 import org.bread_experts_group.dumpLog
 import org.bread_experts_group.dumpLogSafe

@@ -88,13 +88,18 @@ abstract class Parser<T, O, S : InputStream>(
 			) to compound.build()?.let {
 				FallbackException("Compounded failure [${compound.thrown.size}]", it)
 			}
-		return parser(
-			FailQuickInputStream(responsibleStream(of)), of, compound,
-			additionalParam, parameters
-		).also {
-			this.logger.fine {
-				"Parsed chunk [${of.javaClass.canonicalName}] into [${it.javaClass.canonicalName}] from [$parser]"
+		return try {
+			parser(
+				FailQuickInputStream(responsibleStream(of)), of, compound,
+				additionalParam, parameters
+			).also {
+				this.logger.fine {
+					"Parsed chunk [${of.javaClass.canonicalName}] into [${it.javaClass.canonicalName}] from [$parser]"
+				}
 			}
+		} catch (e: Exception) {
+			compound.addThrown(RefinementException("Failure during parsing refinement", e))
+			of
 		} to compound.build()?.let {
 			RefinementException("Compounded failure [${compound.thrown.size}]", it)
 		}
