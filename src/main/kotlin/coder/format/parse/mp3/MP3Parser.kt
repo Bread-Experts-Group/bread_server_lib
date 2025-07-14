@@ -11,7 +11,10 @@ import org.bread_experts_group.coder.format.parse.mp3.frame.header.*
 import org.bread_experts_group.stream.ConsolidatedInputStream
 import java.io.InputStream
 
-class MP3Parser(from: InputStream) : Parser<Nothing?, MP3BaseFrame, InputStream>("MPEG 3", from) {
+class MP3Parser : Parser<Nothing?, MP3BaseFrame, InputStream>(
+	"MPEG 3",
+	InputStream::class
+) {
 	private val consolidatoryStream = ConsolidatedInputStream(false)
 	private var preFrame: MP3ID3Frame? = null
 	override fun readBase(compound: CodingCompoundThrowable): MP3BaseFrame {
@@ -55,12 +58,11 @@ class MP3Parser(from: InputStream) : Parser<Nothing?, MP3BaseFrame, InputStream>
 		return MP3Frame(header, fqIn.readNBytes(frameSize - 4))
 	}
 
-	init {
+	override fun responsibleStream(of: MP3BaseFrame): InputStream = fqIn
+	override fun inputInit() {
 		consolidatoryStream.streams.addFirst(fqIn)
 		val id3Scan = fqIn.readNBytes(3)
 		consolidatoryStream.streams.addFirst(id3Scan.inputStream())
-		if (id3Scan.decodeToString() == "ID3") preFrame = MP3ID3Frame(ID3Parser(consolidatoryStream))
+		if (id3Scan.decodeToString() == "ID3") preFrame = MP3ID3Frame(ID3Parser().setInput(consolidatoryStream))
 	}
-
-	override fun responsibleStream(of: MP3BaseFrame): InputStream = fqIn
 }

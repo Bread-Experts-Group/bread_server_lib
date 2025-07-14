@@ -25,7 +25,7 @@ class X509ASN1CertificateTest {
 			x509.write(it)
 			val data = it.toByteArray()
 			testBase.resolve("x509.crt").writeBytes(data)
-			ASN1Parser(data.inputStream()).throwOnUnknown().dumpLog(logger)
+			ASN1Parser().setInput(data.inputStream()).throwOnUnknown().dumpLog(logger)
 		}
 	}
 }

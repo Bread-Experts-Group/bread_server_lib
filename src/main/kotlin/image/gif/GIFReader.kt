@@ -25,13 +25,15 @@ class GIFReader(spi: GIFReaderSpi) : ImageReader(spi) {
 	private fun readAll() {
 		if (initialized) return
 		initialized = true
-		val parsed = GIFParser(
-			when (this.input) {
-				is ImageInputStream -> DataInputProxyStream(this.input as ImageInputStream)
-				is InputStream -> this.input as InputStream
-				else -> throw UnsupportedOperationException(this.input::class.java.canonicalName)
-			}
-		).toList()
+		val parsed = GIFParser()
+			.setInput(
+				when (this.input) {
+					is ImageInputStream -> DataInputProxyStream(this.input as ImageInputStream)
+					is InputStream -> this.input as InputStream
+					else -> throw UnsupportedOperationException(this.input::class.java.canonicalName)
+				}
+			)
+			.toList()
 		var (canvas, globalColors) = (parsed.first() as GIFLogicalScreenDescriptorBlock).run {
 			Triple(
 				BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB),

@@ -10,9 +10,10 @@ import org.bread_experts_group.stream.read32
 import org.bread_experts_group.stream.readString
 import java.io.InputStream
 
-open class RIFFParser(
-	from: InputStream
-) : Parser<String, RIFFChunk, InputStream>("Resource Interchange File Format", from) {
+open class RIFFParser : Parser<String, RIFFChunk, InputStream>(
+	"Resource Interchange File Format",
+	InputStream::class
+) {
 	override fun responsibleStream(of: RIFFChunk): InputStream = of.data.inputStream()
 
 	override fun readBase(compound: CodingCompoundThrowable): RIFFChunk {
@@ -34,7 +35,7 @@ open class RIFFParser(
 			val containerChunk = RIFFContainerChunk(
 				chunk.tag,
 				stream.readString(4),
-				RIFFParser(stream)
+				RIFFParser().setInput(stream)
 			)
 			containerChunk
 		}
@@ -87,6 +88,6 @@ open class RIFFParser(
 				stream.readAllBytes()
 			)
 		}
-		addParser("id3 ") { stream, chunk, _ -> RIFFID3Chunk(ID3Parser(stream)) }
+		addParser("id3 ") { stream, chunk, _ -> RIFFID3Chunk(ID3Parser().setInput(stream)) }
 	}
 }

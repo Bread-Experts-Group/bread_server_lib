@@ -15,7 +15,7 @@ class MP3ParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/mp3/8dd8d4dc-7803-4257-a252-30e72d9d6c55.mp3"
 	)
-	val testStream: MP3Parser = MP3Parser(testFile!!)
+	val testStream = MP3Parser().setInput(testFile!!)
 	val logger = ColoredHandler.newLoggerResourced("tests.mp3")
 
 	@Test

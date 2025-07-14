@@ -11,9 +11,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 
-class ISOBMFFParser(
-	from: InputStream
-) : Parser<String, ISOBMFFBox, InputStream>("ISO Base Media File Format", from) {
+class ISOBMFFParser : Parser<String, ISOBMFFBox, InputStream>(
+	"ISO Base Media File Format",
+	InputStream::class
+) {
 	override fun responsibleStream(of: ISOBMFFBox): InputStream = of.data.inputStream()
 
 	override fun readBase(compound: CodingCompoundThrowable): ISOBMFFBox {
@@ -32,7 +33,7 @@ class ISOBMFFParser(
 		this.addParser(name) { stream, box, _ ->
 			ISOBMFFContainerBox(
 				box.tag,
-				ISOBMFFParser(stream)
+				ISOBMFFParser().setInput(stream)
 			)
 		}
 	}
@@ -42,7 +43,7 @@ class ISOBMFFParser(
 			val (version, flags) = fullBox(stream)
 			ISOBMFFContainerFullBox(
 				box.tag,
-				ISOBMFFParser(stream),
+				ISOBMFFParser().setInputFq(fqIn),
 				version,
 				flags
 			)

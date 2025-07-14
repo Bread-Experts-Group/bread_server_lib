@@ -12,7 +12,7 @@ class GIFParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/gif/furry-and-fluffy-furry.gif"
 	)
-	val testStream: GIFParser = GIFParser(testFile!!)
+	val testStream = GIFParser().setInput(testFile!!)
 	val logger: Logger = ColoredHandler.newLoggerResourced("tests.gif")
 
 	@Test

@@ -5,7 +5,6 @@ import org.bread_experts_group.coder.format.parse.asn1.ASN1Parser
 import org.bread_experts_group.coder.format.parse.asn1.element.ASN1Integer
 import org.bread_experts_group.coder.format.parse.asn1.element.ASN1Sequence
 import org.bread_experts_group.crypto.x509.X509ASN1Certificate.Companion.toBytes
-import java.io.ByteArrayInputStream
 import java.security.KeyPair
 import java.security.Signature
 import java.util.*
@@ -35,7 +34,7 @@ data class JSONWebSignatureSignedData(
 			val signatureB64 = Signature.getInstance("SHA256withECDSA").let {
 				it.initSign(keyPair.private)
 				it.update("$protectedB64.$payloadB64".toByteArray())
-				val seq = ASN1Parser(ByteArrayInputStream(it.sign())).toList()
+				val seq = ASN1Parser().setInput(it.sign().inputStream()).toList()
 					.first() as ASN1Sequence
 				encoder.encodeToString(
 					((seq.first() as ASN1Integer).value).toBytes(32) +

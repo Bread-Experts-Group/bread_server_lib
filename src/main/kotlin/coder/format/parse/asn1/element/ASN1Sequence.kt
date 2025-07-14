@@ -23,7 +23,7 @@ open class ASN1Sequence(
 		}
 	)
 
-	private val parser = ASN1Parser(data.inputStream())
+	private val parser = ASN1Parser().setInput(data.inputStream())
 	override fun iterator(): Iterator<LazyPartialResult<ASN1Element, CodingException>> = parser.iterator()
 	override fun toString(): String = "$tag[#${data.size}]"
 }

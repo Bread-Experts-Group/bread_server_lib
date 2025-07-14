@@ -1,12 +1,15 @@
 package org.bread_experts_group.coder.format.parse.gif
 
-enum class GIFDisposalMethod(val code: Int) {
-	UNSPECIFIED(0),
-	DO_NOT_DISPOSE(1),
-	RESTORE_TO_BACKGROUND(2),
-	RESTORE_TO_PREVIOUS(3);
+import org.bread_experts_group.coder.Mappable
 
-	companion object {
-		val mapping: Map<Int, GIFDisposalMethod> = entries.associateBy(GIFDisposalMethod::code)
-	}
+enum class GIFDisposalMethod(
+	override val id: Int,
+	override val tag: String
+) : Mappable<GIFDisposalMethod, Int> {
+	UNSPECIFIED(0, "Unknown"),
+	DO_NOT_DISPOSE(1, "Keep Canvas"),
+	RESTORE_TO_BACKGROUND(2, "Restore Canvas To Background"),
+	RESTORE_TO_PREVIOUS(3, "Restore Canvas To Previous Image");
+
+	override fun toString(): String = stringForm()
 }

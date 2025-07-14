@@ -8,14 +8,10 @@ import org.bread_experts_group.coder.format.parse.flac.block.*
 import org.bread_experts_group.stream.*
 import java.io.InputStream
 
-class FLACParser(
-	from: InputStream
-) : Parser<FLACBlockType, FLACBlock, InputStream>("Free Lossless Audio Codec", from) {
-	init {
-		val magic = from.readString(4, Charsets.US_ASCII)
-		if (magic != "fLaC") throw InvalidInputException("Magic incorrect [$magic] != [fLaC]")
-	}
-
+class FLACParser : Parser<FLACBlockType, FLACBlock, InputStream>(
+	"Free Lossless Audio Codec",
+	InputStream::class
+) {
 	private var audioData = false
 	override fun readBase(compound: CodingCompoundThrowable): FLACBlock? {
 		val header = fqIn.read32u()
@@ -89,4 +85,8 @@ class FLACParser(
 	}
 
 	override fun responsibleStream(of: FLACBlock): InputStream = of.data.inputStream()
+	override fun inputInit() {
+		val magic = fqIn.readString(4, Charsets.US_ASCII)
+		if (magic != "fLaC") throw InvalidInputException("Magic incorrect [$magic] != [fLaC]")
+	}
 }

@@ -23,7 +23,7 @@ class ELFTest {
 	val logger: Logger = ColoredHandler.Companion.newLoggerResourced("tests.elf")
 
 	fun readFrom(fileStream: FileInputStream): List<LazyPartialResult<ELFContextuallyWritable, CodingException>> {
-		val testStream = ELFParser(fileStream)
+		val testStream = ELFParser().setInput(fileStream)
 		return testStream.toList()
 	}
 

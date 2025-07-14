@@ -16,8 +16,8 @@ class RIFFParserTest {
 
 	@Test
 	fun read() = assertDoesNotThrow {
-		RIFFParser(testFile.openStream()).dumpLog(logger)
-		val file = (RIFFParser(testFile.openStream()).first().resultSafe as RIFFContainerChunk)
+		RIFFParser().setInput(testFile.openStream()).dumpLog(logger)
+		val file = (RIFFParser().setInput(testFile.openStream()).first().resultSafe as RIFFContainerChunk)
 			.toList()
 			.map { it.resultSafe }
 		val format = file.firstNotNullOf { it as? RIFFAudioFormatChunk }

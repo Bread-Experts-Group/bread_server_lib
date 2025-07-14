@@ -12,7 +12,7 @@ class ISOBMFFParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/isobmff/01_simple.mp4"
 	)
-	val testStream: ISOBMFFParser = ISOBMFFParser(testFile!!)
+	val testStream = ISOBMFFParser().setInput(testFile!!)
 	val logger: Logger = ColoredHandler.newLoggerResourced("tests.isobmff")
 
 	@Test

@@ -2,7 +2,7 @@ package org.bread_experts_group.coder.format.decode
 
 import org.bread_experts_group.coder.format.decode.png.PNGImageDecoder
 import org.bread_experts_group.coder.format.parse.CodingPartialResult
-import org.bread_experts_group.coder.format.parse.png.PNGParser
+import org.bread_experts_group.coder.format.parse.png.PNGByteParser
 import org.bread_experts_group.coder.format.parse.png.chunk.*
 import org.bread_experts_group.dumpLog
 import org.bread_experts_group.logging.ColoredHandler
@@ -10,41 +10,42 @@ import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.GridLayout
-import java.io.BufferedInputStream
-import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import kotlin.io.path.forEachDirectoryEntry
-import kotlin.io.path.inputStream
 import kotlin.io.path.isDirectory
 import kotlin.time.Duration
 
 class APNGDecoderTest {
 	val logger: Logger = ColoredHandler.newLogger("png decoder tests tmp")
 	val errorImage = run {
-		val error = this::class.java.classLoader.getResourceAsStream("coder/format/png/error.png")!!
-		val parsed = PNGParser(BufferedInputStream(error)).toList()
+		val error = this::class.java.classLoader.getResource("coder/format/png/error.png")
+			?: throw Error("Missing error image")
+		val parsed = PNGByteParser().setInput(Files.newByteChannel(Paths.get(error.toURI()))).toList()
 		val imageDecoder = PNGImageDecoder(
-			parsed.firstNotNullOf { it.result as? PNGHeaderChunk },
-			parsed.firstNotNullOfOrNull { it.result as? PNGPaletteChunk }?.colors ?: listOf(),
-			parsed.firstNotNullOfOrNull { it.result as? PNGTransparencyPaletteChunk }?.alphas ?: listOf(),
-			parsed.firstNotNullOfOrNull { it.result as? PNGGammaChunk }?.gamma ?: 1.0,
-			parsed.firstNotNullOfOrNull { it.result as? PNGBackgroundChunk }?.color ?: Color(0, 0, 0, 0)
+			parsed.firstNotNullOf { it.resultSafe as? PNGHeaderChunk },
+			parsed.firstNotNullOfOrNull { it.resultSafe as? PNGPaletteChunk }?.colors ?: listOf(),
+			parsed.firstNotNullOfOrNull { it.resultSafe as? PNGTransparencyPaletteChunk }?.alphas ?: listOf(),
+			parsed.firstNotNullOfOrNull { it.resultSafe as? PNGGammaChunk }?.gamma ?: 1.0,
+			parsed.firstNotNullOfOrNull { it.resultSafe as? PNGBackgroundChunk }?.color ?: Color(0, 0, 0, 0)
 		)
-		imageDecoder.setInput(parsed.first { it.resultSafe.tag == "IDAT" }.resultSafe.data)
+		imageDecoder.setInput(parsed.firstNotNullOf { it.resultSafe as? PNGDataChunk }.windows)
 		imageDecoder.next()
 	}
 
 	@Test
 	fun consumeNext() {
 		val testURL = this::class.java.classLoader.getResource("coder/format/png/animated")
-		if (testURL == null || testURL.protocol != "file") return logger.severe("Unable to test")
+		assert(testURL != null && testURL.protocol == "file") { "Unable to test in [$testURL]" }
 		val grid = JPanel(GridLayout(0, 5, 1, 1))
 		grid.background = Color(0, 0, 127)
+		val parser = PNGByteParser()
 		fun Path.testDirectory() {
 			this.forEachDirectoryEntry { path ->
 				if (path.isDirectory()) {
@@ -54,7 +55,7 @@ class APNGDecoderTest {
 				logger.info("File $path")
 				runCatching {
 					val parsed = mutableListOf<CodingPartialResult<PNGChunk>>()
-					PNGParser(BufferedInputStream(path.inputStream())).forEach {
+					parser.setInput(Files.newByteChannel(path)).forEach {
 						it.resultSafe.dumpLog(logger)
 						parsed.add(it)
 					}
@@ -78,13 +79,13 @@ class APNGDecoderTest {
 						pair[0] as PNGFrameControlChunk to pair[1] as PNGFrameDataChunk
 					}
 					imageDecoder.setInput(
-						parsed.first { it.resultSafe.tag == "IDAT" }.resultSafe.data,
+						parsed.firstNotNullOf { it.result as? PNGDataChunk }.windows,
 						delay = fcTlMain?.delay ?: Duration.ZERO
 					)
 					val images = mutableListOf(imageDecoder.next())
 					frames.forEach { (control, data) ->
 						imageDecoder.setInput(
-							data.data,
+							data.windows,
 							control.x,
 							control.y,
 							control.width,
@@ -105,9 +106,7 @@ class APNGDecoderTest {
 				}
 			}
 		}
-		File(testURL.path)
-			.toPath()
-			.testDirectory()
+		Paths.get(testURL!!.toURI()).testDirectory()
 
 		val frame = JFrame("APNG Test").apply {
 			defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE

@@ -3,7 +3,7 @@ package org.bread_experts_group.stream
 import java.io.IOException
 import java.io.InputStream
 
-open class FailQuickInputStream(private val from: InputStream) : LongInputStream() {
+open class FailQuickInputStream<S : InputStream>(val from: S) : LongInputStream() {
 	class EndOfStream : IOException()
 
 	override fun longAvailable(): ULong =
@@ -18,8 +18,11 @@ open class FailQuickInputStream(private val from: InputStream) : LongInputStream
 	}
 
 	override fun readAllBytes(): ByteArray = from.readAllBytes()
-
 	override fun close() {
 		from.close()
 	}
+
+	override fun mark(readlimit: Int) = from.mark(readlimit)
+	override fun markSupported(): Boolean = from.markSupported()
+	override fun reset() = from.reset()
 }

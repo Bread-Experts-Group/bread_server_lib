@@ -1,29 +1,31 @@
 package org.bread_experts_group.coder.format.parse
 
-import org.bread_experts_group.coder.format.parse.png.PNGParser
+import org.bread_experts_group.coder.format.parse.png.PNGByteParser
+import org.bread_experts_group.coder.format.parse.png.chunk.PNGChunk
 import org.bread_experts_group.dumpLog
 import org.bread_experts_group.dumpLogSafe
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.io.BufferedInputStream
 import java.io.File
+import java.nio.channels.SeekableByteChannel
+import java.nio.file.Files
 import java.util.logging.Logger
 import kotlin.io.path.forEachDirectoryEntry
-import kotlin.io.path.inputStream
 import kotlin.io.path.isDirectory
 import kotlin.test.Test
 
 class PNGParserTest {
 	val logger: Logger = ColoredHandler.newLoggerResourced("tests.png")
+	val parser = PNGByteParser()
 
-	fun test(at: String, ascertain: (PNGParser) -> Unit) {
+	fun test(at: String, ascertain: (ByteParser<String, PNGChunk, SeekableByteChannel>) -> Unit) {
 		val testURL = this::class.java.classLoader.getResource("coder/format/png/$at")
 		if (testURL == null || testURL.protocol != "file") return logger.severe("Unable to test")
 		File(testURL.path).toPath().forEachDirectoryEntry { path ->
 			if (path.isDirectory()) throw Error("Directory in test directory stream [$path]!")
 			try {
 				logger.info("File $path")
-				ascertain(PNGParser(BufferedInputStream(path.inputStream())))
+				ascertain(parser.setInput(Files.newByteChannel(path)))
 			} catch (_: InvalidInputException) {
 				logger.info("Invalid Input")
 			}
@@ -71,4 +73,7 @@ class PNGParserTest {
 
 	@Test
 	fun large() = test("large") { assertDoesNotThrow { it.dumpLog(logger) } }
+
+	@Test
+	fun animated() = test("animated") { assertDoesNotThrow { it.dumpLog(logger) } }
 }

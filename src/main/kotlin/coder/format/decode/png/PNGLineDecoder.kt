@@ -4,11 +4,8 @@ import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.format.parse.png.PNGAdaptiveFilterType
 import org.bread_experts_group.coder.format.parse.png.PNGHeaderFlags
 import org.bread_experts_group.coder.format.parse.png.chunk.PNGHeaderChunk
-import org.bread_experts_group.stream.FailQuickInputStream
 import org.bread_experts_group.stream.maskI
-import org.bread_experts_group.stream.read16ui
 import java.awt.Color
-import java.io.InputStream
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -21,13 +18,6 @@ class PNGLineDecoder(
 	private var filter: PNGAdaptiveFilterType = PNGAdaptiveFilterType.NONE
 	private var data: ByteArray = byteArrayOf()
 	private var lastData: ByteArray = byteArrayOf()
-	private val sampleRead: InputStream.() -> Int = {
-		when (from.bitDepth) {
-			8 -> this.read()
-			16 -> this.read16ui() ushr 8
-			else -> TODO(from.bitDepth.toString())
-		}
-	}
 	private val channels =
 		(if (from.flags.contains(PNGHeaderFlags.PALETTE)) max(1, from.bitDepth / 8)
 		else ((if (from.flags.contains(PNGHeaderFlags.TRUE_COLOR)) 3 else 1) +
@@ -65,14 +55,26 @@ class PNGLineDecoder(
 				}
 			}).toByte()
 		}
-		lastData = data
-		val samples = FailQuickInputStream(data.inputStream())
+		if (lastData.isEmpty()) lastData = ByteArray(data.size)
+		System.arraycopy(data, 0, lastData, 0, data.size)
+		var samplesOffset = 0
+		val nextByte = { data[samplesOffset++].toInt() and 0xFF }
+		val next = when (from.bitDepth) {
+			1, 2, 4, 8 -> nextByte
+			16 -> {
+				{
+					((nextByte() shl 8) or nextByte()) ushr 8
+				}
+			}
+
+			else -> throw UnsupportedOperationException("True-color ${from.bitDepth}-bit")
+		}
 		var i = 0
 		while (i < into.size) {
 			if (from.flags.contains(PNGHeaderFlags.PALETTE)) {
 				when (from.bitDepth) {
 					1, 2, 4 -> {
-						val source = samples.read()
+						val source = next()
 						for (n in (0..7 step from.bitDepth).reversed()) {
 							val local = (source shr n) and from.bitDepth.maskI()
 							val trans = paletteTransparency.getOrNull(local)?.times(0xFF)?.roundToInt() ?: 0xFF
@@ -81,7 +83,7 @@ class PNGLineDecoder(
 					}
 
 					8 -> {
-						val local = samples.read()
+						val local = next()
 						val trans = paletteTransparency.getOrNull(local)?.times(0xFF)?.roundToInt() ?: 0xFF
 						into[i++] = (palette[local].rgb and 0xFFFFFF) or (trans shl 24)
 					}
@@ -89,14 +91,14 @@ class PNGLineDecoder(
 					else -> throw UnsupportedOperationException("Palette ${from.bitDepth}-bit")
 				}
 			} else if (from.flags.contains(PNGHeaderFlags.TRUE_COLOR)) {
-				val r = samples.sampleRead()
-				val g = samples.sampleRead()
-				val b = samples.sampleRead()
-				val a = if (from.flags.contains(PNGHeaderFlags.ALPHA)) samples.sampleRead() else 0xFF
+				val r = next()
+				val g = next()
+				val b = next()
+				val a = if (from.flags.contains(PNGHeaderFlags.ALPHA)) next() else 0xFF
 				into[i++] = (a shl 24) or (r shl 16) or (g shl 8) or b
 			} else when (val bits = from.bitDepth) {
 				1, 2, 4 -> {
-					val source = samples.read()
+					val source = next()
 					for (n in (0..7 step bits).reversed()) {
 						val s = ((source shr n) and ((1 shl bits) - 1))
 						val white = when (bits) {
@@ -110,16 +112,14 @@ class PNGLineDecoder(
 				}
 
 				8 -> {
-					val white = samples.read()
-					val a = if (from.flags.contains(PNGHeaderFlags.ALPHA)) samples.read() else 0xFF
+					val white = next()
+					val a = if (from.flags.contains(PNGHeaderFlags.ALPHA)) next() else 0xFF
 					into[i++] = (a shl 24) or (white shl 16) or (white shl 8) or white
 				}
 
 				16 -> {
-					val white = samples.read16ui() ushr 8
-					val a =
-						if (from.flags.contains(PNGHeaderFlags.ALPHA)) samples.read16ui() ushr 8
-						else 0xFF
+					val white = next()
+					val a = if (from.flags.contains(PNGHeaderFlags.ALPHA)) next() else 0xFF
 					into[i++] = (a shl 24) or (white shl 16) or (white shl 8) or white
 				}
 
@@ -132,5 +132,9 @@ class PNGLineDecoder(
 	fun setInput(filter: Int, data: ByteArray) {
 		this.filter = PNGAdaptiveFilterType.entries.id(filter)
 		this.data = data
+	}
+
+	fun reset() {
+		this.lastData = byteArrayOf()
 	}
 }

@@ -13,30 +13,16 @@ import java.math.BigInteger
 import java.net.URI
 import java.util.*
 
-class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("ID3", from) {
+class ID3Parser : Parser<String, ID3Frame<*>, InputStream>(
+	"ID3",
+	InputStream::class
+) {
 	private var unsupported = false
 	private var version: Int = 0
 	private var preFrame: ID3Header? = null
-	override var fqIn: FailQuickInputStream = super.fqIn
 
 	override fun toString(): String = super.toString() + "[${!unsupported}/v$version]"
 	fun readZeroPadded() = (3 downTo 0).fold(0) { acc, i -> acc or (fqIn.read() shl (7 * i)) }
-
-	init {
-		val tag = fqIn.readString(3)
-		if (tag != "ID3") throw InvalidInputException("Not an ID3 stream")
-		version = fqIn.read()
-		val minor = fqIn.read()
-		val flags = fqIn.read()
-		val size = readZeroPadded()
-		if (version !in 2..4) {
-			unsupported = true
-			fqIn.skip(size.toLong())
-		} else {
-			fqIn = FailQuickInputStream(fqIn.readNBytes(size).inputStream())
-			preFrame = ID3Header(version, minor, flags)
-		}
-	}
 
 	override fun responsibleStream(of: ID3Frame<*>): InputStream = of.data.inputStream()
 	override fun readBase(compound: CodingCompoundThrowable): ID3Frame<*>? {
@@ -81,7 +67,7 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				)
 			}
 
-			else -> throw NotImplementedError("Unsupported version [$version]")
+			else -> throw UnsupportedOperationException("Unsupported version [$version]")
 		}
 	}
 
@@ -156,6 +142,22 @@ class ID3Parser(from: InputStream) : Parser<String, ID3Frame<*>, InputStream>("I
 				stream.readString(encoding.charset),
 				stream.readAllBytes()
 			)
+		}
+	}
+
+	override fun inputInit() {
+		val tag = fqIn.readString(3)
+		if (tag != "ID3") throw InvalidInputException("Not an ID3 stream")
+		version = fqIn.read()
+		val minor = fqIn.read()
+		val flags = fqIn.read()
+		val size = readZeroPadded()
+		if (version !in 2..4) {
+			unsupported = true
+			fqIn.skip(size.toLong())
+		} else {
+			fqIn = FailQuickInputStream(fqIn.readNBytes(size).inputStream())
+			preFrame = ID3Header(version, minor, flags)
 		}
 	}
 }

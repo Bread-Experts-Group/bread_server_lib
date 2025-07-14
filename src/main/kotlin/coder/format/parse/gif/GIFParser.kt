@@ -1,5 +1,6 @@
 package org.bread_experts_group.coder.format.parse.gif
 
+import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.format.parse.CodingCompoundThrowable
 import org.bread_experts_group.coder.format.parse.Parser
 import org.bread_experts_group.coder.format.parse.gif.block.*
@@ -14,15 +15,11 @@ import kotlin.contracts.contract
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphics Interchange Format", from) {
+class GIFParser : Parser<Byte, GIFBlock, InputStream>(
+	"Graphics Interchange Format",
+	InputStream::class
+) {
 	private val preread = ArrayDeque<GIFBlock>()
-
-	init {
-		val signature = from.readString(3)
-		require(signature == "GIF") {
-			"GIF signature mismatch; [\"${signature}\" =/= \"GIF\"]"
-		}
-	}
 
 	private fun readColorTable(size: Int) = List(size) {
 		Color(fqIn.read(), fqIn.read(), fqIn.read())
@@ -43,18 +40,91 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 		}
 	}
 
+	override fun responsibleStream(of: GIFBlock): InputStream = fqIn
+	override fun readBase(compound: CodingCompoundThrowable): GIFBlock =
+		preread.removeFirstOrNull()
+			?: GIFBlock(fqIn.read().toByte(), byteArrayOf())
+
+	private fun readBlocks(): ConsolidatedInputStream {
+		val consolidated = ConsolidatedInputStream(false)
+		while (true) {
+			val data = fqIn.readNBytes(fqIn.read())
+			if (data.isEmpty()) break
+			consolidated.streams.add(data.inputStream())
+		}
+		return consolidated
+	}
+
 	init {
-		val version = from.readString(3)
+		addParser(0x2C) { stream, block, _ ->
+			val x = fqIn.read16().le().toInt()
+			val y = fqIn.read16().le().toInt()
+			val width = fqIn.read16().le().toInt()
+			val height = fqIn.read16().le().toInt()
+			val packed = fqIn.read()
+
+			val localColorTable = (packed and 0b10000000) != 0
+			val interlaced = (packed and 0b01000000) != 0
+			val sorted = (packed and 0b00100000) != 0
+			val localColorTableSize = 1 shl ((packed and 0b00000111) + 1)
+			val colorTable = if (localColorTable) readColorTable(localColorTableSize) else null
+
+			val lzwMCS = fqIn.read()
+			GIFImageDescriptor(
+				x, y, width, height,
+				interlaced, sorted, colorTable,
+				lzwMCS, readBlocks()
+			)
+		}
+		addParser(0x21) { stream, block, _ ->
+			val extension = fqIn.read()
+			val size = fqIn.read()
+			when (extension) {
+				0xFF -> GIFApplicationExtensionBlock(
+					fqIn.readString(8),
+					fqIn.readNBytes(3),
+					readBlocks()
+				)
+
+				0xF9 -> {
+					val packed = stream.read()
+					val delayTime = fqIn.read16().le() * 10L
+					val transparentColorIndex = stream.read()
+					fqIn.read() // Terminator
+					GIFGraphicControlExtensionBlock(
+						delayTime.toDuration(DurationUnit.MILLISECONDS),
+						if (packed and 1 == 0) null else transparentColorIndex,
+						GIFDisposalMethod.entries.id((packed and 0b00011100) ushr 2),
+						(packed ushr 1) and 1 == 1
+					)
+				}
+
+				else -> GIFExtensionBlock(
+					extension.toByte(),
+					fqIn.readNBytes(size)
+				)
+			}
+		}
+	}
+
+	override fun inputInit() {
+		val signature = fqIn.readString(3)
+		require(signature == "GIF") {
+			"GIF signature mismatch; [\"${signature}\" =/= \"GIF\"]"
+		}
+
+		val version = fqIn.readString(3)
 		require(version == "87a" || version == "89a") {
 			"Unsupported GIF version; \"$version\", supported versions are [87a, 89a]"
 		}
+
 		// Logical Screen Descriptor
 		run {
-			val width = from.read16().le().toInt()
-			val height = from.read16().le().toInt()
-			val packed = from.read()
-			val backgroundColorIndex = from.read()
-			val pixelAspectRatio = from.read()
+			val width = fqIn.read16().le().toInt()
+			val height = fqIn.read16().le().toInt()
+			val packed = fqIn.read()
+			val backgroundColorIndex = fqIn.read()
+			val pixelAspectRatio = fqIn.read()
 
 			val globalColorTable = (packed and 0b10000000) != 0
 			val bitDepth = ((packed and 0b01110000) ushr 4) + 1
@@ -73,73 +143,6 @@ class GIFParser(from: InputStream) : Parser<Byte, GIFBlock, InputStream>("Graphi
 					colorTable
 				)
 			)
-		}
-	}
-
-	override fun responsibleStream(of: GIFBlock): InputStream = fqIn
-	override fun readBase(compound: CodingCompoundThrowable): GIFBlock =
-		preread.removeFirstOrNull()
-			?: GIFBlock(fqIn.read().toByte(), byteArrayOf())
-
-	private fun readBlocks(): ConsolidatedInputStream {
-		val consolidated = ConsolidatedInputStream(false)
-		while (true) {
-			val data = fqIn.readNBytes(fqIn.read())
-			if (data.isEmpty()) break
-			consolidated.streams.add(data.inputStream())
-		}
-		return consolidated
-	}
-
-	init {
-		addParser(0x2C) { stream, block, _ ->
-			val x = from.read16().le().toInt()
-			val y = from.read16().le().toInt()
-			val width = from.read16().le().toInt()
-			val height = from.read16().le().toInt()
-			val packed = from.read()
-
-			val localColorTable = (packed and 0b10000000) != 0
-			val interlaced = (packed and 0b01000000) != 0
-			val sorted = (packed and 0b00100000) != 0
-			val localColorTableSize = 1 shl ((packed and 0b00000111) + 1)
-			val colorTable = if (localColorTable) readColorTable(localColorTableSize) else null
-
-			val lzwMCS = from.read()
-			GIFImageDescriptor(
-				x, y, width, height,
-				interlaced, sorted, colorTable,
-				lzwMCS, readBlocks()
-			)
-		}
-		addParser(0x21) { stream, block, _ ->
-			val extension = from.read()
-			val size = from.read()
-			when (extension) {
-				0xFF -> GIFApplicationExtensionBlock(
-					from.readString(8),
-					from.readNBytes(3),
-					readBlocks()
-				)
-
-				0xF9 -> {
-					val packed = stream.read()
-					val delayTime = fqIn.read16().le() * 10L
-					val transparentColorIndex = stream.read()
-					from.read() // Terminator
-					GIFGraphicControlExtensionBlock(
-						delayTime.toDuration(DurationUnit.MILLISECONDS),
-						if (packed and 1 == 0) null else transparentColorIndex,
-						GIFDisposalMethod.mapping.getValue((packed and 0b00011100) ushr 2),
-						(packed ushr 1) and 1 == 1
-					)
-				}
-
-				else -> GIFExtensionBlock(
-					extension.toByte(),
-					from.readNBytes(size)
-				)
-			}
 		}
 	}
 }

@@ -7,6 +7,7 @@ enum class TIFFStructureIdentifier(
 	override val id: Int,
 	override val tag: String
 ) : Mappable<TIFFStructureIdentifier, Int> {
+	COMPRESSION(0x0103, "Compression (Exif.Image.Compression)"),
 	IMAGE_DESCRIPTION(0x010E, "Image Description (Exif.Image.ImageDescription)"),
 	EQUIPMENT_MANUFACTURER(0x010F, "Equipment Manufacturer (Exif.Image.Make)"),
 	EQUIPMENT_MODEL(0x0110, "Equipment Model (Exif.Image.Model)"),
@@ -17,6 +18,8 @@ enum class TIFFStructureIdentifier(
 	SOFTWARE(0x0131, "Software (Exif.Image.Software)"),
 	MODIFIED_DATE_TIME(0x0132, "Last Modified (Exif.Image.DateTime)"),
 	ARTIST(0x013B, "Artist (Exif.Image.Artist)"),
+	JPEG_OFFSET(0x0201, "JPEG Offset (Exif.Image.JPEGInterchangeFormat)"),
+	JPEG_SIZE(0x0202, "JPEG Size (Exif.Image.JPEGInterchangeFormatLength)"),
 	YCBCR_POSITIONING(0x0213, "YCbCr Positioning (Exif.Image.YCbCrPositioning)"),
 	COPYRIGHT(0x8298, "Copyright (Exif.Image.Copyright)"),
 	EXPOSURE_TIME(0x829A, "Exposure Time (s) (Exif.Image.ExposureTime)"),

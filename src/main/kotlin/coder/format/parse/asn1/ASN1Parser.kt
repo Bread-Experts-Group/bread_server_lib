@@ -8,9 +8,10 @@ import org.bread_experts_group.stream.read16ui
 import java.io.InputStream
 import java.math.BigInteger
 
-class ASN1Parser(
-	from: InputStream
-) : Parser<ASN1ElementIdentifier, ASN1Element, InputStream>("Abstract Syntax Notation One", from) {
+class ASN1Parser : Parser<ASN1ElementIdentifier, ASN1Element, InputStream>(
+	"Abstract Syntax Notation One",
+	InputStream::class
+) {
 	override fun responsibleStream(of: ASN1Element): InputStream = of.data.inputStream()
 
 	override fun readBase(compound: CodingCompoundThrowable): ASN1Element = ASN1Element(

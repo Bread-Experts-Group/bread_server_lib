@@ -12,7 +12,7 @@ class ASN1ParserTest {
 	val testFile: InputStream? = this::class.java.classLoader.getResourceAsStream(
 		"coder/format/crypto/x509/32k-rsa-example-cert.der"
 	)
-	val testParser = ASN1Parser(testFile!!).throwOnUnknown()
+	val testParser = ASN1Parser().setInput(testFile!!).throwOnUnknown()
 
 	@Test
 	fun getNext() = assertDoesNotThrow {

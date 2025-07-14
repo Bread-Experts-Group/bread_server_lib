@@ -12,6 +12,8 @@ import org.bread_experts_group.stream.Writable
 import java.io.InputStream
 import java.util.function.Predicate
 import java.util.logging.Logger
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSuperclassOf
 
 typealias CodingCompoundThrowable = CompoundThrowable<CodingException>
 typealias CodingPartialResult<O> = LazyPartialResult<O, CodingException>
@@ -20,10 +22,10 @@ private typealias ParserGroup<O> = Pair<SubParser<O>, Array<out Any>>
 
 abstract class Parser<T, O, S : InputStream>(
 	private val format: String,
-	protected val rawStream: S
+	private val streamClass: KClass<S>
 ) : AutoCloseable, Iterable<CodingPartialResult<O>> where O : Tagged<T>, O : Writable {
 
-	protected open val fqIn = FailQuickInputStream(rawStream)
+	protected lateinit var fqIn: FailQuickInputStream<S>
 	protected val logger: Logger = ColoredHandler.newLogger("$format ${LoggerResource.get().getString("parser")}")
 	protected val parsers = mutableMapOf<T, ParserGroup<O>>()
 	protected val predicateParsers = mutableMapOf<Predicate<O>, ParserGroup<O>>()
@@ -130,5 +132,21 @@ abstract class Parser<T, O, S : InputStream>(
 	}
 
 	override fun iterator(): Iterator<CodingPartialResult<O>> = standardIterator
-	override fun toString(): String = "${this::class.simpleName}[\"$format\", #${rawStream.available()}]"
+	override fun toString(): String = "${this::class.simpleName}[\"$format\"]"
+
+	fun setInput(from: InputStream): Parser<T, O, S> {
+		if (streamClass.isSuperclassOf(from::class))
+			@Suppress("UNCHECKED_CAST") return setInputFq(FailQuickInputStream(from as S))
+		if (from is FailQuickInputStream<*> && streamClass.isInstance(from.from))
+			@Suppress("UNCHECKED_CAST") return setInputFq(from as FailQuickInputStream<S>)
+		throw IllegalArgumentException("[$from] is not [$streamClass]")
+	}
+
+	fun setInputFq(from: FailQuickInputStream<S>): Parser<T, O, S> {
+		fqIn = from
+		inputInit()
+		return this
+	}
+
+	open fun inputInit() {}
 }

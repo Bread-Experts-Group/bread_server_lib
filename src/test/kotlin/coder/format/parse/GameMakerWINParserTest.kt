@@ -34,7 +34,7 @@ class GameMakerWINParserTest {
 		val tempFile = Files.createTempFile("test", ".win")
 		tempFile.writeBytes(testFile.readAllBytes())
 		val fileStream = FileInputStream(tempFile.toFile())
-		val testStream = GameMakerWINParser(fileStream)
+		val testStream = GameMakerWINParser().setInput(fileStream)
 		val dialA = System.currentTimeMillis()
 		val read = testStream.toList()
 		logger.info((System.currentTimeMillis() - dialA).toDuration(DurationUnit.MILLISECONDS).toString())

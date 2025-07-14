@@ -11,11 +11,12 @@ class FLACParserTest {
 
 	@Test
 	fun readBase() {
-		val parser = FLACParser(
-			URI("https://breadexperts.group/music/Minecraft%20(Alpha)/01.%20Key.flac")
-				.toURL()
-				.openStream()
-		)
+		val parser = FLACParser()
+			.setInput(
+				URI("https://breadexperts.group/music/Minecraft%20(Alpha)/01.%20Key.flac")
+					.toURL()
+					.openStream()
+			)
 		parser.dumpLog(logger)
 	}
 }

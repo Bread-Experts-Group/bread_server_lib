@@ -10,27 +10,30 @@ import java.io.FileInputStream
 import java.io.InputStream
 
 @OptIn(ExperimentalUnsignedTypes::class)
-class ELFParser(
-	from: FileInputStream
-) : Parser<Nothing?, ELFContextuallyWritable, FileInputStream>("Executable and Linkable Format", from) {
+class ELFParser : Parser<Nothing?, ELFContextuallyWritable, FileInputStream>(
+	"Executable and Linkable Format",
+	FileInputStream::class
+) {
 	private val preread = ArrayDeque<ELFContextuallyWritable>()
 
 	companion object {
 		val goodSignature = ubyteArrayOf(0x7Fu, 0x45u, 0x4Cu, 0x46u).toByteArray()
 	}
 
-	init {
-		val signature = from.readNBytes(4)
+	override fun responsibleStream(of: ELFContextuallyWritable): FileInputStream = fqIn.from
+	override fun readBase(compound: CodingCompoundThrowable): ELFContextuallyWritable = preread.removeFirstOrNull()
+		?: throw FailQuickInputStream.EndOfStream()
+
+	override fun inputInit() {
+		val signature = fqIn.readNBytes(4)
 		require(signature.contentEquals(goodSignature)) {
 			"ELF signature mismatch; [${signature.toHexString()} =/= ${goodSignature.toHexString()}]"
 		}
-	}
 
-	init {
-		val bitsRaw = from.read()
+		val bitsRaw = fqIn.read()
 		val bits = ELFHeaderBits.mapping[bitsRaw]
 		if (bits == null) throw InvalidInputException("Unknown ELF bits [$bitsRaw]")
-		val endianRaw = from.read()
+		val endianRaw = fqIn.read()
 		val endian = ELFHeaderEndian.Companion.mapping[endianRaw]
 		if (endian == null) throw InvalidInputException("Unknown ELF endian [$endianRaw]")
 
@@ -41,25 +44,25 @@ class ELFParser(
 			if (bits == ELFHeaderBits.BIT_32) this.read32().re().toLong()
 			else this.read64().re()
 
-		val version = from.read()
+		val version = fqIn.read()
 		if (version != 1) logger.warning("Unknown ELF version(1) [$version]")
-		val abiRaw = from.read()
-		val abiVersion = from.read()
-		from.skip(7)
-		val objectTypeRaw = from.read16().re().toInt()
-		val isaRaw = from.read16().re().toInt()
-		val version2 = from.read32().re()
+		val abiRaw = fqIn.read()
+		val abiVersion = fqIn.read()
+		fqIn.skip(7)
+		val objectTypeRaw = fqIn.read16().re().toInt()
+		val isaRaw = fqIn.read16().re().toInt()
+		val version2 = fqIn.read32().re()
 		if (version2 != 1) logger.warning("Unknown ELF version(2) [$version2]")
-		val entryPoint = from.readBits().let { if (it == 0L) null else it }
-		val programHeaderOffset = from.readBits()
-		val sectionHeaderOffset = from.readBits()
-		val isaFlags = from.read32().re()
-		from.skip(2)
-		val programHeaderEntrySize = from.read16().re().toInt()
-		val programHeaderEntries = from.read16().re().toInt()
-		val sectionHeaderEntrySize = from.read16().re().toInt()
-		val sectionHeaderEntries = from.read16().re().toInt()
-		val sectionNamesIndex = from.read16().re().toInt()
+		val entryPoint = fqIn.readBits().let { if (it == 0L) null else it }
+		val programHeaderOffset = fqIn.readBits()
+		val sectionHeaderOffset = fqIn.readBits()
+		val isaFlags = fqIn.read32().re()
+		fqIn.skip(2)
+		val programHeaderEntrySize = fqIn.read16().re().toInt()
+		val programHeaderEntries = fqIn.read16().re().toInt()
+		val sectionHeaderEntrySize = fqIn.read16().re().toInt()
+		val sectionHeaderEntries = fqIn.read16().re().toInt()
+		val sectionNamesIndex = fqIn.read16().re().toInt()
 		preread.add(
 			ELFHeader(
 				bits,
@@ -74,9 +77,9 @@ class ELFParser(
 				isaFlags
 			)
 		)
-		from.channel.position(programHeaderOffset)
+		fqIn.from.channel.position(programHeaderOffset)
 		(0 until programHeaderEntries).forEach { _ ->
-			val local = from.readNBytes(programHeaderEntrySize).inputStream()
+			val local = fqIn.readNBytes(programHeaderEntrySize).inputStream()
 			val rawType = local.read32().re()
 			if (bits == ELFHeaderBits.BIT_64) {
 				val rawFlags = local.read32().re()
@@ -122,9 +125,9 @@ class ELFParser(
 				)
 			}
 		}
-		from.channel.position(sectionHeaderOffset)
+		fqIn.from.channel.position(sectionHeaderOffset)
 		for (index in 0 until sectionHeaderEntries) {
-			val local = from.readNBytes(sectionHeaderEntrySize).inputStream()
+			val local = fqIn.readNBytes(sectionHeaderEntrySize).inputStream()
 			val nameOffset = local.read32().re()
 			val rawType = local.read32().re()
 			val rawFlags = local.readBits()
@@ -149,8 +152,4 @@ class ELFParser(
 			)
 		}
 	}
-
-	override fun responsibleStream(of: ELFContextuallyWritable): FileInputStream = rawStream
-	override fun readBase(compound: CodingCompoundThrowable): ELFContextuallyWritable = preread.removeFirstOrNull()
-		?: throw FailQuickInputStream.EndOfStream()
 }

@@ -2,13 +2,14 @@ package org.bread_experts_group.coder.format.parse.riff.chunk
 
 import org.bread_experts_group.coder.CodingException
 import org.bread_experts_group.coder.LazyPartialResult
-import org.bread_experts_group.coder.format.parse.riff.RIFFParser
+import org.bread_experts_group.coder.format.parse.Parser
+import java.io.InputStream
 import java.io.OutputStream
 
 class RIFFContainerChunk(
 	override val tag: String,
 	val localIdentifier: String,
-	private val chunks: RIFFParser
+	private val chunks: Parser<String, RIFFChunk, InputStream>
 ) : RIFFChunk(tag, byteArrayOf()), Iterable<LazyPartialResult<RIFFChunk, CodingException>> {
 	override fun iterator(): Iterator<LazyPartialResult<RIFFChunk, CodingException>> = chunks.iterator()
 	override fun toString(): String = "RIFFContainerChunk.\"$tag\"[\"$localIdentifier\"]"

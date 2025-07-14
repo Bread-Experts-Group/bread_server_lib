@@ -19,6 +19,7 @@ repositories {
 }
 dependencies {
 	testImplementation(kotlin("test"))
+	implementation(kotlin("reflect"))
 }
 tasks.test {
 	useJUnitPlatform()
