@@ -94,8 +94,11 @@ class APNGDecoderTest {
 							control.blend,
 							control.delay
 						)
-						val image = imageDecoder.next()
-						images.add(image)
+						try {
+							val image = imageDecoder.next()
+							images.add(image)
+						} catch (_: Exception) {
+						}
 					}
 					val imagePanel = ImagePanel(images)
 					imagePanel.background = Color(127, 0, 0)

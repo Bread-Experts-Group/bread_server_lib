@@ -32,27 +32,6 @@ class HTTPResponse(
 				if (data is LongInputStream) data.longAvailable().toString()
 				else data.available().toString()
 			it["strict-transport-security"] = "max-age=31536000; includeSubDomains; preload"
-			// Defaults
-			it.putIfAbsent("x-frame-options", "DENY")
-			it.putIfAbsent("x-content-type-options", "nosniff")
-			it.putIfAbsent("referrer-policy", "strict-origin-when-cross-origin")
-			it.putIfAbsent(
-				"permissions-policy", "bluetooth=(), ambient-light-sensor=(), attribution-reporting=()" +
-						", autoplay=(self), browsing-topics=(), camera=(), compute-pressure=(), cross-origin-isolated=()" +
-						", deferred-fetch=(), deferred-fetch-minimal=(), display-capture=(), encrypted-media=()" +
-						", fullscreen=(), geolocation=(), gyroscope=(), hid=(), identity-credentials-get=()" +
-						", idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), otp-credentials=()" +
-						", payment=(), picture-in-picture=(self), publickey-credentials-create=()" +
-						", publickey-credentials-get=(), screen-wake-lock=(), serial=(), storage-access=(), summarizer=()" +
-						", usb=(), web-share=(), window-management=(), xr-spatial-tracking=(), accelerometer=()"
-			)
-			it.putIfAbsent(
-				"content-security-policy",
-				"default-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
-			)
-			it.putIfAbsent("cross-origin-embedder-policy", "require-corp")
-			it.putIfAbsent("cross-origin-resource-policy", "same-origin")
-			it.putIfAbsent("cross-origin-opener-policy", "same-origin")
 		}
 
 	override fun toString(): String = "(<Res>) $code [DATA#: ${data.available()}] " + buildString {
