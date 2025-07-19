@@ -2,7 +2,6 @@ package org.bread_experts_group.coder.fixed.json
 
 import org.bread_experts_group.coder.fixed.json.JSONElement.Companion
 
-
 data class JSONArray(
 	val entries: Array<JSONElement>
 ) : JSONElement() {
@@ -20,6 +19,8 @@ data class JSONArray(
 			return JSONArray(entries.toTypedArray())
 		}
 	}
+
+	override fun toString(): String = '[' + entries.joinToString(",") { it.toString() } + ']'
 
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true

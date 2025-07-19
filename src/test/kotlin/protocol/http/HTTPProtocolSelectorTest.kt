@@ -4,10 +4,17 @@ import org.bread_experts_group.getTLSContext
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
-import java.net.*
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.net.SocketException
+import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.ByteBuffer
+import java.nio.channels.Channels
+import java.nio.channels.ServerSocketChannel
+import java.nio.channels.SocketChannel
 import java.nio.file.Files
 import java.security.cert.X509Certificate
 import java.util.concurrent.CountDownLatch
@@ -50,16 +57,19 @@ class HTTPProtocolSelectorTest {
 		remoteClient = HttpClient.newBuilder().sslContext(tlsContext).build()
 	}
 
-	fun testNextRequest(socket: ServerSocket, version: HTTPVersion, latch: CountDownLatch) {
+	fun testNextRequest(socket: ServerSocketChannel, version: HTTPVersion, latch: CountDownLatch) {
 		while (true) {
 			val connection = socket.accept()
 			try {
-				logger.info("Connection from [${connection.remoteSocketAddress}]")
-				val selector = HTTPProtocolSelector(version, connection.inputStream, connection.outputStream, true)
-				val request = selector.nextRequest()
+				logger.info("Connection from [${connection.remoteAddress}]")
+				val selector = HTTPProtocolSelector(version, connection, connection, true)
+				val request = selector.nextRequest().getOrThrow()
 				logger.info("Request: $request")
 				selector.sendResponse(
-					HTTPResponse(request.getOrThrow(), 200, data = "Hello, ${version.tag}".byteInputStream())
+					HTTPResponse(
+						request, 200,
+						data = Channels.newChannel("Hello, ${version.tag}".byteInputStream())
+					)
 				)
 				latch.await()
 				break
@@ -72,13 +82,13 @@ class HTTPProtocolSelectorTest {
 
 	@Test
 	fun nextRequestHTTP11(): Unit = assertDoesNotThrow {
-		val socket = ServerSocket()
+		val socket = ServerSocketChannel.open()
 		socket.bind(InetSocketAddress("localhost", 60511))
-		logger.info("Server active on address [${socket.localSocketAddress}]")
+		logger.info("Server active on address [${socket.localAddress}]")
 		val block = CountDownLatch(1)
 		Thread.ofVirtual().name("HTTP/1.1 Selection Tests, Remote Client").start {
 			val response = remoteClient.send(
-				HttpRequest.newBuilder(URI("http://localhost:${socket.localPort}"))
+				HttpRequest.newBuilder(URI("http://localhost:${(socket.localAddress as InetSocketAddress).port}"))
 					.version(HttpClient.Version.HTTP_1_1)
 					.build(),
 				HttpResponse.BodyHandlers.ofString()
@@ -112,26 +122,36 @@ class HTTPProtocolSelectorTest {
 //		testNextRequest(socket, HTTPVersion.HTTP_2, block)
 //	}
 
-	fun testNextResponse(socket: Socket, version: HTTPVersion) {
-		val selector = HTTPProtocolSelector(version, socket.inputStream, socket.outputStream, false)
+	fun testNextResponse(socket: SocketChannel, version: HTTPVersion) {
+		val selector = HTTPProtocolSelector(version, socket, socket, false)
 		selector.sendRequest(HTTPRequest(HTTPMethod.GET, URI.create("/")))
-		val response = selector.nextResponse()
+		val response = selector.nextResponse().getOrThrow()
 		logger.info("Response: $response")
-		response.onSuccess {
-			logger.info(it.data.readAllBytes().decodeToString())
+		val buffer = ByteBuffer.allocate(4096)
+		val string = StringBuilder()
+		while (true) {
+			buffer.clear()
+			val read = response.data.read(buffer)
+			if (read == -1) break
+			val bytes = ByteArray(read)
+			buffer.flip()
+			buffer.get(bytes, 0, buffer.remaining())
+			string.append(bytes.decodeToString())
+			Thread.sleep(10)
 		}
+		logger.info(string.toString())
 	}
 
 	@Test
 	fun nextResponseHTTP11(): Unit = assertDoesNotThrow {
 		fun site(s: String) {
-			val socket = Socket()
-			socket.connect(InetSocketAddress(s, 80), 5000)
+			val socket = SocketChannel.open()
+			socket.connect(InetSocketAddress(s, 80))
 			testNextResponse(socket, HTTPVersion.HTTP_1_1)
 			socket.close()
 		}
 
-		site("google.com")
-		site("cloudflare.com")
+		site("www.google.com")
+		site("example.com")
 	}
 }

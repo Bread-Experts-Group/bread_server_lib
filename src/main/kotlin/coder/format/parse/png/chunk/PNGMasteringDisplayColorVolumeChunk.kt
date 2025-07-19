@@ -1,6 +1,6 @@
 package org.bread_experts_group.coder.format.parse.png.chunk
 
-import org.bread_experts_group.coder.format.parse.png.Point2D
+import org.bread_experts_group.numeric.geometry.Point2D
 import java.nio.channels.SeekableByteChannel
 
 class PNGMasteringDisplayColorVolumeChunk(

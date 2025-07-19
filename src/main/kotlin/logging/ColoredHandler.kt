@@ -109,7 +109,7 @@ class ColoredHandler(
 					additionalOffset = it.length
 					append(it)
 				}
-				append(" ".repeat(max(0, prefix.length() - exceptionName.length - 3 - additionalOffset)))
+				append(" ".repeat(max(0, prefix.length - exceptionName.length - 3 - additionalOffset)))
 				append('[')
 				color(ANSI16Color(ANSI16.RED)) { append(exceptionName) }
 				append(']')
@@ -164,7 +164,7 @@ class ColoredHandler(
 			}
 			logTruncated()
 		}
-	}.build() + (thrown.cause?.let {
+	}.toString() + (thrown.cause?.let {
 		'\n' + createExceptionMessage(
 			record, prefix, spaced,
 			it, hitThrown + thrown
@@ -220,12 +220,12 @@ class ColoredHandler(
 			}
 			append(' ')
 		}
-		val spaced = " ".repeat(prefix.length())
+		val spaced = " ".repeat(prefix.length)
 		val paddedMessage = record.message.replace("\n", "\n$spaced", true)
 		val fullMessage = if (record.thrown != null) {
-			val initialMessage = prefix.build() + paddedMessage
+			val initialMessage = prefix.toString() + paddedMessage
 			initialMessage + '\n' + createExceptionMessage(record, prefix, spaced)
-		} else prefix.build() + paddedMessage
+		} else prefix.toString() + paddedMessage
 		synchronized(towards) {
 			towards.println(fullMessage)
 		}

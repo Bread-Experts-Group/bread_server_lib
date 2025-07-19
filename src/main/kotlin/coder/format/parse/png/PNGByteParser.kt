@@ -1,5 +1,6 @@
 package org.bread_experts_group.coder.format.parse.png
 
+import org.bread_experts_group.channel.*
 import org.bread_experts_group.coder.Flaggable.Companion.from
 import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.SaveSingle
@@ -8,6 +9,7 @@ import org.bread_experts_group.coder.format.parse.gif.GIFDisposalMethod
 import org.bread_experts_group.coder.format.parse.png.chunk.*
 import org.bread_experts_group.coder.format.parse.tiff.TIFFByteParser
 import org.bread_experts_group.hex
+import org.bread_experts_group.numeric.geometry.Point2D
 import org.bread_experts_group.stream.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
@@ -51,6 +53,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 	private val crc32Buffer = ByteBuffer.allocate(4096)
 	private fun internalReadBase(compound: CodingCompoundThrowable): PNGChunk? {
 		buffer12.limit(8)
+		buffer12.rewind()
 		channel.read(buffer12)
 		buffer12.rewind()
 		val length = buffer12.int
@@ -166,11 +169,13 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 
 	init {
 		addParser("IHDR") { channel, chunk, compound ->
-			val stream = Channels.newInputStream(channel)
-			val width = stream.read32()
-			val height = stream.read32()
-			val bitDepth = stream.read()
-			val colorType = stream.read()
+			val bufferIHDR = ByteBuffer.allocate(13)
+			channel.read(bufferIHDR)
+			bufferIHDR.rewind()
+			val width = bufferIHDR.int
+			val height = bufferIHDR.int
+			val bitDepth = bufferIHDR.byteInt
+			val colorType = bufferIHDR.byteInt
 			when (colorType) {
 				0 -> when (bitDepth) {
 					1, 2, 4, 8, 16 -> {}
@@ -202,93 +207,111 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			header = PNGHeaderChunk(
 				width, height, bitDepth,
 				PNGHeaderFlags.entries.from(colorType),
-				PNGCompressionType.entries.id(stream.read()),
-				PNGFilterType.entries.id(stream.read()),
-				PNGInterlaceType.entries.id(stream.read()),
+				PNGCompressionType.entries.id(bufferIHDR.byteInt),
+				PNGFilterType.entries.id(bufferIHDR.byteInt),
+				PNGInterlaceType.entries.id(bufferIHDR.byteInt),
 				channel
 			)
 			header
 		}
 		addParser("PLTE") { channel, _, _ ->
-			val buffer = ByteBuffer.allocate(4)
+			val bufferPLTE = ByteBuffer.allocate(4)
 			palette = PNGPaletteChunk(
 				List((channel.size() / 3).toInt()) {
-					buffer.position(1)
-					channel.read(buffer)
-					buffer.rewind()
-					Color(buffer.int)
+					bufferPLTE.position(1)
+					channel.read(bufferPLTE)
+					bufferPLTE.rewind()
+					Color(bufferPLTE.int)
 				},
 				channel
 			)
 			palette
 		}
-		addParser("sPLT") { channel, _, compound ->
-			val stream = Channels.newInputStream(channel)
+		addParser("sPLT") { channel, chunk, compound ->
+			// TODO: Make ByteBuffers in general use ReadingByteBuffers
+			val reader = ReadingByteBuffer(channel, ByteBuffer.allocate(100).flip(), null)
 			PNGSuggestedPaletteChunk(
-				stream.readString(Charsets.ISO_8859_1),
+				reader.decodeString(Charsets.ISO_8859_1),
 				buildList {
-					when (val depth = stream.read()) {
-						8 -> while (stream.available() > 0) add(
-							Color(
-								stream.read() / 255f,
-								stream.read() / 255f,
-								stream.read() / 255f,
-								stream.read() / 255f
-							) to stream.read16ui()
-						)
+					val depth = reader.u8i32()
+					try {
+						while (true) {
+							when (depth) {
+								8 -> add(
+									Color(
+										reader.u8i32() / 255f,
+										reader.u8i32() / 255f,
+										reader.u8i32() / 255f,
+										reader.u8i32() / 255f
+									) to reader.u16i32()
+								)
 
-						16 -> while (stream.available() > 0) add(
-							Color(
-								stream.read16ui() / 65535f,
-								stream.read16ui() / 65535f,
-								stream.read16ui() / 65535f,
-								stream.read16ui() / 65535f
-							) to stream.read16ui()
-						)
+								16 -> add(
+									Color(
+										reader.u16i32() / 65535f,
+										reader.u16i32() / 65535f,
+										reader.u16i32() / 65535f,
+										reader.u16i32() / 65535f
+									) to reader.u16i32()
+								)
 
-						else -> compound.addThrown(InvalidInputException("Invalid sPLT depth [$depth]"))
+								else -> {
+									compound.addThrown(InvalidInputException("Invalid sPLT depth [$depth]"))
+									return@addParser chunk
+								}
+							}
+						}
+					} catch (_: EOFException) {
 					}
 				},
 				channel
 			)
 		}
 		addParser("acTL") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferACTL = ByteBuffer.allocate(8)
+			channel.read(bufferACTL)
+			bufferACTL.rewind()
 			PNGAnimationControlChunk(
-				stream.read32(),
-				stream.read32(),
+				bufferACTL.int,
+				bufferACTL.int,
 				channel
 			)
 		}
 		addParser("fcTL") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
-			val sequence = stream.read32()
-			val width = stream.read32()
-			val height = stream.read32()
-			val x = stream.read32()
-			val y = stream.read32()
-			val numerator = stream.read16ui()
-			val denominator = stream.read16ui().let { if (it == 0) 100 else it }
+			val bufferFCTL = ByteBuffer.allocate(26)
+			channel.read(bufferFCTL)
+			bufferFCTL.rewind()
+			val sequence = bufferFCTL.int
+			val width = bufferFCTL.int
+			val height = bufferFCTL.int
+			val x = bufferFCTL.int
+			val y = bufferFCTL.int
+			val numerator = bufferFCTL.shortInt
+			val denominator = bufferFCTL.shortInt.let { if (it == 0) 100 else it }
 			val delayMillis =
 				if (numerator == 0) 0L
 				else ((numerator.toDouble() / denominator) * 1000L).toLong()
 			PNGFrameControlChunk(
 				sequence, width, height, x, y,
 				delayMillis.toDuration(DurationUnit.MILLISECONDS),
-				PNGDisposeOperation.entries.id(stream.read()),
-				PNGBlendOperation.entries.id(stream.read()),
+				PNGDisposeOperation.entries.id(bufferFCTL.byteInt),
+				PNGBlendOperation.entries.id(bufferFCTL.byteInt),
 				channel
 			)
 		}
 		addParser("gAMA") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferGAMA = ByteBuffer.allocate(4)
+			channel.read(bufferGAMA)
+			bufferGAMA.rewind()
 			PNGGammaChunk(
-				stream.read32ul() / 100000.0,
+				bufferGAMA.intLong / 100000.0,
 				channel
 			)
 		}
 		addParser("sBIT") { channel, chunk, compound ->
-			val stream = Channels.newInputStream(channel)
+			val bufferSBIT = ByteBuffer.allocate(4)
+			channel.read(bufferSBIT)
+			bufferSBIT.rewind()
 			if (!this::header.isInitialized) {
 				compound.addThrown(RefinementException("IHDR not defined"))
 				return@addParser chunk
@@ -296,20 +319,22 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 
 			PNGSignificantBitsChunk(
 				ByteArrayOutputStream().use { out ->
-					out.write(stream.read()) // R / W
+					out.write(bufferSBIT.byteInt) // R / W
 					if (header.flags.contains(PNGHeaderFlags.TRUE_COLOR)) {
-						out.write(stream.read()) // G
-						out.write(stream.read()) // B
+						out.write(bufferSBIT.byteInt) // G
+						out.write(bufferSBIT.byteInt) // B
 					}
 					if (header.flags.contains(PNGHeaderFlags.ALPHA))
-						out.write(stream.read()) // A
+						out.write(bufferSBIT.byteInt) // A
 					out.toByteArray()
 				},
 				channel
 			)
 		}
 		addParser("bKGD") { channel, chunk, compound ->
-			val stream = Channels.newInputStream(channel)
+			val bufferBKGD = ByteBuffer.allocate(6)
+			channel.read(bufferBKGD)
+			bufferBKGD.rewind()
 			if (!this::header.isInitialized) {
 				compound.addThrown(RefinementException("IHDR not defined"))
 				return@addParser chunk
@@ -323,7 +348,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 							compound.addThrown(RefinementException("PLTE not defined"))
 							return@addParser chunk
 						}
-						val index = stream.read()
+						val index = bufferBKGD.byteInt
 						if (index !in palette.colors.indices) {
 							compound.addThrown(RefinementException("[$index] out of range in PLTE"))
 							return@addParser chunk
@@ -332,13 +357,13 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 					}
 
 					header.flags.contains(PNGHeaderFlags.TRUE_COLOR) -> Color(
-						(stream.read16ui() and mask) / (mask.toFloat()),
-						(stream.read16ui() and mask) / (mask.toFloat()),
-						(stream.read16ui() and mask) / (mask.toFloat())
+						(bufferBKGD.shortInt and mask) / (mask.toFloat()),
+						(bufferBKGD.shortInt and mask) / (mask.toFloat()),
+						(bufferBKGD.shortInt and mask) / (mask.toFloat())
 					)
 
 					else -> {
-						val gray = (stream.read16ui() and mask) / (mask.toFloat())
+						val gray = (bufferBKGD.shortInt and mask) / (mask.toFloat())
 						Color(gray, gray, gray)
 					}
 				},
@@ -379,21 +404,25 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			}
 		}
 		addParser("cHRM") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferCHRM = ByteBuffer.allocate(32)
+			channel.read(bufferCHRM)
+			bufferCHRM.rewind()
 			PNGChromaticitiesChunk(
-				Point2D(stream.read32() / 100000.0, stream.read32() / 100000.0),
-				Point2D(stream.read32() / 100000.0, stream.read32() / 100000.0),
-				Point2D(stream.read32() / 100000.0, stream.read32() / 100000.0),
-				Point2D(stream.read32() / 100000.0, stream.read32() / 100000.0),
+				Point2D(bufferCHRM.intLong / 100000.0, bufferCHRM.intLong / 100000.0),
+				Point2D(bufferCHRM.intLong / 100000.0, bufferCHRM.intLong / 100000.0),
+				Point2D(bufferCHRM.intLong / 100000.0, bufferCHRM.intLong / 100000.0),
+				Point2D(bufferCHRM.intLong / 100000.0, bufferCHRM.intLong / 100000.0),
 				channel
 			)
 		}
 		addParser("pHYs") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferPHYS = ByteBuffer.allocate(9)
+			channel.read(bufferPHYS)
+			bufferPHYS.rewind()
 			PNGPhysicalPixelDimensionsChunk(
-				stream.read32(),
-				stream.read32(),
-				PNGPixelDimensions.entries.id(stream.read()),
+				bufferPHYS.intLong,
+				bufferPHYS.intLong,
+				PNGPixelDimensions.entries.id(bufferPHYS.byteInt),
 				channel
 			)
 		}
@@ -407,16 +436,18 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			)
 		}
 		addParser("tIME") { channel, chunk, compound ->
-			val stream = Channels.newInputStream(channel)
+			val bufferTIME = ByteBuffer.allocate(7)
+			channel.read(bufferTIME)
+			bufferTIME.rewind()
 			try {
 				PNGTimestampChunk(
 					ZonedDateTime.of(
-						stream.read16ui(),
-						stream.read(),
-						stream.read(),
-						stream.read(),
-						stream.read(),
-						stream.read(),
+						bufferTIME.shortInt,
+						bufferTIME.byteInt,
+						bufferTIME.byteInt,
+						bufferTIME.byteInt,
+						bufferTIME.byteInt,
+						bufferTIME.byteInt,
 						0,
 						ZoneOffset.UTC
 					),
@@ -533,56 +564,68 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			)
 		}
 		addParser("sRGB") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferSRGB = ByteBuffer.allocate(1)
+			channel.read(bufferSRGB)
+			bufferSRGB.rewind()
 			PNGSRGBChunk(
-				PNGSRGBIntent.entries.id(stream.read()),
+				PNGSRGBIntent.entries.id(bufferSRGB.byteInt),
 				channel
 			)
 		}
 		addParser("cICP") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferCICP = ByteBuffer.allocate(4)
+			channel.read(bufferCICP)
+			bufferCICP.rewind()
 			PNGICPVSTIDChunk(
-				PNGICPVSTIDColorPrimaries.entries.id(stream.read()),
-				PNGICPVSTIDTransferFunction.entries.id(stream.read()),
-				PNGICPVSTIDMatrixCoefficients.entries.id(stream.read()),
-				stream.read() != 0,
+				PNGICPVSTIDColorPrimaries.entries.id(bufferCICP.byteInt),
+				PNGICPVSTIDTransferFunction.entries.id(bufferCICP.byteInt),
+				PNGICPVSTIDMatrixCoefficients.entries.id(bufferCICP.byteInt),
+				bufferCICP.byteInt != 0,
 				channel
 			)
 		}
 		addParser("mDCV") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferMDCV = ByteBuffer.allocate(24)
+			channel.read(bufferMDCV)
+			bufferMDCV.rewind()
 			PNGMasteringDisplayColorVolumeChunk(
-				Point2D(stream.read16ui() * 0.00002, stream.read16ui() * 0.00002),
-				Point2D(stream.read16ui() * 0.00002, stream.read16ui() * 0.00002),
-				Point2D(stream.read16ui() * 0.00002, stream.read16ui() * 0.00002),
-				Point2D(stream.read16ui() * 0.00002, stream.read16ui() * 0.00002),
-				stream.read32ul() * 0.0001,
-				stream.read32ul() * 0.0001,
+				Point2D(bufferMDCV.shortInt * 0.00002, bufferMDCV.shortInt * 0.00002),
+				Point2D(bufferMDCV.shortInt * 0.00002, bufferMDCV.shortInt * 0.00002),
+				Point2D(bufferMDCV.shortInt * 0.00002, bufferMDCV.shortInt * 0.00002),
+				Point2D(bufferMDCV.shortInt * 0.00002, bufferMDCV.shortInt * 0.00002),
+				bufferMDCV.intLong * 0.0001,
+				bufferMDCV.intLong * 0.0001,
 				channel
 			)
 		}
 		addParser("cLLI") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferCLLI = ByteBuffer.allocate(8)
+			channel.read(bufferCLLI)
+			bufferCLLI.rewind()
 			PNGContentLightLevelInfoChunk(
-				stream.read32ul() * 0.0001,
-				stream.read32ul() * 0.0001,
+				bufferCLLI.intLong * 0.0001,
+				bufferCLLI.intLong * 0.0001,
 				channel
 			)
 		}
 		// Extensions [https://w3c.github.io/png/extensions/Overview.html]
 		addParser("sTER") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferSTER = ByteBuffer.allocate(1)
+			channel.read(bufferSTER)
+			bufferSTER.rewind()
 			PNGStereoscopyChunk(
-				PNGStereoscopyMode.entries.id(stream.read()),
+				PNGStereoscopyMode.entries.id(bufferSTER.byteInt),
 				channel
 			)
 		}
 		addParser("oFFs") { channel, _, _ ->
-			val stream = Channels.newInputStream(channel)
+			val bufferOFFS = ByteBuffer.allocate(9)
+			channel.read(bufferOFFS)
+			bufferOFFS.rewind()
 			PNGPrintOffsetChunk(
-				stream.read32(),
-				stream.read32(),
-				PNGPrintOffsetUnit.entries.id(stream.read()),
+				bufferOFFS.intLong,
+				bufferOFFS.intLong,
+				PNGPrintOffsetUnit.entries.id(bufferOFFS.byteInt),
 				channel
 			)
 		}
@@ -612,11 +655,13 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			)
 		}
 		addParser("gIFg") { channel, _, _ ->
-			val stream = FailQuickInputStream(Channels.newInputStream(channel))
+			val bufferGIFG = ByteBuffer.allocate(4)
+			channel.read(bufferGIFG)
+			bufferGIFG.rewind()
 			PNGGIFGraphicControlExtensionChunk(
-				GIFDisposalMethod.entries.id(stream.read()),
-				stream.read() != 0,
-				(stream.read16ui() * 10).toDuration(DurationUnit.MILLISECONDS),
+				GIFDisposalMethod.entries.id(bufferGIFG.byteInt),
+				bufferGIFG.byteInt != 0,
+				(bufferGIFG.shortInt * 10).toDuration(DurationUnit.MILLISECONDS),
 				channel
 			)
 		}

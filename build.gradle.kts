@@ -6,13 +6,14 @@ plugins {
 	kotlin("jvm") version "2.2.0"
 	id("org.jetbrains.dokka") version "2.0.0"
 	id("org.jetbrains.dokka-javadoc") version "2.0.0"
+	id("org.graalvm.buildtools.native") version "0.10.6"
 	`maven-publish`
 	`java-library`
 	signing
 }
 
 group = "org.bread_experts_group"
-version = "3.3.1"
+version = "3.5.0"
 
 repositories {
 	mavenCentral()
@@ -46,6 +47,7 @@ publishing {
 			from(components["kotlin"])
 			artifact(tasks.kotlinSourcesJar)
 			artifact(tasks["dokkaJavadocJar"])
+			artifact(tasks.nativeCompile)
 			pom {
 				name = "Bread Server Library"
 				description = "Distribution of software for Bread Experts Group operated servers."
@@ -64,13 +66,13 @@ publishing {
 					developer {
 						id = "mikoe"
 						name = "Miko Elbrecht"
-						email = "miko@javart.zip"
+						email = "miko@breadexperts.group"
 					}
 				}
 				scm {
 					connection = "scm:git:git://github.com/Bread-Experts-Group/bread_server_lib.git"
 					developerConnection = "scm:git:ssh://git@github.com:Bread-Experts-Group/maven_micro_server.git"
-					url = "https://javart.zip"
+					url = "https://breadexperts.group"
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-package org.bread_experts_group.stream
+package org.bread_experts_group.channel
 
 import java.nio.ByteBuffer
 import java.nio.channels.SeekableByteChannel
@@ -10,18 +10,16 @@ class WindowedSeekableByteChannel(
 	val end: Long
 ) : SeekableByteChannel {
 	private var position = 0L
+
+	override fun size(): Long = end - start
 	override fun position(): Long = position
 
-	@Synchronized
 	override fun position(newPos: Long): SeekableByteChannel {
 		require(newPos >= 0 && newPos <= size()) { "Position out of slice range" }
 		position = newPos
 		return this
 	}
 
-	override fun size(): Long = end - start
-
-	@Synchronized
 	override fun read(dst: ByteBuffer): Int = synchronized(base) {
 		if (position >= size()) return -1
 		val returnTo = base.position()
@@ -39,10 +37,7 @@ class WindowedSeekableByteChannel(
 	}
 
 	@Synchronized
-	override fun write(src: ByteBuffer): Int {
-		TODO("Write")
-	}
-
+	override fun write(src: ByteBuffer): Int = throw UnsupportedOperationException()
 	override fun truncate(size: Long): SeekableByteChannel = throw UnsupportedOperationException()
 	override fun close() = base.close()
 	override fun isOpen() = base.isOpen

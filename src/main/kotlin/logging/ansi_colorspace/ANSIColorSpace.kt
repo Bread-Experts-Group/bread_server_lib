@@ -6,5 +6,5 @@ package org.bread_experts_group.logging.ansi_colorspace
  * @since 2.31.0
  */
 interface ANSIColorSpace {
-	fun trailer(): String
+	val trailer: String
 }

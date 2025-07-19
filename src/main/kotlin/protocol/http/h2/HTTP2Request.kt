@@ -11,4 +11,4 @@ class HTTP2Request internal constructor(
 	path: URI,
 	headers: Map<String, String> = emptyMap(),
 	data: InputStream
-) : HTTPRequest(method, path, headers, data)
+) : HTTPRequest(method, path, headers, TODO("HTTP/2 data"))

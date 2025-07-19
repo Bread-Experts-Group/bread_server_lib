@@ -1,5 +1,6 @@
 package org.bread_experts_group.coder.format.parse.tiff
 
+import org.bread_experts_group.channel.WindowedSeekableByteChannel
 import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.format.parse.ByteParser
 import org.bread_experts_group.coder.format.parse.CodingCompoundThrowable
@@ -10,7 +11,6 @@ import org.bread_experts_group.coder.format.parse.tiff.structure.TIFFStructure
 import org.bread_experts_group.coder.format.parse.tiff.structure.TIFFTextStructure
 import org.bread_experts_group.hex
 import org.bread_experts_group.stream.FailQuickInputStream
-import org.bread_experts_group.stream.WindowedSeekableByteChannel
 import org.bread_experts_group.stream.readString
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

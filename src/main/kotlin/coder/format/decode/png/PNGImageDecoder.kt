@@ -1,5 +1,6 @@
 package org.bread_experts_group.coder.format.decode.png
 
+import org.bread_experts_group.channel.SplitReadableChannel
 import org.bread_experts_group.coder.format.decode.Decoder
 import org.bread_experts_group.coder.format.decode.TimedBufferedImage
 import org.bread_experts_group.coder.format.parse.png.PNGBlendOperation
@@ -32,7 +33,7 @@ class PNGImageDecoder(
 	private var dispose: PNGDisposeOperation = PNGDisposeOperation.APNG_DISPOSE_OP_NONE
 	private var blend: PNGBlendOperation = PNGBlendOperation.APNG_BLEND_OP_OVER
 	private var delay: Duration = Duration.INFINITE
-	private var data = ArrayDeque<ReadableByteChannel>()
+	private var data = SplitReadableChannel(emptyList())
 	private val inflater = Inflater()
 	private val lineDecoder = PNGLineDecoder(from, palette, paletteTransparency)
 	val gammaLut = ByteArray(256) { i ->
@@ -64,11 +65,30 @@ class PNGImageDecoder(
 		}
 	}
 
+	private val inflaterBuffer = ByteBuffer.allocateDirect(8192)
+	fun inflate(into: ByteArray) {
+		var inflated = 0
+		while (inflated < into.size) {
+			val new = inflater.inflate(into, inflated, into.size - inflated)
+			if (new == 0) {
+				inflaterBuffer.clear()
+				data.read(inflaterBuffer)
+				inflaterBuffer.flip()
+				inflater.setInput(inflaterBuffer)
+				continue
+			}
+			inflated += new
+		}
+	}
+
+	private val filter = ByteArray(1)
+	private var readInto = ByteArray(0)
 	override fun next(): TimedBufferedImage {
 		val strideSize = when (from.interlaceType) {
 			PNGInterlaceType.NONE -> ((width * from.bitDepth * channels) + 7) / 8
 			else -> throw UnsupportedOperationException(from.interlaceType.toString())
 		}
+		if (readInto.size != strideSize) readInto = ByteArray(strideSize)
 		lateinit var precopy: BufferedImage
 		if (dispose == PNGDisposeOperation.APNG_DISPOSE_OP_PREVIOUS) precopy = canvas.copy()
 		val blendImg = BufferedImage(
@@ -76,33 +96,10 @@ class PNGImageDecoder(
 			BufferedImage.TYPE_INT_ARGB
 		)
 		val line = IntArray(width)
-		val filter = ByteArray(1)
-		val readInto = ByteArray(strideSize)
-		val zipBuffer = ByteBuffer.allocate(4096)
-		fun feedNext() {
-			if (inflater.needsInput()) {
-				zipBuffer.clear()
-				if (data.isEmpty()) TODO("EMPTY")
-				while (true) {
-					val read = data.first().read(zipBuffer)
-					if (read == -1) data.removeFirst()
-					else break
-				}
-				zipBuffer.flip()
-				inflater.setInput(zipBuffer)
-			}
-		}
-
 		lineDecoder.reset()
 		for (lY in 0 until height) {
-			feedNext()
-			inflater.inflate(filter)
-			var mustCompute = readInto.size
-			while (mustCompute > 0) {
-				val next = inflater.inflate(readInto, readInto.size - mustCompute, mustCompute)
-				if (next == 0) feedNext()
-				else mustCompute -= next
-			}
+			inflate(filter)
+			inflate(readInto)
 			lineDecoder.setInput(filter[0].toInt() and 0xFF, readInto)
 			lineDecoder.next(line)
 			blendImg.setRGB(
@@ -152,7 +149,7 @@ class PNGImageDecoder(
 		blend: PNGBlendOperation = this.blend,
 		delay: Duration = Duration.INFINITE
 	) {
-		this.data.addAll(data)
+		this.data = SplitReadableChannel(data)
 		inflater.reset()
 		this.x = x
 		this.y = y

@@ -4,8 +4,10 @@ import org.bread_experts_group.coder.fixed.json.JSONElement.Companion
 import java.math.BigDecimal
 
 data class JSONObject(
-	val entries: Map<String, JSONElement>
+	val entries: MutableMap<String, JSONElement>
 ) : JSONElement() {
+	constructor(vararg entries: Pair<String, JSONElement>) : this(mapOf(*entries).toMutableMap())
+
 	fun <T> inObject(key: String, init: JSONObject.() -> T): T = entries.getValue(key).asObject { init() }
 	inline fun <reified T> inArray(key: String, crossinline init: JSONArray.(JSONElement) -> T): Array<T> =
 		entries.getValue(key).asArray {
@@ -16,6 +18,10 @@ data class JSONObject(
 	fun withString(key: String): String = entries.getValue(key).asString { this.value }
 	fun withObject(key: String): JSONObject = entries.getValue(key).asObject { this }
 	fun withArray(key: String): JSONArray = entries.getValue(key).asArray { this }
+
+	override fun toString(): String = '{' + entries.entries.joinToString(",") { (key, value) ->
+		"\"$key\":$value"
+	} + '}'
 
 	companion object {
 		fun localRead(stream: TrackingBufferedReader): JSONObject {
@@ -29,7 +35,7 @@ data class JSONObject(
 				}
 			} catch (_: Companion.ObjectExit) {
 			}
-			return JSONObject(newEntries.toMap())
+			return JSONObject(newEntries.toMutableMap())
 		}
 	}
 }

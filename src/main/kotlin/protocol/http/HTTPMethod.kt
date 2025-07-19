@@ -1,6 +1,8 @@
 package org.bread_experts_group.protocol.http
 
-enum class HTTPMethod {
+import org.bread_experts_group.coder.Mappable
+
+enum class HTTPMethod : Mappable<HTTPMethod, String> {
 	GET,
 	HEAD,
 	POST,
@@ -14,7 +16,8 @@ enum class HTTPMethod {
 	PRI, // HTTP/2 Preface
 	OTHER;
 
-	companion object {
-		val safeMapping: Map<String, HTTPMethod> = entries.associateBy(HTTPMethod::name)
-	}
+	override val id: String = name
+	override val tag: String = id
+	override fun other(): HTTPMethod? = OTHER
+	override fun toString(): String = stringForm()
 }

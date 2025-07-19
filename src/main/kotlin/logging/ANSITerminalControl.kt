@@ -2,35 +2,36 @@ package org.bread_experts_group.logging
 
 import org.bread_experts_group.logging.ansi_colorspace.ANSIColorSpace
 
-class ANSIString(private var total: String = "") {
-	private var length = 0
-	private val ansiEscape = ''
-	private var resetChar = "$ansiEscape[39m"
+class ANSIString(val total: StringBuilder = StringBuilder()) {
+	private var reset = "${ansiEscape}39m"
+	var length: Int = 0
 
 	fun append(c: Char) {
-		this.total += c; length++
+		total.append(c)
+		length += 1
 	}
 
 	fun append(s: String) {
-		this.total += s; length += s.length
+		total.append(s)
+		length += s.length
 	}
 
+	override fun toString(): String = total.toString()
+
 	fun color(n: ANSIColorSpace, init: ANSIString.() -> Unit): ANSIString = this.also {
-		val last = resetChar
-		resetChar = "$ansiEscape[${n.trailer()}"
+		val last = reset
+		reset = n.trailer
 		reset()
 		init()
-		resetChar = last
+		reset = last
 		reset()
 	}
 
 	var setResets: Boolean = true
 	private fun reset() {
-		if (setResets) this.total += resetChar
+		if (setResets) this.total.append(reset)
 	}
-
-	fun build(): String = this.total
-	fun length(): Int = this.length
 }
 
+const val ansiEscape = "["
 fun ansi(init: ANSIString.() -> Unit): ANSIString = ANSIString().also { it.init() }

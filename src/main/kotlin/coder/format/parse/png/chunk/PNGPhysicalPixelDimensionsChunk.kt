@@ -4,8 +4,8 @@ import org.bread_experts_group.coder.format.parse.png.PNGPixelDimensions
 import java.nio.channels.SeekableByteChannel
 
 class PNGPhysicalPixelDimensionsChunk(
-	val x: Int,
-	val y: Int,
+	val x: Long,
+	val y: Long,
 	val unit: PNGPixelDimensions,
 	window: SeekableByteChannel
 ) : PNGChunk("pHYs", window) {
