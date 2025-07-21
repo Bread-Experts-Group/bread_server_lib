@@ -229,7 +229,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 		}
 		addParser("sPLT") { channel, chunk, compound ->
 			// TODO: Make ByteBuffers in general use ReadingByteBuffers
-			val reader = ReadingByteBuffer(channel, ByteBuffer.allocate(100).flip(), null)
+			val reader = ReadingByteBuffer(channel, ByteBuffer.allocate(100), null)
 			PNGSuggestedPaletteChunk(
 				reader.decodeString(Charsets.ISO_8859_1),
 				buildList {

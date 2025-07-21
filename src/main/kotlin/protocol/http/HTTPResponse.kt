@@ -17,7 +17,8 @@ class HTTPResponse(
 	rawHeaders: Boolean = false
 ) {
 	val headers: MutableMap<String, String> =
-		(if (rawHeaders) headers else headers.mapKeys { it.key.lowercase() }.toMutableMap().also {
+		if (rawHeaders) headers.toMutableMap()
+		else headers.mapKeys { it.key.lowercase() }.toMutableMap().also {
 			disallowedHeaders.forEach { h ->
 				if (it.contains(h)) throw IllegalArgumentException("Do not set $h header!")
 			}
@@ -29,7 +30,7 @@ class HTTPResponse(
 				)
 			)
 			it["strict-transport-security"] = "max-age=31536000; includeSubDomains; preload"
-		}).toMutableMap()
+		}
 
 	override fun toString(): String = "(<Res>) $code " + buildString {
 		append("[HEAD#: ${headers.size}]")

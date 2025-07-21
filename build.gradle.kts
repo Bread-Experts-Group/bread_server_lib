@@ -6,14 +6,13 @@ plugins {
 	kotlin("jvm") version "2.2.0"
 	id("org.jetbrains.dokka") version "2.0.0"
 	id("org.jetbrains.dokka-javadoc") version "2.0.0"
-	id("org.graalvm.buildtools.native") version "0.10.6"
 	`maven-publish`
 	`java-library`
 	signing
 }
 
 group = "org.bread_experts_group"
-version = "3.5.0"
+version = "3.6.0"
 
 repositories {
 	mavenCentral()
@@ -47,7 +46,6 @@ publishing {
 			from(components["kotlin"])
 			artifact(tasks.kotlinSourcesJar)
 			artifact(tasks["dokkaJavadocJar"])
-			artifact(tasks.nativeCompile)
 			pom {
 				name = "Bread Server Library"
 				description = "Distribution of software for Bread Experts Group operated servers."

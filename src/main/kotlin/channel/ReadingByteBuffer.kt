@@ -15,50 +15,63 @@ class ReadingByteBuffer(
 	val buffer: ByteBuffer,
 	val lengthMarker: KMutableProperty<Long>?
 ) {
+	init {
+		buffer.flip()
+	}
+
+	private var present = 0
 	fun refill(amount: Int) {
 		lengthMarker?.setter?.call(lengthMarker.getter.call() - amount)
-		var toFill = amount - buffer.remaining()
+		val toFill = amount - present
+		if (toFill < 1) return
 		buffer.compact()
-		while (toFill > 0) {
+		while (toFill > present) {
 			val read = from.read(buffer)
 			if (read == -1) throw EOFException()
-			toFill -= read
+			present += read
 		}
 		buffer.flip()
 	}
 
 	fun get(b: ByteArray) {
 		refill(b.size)
+		present -= b.size
 		buffer.get(b)
 	}
 
 	fun f64(): Double {
 		refill(8)
+		present -= 8
 		return buffer.double
 	}
 
 	fun f32(): Float {
 		refill(4)
+		present -= 4
 		return buffer.float
 	}
 
 	fun i64(): Long {
 		refill(8)
+		present -= 8
 		return buffer.long
 	}
 
 	fun i32(): Int {
 		refill(4)
+		present -= 4
 		return buffer.int
 	}
 
 	fun i16(): Short {
 		refill(2)
+		present -= 2
 		return buffer.short
 	}
 
 	fun i8(): Byte {
 		refill(1)
+		present -= 1
 		return buffer.get()
 	}
 
@@ -74,23 +87,36 @@ class ReadingByteBuffer(
 		val enc = ByteArrayOutputStream()
 		val bucket = IntArray(pattern.size)
 		var bucketPosition = 0
+
+		val read: () -> Unit
+		val write: (Int) -> Unit
+		when (c) {
+			Charsets.ISO_8859_1, Charsets.UTF_8, Charsets.US_ASCII -> {
+				read = { bucket[bucketPosition] = this.u8i32() }
+				write = { enc.write(bucket[it]) }
+			}
+
+			Charsets.UTF_16 -> {
+				read = { bucket[bucketPosition] = this.u16i32() }
+				write = { enc.write16(bucket[it]) }
+			}
+
+			Charsets.UTF_32 -> {
+				read = { bucket[bucketPosition] = this.i32() }
+				write = { enc.write32(bucket[it]) }
+			}
+
+			else -> throw UnsupportedOperationException(c.displayName())
+		}
+
 		try {
 			while (true) {
-				when (c) {
-					Charsets.UTF_32 -> bucket[bucketPosition] = this.i32()
-					Charsets.UTF_16 -> bucket[bucketPosition] = this.u16i32()
-					Charsets.ISO_8859_1, Charsets.UTF_8, Charsets.US_ASCII -> bucket[bucketPosition] = this.u8i32()
-					else -> throw UnsupportedOperationException(c.displayName())
-				}
+				read()
 				if (bucket[bucketPosition] == pattern[bucketPosition]) {
 					if (bucketPosition == pattern.lastIndex) break
 					bucketPosition++
 				} else {
-					for (i in 0..bucketPosition) when (c) {
-						Charsets.UTF_32 -> enc.write32(bucket[i])
-						Charsets.UTF_16 -> enc.write16(bucket[i])
-						Charsets.ISO_8859_1, Charsets.UTF_8, Charsets.US_ASCII -> enc.write(bucket[i])
-					}
+					for (i in 0..bucketPosition) write(i)
 					bucketPosition = 0
 				}
 			}
@@ -107,6 +133,7 @@ class ReadingByteBuffer(
 		buffer.limit(transfer)
 		dst.put(buffer)
 		buffer.limit(saved)
+		present -= transfer
 		return transfer
 	}
 

@@ -49,7 +49,7 @@ class HTTPProtocolSelector(
 
 			fun decodeData(headers: Map<String, String>): ReadableByteChannel {
 				return object : ReadableByteChannel {
-					private var locked = true
+					private var locked = false
 					private var transferEncodingState =
 						if (headers.containsKey("transfer-encoding")) TransferEncodingState.INITIAL_CHUNK
 						else TransferEncodingState.NO_TRANSFER_ENCODING
@@ -58,7 +58,13 @@ class HTTPProtocolSelector(
 					else 0uL
 
 					init {
-						fromLock.acquire()
+						if (
+							transferEncodingState != TransferEncodingState.NO_TRANSFER_ENCODING ||
+							remaining > 0uL
+						) {
+							locked = true
+							fromLock.acquire()
+						}
 					}
 
 					override fun read(dst: ByteBuffer): Int {
@@ -69,6 +75,7 @@ class HTTPProtocolSelector(
 									reading.decodeString(Charsets.US_ASCII, CRLFi)
 								remaining = reading.decodeString(Charsets.US_ASCII, CRLFi).toULong(16)
 								if (remaining == 0uL) {
+									reading.decodeString(Charsets.US_ASCII, CRLFi)
 									close()
 									return -1
 								}
@@ -285,7 +292,7 @@ class HTTPProtocolSelector(
 		if (from != null) versionInitialization(
 			ReadingByteBuffer(
 				from,
-				ByteBuffer.allocateDirect(8192).flip(),
+				ByteBuffer.allocateDirect(8192),
 				null
 			)
 		)
@@ -298,25 +305,27 @@ class HTTPProtocolSelector(
 	private fun txData11(headline: ByteArray, data: ReadableByteChannel, size: Long?): Long {
 		sendBuffer.clear()
 		sendBuffer.put(headline)
-		sendBuffer.flip()
-		to.write(sendBuffer)
 		var sent = 0L
 		if (size != null) {
-			if (data is FileChannel) while (sent < size) {
-				sent += data.transferTo(sent, size - sent, to)
-			} else while (true) {
-				sendBuffer.clear()
-				val read = data.read(sendBuffer)
-				if (read == -1) break
-				sent += read
+			if (data is FileChannel) {
 				sendBuffer.flip()
 				to.write(sendBuffer)
+				while (sent < size) {
+					sent += data.transferTo(sent, size - sent, to)
+				}
+			} else {
+				do {
+					val read = data.read(sendBuffer)
+					sent += read
+					sendBuffer.flip()
+					to.write(sendBuffer)
+					sendBuffer.clear()
+				} while (read != -1)
+				sent++
 			}
 		} else {
-			while (true) {
-				sendBuffer.clear()
+			do {
 				val read = data.read(sendBuffer)
-				if (read == -1) break
 				sent += read
 				chunkedBuffer.clear()
 				for (c in Integer.toHexString(read)) chunkedBuffer.put(c.code.toByte())
@@ -330,7 +339,8 @@ class HTTPProtocolSelector(
 				chunkedBuffer.put(CRLF)
 				chunkedBuffer.flip()
 				to.write(chunkedBuffer)
-			}
+				sendBuffer.clear()
+			} while (read != -1)
 			chunkedBuffer.limit(5)
 			chunkedBuffer.rewind()
 			chunkedBuffer.put(48) // '0'
@@ -338,6 +348,7 @@ class HTTPProtocolSelector(
 			chunkedBuffer.put(CRLF)
 			chunkedBuffer.rewind()
 			to.write(chunkedBuffer)
+			sent++
 		}
 		return sent
 	}

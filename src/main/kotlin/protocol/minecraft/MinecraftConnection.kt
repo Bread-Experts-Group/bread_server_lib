@@ -93,7 +93,7 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 			val fromLock = Semaphore(1)
 			val proxy = ReadingByteBuffer(
 				from,
-				ByteBuffer.allocateDirect(8192).flip(),
+				ByteBuffer.allocateDirect(8192),
 				::length
 			)
 			while (true) {
