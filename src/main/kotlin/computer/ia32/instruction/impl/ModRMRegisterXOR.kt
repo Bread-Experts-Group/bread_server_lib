@@ -8,7 +8,7 @@ import org.bread_experts_group.computer.ia32.assembler.BitMode
 import org.bread_experts_group.computer.ia32.assembler.modRmByte
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
-import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.RegisterType
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.flag.LogicalArithmeticFlagOperations
 import org.bread_experts_group.computer.ia32.instruction.type.operand.ModRM
@@ -45,14 +45,20 @@ class ModRMRegisterXOR : Instruction(0x31u, "xor"), ModRM, LogicalArithmeticFlag
 	override val registerType: RegisterType = RegisterType.GENERAL_PURPOSE
 	override val arguments: Int = 2
 	override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
-		val memRM = from[0].asmMemRM(assembler)
-		val register = from[1].asmRegister(assembler)
+		val memRM = from[0].asmMemRM(assembler, assembler.mode, RegisterType.GENERAL_PURPOSE)
+		val register = from[1].asmRegister(assembler, assembler.mode, RegisterType.GENERAL_PURPOSE)
 		return memRM != null && register != null
 	}
 
 	override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
-		val memRM = from.removeFirst().asmMemRM(assembler)!!
-		val register = from.removeFirst().asmRegister(assembler)!!
+		val memRM = from.removeFirst().asmMemRM(
+			assembler,
+			assembler.mode, RegisterType.GENERAL_PURPOSE
+		)!!
+		val register = from.removeFirst().asmRegister(
+			assembler,
+			assembler.mode, RegisterType.GENERAL_PURPOSE
+		)!!
 		when (assembler.mode) {
 			BitMode.BITS_16 -> {
 				if (memRM.mode != assembler.mode || register.mode != assembler.mode) TODO("$memRM, $register")

@@ -24,17 +24,6 @@ class HTTPServerTimingHeader(val timeUnit: DurationUnit = DurationUnit.NANOSECON
 	}
 
 	override fun toString(): String = timings.map { timing ->
-		val builder = StringBuilder()
-		builder.append(timing.tag)
-		builder.append(';')
-		builder.append("dur=")
-		builder.append(timing.time.toDouble(timeUnit))
-		builder.append(';')
-		builder.append("desc=")
-		builder.append('"')
-		builder.append(timing.desc)
-		builder.append(" (${timeUnit.name})")
-		builder.append('"')
-		builder.toString()
+		"${timing.tag};dur=${timing.time.toDouble(timeUnit)};desc=\"${timing.desc} (${timeUnit.name})\""
 	}.joinToString(", ") { it }
 }

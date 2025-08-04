@@ -2,17 +2,17 @@ package org.bread_experts_group.logging
 
 import org.bread_experts_group.logging.ansi_colorspace.ANSIColorSpace
 
-class ANSIString(val total: StringBuilder = StringBuilder()) {
+class ANSIString(var total: String = "") {
 	private var reset = "${ansiEscape}39m"
 	var length: Int = 0
 
 	fun append(c: Char) {
-		total.append(c)
+		total += c
 		length += 1
 	}
 
 	fun append(s: String) {
-		total.append(s)
+		total += s
 		length += s.length
 	}
 
@@ -29,7 +29,7 @@ class ANSIString(val total: StringBuilder = StringBuilder()) {
 
 	var setResets: Boolean = true
 	private fun reset() {
-		if (setResets) this.total.append(reset)
+		if (setResets) total += reset
 	}
 }
 

@@ -279,18 +279,14 @@ class ARMv4Processor : Processor {
 	}
 
 	fun decodeArm(fetched: UInt): String {
-		val disassembly = StringBuilder(hex(this.pc.value - 4u))
-		disassembly.append(":[")
-		disassembly.append(fetched.toString(2).padStart(32, '0'))
-		disassembly.append('/')
-		disassembly.append(hex(fetched))
-		disassembly.append(':')
+		var disassembly = "${hex(this.pc.value - 4u)}:[${fetched.toString(2).padStart(32, '0')}/" +
+				"${hex(fetched)}:"
 		val conditional = InstructionConditionalExecutionSuffix.mapping.getValue(fetched shr 28)
 		if (!checkConditional(conditional)) {
-			disassembly.append("✗]")
-			return disassembly.toString()
+			disassembly += "✗]"
+			return disassembly
 		}
-		disassembly.append("✓]")
+		disassembly += "✓]"
 		when ((fetched shr 25) and 0b111u) {
 			0b000u -> {
 				val maskA = fetched and 0b00000001111100000000000011110000u
@@ -299,48 +295,34 @@ class ARMv4Processor : Processor {
 				if (maskA == 0b00000001001000000000000000110000u) TODO("BL XCHG IS $disassembly")
 				if (maskA == 0b00000001001000000000000000010000u) {
 					val target = registers[(fetched and 0b1111u).toInt()]
-					disassembly.append(" bx")
-					disassembly.append(conditional.assemblerName)
-					disassembly.append(' ')
-					disassembly.append(target.name)
-					disassembly.append(" (")
-					disassembly.append(hex(target.value))
-					disassembly.append(')')
+					disassembly += " bx ${conditional.assemblerName} ${target.name} (${hex(target.value)})"
 					val instruction = target.value
 					status.setFlag(StatusRegister.FlagType.THUMB_MODE, instruction and 1u == 1u)
 					pc.value = instruction and 0xFFFFFFFEu
-					return disassembly.toString()
+					return disassembly
 				}
 				val maskB = fetched and 0b00000001101100000000000011110000u
 				if (maskB == 0b00000001001000000000000000000000u) {
 					val statusBits = (fetched shr 16) and 0b1111u
-					disassembly.append(" msr")
-					disassembly.append(conditional.assemblerName)
-					disassembly.append(" cpsr_")
-					val disassemblyBits = StringBuilder()
+					disassembly += " msr ${conditional.assemblerName} cpsr_"
+					var disassemblyBits = ""
 					val transfer = registers[(fetched and 0b1111u).toInt()]
 					for (mask in (0..24).reversed() step 8) {
 						val statusBit = (statusBits shr (mask shr 3)) and 1u
 						if (statusBit == 1u) {
-							disassembly.append(
-								when (mask) {
-									24 -> 'f'
-									16 -> 'x'
-									8 -> 's'
-									else -> 'c'
-								}
-							)
+							disassembly += when (mask) {
+								24 -> 'f'
+								16 -> 'x'
+								8 -> 's'
+								else -> 'c'
+							}
 							val transferData = (transfer.value shr mask) and 0xFFu
 							status.value = (status.value and (0xFFu shl mask).inv()) or (transferData shl mask)
-							disassemblyBits.append(transferData.toString(2).padStart(8, '0'))
-						} else disassemblyBits.append("x".repeat(8))
+							disassemblyBits += transferData.toString(2).padStart(8, '0')
+						} else disassemblyBits += "x".repeat(8)
 					}
-					disassembly.append(", ")
-					disassembly.append(transfer.name)
-					disassembly.append(" (")
-					disassembly.append(disassemblyBits)
-					disassembly.append(')')
-					return disassembly.toString()
+					disassembly += ", ${transfer.name} ($disassemblyBits)"
+					return disassembly
 				}
 				if (maskB == 0b00000001000000000000000000000000u) TODO("Sts Reg to Reg")
 				val maskC = fetched and 0b00000001100100000000000011110000u
@@ -371,14 +353,7 @@ class ARMv4Processor : Processor {
 					0b0010u -> TODO("SUB")
 					0b0011u -> TODO("RSB")
 					0b0100u -> {
-						disassembly.append(" add")
-						disassembly.append(conditional.assemblerName)
-						disassembly.append(' ')
-						disassembly.append(rd.name)
-						disassembly.append(", ")
-						disassembly.append(rn.name)
-						disassembly.append(", #")
-						disassembly.append(hex(immediate))
+						disassembly += " add${conditional.assemblerName} ${rd.name}, ${rn.name}, #${hex(immediate)}"
 						rd.value = rn.value + immediate
 					}
 
@@ -391,12 +366,7 @@ class ARMv4Processor : Processor {
 					0b1011u -> TODO("CMN")
 					0b1100u -> TODO("ORR")
 					0b1101u -> {
-						disassembly.append(" mov")
-						disassembly.append(conditional.assemblerName)
-						disassembly.append(' ')
-						disassembly.append(rd.name)
-						disassembly.append(", #")
-						disassembly.append(hex(immediate))
+						disassembly += " mov${conditional.assemblerName} ${rd.name}, #${hex(immediate)}"
 						rd.value = immediate
 					}
 
@@ -420,41 +390,21 @@ class ARMv4Processor : Processor {
 				val offset = fetched and 0b111111111111u
 				val calculated = (if (u) UInt::plus else UInt::minus)(rn.value, offset)
 				rd.value = computer.requestMemoryAt32(calculated.toULong())
-				disassembly.append(" ldr")
-				disassembly.append(conditional.assemblerName)
-				disassembly.append(' ')
-				disassembly.append(rd.name)
-				disassembly.append(", ")
-				disassembly.append('[')
-				disassembly.append(rn.name)
-				disassembly.append(' ')
-				disassembly.append(if (u) '+' else '-')
-				disassembly.append(" #")
-				disassembly.append(hex(offset))
-				disassembly.append(" (")
-				disassembly.append(hex(calculated))
-				disassembly.append(")] (")
-				disassembly.append(hex(rd.value))
-				disassembly.append(')')
+				disassembly += " ldr${conditional.assemblerName} ${rd.name}, [${rn.name} ${if (u) '+' else '-'} #" +
+						"${hex(offset)} (${hex(calculated)})] (${hex(rd.value)})"
 			}
 
 			0b101u -> {
 				val link = (fetched shr 24) and 1u == 1u
 				if (link) TODO("BL")
 				val offset = (((fetched and 0b1111_1111_1111_1111_1111_1111u) shl 8).toInt() shr 6) + 4
-				disassembly.append(" b")
-				disassembly.append(conditional.assemblerName)
-				disassembly.append(" #")
-				disassembly.append(hex(offset))
-				disassembly.append(" (")
 				this.pc.value = (this.pc.value.toLong() + offset).toUInt()
-				disassembly.append(hex(this.pc.value))
-				disassembly.append(')')
+				disassembly += " b${conditional.assemblerName} #${hex(offset)} (${hex(this.pc.value)})"
 			}
 
-			else -> throw NotImplementedError(disassembly.toString())
+			else -> throw NotImplementedError(disassembly)
 		}
-		return disassembly.toString()
+		return disassembly
 	}
 
 	val biosHooks: MutableMap<UInt, (ARMv4Processor) -> Unit> = mutableMapOf()

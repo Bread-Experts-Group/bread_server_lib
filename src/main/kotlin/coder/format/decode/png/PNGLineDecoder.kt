@@ -130,7 +130,7 @@ class PNGLineDecoder(
 	}
 
 	fun setInput(filter: Int, data: ByteArray) {
-		this.filter = PNGAdaptiveFilterType.entries.id(filter)
+		this.filter = PNGAdaptiveFilterType.entries.id(filter).enum
 		this.data = data
 	}
 

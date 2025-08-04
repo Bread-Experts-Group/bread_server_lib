@@ -3,7 +3,7 @@ package org.bread_experts_group.computer.ia32.instruction.impl.group.h81
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
-import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.RegisterType
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.flag.ArithmeticAdditionFlagOperations
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate16

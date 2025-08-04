@@ -160,7 +160,7 @@ object DirectoryListing {
 			.parallel()
 			.map { file -> file to file.retrieveBasicAttributes() }
 			.map { (file, attr) ->
-				val localBuilder = StringBuilder()
+				var localEntry = ""
 				val (classes, title) = run {
 					val titles = mutableListOf<String>()
 					val classes = mutableListOf<String>()
@@ -178,9 +178,9 @@ object DirectoryListing {
 				if (attr.isDirectory) {
 					val stat = computeDirectoryStatistics(file)
 //						if (readable)
-					localBuilder.append("<tr><td><a $classes $title href=\"${file.name}/\">${file.name}</a>/</td>")
+					localEntry += "<tr><td><a $classes $title href=\"${file.name}/\">${file.name}</a>/</td>"
 //						else append("<tr><td><u $classes $title>${file.name}</u>/</td>")
-					localBuilder.append("<td>${truncateSizeHTML(stat.calculatedSize.sum())} [")
+					localEntry += "<td>${truncateSizeHTML(stat.calculatedSize.sum())} ["
 					val filesSum = stat.files.sum()
 					val directoriesSum = stat.directories.sum()
 					val entryCount = if (filesSum + directoriesSum > 0) buildList {
@@ -191,31 +191,29 @@ object DirectoryListing {
 					val unreadableSum = stat.unreadable.sum()
 					val loopsSum = stat.loops.sum()
 					if (erroredSum + unreadableSum + loopsSum > 0) {
-						localBuilder.append("<u class=\"dotted\" title=\"")
-						localBuilder.append(
-							buildList {
-								if (erroredSum > 0)
-									add("$erroredSum ${bundle.getString("tree_errors").lowercase()}")
-								if (unreadableSum > 0)
-									add("$unreadableSum ${bundle.getString("unreadable").lowercase()}")
-								if (loopsSum > 0)
-									add("$loopsSum ${bundle.getString("loops").lowercase()}")
-							}.joinToString(", ")
-						)
-						localBuilder.append("\">$entryCount</u>")
-					} else localBuilder.append(entryCount)
-					localBuilder.append("]</td>")
+						localEntry += "<u class=\"dotted\" title=\""
+						localEntry += buildList {
+							if (erroredSum > 0)
+								add("$erroredSum ${bundle.getString("tree_errors").lowercase()}")
+							if (unreadableSum > 0)
+								add("$unreadableSum ${bundle.getString("unreadable").lowercase()}")
+							if (loopsSum > 0)
+								add("$loopsSum ${bundle.getString("loops").lowercase()}")
+						}.joinToString(", ")
+						localEntry += "\">$entryCount</u>"
+					} else localEntry += entryCount
+					localEntry += "]</td>"
 				} else {
 //						if (readable)
-					localBuilder.append("<tr><td><a $classes $title href=\"${file.name}\">${file.name}</a>")
+					localEntry += "<tr><td><a $classes $title href=\"${file.name}\">${file.name}</a>"
 //						else append("<tr><td><u $classes $title>${file.name}</u>")
-					localBuilder.append("</td><td>${truncateSizeHTML(attr.size())}</td>")
+					localEntry += "</td><td>${truncateSizeHTML(attr.size())}</td>"
 				}
 				val mod = Instant.ofEpochMilli(attr.lastModifiedTime().toMillis())
 					.atZone(ZoneId.systemDefault())
 					.format(dateTimeFormatter)
-				localBuilder.append("<td>$mod</td></tr>")
-				localBuilder to attr
+				localEntry += "<td>$mod</td></tr>"
+				localEntry to attr
 			}
 			.sorted { (_, attrA), (_, attrB) ->
 				val dir = attrB.isDirectory.compareTo(attrA.isDirectory)

@@ -15,6 +15,12 @@ val ByteBuffer.shortInt: Int
 val ByteBuffer.intLong: Long
 	get() = this.int.toLong() and 0xFFFFFFFF
 
+fun ByteBuffer.array(n: Int): ByteArray {
+	val array = ByteArray(n)
+	this.get(array)
+	return array
+}
+
 fun ReadableByteChannel.transferTo(channel: WritableByteChannel, buffer: ByteBuffer) {
 	while (true) {
 		buffer.clear()

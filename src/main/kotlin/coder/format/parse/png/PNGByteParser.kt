@@ -207,9 +207,9 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			header = PNGHeaderChunk(
 				width, height, bitDepth,
 				PNGHeaderFlags.entries.from(colorType),
-				PNGCompressionType.entries.id(bufferIHDR.byteInt),
-				PNGFilterType.entries.id(bufferIHDR.byteInt),
-				PNGInterlaceType.entries.id(bufferIHDR.byteInt),
+				PNGCompressionType.entries.id(bufferIHDR.byteInt).enum,
+				PNGFilterType.entries.id(bufferIHDR.byteInt).enum,
+				PNGInterlaceType.entries.id(bufferIHDR.byteInt).enum,
 				channel
 			)
 			header
@@ -294,8 +294,8 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			PNGFrameControlChunk(
 				sequence, width, height, x, y,
 				delayMillis.toDuration(DurationUnit.MILLISECONDS),
-				PNGDisposeOperation.entries.id(bufferFCTL.byteInt),
-				PNGBlendOperation.entries.id(bufferFCTL.byteInt),
+				PNGDisposeOperation.entries.id(bufferFCTL.byteInt).enum,
+				PNGBlendOperation.entries.id(bufferFCTL.byteInt).enum,
 				channel
 			)
 		}
@@ -422,7 +422,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			PNGPhysicalPixelDimensionsChunk(
 				bufferPHYS.intLong,
 				bufferPHYS.intLong,
-				PNGPixelDimensions.entries.id(bufferPHYS.byteInt),
+				PNGPixelDimensions.entries.id(bufferPHYS.byteInt).enum,
 				channel
 			)
 		}
@@ -473,7 +473,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 		addParser("zTXt") { channel, _, compound ->
 			val stream = Channels.newInputStream(channel)
 			val keyword = stream.readString(Charsets.ISO_8859_1)
-			val compressionMethod = PNGCompressionType.entries.id(stream.read())
+			val compressionMethod = PNGCompressionType.entries.id(stream.read()).enum
 			PNGCompressedTextChunk(
 				keyword, compressionMethod,
 				when (compressionMethod) {
@@ -500,7 +500,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			val stream = FailQuickInputStream(Channels.newInputStream(channel))
 			val keyword = stream.readString(Charsets.ISO_8859_1)
 			val compressionMethod =
-				if (stream.read() == 1) PNGCompressionType.entries.id(stream.read())
+				if (stream.read() == 1) PNGCompressionType.entries.id(stream.read()).enum
 				else {
 					stream.read()
 					null
@@ -540,7 +540,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 		addParser("iCCP") { channel, _, compound ->
 			val stream = Channels.newInputStream(channel)
 			val profileName = stream.readString(Charsets.ISO_8859_1)
-			val compressionMethod = PNGCompressionType.entries.id(stream.read())
+			val compressionMethod = PNGCompressionType.entries.id(stream.read()).enum
 			PNGEmbeddedICCChunk(
 				profileName,
 				when (compressionMethod) {
@@ -568,7 +568,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			channel.read(bufferSRGB)
 			bufferSRGB.rewind()
 			PNGSRGBChunk(
-				PNGSRGBIntent.entries.id(bufferSRGB.byteInt),
+				PNGSRGBIntent.entries.id(bufferSRGB.byteInt).enum,
 				channel
 			)
 		}
@@ -577,9 +577,9 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			channel.read(bufferCICP)
 			bufferCICP.rewind()
 			PNGICPVSTIDChunk(
-				PNGICPVSTIDColorPrimaries.entries.id(bufferCICP.byteInt),
-				PNGICPVSTIDTransferFunction.entries.id(bufferCICP.byteInt),
-				PNGICPVSTIDMatrixCoefficients.entries.id(bufferCICP.byteInt),
+				PNGICPVSTIDColorPrimaries.entries.id(bufferCICP.byteInt).enum,
+				PNGICPVSTIDTransferFunction.entries.id(bufferCICP.byteInt).enum,
+				PNGICPVSTIDMatrixCoefficients.entries.id(bufferCICP.byteInt).enum,
 				bufferCICP.byteInt != 0,
 				channel
 			)
@@ -614,7 +614,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			channel.read(bufferSTER)
 			bufferSTER.rewind()
 			PNGStereoscopyChunk(
-				PNGStereoscopyMode.entries.id(bufferSTER.byteInt),
+				PNGStereoscopyMode.entries.id(bufferSTER.byteInt).enum,
 				channel
 			)
 		}
@@ -625,14 +625,14 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			PNGPrintOffsetChunk(
 				bufferOFFS.intLong,
 				bufferOFFS.intLong,
-				PNGPrintOffsetUnit.entries.id(bufferOFFS.byteInt),
+				PNGPrintOffsetUnit.entries.id(bufferOFFS.byteInt).enum,
 				channel
 			)
 		}
 		addParser("sCAL") { channel, _, _ ->
 			val stream = FailQuickInputStream(Channels.newInputStream(channel))
 			PNGSubjectPhysicalScaleChunk(
-				PNGSubjectPhysicalScaleUnit.entries.id(stream.read()),
+				PNGSubjectPhysicalScaleUnit.entries.id(stream.read()).enum,
 				BigDecimal(stream.readString(Charsets.US_ASCII)),
 				BigDecimal(stream.readString(Charsets.US_ASCII)),
 				channel
@@ -643,7 +643,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			val calibrationName = stream.readString(Charsets.ISO_8859_1)
 			val x0 = stream.read32()
 			val x1 = stream.read32()
-			val equation = PNGPixelCalibrationEquationType.entries.id(stream.read())
+			val equation = PNGPixelCalibrationEquationType.entries.id(stream.read()).enum
 			val parameters = stream.read()
 			val unitName = stream.readString(Charsets.ISO_8859_1)
 			PNGPixelCalibrationChunk(
@@ -659,7 +659,7 @@ class PNGByteParser : ByteParser<String, PNGChunk, SeekableByteChannel>(
 			channel.read(bufferGIFG)
 			bufferGIFG.rewind()
 			PNGGIFGraphicControlExtensionChunk(
-				GIFDisposalMethod.entries.id(bufferGIFG.byteInt),
+				GIFDisposalMethod.entries.id(bufferGIFG.byteInt).enum,
 				bufferGIFG.byteInt != 0,
 				(bufferGIFG.shortInt * 10).toDuration(DurationUnit.MILLISECONDS),
 				channel

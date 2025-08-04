@@ -23,7 +23,7 @@ class NBTByteParser : ByteParser<NBTTagType, NBTTag, ReadableByteChannel>("Named
 		var pos = 0
 		while (true) {
 			if (pos == lim) break
-			val next = NBTTagType.entries.id(readable.u8())
+			val next = NBTTagType.entries.id(readable.u8()).enum
 			if (next == NBTTagType.END_OF_COMPOUND) break
 			val name = nextString()
 			set(name, nextTag(next))
@@ -35,7 +35,7 @@ class NBTByteParser : ByteParser<NBTTagType, NBTTag, ReadableByteChannel>("Named
 		NBTTagType.SHORT -> NBTShortTag(readable.i16())
 		NBTTagType.UTF_8 -> NBTStringTag(nextString())
 		NBTTagType.LIST -> {
-			val type = NBTTagType.entries.id(readable.u8())
+			val type = NBTTagType.entries.id(readable.u8()).enum
 			NBTListTag(
 				type,
 				List(readable.i32()) { nextTag(type) }

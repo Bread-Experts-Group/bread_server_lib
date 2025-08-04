@@ -3,8 +3,8 @@ package org.bread_experts_group.computer.ia32.instruction.impl.group.hF6
 import org.bread_experts_group.computer.BinaryUtil.and
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.ia32.IA32Processor
-import org.bread_experts_group.computer.ia32.instruction.DecodingUtil
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.flag.LogicalArithmeticFlagOperations
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate8
@@ -29,5 +29,5 @@ object ModRM8ImmediateTEST : Instruction(0u, "test"), ModRM, Immediate8, Logical
 		}
 	}
 
-	override val registerType: DecodingUtil.RegisterType = DecodingUtil.RegisterType.GENERAL_PURPOSE
+	override val registerType: RegisterType = RegisterType.GENERAL_PURPOSE
 }

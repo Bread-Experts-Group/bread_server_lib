@@ -8,6 +8,7 @@ import org.bread_experts_group.computer.ia32.assembler.BitMode
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
 import org.bread_experts_group.computer.ia32.instruction.InstructionCluster
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate16
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate32
@@ -44,27 +45,19 @@ class MoveImmediateIntoRegisterDefinitions : InstructionCluster {
 
 		override val arguments: Int = 2
 		override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
-			if (assembler.mode != BitMode.BITS_32) TODO(assembler.mode.name)
-			val register = from[0].asmRegister(assembler)
-			if (register == null || register.registerName != this.register.name) return false
-			return assembler.readImmediate(
-				from[1],
-				if (from[1].startsWith('-')) Int.MIN_VALUE..Int.MAX_VALUE.toLong()
-				else 0..(Int.MAX_VALUE * 2L)
-			) != null
+			val register = from[0].asmRegister(
+				assembler,
+				assembler.mode, RegisterType.GENERAL_PURPOSE
+			) ?: return false
+			if (register.registerName != this.register.name) return false
+			return register.withinRange(assembler, from)
 		}
 
 		override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
-			if (assembler.mode != BitMode.BITS_32) TODO(assembler.mode.name)
 			from.removeFirst()
 			into.write(opcode.toInt())
 			val immediateToken = from.removeFirst()
-			val (immediate, write) = assembler.readImmediate(
-				immediateToken,
-				if (immediateToken.startsWith('-')) Int.MIN_VALUE..Int.MAX_VALUE.toLong()
-				else 0..(Int.MAX_VALUE * 2L)
-			)!!
-			if (write) assembler.writeForMode(into, immediate)
+			assembler.writeForMode(into, assembler.readImmediate(immediateToken)!!)
 		}
 	}
 
@@ -78,11 +71,29 @@ class MoveImmediateIntoRegisterDefinitions : InstructionCluster {
 	class MoveImmediateIntoRegister8(
 		opcode: UInt,
 		val r8n: String,
-		val register: KMutableProperty0<ULong>
-	) : Instruction(opcode, "mov"), Immediate8 {
+		val register: Register,
+		val half: KMutableProperty0<ULong>
+	) : Instruction(opcode, "mov"), Immediate8, AssembledInstruction {
 		override fun operands(processor: IA32Processor): String = "${this.r8n}, ${hex(processor.imm8())}"
 		override fun handle(processor: IA32Processor) {
-			this.register.set(processor.imm8().toULong())
+			this.half.set(processor.imm8().toULong())
+		}
+
+		override val arguments: Int = 2
+		override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
+			val register = from[0].asmRegister(
+				assembler,
+				BitMode.BITS_8, RegisterType.GENERAL_PURPOSE
+			) ?: return false
+			if (register.registerName != this.register.name) return false
+			return register.withinRange(assembler, from)
+		}
+
+		override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
+			from.removeFirst()
+			into.write(opcode.toInt())
+			val immediateToken = from.removeFirst()
+			into.write(assembler.readImmediate(immediateToken, BitMode.BITS_8.range(immediateToken))!!.toInt())
 		}
 	}
 
@@ -95,13 +106,13 @@ class MoveImmediateIntoRegisterDefinitions : InstructionCluster {
 		MoveImmediateIntoRegister(0xBDu, "ebp", "bp", processor.bp),
 		MoveImmediateIntoRegister(0xBEu, "esi", "si", processor.si),
 		MoveImmediateIntoRegister(0xBFu, "edi", "di", processor.di),
-		MoveImmediateIntoRegister8(0xB0u, "al", processor.a::l),
-		MoveImmediateIntoRegister8(0xB1u, "cl", processor.c::l),
-		MoveImmediateIntoRegister8(0xB2u, "dl", processor.d::l),
-		MoveImmediateIntoRegister8(0xB3u, "bl", processor.b::l),
-		MoveImmediateIntoRegister8(0xB4u, "ah", processor.a::h),
-		MoveImmediateIntoRegister8(0xB5u, "ch", processor.c::h),
-		MoveImmediateIntoRegister8(0xB6u, "dh", processor.d::h),
-		MoveImmediateIntoRegister8(0xB7u, "bh", processor.b::h)
+		MoveImmediateIntoRegister8(0xB0u, "al", processor.a, processor.a::l),
+		MoveImmediateIntoRegister8(0xB1u, "cl", processor.c, processor.c::l),
+		MoveImmediateIntoRegister8(0xB2u, "dl", processor.d, processor.d::l),
+		MoveImmediateIntoRegister8(0xB3u, "bl", processor.b, processor.b::l),
+		MoveImmediateIntoRegister8(0xB4u, "ah", processor.a, processor.a::h),
+		MoveImmediateIntoRegister8(0xB5u, "ch", processor.c, processor.c::h),
+		MoveImmediateIntoRegister8(0xB6u, "dh", processor.d, processor.d::h),
+		MoveImmediateIntoRegister8(0xB7u, "bh", processor.b, processor.b::h)
 	)
 }

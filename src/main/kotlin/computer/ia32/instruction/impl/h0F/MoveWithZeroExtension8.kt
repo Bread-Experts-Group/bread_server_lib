@@ -2,7 +2,7 @@ package org.bread_experts_group.computer.ia32.instruction.impl.h0F
 
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
-import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.RegisterType
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 
 class MoveWithZeroExtension8 : Instruction(0x0FB6u, "movzx") {

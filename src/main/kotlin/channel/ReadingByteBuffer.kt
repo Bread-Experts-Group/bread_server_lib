@@ -10,17 +10,17 @@ import java.nio.channels.ReadableByteChannel
 import java.nio.charset.Charset
 import kotlin.reflect.KMutableProperty
 
-class ReadingByteBuffer(
+open class ReadingByteBuffer(
 	private val from: ReadableByteChannel,
 	val buffer: ByteBuffer,
 	val lengthMarker: KMutableProperty<Long>?
-) {
+) : AutoCloseable {
 	init {
 		buffer.flip()
 	}
 
-	private var present = 0
-	fun refill(amount: Int) {
+	protected var present = 0
+	open fun refill(amount: Int) {
 		lengthMarker?.setter?.call(lengthMarker.getter.call() - amount)
 		val toFill = amount - present
 		if (toFill < 1) return
@@ -137,18 +137,5 @@ class ReadingByteBuffer(
 		return transfer
 	}
 
-	fun channel(): ReadableByteChannel = object : ReadableByteChannel {
-		override fun read(dst: ByteBuffer?): Int {
-			TODO("Not yet implemented")
-		}
-
-		override fun isOpen(): Boolean {
-			TODO("Not yet implemented")
-		}
-
-		override fun close() {
-			TODO("Not yet implemented")
-		}
-
-	}
+	override fun close() = from.close()
 }

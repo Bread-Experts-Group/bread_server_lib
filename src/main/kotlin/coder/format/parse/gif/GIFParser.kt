@@ -94,7 +94,7 @@ class GIFParser : Parser<Byte, GIFBlock, InputStream>(
 					GIFGraphicControlExtensionBlock(
 						delayTime.toDuration(DurationUnit.MILLISECONDS),
 						if (packed and 1 == 0) null else transparentColorIndex,
-						GIFDisposalMethod.entries.id((packed and 0b00011100) ushr 2),
+						GIFDisposalMethod.entries.id((packed and 0b00011100) ushr 2).enum,
 						(packed ushr 1) and 1 == 1
 					)
 				}

@@ -2,6 +2,7 @@ package org.bread_experts_group.computer.ia32.instruction.type.operand
 
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.*
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 
 interface ModRM {
 	fun IA32Processor.rm(operandLength: AddressingLength = this.operandSize): ModRMResult = this.decoding.getModRM(

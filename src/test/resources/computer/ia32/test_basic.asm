@@ -1,0 +1,6 @@
+org 0x500
+bits 16
+
++ mov [$0xB8000], $0x4200
+cli
+hlt

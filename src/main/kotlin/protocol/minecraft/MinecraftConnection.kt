@@ -103,14 +103,14 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 				fromLock.release()
 				val add = when (connectionState) {
 					MinecraftConnectionState.HANDSHAKE -> {
-						val packetID = MinecraftHandshakePacketType.entries.id(id)
+						val packetID = MinecraftHandshakePacketType.entries.id(id).enum
 						when (packetID) {
 							MinecraftHandshakePacketType.HANDSHAKE -> {
 								val version = proxy.varN32()
 								val server = proxy.string(255)
 								val port = proxy.u16()
 								val state = proxy.varN32()
-								val nextState = MinecraftHandshakeNextState.entries.id(state)
+								val nextState = MinecraftHandshakeNextState.entries.id(state).enum
 								connectionState = when (nextState) {
 									MinecraftHandshakeNextState.STATUS -> MinecraftConnectionState.STATUS
 									MinecraftHandshakeNextState.LOGIN -> MinecraftConnectionState.LOGIN
@@ -124,7 +124,7 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 					}
 
 					MinecraftConnectionState.STATUS -> {
-						val packetID = MinecraftStatusPacketType.entries.id(id)
+						val packetID = MinecraftStatusPacketType.entries.id(id).enum
 						when (packetID) {
 							MinecraftStatusPacketType.REQUEST -> MinecraftStatusRequestPacket(
 								LockedReadableChannel(proxy.buffer, fromLock, length)
@@ -138,7 +138,9 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 					}
 
 					MinecraftConnectionState.LOGIN -> {
-						val packetID = MinecraftLoginPacketType.entries.id(SidedIdentifier(MinecraftSide.TO_SERVER, id))
+						val packetID = MinecraftLoginPacketType.entries.id(
+							SidedIdentifier(MinecraftSide.TO_SERVER, id)
+						).enum
 						when (packetID) {
 							MinecraftLoginPacketType.LOGIN_START -> {
 								val username = proxy.string(16)
@@ -155,7 +157,9 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 					}
 
 					MinecraftConnectionState.PLAY -> {
-						val packetID = MinecraftPlayPacketType.entries.id(SidedIdentifier(MinecraftSide.TO_SERVER, id))
+						val packetID = MinecraftPlayPacketType.entries.id(
+							SidedIdentifier(MinecraftSide.TO_SERVER, id)
+						).enum
 						when (packetID) {
 							MinecraftPlayPacketType.TELEPORT_CONFIRM -> {
 								val id = proxy.varN32()
@@ -176,7 +180,7 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 							MinecraftPlayPacketType.CLIENT_STATUS -> {
 								val action = proxy.varN32()
 								MinecraftPlayClientStatusPacket(
-									MinecraftClientStatusAction.entries.id(action),
+									MinecraftClientStatusAction.entries.id(action).enum,
 									LockedReadableChannel(proxy.buffer, fromLock, length)
 								)
 							}
@@ -191,10 +195,10 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 								MinecraftPlayClientSettingsPacket(
 									Locale.of(localeString),
 									viewDistance,
-									MinecraftChatMode.entries.id(chatMode),
+									MinecraftChatMode.entries.id(chatMode).enum,
 									chatColors,
 									MinecraftSkinPart.entries.from(displayedSkinParts),
-									MinecraftMainHand.entries.id(mainHand),
+									MinecraftMainHand.entries.id(mainHand).enum,
 									LockedReadableChannel(proxy.buffer, fromLock, length)
 								)
 							}
@@ -259,9 +263,9 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 								val position = proxy.p3I()
 								val face = proxy.i8()
 								MinecraftPlayItemActionPacket(
-									MinecraftItemAction.entries.id(action),
+									MinecraftItemAction.entries.id(action).enum,
 									position,
-									MinecraftFace.entries.id(face),
+									MinecraftFace.entries.id(face).enum,
 									LockedReadableChannel(proxy.buffer, fromLock, length)
 								)
 							}
@@ -271,14 +275,15 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 								val action = proxy.varN32()
 								val boost = proxy.varN32()
 								MinecraftPlayEntityActionPacket(
-									entity, MinecraftEntityAction.entries.id(action), boost,
+									entity, MinecraftEntityAction.entries.id(action).enum,
+									boost,
 									LockedReadableChannel(proxy.buffer, fromLock, length)
 								)
 							}
 
 							MinecraftPlayPacketType.CRAFTING_BOOK_DATA -> {
 								val type = proxy.varN32()
-								when (MinecraftCraftingBookDataType.entries.id(type)) {
+								when (MinecraftCraftingBookDataType.entries.id(type).enum) {
 									MinecraftCraftingBookDataType.DISPLAYED_RECIPE ->
 										MinecraftPlayCraftingBookDisplayPacket(
 											proxy.i32(),
@@ -295,7 +300,7 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 
 							MinecraftPlayPacketType.ADVANCEMENT_TAB -> {
 								val type = proxy.varN32()
-								when (MinecraftAdvancementTabAction.entries.id(type)) {
+								when (MinecraftAdvancementTabAction.entries.id(type).enum) {
 									MinecraftAdvancementTabAction.OPENED -> {
 										val string = proxy.string(32767)
 										MinecraftPlayAdvancementTabOpenedPacket(
@@ -327,7 +332,7 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 							MinecraftPlayPacketType.ANIMATION_TS -> {
 								val hand = proxy.varN32()
 								MinecraftPlayAnimationToServerPacket(
-									MinecraftHand.entries.id(hand),
+									MinecraftHand.entries.id(hand).enum,
 									LockedReadableChannel(proxy.buffer, fromLock, length)
 								)
 							}
@@ -335,7 +340,7 @@ class MinecraftConnection(private val from: ReadableByteChannel) {
 							MinecraftPlayPacketType.USE_ITEM -> {
 								val hand = proxy.varN32()
 								MinecraftPlayUseItemPacket(
-									MinecraftHand.entries.id(hand),
+									MinecraftHand.entries.id(hand).enum,
 									LockedReadableChannel(proxy.buffer, fromLock, length)
 								)
 							}

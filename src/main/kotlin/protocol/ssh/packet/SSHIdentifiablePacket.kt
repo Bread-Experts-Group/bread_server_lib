@@ -16,7 +16,7 @@ sealed class SSHIdentifiablePacket(val identity: SSHPacketIdentity) : SSHBasePac
 
 	companion object {
 		fun decode(from: SSHPacket): SSHIdentifiablePacket {
-			val message = SSHPacketIdentity.entries.id(from.data.read())
+			val message = SSHPacketIdentity.entries.id(from.data.read()).enum
 			return when (message) {
 				SSHPacketIdentity.SSH_MSG_KEXINIT -> SSHAlgorithmNegotiationPacket.decode(from.data)
 				SSHPacketIdentity.SSH_MSG_KEX_ECDH_INIT -> SSHECDHKeyExchangeInitializationPacket.decode(from.data)

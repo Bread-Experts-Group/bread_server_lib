@@ -1,10 +1,9 @@
 package org.bread_experts_group.computer.ia32.instruction.impl.intr
 
-import org.bread_experts_group.command_line.stringToInt
-import org.bread_experts_group.command_line.stringToIntOrNull
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.assembler.Assembler
+import org.bread_experts_group.computer.ia32.assembler.BitMode
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate8
@@ -16,11 +15,12 @@ class FireSoftwareInterrupt : Instruction(0xCDu, "int"), Immediate8, AssembledIn
 
 	override val arguments: Int = 1
 	override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
-		return stringToIntOrNull(0x00..0xFF)(from.first()) != null
+		return assembler.readImmediate(from[0], BitMode.BITS_8.range(from[0])) != null
 	}
 
 	override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
 		into.write(opcode.toInt())
-		into.write(stringToInt(0x00..0xFF)(from.removeFirst()))
+		val imm = from.removeFirst()
+		into.write(assembler.readImmediate(imm, BitMode.BITS_8.range(imm))!!.toInt())
 	}
 }

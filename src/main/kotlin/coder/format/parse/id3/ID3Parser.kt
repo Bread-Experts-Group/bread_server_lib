@@ -80,7 +80,7 @@ class ID3Parser : Parser<String, ID3Frame<*>, InputStream>(
 
 	init {
 		addPredicateParser({ it.tag[0] == 'T' }) { stream, frame, _ ->
-			val encoding = ID3TextEncoding.entries.id(stream.read())
+			val encoding = ID3TextEncoding.entries.id(stream.read()).enum
 			ID3TextFrame(
 				frame.tag, frame.flags.raw().toInt(),
 				encoding, buildList {
@@ -106,7 +106,7 @@ class ID3Parser : Parser<String, ID3Frame<*>, InputStream>(
 			)
 		}
 		addParser("COMM") { stream, frame, _ ->
-			val encoding = ID3TextEncoding.entries.id(stream.read())
+			val encoding = ID3TextEncoding.entries.id(stream.read()).enum
 			ID3CommentFrame(
 				frame.tag, frame.flags.raw().toInt(),
 				encoding, Locale.of(stream.readString(3)),
@@ -115,7 +115,7 @@ class ID3Parser : Parser<String, ID3Frame<*>, InputStream>(
 			)
 		}
 		addParser("USLT") { stream, frame, _ ->
-			val encoding = ID3TextEncoding.entries.id(stream.read())
+			val encoding = ID3TextEncoding.entries.id(stream.read()).enum
 			ID3CommentFrame(
 				frame.tag, frame.flags.raw().toInt(),
 				encoding, Locale.of(stream.readString(3)),
@@ -124,21 +124,21 @@ class ID3Parser : Parser<String, ID3Frame<*>, InputStream>(
 			)
 		}
 		addParser("APIC") { stream, frame, _ ->
-			val encoding = ID3TextEncoding.entries.id(stream.read())
+			val encoding = ID3TextEncoding.entries.id(stream.read()).enum
 			ID3PictureFrame3(
 				frame.tag, frame.flags.raw().toInt(),
 				encoding, stream.readString(Charsets.ISO_8859_1),
-				ID3PictureType.entries.id(stream.read()),
+				ID3PictureType.entries.id(stream.read()).enum,
 				stream.readString(encoding.charset),
 				stream.readAllBytes()
 			)
 		}
 		addParser("PIC") { stream, frame, _ ->
-			val encoding = ID3TextEncoding.entries.id(stream.read())
+			val encoding = ID3TextEncoding.entries.id(stream.read()).enum
 			ID3PictureFrame2(
 				frame.tag, frame.flags.raw().toInt(),
 				encoding, stream.readString(3),
-				ID3PictureType.entries.id(stream.read()),
+				ID3PictureType.entries.id(stream.read()).enum,
 				stream.readString(encoding.charset),
 				stream.readAllBytes()
 			)

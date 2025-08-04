@@ -16,36 +16,30 @@ class DecodingUtil(private val processor: IA32Processor) {
 		R32
 	}
 
-	enum class RegisterType {
-		GENERAL_PURPOSE,
-		SEGMENT,
-		CONTROL_REGISTER
-	}
-
 	fun getRegRM(reg: UInt, type: RegisterType, operandLength: AddressingLength): KMutableProperty0<ULong> {
 		val register = when (reg) {
 			0b000u -> when (type) {
 				RegisterType.GENERAL_PURPOSE -> this.processor.a
 				RegisterType.SEGMENT -> return this.processor.es::x
-				RegisterType.CONTROL_REGISTER -> return this.processor.cr0::ex
+				RegisterType.CONTROL -> return this.processor.cr0::ex
 			}
 
 			0b001u -> when (type) {
 				RegisterType.GENERAL_PURPOSE -> this.processor.c
 				RegisterType.SEGMENT -> return this.processor.cs::x
-				RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR1")
+				RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR1")
 			}
 
 			0b010u -> when (type) {
 				RegisterType.GENERAL_PURPOSE -> this.processor.d
 				RegisterType.SEGMENT -> return this.processor.ss::x
-				RegisterType.CONTROL_REGISTER -> return this.processor.cr2::ex
+				RegisterType.CONTROL -> return this.processor.cr2::ex
 			}
 
 			0b011u -> when (type) {
 				RegisterType.GENERAL_PURPOSE -> this.processor.b
 				RegisterType.SEGMENT -> return this.processor.ds::x
-				RegisterType.CONTROL_REGISTER -> return this.processor.cr3::ex
+				RegisterType.CONTROL -> return this.processor.cr3::ex
 			}
 
 			0b100u -> when (type) {
@@ -54,7 +48,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					else this.processor.sp
 
 				RegisterType.SEGMENT -> return this.processor.fs::x
-				RegisterType.CONTROL_REGISTER -> return this.processor.cr4::ex
+				RegisterType.CONTROL -> return this.processor.cr4::ex
 			}
 
 			0b101u -> when (type) {
@@ -63,7 +57,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					else this.processor.bp
 
 				RegisterType.SEGMENT -> return this.processor.gs::x
-				RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR5")
+				RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR5")
 			}
 
 			0b110u -> when (type) {
@@ -72,7 +66,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					else this.processor.si
 
 				RegisterType.SEGMENT -> throw IllegalArgumentException("#UD Sreg 110")
-				RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR6")
+				RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR6")
 			}
 
 			0b111u -> when (type) {
@@ -81,7 +75,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					else this.processor.di
 
 				RegisterType.SEGMENT -> throw IllegalArgumentException("#UD Sreg 111")
-				RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR7")
+				RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR7")
 			}
 
 			else -> throw IllegalStateException(hex(reg))
@@ -102,7 +96,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> "es [${hex(this.processor.es.tx)}]"
-			RegisterType.CONTROL_REGISTER -> "cr0 [${hex(this.processor.cr0.tex)}]"
+			RegisterType.CONTROL -> "cr0 [${hex(this.processor.cr0.tex)}]"
 		}
 
 		0b001u -> when (type) {
@@ -113,7 +107,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> "cs [${hex(this.processor.cs.tx)}]"
-			RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR1")
+			RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR1")
 		}
 
 		0b010u -> when (type) {
@@ -124,7 +118,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> "ss [${hex(this.processor.ss.tx)}]"
-			RegisterType.CONTROL_REGISTER -> "cr2 [${hex(this.processor.cr2.tex)}]"
+			RegisterType.CONTROL -> "cr2 [${hex(this.processor.cr2.tex)}]"
 		}
 
 		0b011u -> when (type) {
@@ -135,7 +129,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> "ds [${hex(this.processor.ds.tx)}]"
-			RegisterType.CONTROL_REGISTER -> "cr3 [${hex(this.processor.cr3.tex)}]"
+			RegisterType.CONTROL -> "cr3 [${hex(this.processor.cr3.tex)}]"
 		}
 
 		0b100u -> when (type) {
@@ -146,7 +140,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> "fs [${hex(this.processor.fs.tx)}]"
-			RegisterType.CONTROL_REGISTER -> "cr4 [${hex(this.processor.cr4.tex)}]"
+			RegisterType.CONTROL -> "cr4 [${hex(this.processor.cr4.tex)}]"
 		}
 
 		0b101u -> when (type) {
@@ -157,7 +151,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> "gs [${hex(this.processor.gs.tx)}]"
-			RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR5")
+			RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR5")
 		}
 
 		0b110u -> when (type) {
@@ -168,7 +162,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> throw IllegalArgumentException("#UD Sreg 110")
-			RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR6")
+			RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR6")
 		}
 
 		0b111u -> when (type) {
@@ -179,7 +173,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 			}
 
 			RegisterType.SEGMENT -> throw IllegalArgumentException("#UD Sreg 111")
-			RegisterType.CONTROL_REGISTER -> throw IllegalArgumentException("#UD CR7")
+			RegisterType.CONTROL -> throw IllegalArgumentException("#UD CR7")
 		}
 
 		else -> throw IllegalStateException(hex(reg))

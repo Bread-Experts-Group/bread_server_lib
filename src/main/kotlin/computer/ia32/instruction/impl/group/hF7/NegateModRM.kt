@@ -2,7 +2,7 @@ package org.bread_experts_group.computer.ia32.instruction.impl.group.hF7
 
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
-import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.RegisterType
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.flag.ArithmeticFlagOperations
 import org.bread_experts_group.computer.ia32.instruction.type.operand.ModRM

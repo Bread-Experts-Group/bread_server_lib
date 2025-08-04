@@ -9,36 +9,14 @@ import java.net.URI
 class HTTPForwardedHeader {
 	val forwardees = mutableListOf<HTTPForwardee>()
 
-	override fun toString(): String = forwardees.map { forwardee ->
-		val local = mutableListOf<StringBuilder>()
-		if (forwardee.by != null) {
-			val builder = StringBuilder()
-			builder.append("by=")
-			builder.append(forwardee.by)
-			local.add(builder)
-		}
-		if (forwardee.`for` != null) {
-			val builder = StringBuilder()
-			builder.append("for=")
-			builder.append(forwardee.`for`)
-			local.add(builder)
-		}
-		if (forwardee.host != null) {
-			val builder = StringBuilder()
-			builder.append("host=")
-			builder.append('"')
-			builder.append(forwardee.host.toASCIIString())
-			builder.append('"')
-			local.add(builder)
-		}
-		if (forwardee.proto != null) {
-			val builder = StringBuilder()
-			builder.append("proto=")
-			builder.append(forwardee.proto)
-			local.add(builder)
-		}
-		local.joinToString(";") { it }
-	}.joinToString(", ") { it }
+	override fun toString(): String = forwardees.joinToString(", ") { forwardee ->
+		listOfNotNull(
+			if (forwardee.by != null) "by=${forwardee.by}" else "",
+			if (forwardee.`for` != null) "for=${forwardee.`for`}" else "",
+			if (forwardee.host != null) "host=\"${forwardee.host.toASCIIString()}\"" else "",
+			if (forwardee.proto != null) "proto=${forwardee.proto}" else ""
+		).joinToString(";")
+	}
 
 	companion object {
 		fun parse(value: String): HTTPForwardedHeader {

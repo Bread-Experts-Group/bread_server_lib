@@ -6,7 +6,7 @@ import org.bread_experts_group.computer.ia32.assembler.Assembler
 import org.bread_experts_group.computer.ia32.assembler.AssemblerMemRM.Companion.asmMemRM
 import org.bread_experts_group.computer.ia32.instruction.AssembledInstruction
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
-import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.RegisterType
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.flag.ArithmeticAdditionFlagOperations
 import org.bread_experts_group.computer.ia32.instruction.type.operand.ModRM
@@ -36,12 +36,12 @@ class IncrementModRM : Instruction(0u, "inc"), ModRM, ArithmeticAdditionFlagOper
 	override val registerType: RegisterType = RegisterType.GENERAL_PURPOSE
 	override val arguments: Int = 1
 	override fun acceptable(assembler: Assembler, from: ArrayDeque<String>): Boolean {
-		return from[0].asmMemRM(assembler) != null
+		return from[0].asmMemRM(assembler, assembler.mode, RegisterType.GENERAL_PURPOSE) != null
 	}
 
 	override fun produce(assembler: Assembler, into: OutputStream, from: ArrayDeque<String>) {
 		into.write(0xFF)
-		val register = from.removeFirst().asmMemRM(assembler)!!
+		val register = from.removeFirst().asmMemRM(assembler, assembler.mode, RegisterType.GENERAL_PURPOSE)!!
 		if (register.address != null) TODO("mem")
 		var selected: UByte = 0b11000000u
 		selected = selected or (register.register!!.regBits() shl 3)

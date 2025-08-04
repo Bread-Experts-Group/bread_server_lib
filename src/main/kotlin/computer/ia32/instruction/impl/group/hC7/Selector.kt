@@ -10,6 +10,6 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  */
 class Selector : InstructionSelector(0xC7u) {
 	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to MoveImmediateToModRM
+		0u to MoveImmediateToModRM()
 	)
 }

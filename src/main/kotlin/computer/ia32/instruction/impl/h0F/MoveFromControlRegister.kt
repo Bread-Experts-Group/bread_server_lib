@@ -2,7 +2,7 @@ package org.bread_experts_group.computer.ia32.instruction.impl.h0F
 
 import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
-import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.RegisterType
+import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.operand.ModRM
 
@@ -23,5 +23,5 @@ class MoveFromControlRegister : Instruction(0x0F20u, "mov"), ModRM {
 		memRM.setRMi(register.get().toUInt())
 	}
 
-	override val registerType: RegisterType = RegisterType.CONTROL_REGISTER
+	override val registerType: RegisterType = RegisterType.CONTROL
 }

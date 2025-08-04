@@ -10,8 +10,13 @@ interface Mappable<E, T> where E : Enum<E>, E : Mappable<E, T> {
 	fun other(): E? = null
 
 	companion object {
-		inline fun <reified E, T> EnumEntries<E>.id(n: T): E where E : Enum<E>, E : Mappable<E, T> = this.firstOrNull {
-			it.id == n
-		} ?: this.first().other() ?: throw IndexOutOfBoundsException("Missing ID for $n")
+		inline fun <reified E, T> EnumEntries<E>.id(
+			n: T
+		): MappedEnumeration<T, E> where E : Enum<E>, E : Mappable<E, T> = MappedEnumeration(
+			this.firstOrNull {
+				it.id == n
+			} ?: this.first().other() ?: throw IndexOutOfBoundsException("Missing ID for $n"),
+			n
+		)
 	}
 }
