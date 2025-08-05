@@ -2,11 +2,14 @@ package org.bread_experts_group.socket.windows
 
 import org.bread_experts_group.socket.BSLInetSocketAddress
 import org.bread_experts_group.socket.BSLInternetProtocolSocketType
+import org.bread_experts_group.socket.SocketAlreadyBoundException
+import org.bread_experts_group.socket.SocketNotBoundException
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.net.Inet6Address
 import java.net.SocketAddress
-import java.nio.channels.AlreadyBoundException
+import java.nio.ByteBuffer
+import java.nio.channels.ClosedChannelException
 import java.nio.channels.NetworkChannel
 
 class BSLInternetRawSocketWindowsV6 : BSLInternetRawSocketBaseWindows(
@@ -17,7 +20,10 @@ class BSLInternetRawSocketWindowsV6 : BSLInternetRawSocketBaseWindows(
 ) {
 	private val sockAddr = this.arena.allocate(wsaV6SockAddrInStruct)
 	override fun bind(local: SocketAddress?): NetworkChannel? {
-		if (this.localAddress != null) throw AlreadyBoundException()
+		this.localAddress?.let {
+			if (it != local) throw SocketAlreadyBoundException("Already bound on $it")
+			return this
+		}
 		if (local != null) {
 			if (local !is BSLInetSocketAddress)
 				throw UnsupportedOperationException("SocketAddress must be a BSLInetSocketAddress")
@@ -56,5 +62,11 @@ class BSLInternetRawSocketWindowsV6 : BSLInternetRawSocketBaseWindows(
 		)
 	} catch (_: WSAInvalidArgumentException) {
 		null
+	}
+
+	override fun writeDatagram(src: ByteBuffer): Pair<ByteArray, Int> {
+		if (this.closed) throw ClosedChannelException()
+		if (this.localAddress == null) throw SocketNotBoundException()
+		TODO("v6 write")
 	}
 }

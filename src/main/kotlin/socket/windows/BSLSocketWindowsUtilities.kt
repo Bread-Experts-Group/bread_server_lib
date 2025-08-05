@@ -4,6 +4,7 @@ import org.bread_experts_group.channel.array
 import org.bread_experts_group.coder.Flaggable.Companion.from
 import org.bread_experts_group.coder.Flaggable.Companion.raw
 import org.bread_experts_group.coder.Mappable.Companion.id
+import org.bread_experts_group.socket.AddressNotAvailableException
 import org.bread_experts_group.socket.NoSocketAvailableException
 import org.bread_experts_group.socket.SocketAccessDeniedException
 import java.lang.foreign.Arena
@@ -20,6 +21,7 @@ fun decodeExtendedError(error: Int) = when (error) {
 		"The system could not create a socket conforming to the provided parameters."
 	)
 
+	10049 -> throw AddressNotAvailableException()
 	10055 -> throw WSANoBufferSpaceAvailableException()
 	else -> throw UnsupportedOperationException("$error")
 }

@@ -20,7 +20,7 @@ sealed class BSLInternetRawSocketBaseWindows(
 	protocolDefinition: WSAProtocolDefinition
 ) : BSLInternetRawSocket(internetType, arrayOf("Windows 11")) {
 	protected val arena: Arena = Arena.ofConfined()
-	private var closed = false
+	protected var closed = false
 	val protocol = wsaProtocols.list.firstOrNull {
 		it.socketType.enum == socketType && it.addressFamily.enum == addressFamily
 	} ?: throw NoSocketAvailableException(
@@ -86,12 +86,6 @@ sealed class BSLInternetRawSocketBaseWindows(
 		).toArray(ValueLayout.JAVA_BYTE)
 		networkArena.close()
 		return address to read
-	}
-
-	override fun writeDatagram(src: ByteBuffer): Pair<ByteArray, Int> {
-		if (closed) throw ClosedChannelException()
-		if (this.localAddress == null) throw NotYetBoundException()
-		TODO("ALPHA")
 	}
 
 	override fun isOpen(): Boolean = !closed
