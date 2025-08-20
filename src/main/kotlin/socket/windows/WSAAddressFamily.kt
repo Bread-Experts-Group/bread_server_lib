@@ -35,9 +35,7 @@ enum class WSAAddressFamily(override val id: Int, override val tag: String) : Ma
 	AF_ICLFXBM(31, "ICLFXBM"),
 	AF_BTH(32, "Bluetooth"),
 	AF_LINK(33, "LINK [unspec]"),
-	AF_HYPERV(34, "Hyper-V"),
-	OTHER(-1, "Other");
+	AF_HYPERV(34, "Hyper-V");
 
 	override fun toString(): String = stringForm()
-	override fun other(): WSAAddressFamily = OTHER
 }

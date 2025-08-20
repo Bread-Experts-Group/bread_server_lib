@@ -113,7 +113,6 @@ class PNGImageDecoder(
 			composite = when (blend) {
 				PNGBlendOperation.APNG_BLEND_OP_SOURCE -> AlphaComposite.Src
 				PNGBlendOperation.APNG_BLEND_OP_OVER -> AlphaComposite.SrcOver
-				else -> throw UnsupportedOperationException(blend.toString())
 			}
 			drawImage(blendImg, x, y, null)
 			dispose()
@@ -135,8 +134,6 @@ class PNGImageDecoder(
 			PNGDisposeOperation.APNG_DISPOSE_OP_PREVIOUS -> {
 				canvas = precopy
 			}
-
-			else -> throw UnsupportedOperationException(dispose.toString())
 		}
 		return TimedBufferedImage(final, delay)
 	}

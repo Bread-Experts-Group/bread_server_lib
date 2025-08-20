@@ -21,9 +21,7 @@ enum class PNGDisposeOperation(
 	 * The frame's region of the output buffer is to be reverted to the previous contents before rendering
 	 * the next frame.
 	 */
-	APNG_DISPOSE_OP_PREVIOUS(2, "Dispose To Previous"),
-	OTHER(-1, "Other");
+	APNG_DISPOSE_OP_PREVIOUS(2, "Dispose To Previous");
 
-	override fun other(): PNGDisposeOperation? = OTHER
 	override fun stringForm(): String = stringForm()
 }

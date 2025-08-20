@@ -13,7 +13,6 @@ import org.bread_experts_group.computer.ia32.register.FlagsRegister
 import org.bread_experts_group.computer.ia32.register.FlagsRegister.FlagType
 import org.bread_experts_group.computer.ia32.register.Register
 import org.bread_experts_group.computer.ia32.register.SegmentRegister
-import org.bread_experts_group.logging.ColoredHandler
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.logging.Logger
@@ -37,7 +36,12 @@ class IA32Processor : Processor {
 	}
 
 	val decoding: DecodingUtil = DecodingUtil(this)
-	val logger: Logger = ColoredHandler.newLoggerResourced("ia32_processor")
+	val logger: Logger = Logger.getLogger(
+		"ia32_processor",
+		"org.bread_experts_group.resource.LoggerResource"
+	).also {
+		it.useParentHandlers = false
+	}
 
 	// General Purpose
 	val a: Register = Register(this.logger, "a", 0u)
@@ -95,24 +99,40 @@ class IA32Processor : Processor {
 	var cir: UByte = 0u
 
 	fun push32(value: UInt) {
-		this.sp.rx -= 4u
+		when (this.addressSize) {
+			AddressingLength.R32 -> this.sp.ex -= 4u
+			AddressingLength.R16 -> this.sp.x -= 4u
+			else -> throw UnsupportedOperationException()
+		}
 		this.computer.setMemoryAt32(this.ss.offset(this.sp), value)
 	}
 
 	fun push16(value: UShort) {
-		this.sp.rx -= 2u
+		when (this.addressSize) {
+			AddressingLength.R32 -> this.sp.ex -= 2u
+			AddressingLength.R16 -> this.sp.x -= 2u
+			else -> throw UnsupportedOperationException()
+		}
 		this.computer.setMemoryAt16(this.ss.offset(this.sp), value)
 	}
 
 	fun pop32(): UInt {
 		val popped = this.computer.requestMemoryAt32(this.ss.offset(this.sp))
-		this.sp.rx += 4u
+		when (this.addressSize) {
+			AddressingLength.R32 -> this.sp.ex += 4u
+			AddressingLength.R16 -> this.sp.x += 4u
+			else -> throw UnsupportedOperationException()
+		}
 		return popped
 	}
 
 	fun pop16(): UShort {
 		val popped = this.computer.requestMemoryAt16(this.ss.offset(this.sp))
-		this.sp.rx += 2u
+		when (this.addressSize) {
+			AddressingLength.R32 -> this.sp.ex += 2u
+			AddressingLength.R16 -> this.sp.x += 2u
+			else -> throw UnsupportedOperationException()
+		}
 		return popped
 	}
 
@@ -151,14 +171,15 @@ class IA32Processor : Processor {
 	}
 
 	var halt: CountDownLatch = CountDownLatch(1)
+
 	fun initiateInterrupt(selector: UByte) {
 		this.halt.countDown()
 		if (this.realMode()) {
-			this.logger.warning("!!! INTERRUPT RECEIVED (${hex(selector)}) !!!")
 			this.push16(this.flags.tx)
 			this.flags.setFlag(FlagType.INTERRUPT_ENABLE_FLAG, false)
 			this.flags.setFlag(FlagType.TRAP_FLAG, false)
 			this.flags.setFlag(FlagType.AUXILIARY_CARRY_FLAG, false)
+			this.logger.warning("!!! INTERRUPT RECEIVED (${hex(selector)}) !!!")
 			this.push16(this.cs.tx)
 			this.push16(this.ip.tx)
 			val addr = selector.toULong() * 4u
@@ -177,9 +198,10 @@ class IA32Processor : Processor {
 	}
 
 	val instructionMap: MutableMap<UInt, Instruction> = mutableMapOf()
-	var segment: SegmentRegister = this.ds
+	var segment: SegmentRegister? = null
 	private var operandSizeOverride: Boolean = false
 	private var addressSizeOverride: Boolean = false
+	private var memoryLock: Boolean = false // TODO, No-op
 	fun realMode(): Boolean = !this.cr0.getFlag(ControlRegister0.FlagType.PROTECTED_MODE_ENABLE)
 
 	fun getAddressingLengthForSpecifier(specifier: KProperty0<Boolean>): AddressingLength {
@@ -218,10 +240,10 @@ class IA32Processor : Processor {
 				this.instructionMap[f.opcode] = f
 			}
 		}
-		this.logger.warning("Understood ${this.instructionMap.size} opcodes.")
 	}
 
 	private var readingOffPrefix: UInt = 0u
+	private var localExecutor: ((Instruction) -> Unit)? = null
 	fun decode() {
 		val instruction = when (this.cir.toUInt()) {
 			0x26u -> {
@@ -269,13 +291,49 @@ class IA32Processor : Processor {
 					"Missing two-byte opcode (0F) for ${hex(this.cir)} [${hex(this.ip.rx)}]"
 				)
 
+			0xF0u -> {
+				this.memoryLock = true
+				return
+			}
+
 			0xF2u -> {
-				this.readingOffPrefix = 0xF2u
+				this.localExecutor = {
+					val c = when (this.addressSize) {
+						AddressingLength.R32 -> this.c::ex
+						AddressingLength.R16 -> this.c::x
+						else -> throw UnsupportedOperationException()
+					}
+					while (c.get() > 0u) {
+						it.handle(this)
+						c.set(c.get() - 1u)
+						if (
+							(it.opcode == 0xA6u || it.opcode == 0xA7u ||
+									it.opcode == 0xAEu || it.opcode == 0xAFu) &&
+							this.flags.getFlag(FlagType.ZERO_FLAG)
+						) break
+					}
+				}
 				return
 			}
 
 			0xF3u -> {
-				this.readingOffPrefix = 0xF3u
+				this.localExecutor = {
+					val c = when (this.addressSize) {
+						AddressingLength.R32 -> this.c::ex
+						AddressingLength.R16 -> this.c::x
+						else -> throw UnsupportedOperationException()
+					}
+					this.flags.setFlag(FlagType.ZERO_FLAG, true)
+					while (c.get() > 0u) {
+						it.handle(this)
+						c.set(c.get() - 1u)
+						if (
+							(it.opcode == 0xA6u || it.opcode == 0xA7u ||
+									it.opcode == 0xAEu || it.opcode == 0xAFu) &&
+							!this.flags.getFlag(FlagType.ZERO_FLAG)
+						) break
+					}
+				}
 				return
 			}
 
@@ -287,15 +345,18 @@ class IA32Processor : Processor {
 									"${hex(this.cir)} [${hex(this.ip.rx)}]"
 						)).also { this.readingOffPrefix = 0u }
 				} else {
-					this.instructionMap[this.cir.toUInt()]
-						?: throw IllegalArgumentException("Missing opcode for ${hex(this.cir)} [${hex(this.ip.rx)}]")
+					this.instructionMap[this.cir.toUInt()] ?: throw IllegalArgumentException(
+						"Missing opcode for ${hex(this.cir)} [${this.cs.hex(this.ip.rx - 1u)}]"
+					)
 				}
 			}
 		}
 		this.logger.warning { "${this.cs.hex(this.ip.rx - 1u)} ${hex(this.cir)}: ${instruction.getDisassembly(this)}" }
-		instruction.handle(this)
-		this.segment = this.ds
+		localExecutor?.invoke(instruction) ?: instruction.handle(this)
+		this.localExecutor = null
+		this.segment = null
 		this.operandSizeOverride = false
 		this.addressSizeOverride = false
+		this.memoryLock = false
 	}
 }

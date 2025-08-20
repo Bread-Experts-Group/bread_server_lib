@@ -5,7 +5,6 @@ import org.bread_experts_group.computer.BinaryUtil.abss
 import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.BinaryUtil.readBinary
 import org.bread_experts_group.computer.ia32.IA32Processor
-import org.bread_experts_group.computer.ia32.register.FlagsRegister.FlagType
 import kotlin.math.abs
 import kotlin.reflect.KMutableProperty0
 
@@ -185,12 +184,12 @@ class DecodingUtil(private val processor: IA32Processor) {
 	fun decodeSIB(): ULong {
 		this.processor.fetch()
 		val (scale, index, base) = this.getComponents(this.processor.cir)
-		return (when (index) {
+		return ((when (index) {
 			0b000u -> this.processor.a.ex
 			0b001u -> this.processor.c.ex
 			0b010u -> this.processor.d.ex
 			0b011u -> this.processor.b.ex
-			0b100u -> this.processor.sp.ex
+			0b100u -> 0u
 			0b110u -> this.processor.si.ex
 			0b111u -> this.processor.di.ex
 			else -> throw IllegalArgumentException("SIB index $index")
@@ -200,17 +199,17 @@ class DecodingUtil(private val processor: IA32Processor) {
 			0b10u -> 4u
 			0b11u -> 8u
 			else -> throw IllegalArgumentException("SIB scale $scale")
-		}) + when (base) {
+		}).toInt() + when (base) {
 			0b000u -> this.processor.a.ex
 			0b001u -> this.processor.c.ex
 			0b010u -> this.processor.d.ex
 			0b011u -> this.processor.b.ex
-			0b100u -> 0u
-			0b101u -> this.processor.bp.ex
+			0b100u -> this.processor.sp.ex
+			0b101u -> TODO("Delta")
 			0b110u -> this.processor.si.ex
 			0b111u -> this.processor.di.ex
 			else -> throw IllegalArgumentException("SIB base $base")
-		}
+		}.toInt()).toULong()
 	}
 
 	fun decodeSIBDisassembler(): String {
@@ -249,8 +248,9 @@ class DecodingUtil(private val processor: IA32Processor) {
 		operandLength: AddressingLength
 	): MemRM = when (mod) {
 		0b00u, 0b01u, 0b10u -> {
+			var segment = processor.ds
 			val memRm = when (this.processor.addressSize) {
-				AddressingLength.R32 -> when (rm) {
+				AddressingLength.R32 -> (when (rm) {
 					0b000u -> this.processor.a.ex
 					0b001u -> this.processor.c.ex
 					0b010u -> this.processor.d.ex
@@ -258,7 +258,10 @@ class DecodingUtil(private val processor: IA32Processor) {
 					0b100u -> this.decodeSIB()
 					0b101u -> when (mod) {
 						0b00u -> this.readBinaryFetch(4).toULong()
-						else -> this.processor.bp.ex
+						else -> {
+							segment = processor.ss
+							this.processor.bp.ex
+						}
 					}
 
 					0b110u -> this.processor.si.ex
@@ -271,34 +274,45 @@ class DecodingUtil(private val processor: IA32Processor) {
 						0b10u -> it + this.readBinaryFetch(4).toInt()
 						else -> throw IllegalArgumentException(hex(mod))
 					}
-				}
+				}).toUInt().toULong()
 
-				AddressingLength.R16 -> when (rm) {
+				AddressingLength.R16 -> (when (rm) {
 					0b000u -> this.processor.b.x + this.processor.si.x
 					0b001u -> this.processor.b.x + this.processor.di.x
-					0b010u -> this.processor.bp.x + this.processor.si.x
-					0b011u -> this.processor.bp.x + this.processor.di.x
+					0b010u -> {
+						segment = processor.ss
+						this.processor.bp.x + this.processor.si.x
+					}
+
+					0b011u -> {
+						segment = processor.ss
+						this.processor.bp.x + this.processor.di.x
+					}
+
 					0b100u -> this.processor.si.x
 					0b101u -> this.processor.di.x
 					0b110u -> when (mod) {
 						0b00u -> this.readBinaryFetch(2).toULong()
-						else -> this.processor.bp.x
+						else -> {
+							segment = processor.ss
+							this.processor.bp.x
+						}
 					}
 
 					0b111u -> this.processor.b.x
 					else -> throw IllegalArgumentException(hex(rm))
-				}.toLong().let {
+				}.toInt().let {
 					when (mod) {
 						0b00u -> it
 						0b01u -> it + this.readBinaryFetch(1).toByte()
 						0b10u -> it + this.readBinaryFetch(2).toShort()
 						else -> throw IllegalArgumentException(hex(mod))
 					}
-				}
+				}).toUShort().toULong()
 
 				else -> throw UnsupportedOperationException()
 			}
-			MemRM(null, memRm.toULong())
+			MemRM(null, (processor.segment ?: segment).offset(memRm))
 		}
 
 		0b11u -> MemRM(this.getRegRM(rm, regRMType, operandLength), null)
@@ -310,7 +324,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 		operandLength: AddressingLength
 	): String = when (mod) {
 		0b00u, 0b01u, 0b10u -> {
-			when (this.processor.addressSize) {
+			'[' + when (this.processor.addressSize) {
 				AddressingLength.R32 -> when (rm) {
 					0b000u -> "eax [${hex(this.processor.a.tex)}]"
 					0b001u -> "ecx [${hex(this.processor.c.tex)}]"
@@ -340,11 +354,11 @@ class DecodingUtil(private val processor: IA32Processor) {
 					0b100u -> "si [${hex(this.processor.si.tx)}]"
 					0b101u -> "di [${hex(this.processor.di.tx)}]"
 					0b110u -> when (mod) {
-						0b00u -> "+${hex(this.readBinaryFetch(2).toUShort())}"
-						else -> "+bp [${hex(this.processor.bp.tx)}]"
+						0b00u -> hex(this.readBinaryFetch(2).toUShort())
+						else -> "bp [${hex(this.processor.bp.tx)}]"
 					}
 
-					0b111u -> "+bx [${hex(this.processor.b.x)}]"
+					0b111u -> "bx [${hex(this.processor.b.x)}]"
 					else -> throw IllegalArgumentException(hex(rm))
 				} + when (mod) {
 					0b00u -> ""
@@ -354,7 +368,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 				}
 
 				else -> throw UnsupportedOperationException()
-			}
+			} + ']'
 		}
 
 		0b11u -> this.getRegRMDisassembler(rm, regRMType, operandLength)
@@ -429,20 +443,25 @@ class DecodingUtil(private val processor: IA32Processor) {
 		)
 	}
 
-	fun getFlagForResult(flag: FlagType, value: ULong): Boolean = when (flag) {
-		FlagType.SIGN_FLAG -> value.toLong() < 0
-		FlagType.ZERO_FLAG -> value == ULong.MIN_VALUE
-		FlagType.PARITY_FLAG -> value.toUByte().countOneBits() % 2 == 0
-		else -> throw UnsupportedOperationException("Unsupported flag: $flag")
+	fun loadFloppyIntoMemory(n: Int, start: ULong, end: ULong, memoryStart: ULong) {
+		processor.computer.floppyURLs[n]!!.openStream().use {
+			it.skip(start.toLong())
+			this.processor.logger.warning("BIOS FP CPY ${hex(start)} -> ${hex(end)} @ ${hex(memoryStart)}")
+			for (offset in memoryStart..memoryStart + (end - start)) {
+//			 TODO Send in chunks
+				this.processor.computer.setMemoryAt(offset, it.read().toUByte())
+			}
+		}
 	}
 
 	fun loadDiscIntoMemory(start: ULong, end: ULong, memoryStart: ULong) {
-		val disc = this.processor.computer.disc ?: return
-		disc.discStream.channel.position(start.toLong())
-		this.processor.logger.warning("BIOS CPY ${hex(start)} -> ${hex(end)} @ ${hex(memoryStart)}")
-		for (offset in memoryStart..memoryStart + (end - start)) {
-			// TODO Send in chunks
-			this.processor.computer.setMemoryAt(offset, disc.discStream.read().toUByte())
+		processor.computer.discStream.use {
+			it.skip(start.toLong())
+			this.processor.logger.warning("BIOS CD CPY ${hex(start)} -> ${hex(end)} @ ${hex(memoryStart)}")
+			for (offset in memoryStart..memoryStart + (end - start)) {
+//			 TODO Send in chunks
+				this.processor.computer.setMemoryAt(offset, it.read().toUByte())
+			}
 		}
 	}
 }

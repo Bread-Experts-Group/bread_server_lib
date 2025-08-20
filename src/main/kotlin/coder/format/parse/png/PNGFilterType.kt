@@ -6,9 +6,7 @@ enum class PNGFilterType(
 	override val id: Int,
 	override val tag: String
 ) : Mappable<PNGFilterType, Int> {
-	ADAPTIVE(0, "Adaptive Filtering"),
-	OTHER(-1, "Unknown");
+	ADAPTIVE(0, "Adaptive Filtering");
 
-	override fun other(): PNGFilterType? = OTHER
 	override fun toString(): String = stringForm()
 }

@@ -7,9 +7,7 @@ enum class PNGBlendOperation(
 	override val tag: String
 ) : Mappable<PNGBlendOperation, Int> {
 	APNG_BLEND_OP_SOURCE(0, "Blend Source"),
-	APNG_BLEND_OP_OVER(1, "Blend Over"),
-	OTHER(-1, "Other");
+	APNG_BLEND_OP_OVER(1, "Blend Over");
 
-	override fun other(): PNGBlendOperation? = OTHER
 	override fun toString(): String = stringForm()
 }

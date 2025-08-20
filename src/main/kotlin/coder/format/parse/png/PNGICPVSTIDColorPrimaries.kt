@@ -8,7 +8,6 @@ enum class PNGICPVSTIDColorPrimaries(
 ) : Mappable<PNGICPVSTIDColorPrimaries, Int> {
 	RESERVED(0, "Reserved"),
 	BT709_SRGB(1, "BT.709 / sRGB"),
-	UNSPECIFIED(2, "Unspecified"),
 	BT470M(4, "BT.470‑6 System M"),
 	BT470BG(5, "BT.470‑6 System B/G / BT.601‑625"),
 	BT601_525(6, "BT.601‑525 / SMPTE 170M"),
@@ -21,5 +20,4 @@ enum class PNGICPVSTIDColorPrimaries(
 	EBU3213(22, "EBU Tech. 3213‑E");
 
 	override fun toString(): String = stringForm()
-	override fun other(): PNGICPVSTIDColorPrimaries? = UNSPECIFIED
 }

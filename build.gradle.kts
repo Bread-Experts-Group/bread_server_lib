@@ -29,6 +29,7 @@ kotlin {
 	jvmToolchain(21)
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
+		freeCompilerArgs.add("-Xannotations-in-metadata")
 	}
 }
 tasks.register<Jar>("dokkaJavadocJar") {

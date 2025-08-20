@@ -26,13 +26,13 @@ class MP3Parser : Parser<Nothing?, MP3BaseFrame, InputStream>(
 		val header3 = consolidatoryStream.read()
 		val header4 = consolidatoryStream.read()
 
-		val versionId = MPEGAudioVersionID.entries.id((header2 and 0b00011000) shr 3).enum
-		val layerDescription = LayerDescription.entries.id((header2 and 0b00000110) shr 1).enum
+		val versionId = MPEGAudioVersionID.entries.id((header2 and 0b00011000) shr 3).enum!!
+		val layerDescription = LayerDescription.entries.id((header2 and 0b00000110) shr 1).enum!!
 		val bitrate = mp3Bitrate(header3 shr 4, versionId, layerDescription)
 		val sampleRate = mp3SampleRate((header3 and 0b00001100) shr 2, versionId)
 		val padding = (header3 and 0b00000010) != 0
-		val channelMode = ChannelMode.entries.id(header4 shr 6).enum
-		val emphasis = MP3Emphasis.entries.id(header4 and 0b00000001).enum
+		val channelMode = ChannelMode.entries.id(header4 shr 6).enum!!
+		val emphasis = MP3Emphasis.entries.id(header4 and 0b00000001).enum!!
 
 		val frameSize =
 			if (layerDescription == LayerDescription.LAYER_1)
@@ -49,7 +49,7 @@ class MP3Parser : Parser<Nothing?, MP3BaseFrame, InputStream>(
 			padding,
 			(header3 and 0b00000001) == 1,
 			channelMode,
-			ModeExtension.entries.id((header4 and 0b00110000) shr 4).enum,
+			ModeExtension.entries.id((header4 and 0b00110000) shr 4).enum!!,
 			((header4 and 0b00000100) shr 2) == 1,
 			((header4 and 0b00000010) shr 1) == 1,
 			emphasis

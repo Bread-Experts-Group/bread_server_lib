@@ -17,9 +17,7 @@ enum class TIFFDataType(
 	SLONG(9, "Signed Integer (32-bit)"),
 	SRATIONAL(10, "Signed Composite Fractional (32/32-bit)"),
 	FLOAT(11, "Floating Point (32-bit)"),
-	DOUBLE(12, "Floating Point (64-bit)"),
-	OTHER(-1, "Unknown");
+	DOUBLE(12, "Floating Point (64-bit)");
 
 	override fun toString(): String = stringForm()
-	override fun other(): TIFFDataType? = OTHER
 }

@@ -15,7 +15,9 @@ abstract class InstructionSelector(opcode: UInt) : Instruction(opcode, "") {
 		return read
 	}
 
-	private fun getIns(): Instruction = this.instructions().getValue(this.getReg())
+	private fun getIns(): Instruction = this.instructions()[this.getReg()]
+		?: throw ArrayIndexOutOfBoundsException("${this.getReg()} in ${this.instructions()} is out of bounds...")
+
 	override fun operands(processor: IA32Processor): String = this.getIns().operands(processor)
 	override fun handle(processor: IA32Processor): Unit = this.getIns().handle(processor)
 

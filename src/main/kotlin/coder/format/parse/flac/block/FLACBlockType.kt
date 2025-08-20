@@ -13,9 +13,7 @@ enum class FLACBlockType(
 	VORBIS_COMMENT(4, "Vorbis Comment"),
 	CD_CUESHEET(5, "CD Cue-sheet"),
 	PICTURE(6, "Picture"),
-	OTHER(-1, "Other"),
 	AUDIO_DATA(-2, "Audio Data");
 
-	override fun other(): FLACBlockType? = OTHER
 	override fun toString(): String = stringForm()
 }

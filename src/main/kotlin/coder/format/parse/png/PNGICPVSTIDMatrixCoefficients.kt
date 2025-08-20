@@ -13,9 +13,7 @@ enum class PNGICPVSTIDMatrixCoefficients(
 	SMPTE240(5, "SMPTE 240"),
 	BT2020(9, "BT.2020"),
 	ICTCP(14, "ICtCp"),
-	YCGCO(8, "YCgCo"),
-	UNSPECIFIED(255, "Unspecified");
+	YCGCO(8, "YCgCo");
 
-	override fun other(): PNGICPVSTIDMatrixCoefficients? = UNSPECIFIED
 	override fun toString(): String = tag
 }

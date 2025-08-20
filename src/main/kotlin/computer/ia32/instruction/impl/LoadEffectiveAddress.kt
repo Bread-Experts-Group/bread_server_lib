@@ -9,7 +9,7 @@ class LoadEffectiveAddress : Instruction(0x8Du, "lea"), ModRM {
 	override fun operands(processor: IA32Processor): String = processor.rmD().let { "${it.register}, ${it.regMem}" }
 	override fun handle(processor: IA32Processor) {
 		val (memRM, register) = processor.rm()
-		register.set(memRM.memory!!)
+		register.set(memRM.memory!! - ((processor.segment ?: processor.ds).rx * 0x10u))
 	}
 
 	override val registerType: RegisterType = RegisterType.GENERAL_PURPOSE

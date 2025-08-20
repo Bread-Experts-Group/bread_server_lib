@@ -1,6 +1,7 @@
 package org.bread_experts_group
 
 import org.bread_experts_group.coder.LazyPartialResult
+import java.net.URI
 import java.util.logging.Logger
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
@@ -28,3 +29,6 @@ fun Any.dumpLogSafe(logger: Logger, prepend: String = "") {
 		else it?.dumpLogSafe(logger, "$prepend ")
 	}
 }
+
+fun getResource(path: String): URI = (MissingResourceError::class.java.getResource(path)
+	?: throw MissingResourceError(path)).toURI()

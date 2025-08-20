@@ -1,6 +1,7 @@
 package org.bread_experts_group.protocol.ssh
 
 import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.protocol.old.ssh.SSHConnection
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.net.InetSocketAddress

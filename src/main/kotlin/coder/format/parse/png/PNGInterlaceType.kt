@@ -7,9 +7,7 @@ enum class PNGInterlaceType(
 	override val tag: String
 ) : Mappable<PNGInterlaceType, Int> {
 	NONE(0, "No Interlace"),
-	ADAM7(1, "Adam-7 Interlace"),
-	OTHER(-1, "Unknown");
+	ADAM7(1, "Adam-7 Interlace");
 
-	override fun other(): PNGInterlaceType? = OTHER
 	override fun toString(): String = stringForm()
 }

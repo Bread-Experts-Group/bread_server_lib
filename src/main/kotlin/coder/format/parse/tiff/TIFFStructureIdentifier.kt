@@ -67,9 +67,7 @@ enum class TIFFStructureIdentifier(
 	SHARPNESS(0xA40A, "Sharpness (Exif.Photo.Sharpness)"),
 	LENS_SPECIFICATION(0xA432, "Lens Specification (Exif.Photo.LensSpecification)"),
 	LENS_MANUFACTURER(0xA433, "Lens Manufacturer (Exif.Photo.LensMake)"),
-	LENS_MODEL(0xA434, "Lens Model (Exif.Photo.LensModel)"),
-	OTHER(-1, "Other");
+	LENS_MODEL(0xA434, "Lens Model (Exif.Photo.LensModel)");
 
-	override fun other(): TIFFStructureIdentifier? = OTHER
 	override fun toString(): String = stringForm()
 }

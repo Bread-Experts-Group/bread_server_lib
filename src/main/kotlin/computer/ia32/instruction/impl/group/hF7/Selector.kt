@@ -1,5 +1,9 @@
 package org.bread_experts_group.computer.ia32.instruction.impl.group.hF7
 
+import org.bread_experts_group.computer.ia32.instruction.impl.LogicalCompare
+import org.bread_experts_group.computer.ia32.instruction.impl.OnesComplementNegation
+import org.bread_experts_group.computer.ia32.instruction.impl.TwosComplementNegation
+import org.bread_experts_group.computer.ia32.instruction.impl.group.*
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelector
 
@@ -10,8 +14,21 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  */
 class Selector : InstructionSelector(0xF7u) {
 	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to TestModRM,
-		3u to NegateModRM,
+		0u to LogicalCompare.TwoOperand(
+			0u,
+			d16MI(processor), dc16MI(processor),
+			d32MI(processor), dc32MI(processor)
+		),
+		2u to OnesComplementNegation.SingleOperand(
+			0u,
+			d16M(processor), dc16M(processor),
+			d32M(processor), dc32M(processor)
+		),
+		3u to TwosComplementNegation.SingleOperand(
+			0u,
+			d16M(processor), dc16M(processor),
+			d32M(processor), dc32M(processor)
+		),
 		4u to MultiplyModRM,
 		6u to DivideModRM
 	)

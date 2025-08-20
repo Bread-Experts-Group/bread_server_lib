@@ -13,9 +13,7 @@ enum class WSAProtocolDefinition(
 	IPPROTO_TCP(6, "Transmission Control Protocol (TCP)"),
 	IPPROTO_UDP(17, "User Datagram Protocol (UDP)"),
 	IPPROTO_ICMPV6(58, "Internet Control Message Protocol, version 6 (ICMPv6)"),
-	IPPROTO_RM(113, "PGM Reliable Multicast Protocol"),
-	OTHER(-1, "Other");
+	IPPROTO_RM(113, "PGM Reliable Multicast Protocol");
 
 	override fun toString(): String = stringForm()
-	override fun other(): WSAProtocolDefinition = OTHER
 }

@@ -9,6 +9,5 @@ enum class PNGPixelDimensions(
 	UNKNOWN(0, "?"),
 	METER(1, "m");
 
-	override fun other(): PNGPixelDimensions? = UNKNOWN
 	override fun toString(): String = stringForm()
 }

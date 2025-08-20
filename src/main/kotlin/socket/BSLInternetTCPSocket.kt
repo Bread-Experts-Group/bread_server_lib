@@ -1,6 +1,5 @@
 package org.bread_experts_group.socket
 
-import java.nio.channels.NetworkChannel
 import java.util.*
 
 /**
@@ -11,8 +10,8 @@ import java.util.*
  */
 abstract class BSLInternetTCPSocket(
 	protected val internetType: BSLInternetProtocolSocketType,
-	protected val accepts: Array<String>
-) : AddressableByteChannel, NetworkChannel {
+	accepts: Array<String>
+) : BSLSocket(accepts) {
 	companion object {
 		fun open(
 			internetType: BSLInternetProtocolSocketType

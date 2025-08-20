@@ -5,9 +5,7 @@ import org.bread_experts_group.coder.Mappable
 enum class PNGCompressionType(
 	override val id: Int, override val tag: String
 ) : Mappable<PNGCompressionType, Int> {
-	DEFLATE(0, "DEFLATE (RFC 1951 / PKWARE)"),
-	OTHER(-1, "Unknown");
+	DEFLATE(0, "DEFLATE (RFC 1951 / PKWARE)");
 
-	override fun other(): PNGCompressionType? = OTHER
 	override fun toString(): String = stringForm()
 }

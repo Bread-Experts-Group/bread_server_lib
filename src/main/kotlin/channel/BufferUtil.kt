@@ -40,7 +40,8 @@ fun ensureCapacity(n: Int) {
 	}
 }
 
-val longBuffer: ByteBuffer = ByteBuffer.allocate(8)
+@get:Synchronized
+private val longBuffer: ByteBuffer = ByteBuffer.allocate(8)
 fun Long.bytes(order: ByteOrder = ByteOrder.BIG_ENDIAN): ByteArray {
 	longBuffer.order(order)
 	longBuffer.putLong(0, this)

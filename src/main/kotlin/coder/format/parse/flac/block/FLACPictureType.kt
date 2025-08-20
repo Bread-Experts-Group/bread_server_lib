@@ -7,9 +7,7 @@ enum class FLACPictureType(
 	override val tag: String
 ) : Mappable<FLACPictureType, Int> {
 	FRONT_COVER(3, "Front Cover"),
-	BACK_COVER(4, "Back Cover"),
-	OTHER(-1, "Other");
+	BACK_COVER(4, "Back Cover");
 
-	override fun other(): FLACPictureType? = OTHER
 	override fun toString(): String = stringForm()
 }

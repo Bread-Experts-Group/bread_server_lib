@@ -106,7 +106,7 @@ class Assembler(private val assemblyStream: Reader) {
 						val token = queue.removeFirst()
 						val modeBits = stringToIntOrNull(range)(token)
 						if (modeBits == null) assemblerError("$token-bit out of range for supported modes [$range]")
-						val mode = BitMode.entries.id(modeBits).enum
+						val mode = BitMode.entries.id(modeBits).enum!!
 						if (mode == BitMode.BITS_8) assemblerError("$token-bit mode unsupported")
 						this.mode = mode
 					}

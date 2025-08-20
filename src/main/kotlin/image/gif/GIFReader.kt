@@ -43,6 +43,7 @@ class GIFReader(spi: GIFReaderSpi) : ImageReader(spi) {
 		val newReadImages = mutableListOf<IIOImage>()
 		parsed.forEachIndexed { i, block ->
 			try {
+				val block = block.resultSafe
 				if (block is GIFImageDescriptor) {
 					val control = parsed[i - 1] as? GIFGraphicControlExtensionBlock
 					val colors = block.localColors ?: globalColors

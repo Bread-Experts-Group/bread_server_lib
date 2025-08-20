@@ -9,9 +9,7 @@ enum class PNGSRGBIntent(
 	PERCEPTUAL(0, "Gamut adaption preferred"),
 	RELATIVE_COLORMETRIC(1, "Color appearance preferred"),
 	SATURATION(2, "Saturation preservation preferred"),
-	ABSOLUTE_COLORMETRIC(3, "Colormetry preservation preferred"),
-	OTHER(-1, "Unknown");
+	ABSOLUTE_COLORMETRIC(3, "Colormetry preservation preferred");
 
-	override fun other(): PNGSRGBIntent? = OTHER
 	override fun toString(): String = stringForm()
 }

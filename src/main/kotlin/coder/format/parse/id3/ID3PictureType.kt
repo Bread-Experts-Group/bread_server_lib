@@ -5,7 +5,7 @@ import org.bread_experts_group.coder.Mappable
 enum class ID3PictureType(
 	override val id: Int, override val tag: String
 ) : Mappable<ID3PictureType, Int> {
-	OTHER(0x00, "Generic"),
+	GENERIC(0x00, "Generic"),
 	FILE_ICON_32_32(0x01, "32x32 File Icon"),
 	OTHER_FILE_ICON(0x02, "Generic File Icon"),
 	COVER_FRONT(0x03, "Front Cover"),

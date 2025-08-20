@@ -7,6 +7,7 @@ import org.bread_experts_group.computer.ia32.instruction.RegisterType
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.operand.ModRM
 import org.bread_experts_group.computer.ia32.register.SegmentRegister
+import org.bread_experts_group.hex
 
 class LoadFarPointerFromMemoryDefinitions : InstructionCluster {
 	class LoadFarPointerWithSegment(
@@ -15,18 +16,12 @@ class LoadFarPointerFromMemoryDefinitions : InstructionCluster {
 		val segmentRegister: SegmentRegister
 	) : Instruction(opcode, "l${segmentN}s"), ModRM {
 		override fun operands(processor: IA32Processor): String = processor.rmD().let {
-			"${it.register}, ${processor.segment.name}:${it.regMem}"
+			"${segmentRegister.name} [${hex(segmentRegister.tx)}]:${it.register}, ${it.regMem}"
 		}
 
 		override fun handle(processor: IA32Processor) {
 			val (memRm, register) = processor.rm()
 			when (processor.operandSize) {
-				AddressingLength.R32 -> {
-//					this.segmentRegister.tx = processor.computer.requestMemoryAt16(memRm.memory!! + 4u)
-//					register.set(processor.computer.requestMemoryAt32(memRm.memory).toULong())
-					TODO("LsS")
-				}
-
 				AddressingLength.R16 -> {
 					this.segmentRegister.tx = processor.computer.requestMemoryAt16(memRm.memory!! + 2u)
 					register.set(processor.computer.requestMemoryAt32(memRm.memory).toULong())

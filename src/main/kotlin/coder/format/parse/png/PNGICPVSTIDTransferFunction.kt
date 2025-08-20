@@ -23,6 +23,5 @@ enum class PNGICPVSTIDTransferFunction(
 	ST428(14, "ST 428‑1"),
 	HLG(15, "HLG (ARIB STD‑B67)");
 
-	override fun other(): PNGICPVSTIDTransferFunction? = UNSPECIFIED
 	override fun toString(): String = tag
 }

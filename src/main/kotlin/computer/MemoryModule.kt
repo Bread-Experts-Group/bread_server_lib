@@ -18,6 +18,11 @@ class MemoryModule(val capacity: UInt, val effectiveAddress: ULong? = null) {
 		(0x00u).toUByte()
 	}
 
+	@OptIn(ExperimentalUnsignedTypes::class)
+	fun erase() {
+		this.memory = UByteArray(this.capacity.toInt()) { (0x00u).toUByte() }
+	}
+
 	/**
 	 * Gets the value at the specified address.
 	 * @param address The address to read from.

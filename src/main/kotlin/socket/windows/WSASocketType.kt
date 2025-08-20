@@ -7,9 +7,7 @@ enum class WSASocketType(override val id: Int, override val tag: String) : Mappa
 	SOCK_DGRAM(2, "Datagram-oriented"),
 	SOCK_RAW(3, "Raw"),
 	SOCK_RDM(4, "Reliable message datagram-oriented"),
-	SOCK_SEQPACKET(5, "Pseudo-stream datagram-oriented"),
-	OTHER(-1, "Other");
+	SOCK_SEQPACKET(5, "Pseudo-stream datagram-oriented");
 
 	override fun toString(): String = stringForm()
-	override fun other(): WSASocketType = OTHER
 }

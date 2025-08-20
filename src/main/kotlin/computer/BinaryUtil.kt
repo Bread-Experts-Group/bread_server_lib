@@ -18,15 +18,15 @@ object BinaryUtil {
 	fun sandbDef(a: UShort, b: UByte): UShort = a and (b.toUShort())
 	infix fun UShort.and(b: UByte): UShort = this@BinaryUtil.sandbDef(this, b)
 
-	fun shrDef(s: UShort, c: Int): UShort = (s.toUInt() shr c).toUShort()
-	fun shlDef(s: UShort, c: Int): UShort = (s.toUInt() shl c).toUShort()
-	infix fun UShort.shr(c: Int): UShort = this@BinaryUtil.shrDef(this, c)
-	infix fun UShort.shl(c: Int): UShort = this@BinaryUtil.shlDef(this, c)
+	fun shrDef16(s: UShort, c: Int): UShort = (s.toUInt() shr c).toUShort()
+	fun shlDef16(s: UShort, c: Int): UShort = (s.toUInt() shl c).toUShort()
+	infix fun UShort.shr(c: Int): UShort = this@BinaryUtil.shrDef16(this, c)
+	infix fun UShort.shl(c: Int): UShort = this@BinaryUtil.shlDef16(this, c)
 
-	fun shrDef(b: UByte, c: Int): UByte = (b.toUInt() shr c).toUByte()
-	fun shlDef(b: UByte, c: Int): UByte = (b.toUInt() shl c).toUByte()
-	infix fun UByte.shr(c: Int): UByte = this@BinaryUtil.shrDef(this, c)
-	infix fun UByte.shl(c: Int): UByte = this@BinaryUtil.shlDef(this, c)
+	fun shrDef8(b: UByte, c: Int): UByte = (b.toUInt() shr c).toUByte()
+	fun shlDef8(b: UByte, c: Int): UByte = (b.toUInt() shl c).toUByte()
+	infix fun UByte.shr(c: Int): UByte = this@BinaryUtil.shrDef8(this, c)
+	infix fun UByte.shl(c: Int): UByte = this@BinaryUtil.shlDef8(this, c)
 
 	fun Boolean.toULong(): ULong = if (this) 1u else 0u
 	fun Boolean.toUInt(): UInt = if (this) 1u else 0u

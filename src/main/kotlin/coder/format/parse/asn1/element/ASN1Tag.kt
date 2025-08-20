@@ -40,6 +40,5 @@ enum class ASN1Tag(
 	DURATION(34, "DURATION"),
 	UNKNOWN(-1, "Unknown");
 
-	override fun other(): ASN1Tag? = UNKNOWN
 	override fun toString(): String = stringForm()
 }

@@ -1,7 +1,7 @@
-package org.bread_experts_group.protocol.http
+package org.bread_experts_group.protocol.old.http
 
-import org.bread_experts_group.channel.SocketReadingByteBuffer
 import org.bread_experts_group.getTLSContext
+import org.bread_experts_group.io.reader.SocketReadingByteBuffer
 import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test

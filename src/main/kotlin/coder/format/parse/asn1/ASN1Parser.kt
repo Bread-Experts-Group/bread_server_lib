@@ -17,9 +17,9 @@ class ASN1Parser : Parser<ASN1ElementIdentifier, ASN1Element, InputStream>(
 	override fun readBase(compound: CodingCompoundThrowable): ASN1Element = ASN1Element(
 		fqIn.read().let {
 			ASN1ElementIdentifier(
-				ASN1ElementClass.entries.id(it shr 6).enum,
-				ASN1ElementConstruction.entries.id((it shr 5) and 0b1).enum,
-				ASN1Tag.entries.id(it and 0b11111).enum
+				ASN1ElementClass.entries.id(it shr 6).enum!!,
+				ASN1ElementConstruction.entries.id((it shr 5) and 0b1).enum!!,
+				ASN1Tag.entries.id(it and 0b11111).enum!!
 			)
 		},
 		fqIn.readNBytes(

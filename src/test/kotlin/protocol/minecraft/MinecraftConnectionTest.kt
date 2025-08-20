@@ -1,9 +1,9 @@
-package org.bread_experts_group.protocol.minecraft
+package org.bread_experts_group.protocol.old.minecraft
 
 import org.bread_experts_group.buildDate
 import org.bread_experts_group.logging.ColoredHandler
-import org.bread_experts_group.protocol.minecraft.packet.status.MinecraftStatusResponsePacket
-import org.bread_experts_group.protocol.minecraft.server.MinecraftStandardServer
+import org.bread_experts_group.protocol.old.minecraft.packet.status.MinecraftStatusResponsePacket
+import org.bread_experts_group.protocol.old.minecraft.server.MinecraftStandardServer
 import org.bread_experts_group.version
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow

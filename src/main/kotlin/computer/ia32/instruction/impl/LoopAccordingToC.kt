@@ -16,12 +16,17 @@ class LoopAccordingToC : Instruction(0xE2u, "loop"), Immediate8 {
 	}
 
 	override fun handle(processor: IA32Processor) {
-		processor.c.ex--
 		val r8 = processor.rel8()
 		when (processor.operandSize) {
-			AddressingLength.R32 -> if (processor.c.ex > 0u) processor.ip.tex = (processor.ip.tex.toInt() + r8).toUInt()
-			AddressingLength.R16 -> if (processor.c.x > 0u) processor.ip.tex =
-				(processor.ip.tex.toInt() + r8).toUShort().toUInt()
+			AddressingLength.R32 -> {
+				processor.c.ex--
+				if (processor.c.ex > 0u) processor.ip.tex = (processor.ip.tex.toInt() + r8).toUInt()
+			}
+
+			AddressingLength.R16 -> {
+				processor.c.x--
+				if (processor.c.x > 0u) processor.ip.tex = (processor.ip.tex.toInt() + r8).toUShort().toUInt()
+			}
 
 			else -> throw UnsupportedOperationException()
 		}

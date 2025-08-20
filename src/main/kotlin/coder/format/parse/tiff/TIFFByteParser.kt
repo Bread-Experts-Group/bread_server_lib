@@ -47,8 +47,8 @@ class TIFFByteParser : ByteParser<TIFFStructureIdentifier, TIFFStructure, Seekab
 			buffer12.flip()
 			structures.add(
 				TIFFStructure(
-					TIFFStructureIdentifier.entries.id(buffer12.short.toInt() and 0xFFFF).enum,
-					TIFFDataType.entries.id(buffer12.short.toInt() and 0xFFFF).enum,
+					TIFFStructureIdentifier.entries.id(buffer12.short.toInt() and 0xFFFF).enum!!,
+					TIFFDataType.entries.id(buffer12.short.toInt() and 0xFFFF).enum!!,
 					buffer12.int.toLong() and 0xFFFFFFFF,
 					buffer12.int.toLong() and 0xFFFFFFFF,
 					channel.position()

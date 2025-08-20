@@ -1,12 +1,19 @@
 package org.bread_experts_group.computer
 
 import org.bread_experts_group.computer.BinaryUtil.readBinary
-import org.bread_experts_group.computer.disc.iso9960.ISO9660Disc
+import org.bread_experts_group.computer.disc.ISO9660BootRecord
+import org.bread_experts_group.computer.disc.ISO9660Disc
+import org.bread_experts_group.computer.disc.ISO9660PrimaryVolume
+import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.io.BreadModPollingVirtualKeyboard
-import org.bread_experts_group.computer.io.Diagnostics
 import org.bread_experts_group.computer.io.IODevice
-import org.bread_experts_group.computer.io.ps2.PS2Controller
-import org.bread_experts_group.computer.io.ps2.PS2SystemControllerA
+import org.bread_experts_group.computer.io.ProgrammableInterruptTimer
+import org.bread_experts_group.hex
+import org.bread_experts_group.io.reader.ReadingByteBuffer
+import java.io.InputStream
+import java.net.URL
+import java.nio.ByteBuffer
+import java.nio.channels.Channels
 
 /**
  * A Bread Mod computer.
@@ -21,36 +28,38 @@ class Computer(
 	val bios: BIOSProvider
 ) : SimulationSteppable {
 	val keyboard: BreadModPollingVirtualKeyboard = BreadModPollingVirtualKeyboard()
-	var disc: ISO9660Disc? = null
-	val ps2: PS2Controller = PS2Controller()
 	val ioMap: MutableMap<UInt, IODevice> = mutableMapOf(
-		0x60u to this.ps2.data,
-		0x64u to this.ps2.command,
-		0x70u to Diagnostics(),
-		0x80u to Diagnostics(),
-		0x92u to PS2SystemControllerA(),
-		0xB30D0000u to this.keyboard
+		0x40u to ProgrammableInterruptTimer()
 	)
 
-	fun requestMemoryAt(address: ULong): UByte {
-		this.memory.firstOrNull { it.effectiveAddress != null && it.effectiveAddress + it.capacity >= address }?.let {
-			return it[(address - it.effectiveAddress!!).toInt()]
+	fun getIODevice(n: UInt): IODevice = this.ioMap[n] ?: run {
+		println("Access to unknown I/O device ${hex(n)}")
+		object : IODevice {
+			override fun read(computer: Computer): UByte = 0u
+			override fun write(computer: Computer, d: UByte) {}
 		}
-		var count = 0u
-		val module = this.memory.firstOrNull { count += it.capacity; count > address }
-			?: return UByte.MIN_VALUE
-		return module[(address - count + module.capacity).toInt()]
+	}
+
+	fun requestMemoryAt(address: ULong): UByte {
+		this.memory.firstOrNull {
+			val memoryAddress = (it.effectiveAddress ?: 0u)
+			(memoryAddress..<(memoryAddress + it.capacity.toULong())).contains(address)
+		}?.let {
+			return it[(address - (it.effectiveAddress ?: 0u)).toInt()]
+		}
+		throw IndexOutOfBoundsException("Memory address out of bounds, $address")
 	}
 
 	fun setMemoryAt(address: ULong, data: UByte) {
-		this.memory.firstOrNull { it.effectiveAddress != null && it.effectiveAddress + it.capacity >= address }?.let {
-			it[(address - it.effectiveAddress!!).toInt()] = data
+		this.memory.firstOrNull {
+			val memoryAddress = (it.effectiveAddress ?: 0u)
+			(memoryAddress..<(memoryAddress + it.capacity.toULong())).contains(address)
+		}?.let {
+			(processor as IA32Processor).logger.info("SET ${hex(address)} TO ${hex(data)}")
+			it[(address - (it.effectiveAddress ?: 0u)).toInt()] = data
 			return
 		}
-		var count = 0u
-		val module = this.memory.firstOrNull { count += it.capacity; count > address }
-			?: throw IndexOutOfBoundsException("Memory address out of bounds, $address while setting $data")
-		module[(address - count + module.capacity).toInt()] = data
+		throw IndexOutOfBoundsException("Memory address out of bounds, $address while setting $data")
 	}
 
 	fun setMemoryAt32(address: ULong, value: UInt) {
@@ -81,7 +90,41 @@ class Computer(
 		return readBinary(8, { this.requestMemoryAt(address + offset).also { offset++ } }).toULong()
 	}
 
+	var discPrimaryVolume: ISO9660PrimaryVolume? = null
+		private set
+	var discBoot: ISO9660BootRecord? = null
+		private set
+	var disc: ISO9660Disc? = null
+		private set
+	var discURL: URL? = null
+	val discStream: InputStream
+		get() {
+			if (this.discURL == null) throw UninitializedPropertyAccessException("Disc URL is not set")
+			return discURL!!.openStream()
+		}
+
+	fun insertDisc(at: URL) {
+		Channels.newChannel(at.openStream()).use {
+			val reading = ReadingByteBuffer(
+				it,
+				ByteBuffer.allocate(32768),
+				null
+			)
+			val newDisc = ISO9660Disc.layout.read(reading)
+			val primary = newDisc.volumeDescriptors.firstNotNullOfOrNull { v -> v as? ISO9660PrimaryVolume }
+				?: throw IllegalArgumentException("Disc is invalid: no primary volume")
+			val bootRecord = newDisc.volumeDescriptors.firstNotNullOfOrNull { v -> v as? ISO9660BootRecord }
+			this.disc = newDisc
+			this.discPrimaryVolume = primary
+			this.discBoot = bootRecord
+		}
+		this.discURL = at
+	}
+
+	val floppyURLs: Array<URL?> = arrayOfNulls(4)
+
 	override fun reset() {
+		this.memory.forEach { it.erase() }
 		this.bios.initialize(this)
 		this.processor.reset()
 	}

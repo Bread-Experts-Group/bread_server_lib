@@ -1,10 +1,10 @@
 package org.bread_experts_group.coder.format.parse.nbt
 
-import org.bread_experts_group.channel.ReadingByteBuffer
 import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.format.parse.ByteParser
 import org.bread_experts_group.coder.format.parse.CodingCompoundThrowable
 import org.bread_experts_group.coder.format.parse.nbt.tag.*
+import org.bread_experts_group.io.reader.ReadingByteBuffer
 import java.io.EOFException
 import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
@@ -23,7 +23,7 @@ class NBTByteParser : ByteParser<NBTTagType, NBTTag, ReadableByteChannel>("Named
 		var pos = 0
 		while (true) {
 			if (pos == lim) break
-			val next = NBTTagType.entries.id(readable.u8()).enum
+			val next = NBTTagType.entries.id(readable.u8()).enum!!
 			if (next == NBTTagType.END_OF_COMPOUND) break
 			val name = nextString()
 			set(name, nextTag(next))
@@ -35,7 +35,7 @@ class NBTByteParser : ByteParser<NBTTagType, NBTTag, ReadableByteChannel>("Named
 		NBTTagType.SHORT -> NBTShortTag(readable.i16())
 		NBTTagType.UTF_8 -> NBTStringTag(nextString())
 		NBTTagType.LIST -> {
-			val type = NBTTagType.entries.id(readable.u8()).enum
+			val type = NBTTagType.entries.id(readable.u8()).enum!!
 			NBTListTag(
 				type,
 				List(readable.i32()) { nextTag(type) }

@@ -16,7 +16,7 @@ class FLACParser : Parser<FLACBlockType, FLACBlock, InputStream>(
 	override fun readBase(compound: CodingCompoundThrowable): FLACBlock? {
 		val header = fqIn.read32u()
 		if (!audioData) {
-			val blockType = FLACBlockType.entries.id(((header shr 24) and 0b0111111u).toInt()).enum
+			val blockType = FLACBlockType.entries.id(((header shr 24) and 0b0111111u).toInt()).enum!!
 			val blockData = fqIn.readNBytes((header and 0b11111111_11111111_11111111u).toInt())
 			audioData = header shr 31 != 0u
 			return FLACMetadataBlock(blockType, blockData)
@@ -72,7 +72,7 @@ class FLACParser : Parser<FLACBlockType, FLACBlock, InputStream>(
 		}
 		addParser(FLACBlockType.PICTURE) { stream, _, _ ->
 			FLACPictureMetadataBlock(
-				FLACPictureType.entries.id(stream.read32()).enum,
+				FLACPictureType.entries.id(stream.read32()).enum!!,
 				stream.readString(stream.read32()),
 				stream.readString(stream.read32()),
 				stream.read32(),
