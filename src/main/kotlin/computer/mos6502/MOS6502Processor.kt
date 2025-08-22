@@ -71,7 +71,7 @@ class MOS6502Processor : Processor {
 
 	fun fetch(): UByte {
 		this.biosHooks[this.pc.value]?.invoke(this)
-		return computer.requestMemoryAt(this.pc.value.toULong()).also { this.pc.value++ }
+		return computer.getMemoryAt(this.pc.value.toULong()).also { this.pc.value++ }
 	}
 
 	fun decode(byte: UByte): String {

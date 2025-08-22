@@ -1,6 +1,8 @@
 package org.bread_experts_group.computer
 
-import org.bread_experts_group.computer.BinaryUtil.readBinary
+import org.bread_experts_group.computer.BinaryUtil.read16
+import org.bread_experts_group.computer.BinaryUtil.read32
+import org.bread_experts_group.computer.BinaryUtil.read64
 import org.bread_experts_group.computer.disc.ISO9660BootRecord
 import org.bread_experts_group.computer.disc.ISO9660Disc
 import org.bread_experts_group.computer.disc.ISO9660PrimaryVolume
@@ -33,33 +35,36 @@ class Computer(
 	)
 
 	fun getIODevice(n: UInt): IODevice = this.ioMap[n] ?: run {
-		println("Access to unknown I/O device ${hex(n)}")
+		(processor as IA32Processor).logger.info("Access to unknown I/O device ${hex(n)}")
 		object : IODevice {
 			override fun read(computer: Computer): UByte = 0u
 			override fun write(computer: Computer, d: UByte) {}
 		}
 	}
 
-	fun requestMemoryAt(address: ULong): UByte {
-		this.memory.firstOrNull {
-			val memoryAddress = (it.effectiveAddress ?: 0u)
-			(memoryAddress..<(memoryAddress + it.capacity.toULong())).contains(address)
-		}?.let {
-			return it[(address - (it.effectiveAddress ?: 0u)).toInt()]
+	val busCache = object : LinkedHashMap<ULong, MemoryModule>(512, 1f) {
+		override fun removeEldestEntry(eldest: Map.Entry<ULong, MemoryModule>): Boolean = size > 512
+	}
+
+	fun getResponsibleModule(address: ULong): MemoryModule = busCache.getOrPut(address) {
+		for (i in this.memory.indices) {
+			val module = this.memory[i]
+			val memoryAddress = (module.effectiveAddress ?: 0u)
+			if (address < memoryAddress || address >= (memoryAddress + module.capacity.toULong())) continue
+			return@getOrPut module
 		}
 		throw IndexOutOfBoundsException("Memory address out of bounds, $address")
 	}
 
+	fun getMemoryAt(address: ULong): UByte {
+		val module = getResponsibleModule(address)
+		return module[(address - (module.effectiveAddress ?: 0u)).toInt()]
+	}
+
 	fun setMemoryAt(address: ULong, data: UByte) {
-		this.memory.firstOrNull {
-			val memoryAddress = (it.effectiveAddress ?: 0u)
-			(memoryAddress..<(memoryAddress + it.capacity.toULong())).contains(address)
-		}?.let {
-			(processor as IA32Processor).logger.info("SET ${hex(address)} TO ${hex(data)}")
-			it[(address - (it.effectiveAddress ?: 0u)).toInt()] = data
-			return
-		}
-		throw IndexOutOfBoundsException("Memory address out of bounds, $address while setting $data")
+		val module = getResponsibleModule(address)
+//		(processor as IA32Processor).logger.info("SET ${hex(address)} TO ${hex(data)}")
+		module[(address - (module.effectiveAddress ?: 0u)).toInt()] = data
 	}
 
 	fun setMemoryAt32(address: ULong, value: UInt) {
@@ -75,19 +80,19 @@ class Computer(
 		this.setMemoryAt(address + 1u, ((v shr 8) and 0xFFu).toUByte())
 	}
 
-	fun requestMemoryAt16(address: ULong): UShort {
+	fun getMemoryAt16(address: ULong): UShort {
 		var offset = 0u
-		return readBinary(2, { this.requestMemoryAt(address + offset).also { offset++ } }).toUShort()
+		return read16 { this.getMemoryAt(address + (offset++)) }
 	}
 
-	fun requestMemoryAt32(address: ULong): UInt {
+	fun getMemoryAt32(address: ULong): UInt {
 		var offset = 0u
-		return readBinary(4, { this.requestMemoryAt(address + offset).also { offset++ } }).toUInt()
+		return read32 { this.getMemoryAt(address + (offset++)) }
 	}
 
-	fun requestMemoryAt64(address: ULong): ULong {
+	fun getMemoryAt64(address: ULong): ULong {
 		var offset = 0u
-		return readBinary(8, { this.requestMemoryAt(address + offset).also { offset++ } }).toULong()
+		return read64 { this.getMemoryAt(address + (offset++)) }
 	}
 
 	var discPrimaryVolume: ISO9660PrimaryVolume? = null

@@ -14,7 +14,7 @@ class SubtractCompare : InstructionCluster {
 		override fun operands(processor: IA32Processor): String = d()
 		override fun handle(processor: IA32Processor) {
 			val (dest, src) = dc()
-			setFlagsSFZFPF8(processor, subtractAndSetFlagsCFOF8(processor, dest.first(), src.first()))
+			setFlagsSFZFPF8(processor, subtractAndSetFlagsAFCFOF8(processor, dest.first(), src.first()))
 		}
 	}
 
@@ -35,12 +35,12 @@ class SubtractCompare : InstructionCluster {
 			when (processor.operandSize) {
 				AddressingLength.R16 -> {
 					val (dest16, src16) = dc16()
-					setFlagsSFZFPF16(processor, subtractAndSetFlagsCFOF16(processor, dest16.first(), src16.first()))
+					setFlagsSFZFPF16(processor, subtractAndSetFlagsAFCFOF16(processor, dest16.first(), src16.first()))
 				}
 
 				AddressingLength.R32 -> {
 					val (dest32, src32) = dc32()
-					setFlagsSFZFPF32(processor, subtractAndSetFlagsCFOF32(processor, dest32.first(), src32.first()))
+					setFlagsSFZFPF32(processor, subtractAndSetFlagsAFCFOF32(processor, dest32.first(), src32.first()))
 				}
 
 				else -> throw UnsupportedOperationException()

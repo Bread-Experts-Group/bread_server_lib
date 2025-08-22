@@ -41,7 +41,7 @@ class ProcessorVisualMonitor(computer: Computer) : JFrame() {
 				g.font = font
 				g.font = vgaFont
 				for (position in 0u..<teletype.characters) {
-					val data = computer.requestMemoryAt16(TeletypeOutput.COLOR_ADDR + (position * 2u))
+					val data = computer.getMemoryAt16(TeletypeOutput.COLOR_ADDR + (position * 2u))
 					val x = (position.mod(teletype.cols)).toInt()
 					val y = (position.floorDiv(teletype.cols)).toInt()
 					g.color = Color(

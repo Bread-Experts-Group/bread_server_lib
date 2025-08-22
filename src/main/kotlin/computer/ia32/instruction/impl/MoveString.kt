@@ -11,7 +11,7 @@ class MoveString : InstructionCluster {
 		override fun handle(processor: IA32Processor) {
 			processor.computer.setMemoryAt(
 				esDIOffset(processor),
-				processor.computer.requestMemoryAt(dsSIOffset(processor))
+				processor.computer.getMemoryAt(sSIOffset(processor))
 			)
 			moveSIDI(processor, 1u)
 		}
@@ -23,7 +23,7 @@ class MoveString : InstructionCluster {
 			AddressingLength.R32 -> {
 				processor.computer.setMemoryAt32(
 					esDIOffset(processor),
-					processor.computer.requestMemoryAt32(dsSIOffset(processor))
+					processor.computer.getMemoryAt32(sSIOffset(processor))
 				)
 				moveSIDI(processor, 4u)
 			}
@@ -31,7 +31,7 @@ class MoveString : InstructionCluster {
 			AddressingLength.R16 -> {
 				processor.computer.setMemoryAt16(
 					esDIOffset(processor),
-					processor.computer.requestMemoryAt16(dsSIOffset(processor))
+					processor.computer.getMemoryAt16(sSIOffset(processor))
 				)
 				moveSIDI(processor, 2u)
 			}

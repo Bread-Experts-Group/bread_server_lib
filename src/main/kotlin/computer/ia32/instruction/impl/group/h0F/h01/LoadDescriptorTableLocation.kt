@@ -20,14 +20,14 @@ class LoadDescriptorTableLocation(
 ) : Instruction(0u, "l${n}dt"), ModRM {
 	override fun operands(processor: IA32Processor): String = processor.rmB().let { (rm, rmD) ->
 		val addr = rm.memRM.memory!!
-		return "${rmD.regMem} [${hex(processor.computer.requestMemoryAt32(addr + 2u))} / " +
-				"${hex(processor.computer.requestMemoryAt16(addr))}]"
+		return "${rmD.regMem} [${hex(processor.computer.getMemoryAt32(addr + 2u))} / " +
+				"${hex(processor.computer.getMemoryAt16(addr))}]"
 	}
 
 	override fun handle(processor: IA32Processor) {
 		val (memRM, _) = processor.rm()
-		this.limitR.tx = processor.computer.requestMemoryAt16(memRM.memory!!)
-		this.baseR.tex = processor.computer.requestMemoryAt32(memRM.memory + 2u)
+		this.limitR.tx = processor.computer.getMemoryAt16(memRM.memory!!)
+		this.baseR.tex = processor.computer.getMemoryAt32(memRM.memory + 2u)
 	}
 
 	override val registerType: RegisterType = RegisterType.GENERAL_PURPOSE

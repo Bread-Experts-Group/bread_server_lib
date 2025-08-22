@@ -11,34 +11,36 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  * @since 1.0.0
  */
 class SelectorC1h : InstructionSelector(0xC1u) {
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to Rotate.Left(
-			d16MI8(processor), dc16MI8i(processor),
-			d32MI8(processor), dc32MI8i(processor),
-		),
-		1u to Rotate.Right(
-			d16MI8(processor), dc16MI8i(processor),
-			d32MI8(processor), dc32MI8i(processor),
-		),
-		2u to Rotate.LeftWithCarry(
-			d16MI8(processor), dc16MI8i(processor),
-			d32MI8(processor), dc32MI8i(processor),
-		),
-		3u to Rotate.RightWithCarry(
-			d16MI8(processor), dc16MI8i(processor),
-			d32MI8(processor), dc32MI8i(processor),
-		),
-		4u to Shift.Left(
-			d16MI8(processor), dc16MI8i(processor),
-			d32MI8(processor), dc32MI8i(processor),
-		),
-		5u to Shift.Right(
-			d16MI8(processor), dc16MI8i(processor),
-			d32MI8(processor), dc32MI8i(processor),
-		),
-		7u to Shift.RightArithmetic(
-			d16MI8(processor), dc16MI8i(processor),
-			d32MI8(processor), dc32MI8i(processor),
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to Rotate.Left(
+				d16MI8(processor), dc16MI8i(processor),
+				d32MI8(processor), dc32MI8i(processor),
+			),
+			1u to Rotate.Right(
+				d16MI8(processor), dc16MI8i(processor),
+				d32MI8(processor), dc32MI8i(processor),
+			),
+			2u to Rotate.LeftWithCarry(
+				d16MI8(processor), dc16MI8i(processor),
+				d32MI8(processor), dc32MI8i(processor),
+			),
+			3u to Rotate.RightWithCarry(
+				d16MI8(processor), dc16MI8i(processor),
+				d32MI8(processor), dc32MI8i(processor),
+			),
+			4u to Shift.Left(
+				d16MI8(processor), dc16MI8i(processor),
+				d32MI8(processor), dc32MI8i(processor),
+			),
+			5u to Shift.Right(
+				d16MI8(processor), dc16MI8i(processor),
+				d32MI8(processor), dc32MI8i(processor),
+			),
+			7u to Shift.RightArithmetic(
+				d16MI8(processor), dc16MI8i(processor),
+				d32MI8(processor), dc32MI8i(processor),
+			)
 		)
-	)
+	}
 }

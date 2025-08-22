@@ -10,10 +10,10 @@ class CompareString : InstructionCluster {
 		override fun handle(processor: IA32Processor) {
 			setFlagsSFZFPF8(
 				processor,
-				subtractAndSetFlagsCFOF8(
+				subtractAndSetFlagsAFCFOF8(
 					processor,
-					processor.computer.requestMemoryAt(dsSIOffset(processor)),
-					processor.computer.requestMemoryAt(esDIOffset(processor))
+					processor.computer.getMemoryAt(sSIOffset(processor)),
+					processor.computer.getMemoryAt(esDIOffset(processor))
 				)
 			)
 			moveSIDI(processor, 1u)

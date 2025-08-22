@@ -114,21 +114,21 @@ fun d32TD(processor: IA32Processor) = {
 
 fun dc8TD(processor: IA32Processor): Input2<UByte> = {
 	val offset = (processor.segment ?: processor.ds).offset(moffsOffset(processor))
-	({ processor.computer.requestMemoryAt(offset) } to
+	({ processor.computer.getMemoryAt(offset) } to
 			{ b: UByte -> processor.computer.setMemoryAt(offset, b) }) to
 			({ processor.a.tl } to { b: UByte -> processor.a.tl = b })
 }
 
 fun dc16TD(processor: IA32Processor): Input2<UShort> = {
 	val offset = (processor.segment ?: processor.ds).offset(moffsOffset(processor))
-	({ processor.computer.requestMemoryAt16(offset) } to
+	({ processor.computer.getMemoryAt16(offset) } to
 			{ s: UShort -> processor.computer.setMemoryAt16(offset, s) }) to
 			({ processor.a.tx } to { s: UShort -> processor.a.tx = s })
 }
 
 fun dc32TD(processor: IA32Processor): Input2<UInt> = {
 	val offset = (processor.segment ?: processor.ds).offset(moffsOffset(processor))
-	({ processor.computer.requestMemoryAt32(offset) } to
+	({ processor.computer.getMemoryAt32(offset) } to
 			{ i: UInt -> processor.computer.setMemoryAt32(offset, i) }) to
 			({ processor.a.tex } to { i: UInt -> processor.a.tex = i })
 }
@@ -148,21 +148,21 @@ fun d32FD(processor: IA32Processor) = {
 fun dc8FD(processor: IA32Processor): Input2<UByte> = {
 	val offset = (processor.segment ?: processor.ds).offset(moffsOffset(processor))
 	({ processor.a.tl } to { b: UByte -> processor.a.tl = b }) to
-			({ processor.computer.requestMemoryAt(offset) } to
+			({ processor.computer.getMemoryAt(offset) } to
 					{ b: UByte -> processor.computer.setMemoryAt(offset, b) })
 }
 
 fun dc16FD(processor: IA32Processor): Input2<UShort> = {
 	val offset = (processor.segment ?: processor.ds).offset(moffsOffset(processor))
 	({ processor.a.tx } to { s: UShort -> processor.a.tx = s }) to
-			({ processor.computer.requestMemoryAt16(offset) } to
+			({ processor.computer.getMemoryAt16(offset) } to
 					{ s: UShort -> processor.computer.setMemoryAt16(offset, s) })
 }
 
 fun dc32FD(processor: IA32Processor): Input2<UInt> = {
 	val offset = (processor.segment ?: processor.ds).offset(moffsOffset(processor))
 	({ processor.a.tex } to { i: UInt -> processor.a.tex = i }) to
-			({ processor.computer.requestMemoryAt32(offset) } to
+			({ processor.computer.getMemoryAt32(offset) } to
 					{ i: UInt -> processor.computer.setMemoryAt32(offset, i) })
 }
 

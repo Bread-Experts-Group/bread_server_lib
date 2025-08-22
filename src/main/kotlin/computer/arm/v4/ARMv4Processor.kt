@@ -47,11 +47,11 @@ class ARMv4Processor : Processor {
 	}
 
 	fun fetchThumb(): UShort {
-		return this.computer.requestMemoryAt16(this.pc.value.toULong() - 4u).also { this.pc.value += 2u }
+		return this.computer.getMemoryAt16(this.pc.value.toULong() - 4u).also { this.pc.value += 2u }
 	}
 
 	fun fetchArm(): UInt {
-		return this.computer.requestMemoryAt32(this.pc.value.toULong() - 8u).also { this.pc.value += 4u }
+		return this.computer.getMemoryAt32(this.pc.value.toULong() - 8u).also { this.pc.value += 4u }
 	}
 
 	fun checkConditional(cond: InstructionConditionalExecutionSuffix) = when (cond) {
@@ -201,7 +201,7 @@ class ARMv4Processor : Processor {
 					val addr = pc.value + imm8
 					disassembly.append(hex(addr))
 					disassembly.append(") (")
-					rd.value = computer.requestMemoryAt32(addr.toULong())
+					rd.value = computer.getMemoryAt32(addr.toULong())
 					disassembly.append(hex(rd.value))
 					disassembly.append(')')
 					return disassembly.toString()
@@ -389,7 +389,7 @@ class ARMv4Processor : Processor {
 				if (!l) TODO("store")
 				val offset = fetched and 0b111111111111u
 				val calculated = (if (u) UInt::plus else UInt::minus)(rn.value, offset)
-				rd.value = computer.requestMemoryAt32(calculated.toULong())
+				rd.value = computer.getMemoryAt32(calculated.toULong())
 				disassembly += " ldr${conditional.assemblerName} ${rd.name}, [${rn.name} ${if (u) '+' else '-'} #" +
 						"${hex(offset)} (${hex(calculated)})] (${hex(rd.value)})"
 			}

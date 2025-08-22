@@ -117,7 +117,7 @@ class IA32Processor : Processor {
 	}
 
 	fun pop32(): UInt {
-		val popped = this.computer.requestMemoryAt32(this.ss.offset(this.sp))
+		val popped = this.computer.getMemoryAt32(this.ss.offset(this.sp))
 		when (this.addressSize) {
 			AddressingLength.R32 -> this.sp.ex += 4u
 			AddressingLength.R16 -> this.sp.x += 4u
@@ -127,7 +127,7 @@ class IA32Processor : Processor {
 	}
 
 	fun pop16(): UShort {
-		val popped = this.computer.requestMemoryAt16(this.ss.offset(this.sp))
+		val popped = this.computer.getMemoryAt16(this.ss.offset(this.sp))
 		when (this.addressSize) {
 			AddressingLength.R32 -> this.sp.ex += 2u
 			AddressingLength.R16 -> this.sp.x += 2u
@@ -165,7 +165,7 @@ class IA32Processor : Processor {
 		this.halt.countDown()
 	}
 
-	val biosHooks: MutableMap<ULong, MutableMap<ULong, (IA32Processor) -> Unit>> = mutableMapOf()
+	val biosHooks: MutableMap<ULong, MutableMap<ULong, (IA32Processor) -> Unit>> = HashMap(255, 1f)
 	fun setHook(cs: ULong, ip: ULong, r: (IA32Processor) -> Unit) {
 		this.biosHooks.getOrPut(cs) { mutableMapOf() }[ip] = r
 	}
@@ -179,12 +179,12 @@ class IA32Processor : Processor {
 			this.flags.setFlag(FlagType.INTERRUPT_ENABLE_FLAG, false)
 			this.flags.setFlag(FlagType.TRAP_FLAG, false)
 			this.flags.setFlag(FlagType.AUXILIARY_CARRY_FLAG, false)
-			this.logger.warning("!!! INTERRUPT RECEIVED (${hex(selector)}) !!!")
+//			this.logger.warning("!!! INTERRUPT RECEIVED (${hex(selector)}) !!!")
 			this.push16(this.cs.tx)
 			this.push16(this.ip.tx)
 			val addr = selector.toULong() * 4u
-			this.ip.tex = this.computer.requestMemoryAt16(addr).toUInt()
-			this.cs.tx = this.computer.requestMemoryAt16(addr + 2u)
+			this.ip.tex = this.computer.getMemoryAt16(addr).toUInt()
+			this.cs.tx = this.computer.getMemoryAt16(addr + 2u)
 		} else {
 			TODO("Protected mode interrupts")
 		}
@@ -193,11 +193,11 @@ class IA32Processor : Processor {
 	fun fetch() {
 		this.halt.await()
 		if (this.realMode()) this.biosHooks[this.cs.rx]?.get(this.ip.rx)?.invoke(this)
-		this.cir = this.computer.requestMemoryAt(this.cs.offset(this.ip))
+		this.cir = this.computer.getMemoryAt(this.cs.offset(this.ip))
 		this.ip.rx++
 	}
 
-	val instructionMap: MutableMap<UInt, Instruction> = mutableMapOf()
+	val instructionMap: MutableMap<UInt, Instruction> = HashMap(512, 1f)
 	var segment: SegmentRegister? = null
 	private var operandSizeOverride: Boolean = false
 	private var addressSizeOverride: Boolean = false
@@ -351,7 +351,7 @@ class IA32Processor : Processor {
 				}
 			}
 		}
-		this.logger.warning { "${this.cs.hex(this.ip.rx - 1u)} ${hex(this.cir)}: ${instruction.getDisassembly(this)}" }
+//		this.logger.warning { "${this.cs.hex(this.ip.rx - 1u)} ${hex(this.cir)}: ${instruction.getDisassembly(this)}" }
 		localExecutor?.invoke(instruction) ?: instruction.handle(this)
 		this.localExecutor = null
 		this.segment = null

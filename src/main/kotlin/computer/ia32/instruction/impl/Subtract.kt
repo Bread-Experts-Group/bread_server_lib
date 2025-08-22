@@ -7,10 +7,13 @@ import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.register.FlagsRegister.FlagType
 
 fun subAuxCarryCheck(processor: IA32Processor, a: ULong, b: ULong) {
-	processor.flags.setFlag(FlagType.AUXILIARY_CARRY_FLAG, ((a xor (a - b) xor b).toUByte() and 0x10u) > 0u)
+	processor.flags.setFlag(
+		FlagType.AUXILIARY_CARRY_FLAG,
+		(((a and 0xFu) - (b and 0xFu)) and 0x10u) != 0uL
+	)
 }
 
-fun subtractAndSetFlagsCFOF8(processor: IA32Processor, a: UByte, b: UByte): UByte {
+fun subtractAndSetFlagsAFCFOF8(processor: IA32Processor, a: UByte, b: UByte): UByte {
 	subAuxCarryCheck(processor, a.toULong(), b.toULong())
 	processor.flags.setFlag(FlagType.CARRY_FLAG, b > a)
 	val subbed = (a - b).toUByte()
@@ -21,7 +24,7 @@ fun subtractAndSetFlagsCFOF8(processor: IA32Processor, a: UByte, b: UByte): UByt
 	return subbed
 }
 
-fun subtractAndSetFlagsCFOF16(processor: IA32Processor, a: UShort, b: UShort): UShort {
+fun subtractAndSetFlagsAFCFOF16(processor: IA32Processor, a: UShort, b: UShort): UShort {
 	subAuxCarryCheck(processor, a.toULong(), b.toULong())
 	processor.flags.setFlag(FlagType.CARRY_FLAG, b > a)
 	val subbed = (a - b).toUShort()
@@ -32,7 +35,7 @@ fun subtractAndSetFlagsCFOF16(processor: IA32Processor, a: UShort, b: UShort): U
 	return subbed
 }
 
-fun subtractAndSetFlagsCFOF32(processor: IA32Processor, a: UInt, b: UInt): UInt {
+fun subtractAndSetFlagsAFCFOF32(processor: IA32Processor, a: UInt, b: UInt): UInt {
 	subAuxCarryCheck(processor, a.toULong(), b.toULong())
 	processor.flags.setFlag(FlagType.CARRY_FLAG, a < b)
 	val subbed = a - b
@@ -52,7 +55,7 @@ class Subtract : InstructionCluster {
 		override fun operands(processor: IA32Processor): String = d()
 		override fun handle(processor: IA32Processor) {
 			val (dest, src) = dc()
-			val result = subtractAndSetFlagsCFOF8(processor, dest.first(), src.first())
+			val result = subtractAndSetFlagsAFCFOF8(processor, dest.first(), src.first())
 			dest.second(result)
 			setFlagsSFZFPF8(processor, result)
 		}
@@ -75,14 +78,14 @@ class Subtract : InstructionCluster {
 			when (processor.operandSize) {
 				AddressingLength.R16 -> {
 					val (dest16, src16) = dc16()
-					val result = subtractAndSetFlagsCFOF16(processor, dest16.first(), src16.first())
+					val result = subtractAndSetFlagsAFCFOF16(processor, dest16.first(), src16.first())
 					dest16.second(result)
 					setFlagsSFZFPF16(processor, result)
 				}
 
 				AddressingLength.R32 -> {
 					val (dest32, src32) = dc32()
-					val result = subtractAndSetFlagsCFOF32(processor, dest32.first(), src32.first())
+					val result = subtractAndSetFlagsAFCFOF32(processor, dest32.first(), src32.first())
 					dest32.second(result)
 					setFlagsSFZFPF32(processor, result)
 				}
@@ -101,7 +104,7 @@ class Subtract : InstructionCluster {
 		override fun handle(processor: IA32Processor) {
 			val saveCarry = processor.flags.getFlag(FlagType.CARRY_FLAG)
 			val dest = dc()
-			val result = subtractAndSetFlagsCFOF8(processor, dest.first(), 1u)
+			val result = subtractAndSetFlagsAFCFOF8(processor, dest.first(), 1u)
 			dest.second(result)
 			setFlagsSFZFPF8(processor, result)
 			processor.flags.setFlag(FlagType.CARRY_FLAG, saveCarry)
@@ -126,14 +129,14 @@ class Subtract : InstructionCluster {
 			when (processor.operandSize) {
 				AddressingLength.R16 -> {
 					val dest16 = dc16()
-					val result = subtractAndSetFlagsCFOF16(processor, dest16.first(), 1u)
+					val result = subtractAndSetFlagsAFCFOF16(processor, dest16.first(), 1u)
 					dest16.second(result)
 					setFlagsSFZFPF16(processor, result)
 				}
 
 				AddressingLength.R32 -> {
 					val dest32 = dc32()
-					val result = subtractAndSetFlagsCFOF32(processor, dest32.first(), 1u)
+					val result = subtractAndSetFlagsAFCFOF32(processor, dest32.first(), 1u)
 					dest32.second(result)
 					setFlagsSFZFPF32(processor, result)
 				}

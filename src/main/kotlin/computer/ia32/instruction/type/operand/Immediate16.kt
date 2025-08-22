@@ -1,8 +1,9 @@
 package org.bread_experts_group.computer.ia32.instruction.type.operand
 
+import org.bread_experts_group.computer.BinaryUtil.read16
 import org.bread_experts_group.computer.ia32.IA32Processor
 
 interface Immediate16 {
-	fun IA32Processor.imm16(): UShort = this.decoding.readBinaryFetch(2).toUShort()
-	fun IA32Processor.rel16(): Short = this.decoding.readBinaryFetch(2).toShort()
+	fun IA32Processor.imm16(): UShort = read16(this.decoding::readFetch)
+	fun IA32Processor.rel16(): Short = read16(this.decoding::readFetch).toShort()
 }

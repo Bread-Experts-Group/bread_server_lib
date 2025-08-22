@@ -7,7 +7,7 @@ import org.bread_experts_group.hex
 
 object LoadRegisterXFromMemory : Instruction(0xA2u, "ldx") {
 	override fun handle(processor: MOS6502Processor, disassembly: StringBuilder) {
-		val addr = processor.computer.requestMemoryAt(currentAddr(processor).toULong())
+		val addr = processor.computer.getMemoryAt(currentAddr(processor).toULong())
 		processor.x.value = addr
 		disassembly.append(" $addr/${hex(addr)} -> x")
 		processor.status.setFlag(StatusRegister.FlagType.ZERO, valueIs0(processor.x.value))

@@ -31,14 +31,16 @@ class Selector83h : InstructionSelector(0x83u) {
 		(memRM::getRMi to memRM::setRMi) to ({ imm8 } to none32)
 	}
 
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to Add.TwoOperand(0u, d16, dc16, d32, dc32),
-		1u to LogicalOR.TwoOperand(0u, d16, dc16, d32, dc32),
-		2u to AddWithCarry.TwoOperand(0u, d16, dc16, d32, dc32),
-		3u to SubtractWithBorrow.TwoOperand(0u, d16, dc16, d32, dc32),
-		4u to LogicalAND.TwoOperand(0u, d16, dc16, d32, dc32),
-		5u to Subtract.TwoOperand(0u, d16, dc16, d32, dc32),
-		6u to LogicalXOR.TwoOperand(0u, d16, dc16, d32, dc32),
-		7u to SubtractCompare.TwoOperand(0u, d16, dc16, d32, dc32)
-	)
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to Add.TwoOperand(0u, d16, dc16, d32, dc32),
+			1u to LogicalOR.TwoOperand(0u, d16, dc16, d32, dc32),
+			2u to AddWithCarry.TwoOperand(0u, d16, dc16, d32, dc32),
+			3u to SubtractWithBorrow.TwoOperand(0u, d16, dc16, d32, dc32),
+			4u to LogicalAND.TwoOperand(0u, d16, dc16, d32, dc32),
+			5u to Subtract.TwoOperand(0u, d16, dc16, d32, dc32),
+			6u to LogicalXOR.TwoOperand(0u, d16, dc16, d32, dc32),
+			7u to SubtractCompare.TwoOperand(0u, d16, dc16, d32, dc32)
+		)
+	}
 }

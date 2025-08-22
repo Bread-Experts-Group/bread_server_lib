@@ -9,7 +9,9 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  * @since 1.0.0
  */
 class Selector : InstructionSelector(0x8Fu) {
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to PopIntoModRM
-	)
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to PopIntoModRM
+		)
+	}
 }

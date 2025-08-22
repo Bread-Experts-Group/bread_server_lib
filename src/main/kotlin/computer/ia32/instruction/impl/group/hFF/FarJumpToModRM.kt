@@ -11,11 +11,11 @@ object FarJumpToModRM : Instruction(0u, "ljmp"), ModRM {
 	override fun handle(processor: IA32Processor) {
 		val (memRM, _) = processor.rm()
 		val (ip, cs) = when (processor.operandSize) {
-			AddressingLength.R32 -> processor.computer.requestMemoryAt32(memRM.memory!!) to
-					processor.computer.requestMemoryAt16(memRM.memory + 4u)
+			AddressingLength.R32 -> processor.computer.getMemoryAt32(memRM.memory!!) to
+					processor.computer.getMemoryAt16(memRM.memory + 4u)
 
-			AddressingLength.R16 -> processor.computer.requestMemoryAt16(memRM.memory!!).toUInt() to
-					processor.computer.requestMemoryAt16(memRM.memory + 2u)
+			AddressingLength.R16 -> processor.computer.getMemoryAt16(memRM.memory!!).toUInt() to
+					processor.computer.getMemoryAt16(memRM.memory + 2u)
 
 			else -> throw UnsupportedOperationException()
 		}

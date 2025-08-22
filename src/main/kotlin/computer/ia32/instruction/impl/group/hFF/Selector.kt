@@ -15,13 +15,21 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  * @since 1.0.0
  */
 class Selector : InstructionSelector(0xFFu) {
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to Add.TwoOperandIncrement(0u, d16M(processor), dc16M(processor), d32M(processor), dc32M(processor)),
-		1u to Subtract.TwoOperandIncrement(0u, d16M(processor), dc16M(processor), d32M(processor), dc32M(processor)),
-		2u to NearCallToModRM,
-		3u to FarCallToModRM,
-		4u to NearJumpToModRM,
-		5u to FarJumpToModRM,
-		6u to PushModRM
-	)
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to Add.TwoOperandIncrement(0u, d16M(processor), dc16M(processor), d32M(processor), dc32M(processor)),
+			1u to Subtract.TwoOperandIncrement(
+				0u,
+				d16M(processor),
+				dc16M(processor),
+				d32M(processor),
+				dc32M(processor)
+			),
+			2u to NearCallToModRM,
+			3u to FarCallToModRM,
+			4u to NearJumpToModRM,
+			5u to FarJumpToModRM,
+			6u to PushModRM
+		)
+	}
 }

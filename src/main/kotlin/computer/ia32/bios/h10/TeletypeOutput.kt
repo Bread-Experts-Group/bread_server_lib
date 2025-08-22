@@ -22,12 +22,12 @@ class TeletypeOutput : BIOSInterruptProvider {
 
 			else -> {
 				processor.computer.setMemoryAt16(
-					COLOR_ADDR + (position * 2u),
+					COLOR_ADDR + (this.position++ * 2u),
 					((char.toUInt() shl 8) or attribute.toUInt()).toUShort()
 				)
-				this.position++
 			}
 		}
+		if (this.position >= (this.cols * this.rows)) scroll(processor, 1u)
 	}
 
 	fun scroll(processor: IA32Processor, n: UByte) {
@@ -36,7 +36,7 @@ class TeletypeOutput : BIOSInterruptProvider {
 			for (position in 0u..<this.characters) {
 				processor.computer.setMemoryAt16(
 					COLOR_ADDR + (position * 2u),
-					if (position in topMost) processor.computer.requestMemoryAt16(
+					if (position in topMost) processor.computer.getMemoryAt16(
 						COLOR_ADDR + ((position + this.cols) * 2u),
 					) else 0u
 				)

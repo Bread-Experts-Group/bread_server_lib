@@ -13,7 +13,7 @@ class TeletypeOutputString(val output: TeletypeOutput) : BIOSInterruptProvider {
 		if (!flags.contains(TeletypeOutputStringFlags.UPDATE_CURSOR) || flags.size != 1) TODO("Flags")
 		output.position = ((output.cols * processor.d.h) + processor.d.l).toUInt()
 		repeat(processor.c.x.toInt()) {
-			val character = processor.computer.requestMemoryAt(
+			val character = processor.computer.getMemoryAt(
 				processor.es.offset(processor.bp) + it.toULong()
 			)
 

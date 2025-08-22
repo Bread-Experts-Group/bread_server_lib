@@ -19,6 +19,7 @@ import org.bread_experts_group.computer.ia32.bios.h16.GetShiftFlags
 import org.bread_experts_group.computer.ia32.bios.h17.InitializePrinter
 import org.bread_experts_group.computer.ia32.bios.h17.WriteCharacterToPrinter
 import org.bread_experts_group.computer.ia32.bios.h19.BootstrapLoader
+import org.bread_experts_group.computer.ia32.bios.h1A.GetSystemTicks
 import org.bread_experts_group.computer.ia32.instruction.impl.InterruptReturn.Companion.BIOS_RETURN
 import org.bread_experts_group.io.reader.ReadingByteBuffer
 import org.bread_experts_group.io.reader.ReadingByteBuffer.Companion.reading
@@ -32,6 +33,7 @@ class StandardBIOS : BIOSProvider {
 	val getVideoMode: GetVideoMode = GetVideoMode(this.teletype)
 	val setCursor: SetCursorPosition = SetCursorPosition(this.teletype)
 	val getCursor: GetCursorPosition = GetCursorPosition(this.teletype)
+	val selectActiveDisplayPage: SelectActiveDisplayPage = SelectActiveDisplayPage(this.teletype)
 	val scrollUp: ScrollUp = ScrollUp(this.teletype)
 	val putCharacter: PutCharacter = PutCharacter(this.teletype)
 
@@ -50,6 +52,14 @@ class StandardBIOS : BIOSProvider {
 		processor.computer.setMemoryAt32(0x0070u, 0xF000FF4Cu)
 		processor.setHook(0xF000u, 0xFF4Cu) {
 			BIOS_RETURN.handle(processor)
+		}
+		// (F000:FE6E) INT 0x1A System-Timer Services
+		processor.computer.setMemoryAt32(0x0068u, 0xF000FE6Eu)
+		processor.setHook(0xF000u, 0xFE6Eu) {
+			when (processor.a.h.toUInt()) {
+				0x00u -> GetSystemTicks
+				else -> throw IllegalArgumentException("Unknown 0x1A ah: ${hex(processor.a.th)}")
+			}.handle(processor)
 		}
 		// (F000:E6F2) INT 0x19 Entry Point
 		processor.computer.setMemoryAt32(0x0064u, 0xF000E6F2u)
@@ -113,7 +123,7 @@ class StandardBIOS : BIOSProvider {
 			BIOS_RETURN.handle(processor)
 			// parallel ports / internal modem / game port / serial ports / _ / floppies / default video mode /
 			// 16K memory banks / 80x87 coprocessor / floppies installed
-			var equipment = 0b01_1_0_001_0_00_10_11_1_1u
+			var equipment = 0b00_0_0_001_0_00_10_11_1_1u
 			equipment = equipment or ((computer.floppyURLs.size - 1) shl 6).toUInt()
 			processor.a.tex = equipment
 		}
@@ -124,6 +134,7 @@ class StandardBIOS : BIOSProvider {
 				0x00u -> this.setVideoMode
 				0x02u -> this.setCursor
 				0x03u -> this.getCursor
+				0x05u -> this.selectActiveDisplayPage
 				0x06u -> this.scrollUp
 				0x09u -> this.putCharacter
 				0x0Eu -> this.teletype

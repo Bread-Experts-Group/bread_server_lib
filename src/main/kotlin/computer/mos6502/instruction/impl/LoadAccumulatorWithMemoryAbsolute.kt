@@ -7,8 +7,8 @@ import org.bread_experts_group.hex
 
 object LoadAccumulatorWithMemoryAbsolute : Instruction(0xA9u, "lda") {
 	override fun handle(processor: MOS6502Processor, disassembly: StringBuilder) {
-		val addr = processor.computer.requestMemoryAt(
-			processor.computer.requestMemoryAt16(currentAddr(processor).toULong()).toULong()
+		val addr = processor.computer.getMemoryAt(
+			processor.computer.getMemoryAt16(currentAddr(processor).toULong()).toULong()
 		)
 		processor.a.value = addr
 		disassembly.append(" $addr/${hex(addr)} -> a")

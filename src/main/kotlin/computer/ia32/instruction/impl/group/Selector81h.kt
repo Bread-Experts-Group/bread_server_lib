@@ -10,22 +10,24 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  * @since 1.0.0
  */
 class Selector81h : InstructionSelector(0x81u) {
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to Add.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
-		1u to LogicalOR.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
-		2u to AddWithCarry.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
-		3u to SubtractWithBorrow.TwoOperand(
-			0u,
-			d16MI(processor), dc16MI(processor),
-			d32MI(processor), dc32MI(processor)
-		),
-		4u to LogicalAND.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
-		5u to Subtract.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
-		6u to LogicalXOR.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
-		7u to SubtractCompare.TwoOperand(
-			0u,
-			d16MI(processor), dc16MI(processor),
-			d32MI(processor), dc32MI(processor)
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to Add.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
+			1u to LogicalOR.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
+			2u to AddWithCarry.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
+			3u to SubtractWithBorrow.TwoOperand(
+				0u,
+				d16MI(processor), dc16MI(processor),
+				d32MI(processor), dc32MI(processor)
+			),
+			4u to LogicalAND.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
+			5u to Subtract.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
+			6u to LogicalXOR.TwoOperand(0u, d16MI(processor), dc16MI(processor), d32MI(processor), dc32MI(processor)),
+			7u to SubtractCompare.TwoOperand(
+				0u,
+				d16MI(processor), dc16MI(processor),
+				d32MI(processor), dc32MI(processor)
+			)
 		)
-	)
+	}
 }

@@ -3,7 +3,8 @@ package org.bread_experts_group.computer.ia32.instruction
 import org.bread_experts_group.computer.BinaryUtil.absb
 import org.bread_experts_group.computer.BinaryUtil.abss
 import org.bread_experts_group.computer.BinaryUtil.hex
-import org.bread_experts_group.computer.BinaryUtil.readBinary
+import org.bread_experts_group.computer.BinaryUtil.read16
+import org.bread_experts_group.computer.BinaryUtil.read32
 import org.bread_experts_group.computer.ia32.IA32Processor
 import kotlin.math.abs
 import kotlin.reflect.KMutableProperty0
@@ -178,7 +179,6 @@ class DecodingUtil(private val processor: IA32Processor) {
 		else -> throw IllegalStateException(hex(reg))
 	}
 
-	fun readBinaryFetch(length: Int): Long = readBinary(length, this::readFetch)
 	fun readFetch(): UByte = this.processor.fetch().let { this.processor.cir }
 
 	fun decodeSIB(): ULong {
@@ -257,7 +257,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					0b011u -> this.processor.b.ex
 					0b100u -> this.decodeSIB()
 					0b101u -> when (mod) {
-						0b00u -> this.readBinaryFetch(4).toULong()
+						0b00u -> read32(this::readFetch).toULong()
 						else -> {
 							segment = processor.ss
 							this.processor.bp.ex
@@ -270,8 +270,8 @@ class DecodingUtil(private val processor: IA32Processor) {
 				}.toLong().let {
 					when (mod) {
 						0b00u -> it
-						0b01u -> it + this.readBinaryFetch(1).toByte()
-						0b10u -> it + this.readBinaryFetch(4).toInt()
+						0b01u -> it + this.readFetch().toByte()
+						0b10u -> it + read32(this::readFetch).toInt()
 						else -> throw IllegalArgumentException(hex(mod))
 					}
 				}).toUInt().toULong()
@@ -292,7 +292,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					0b100u -> this.processor.si.x
 					0b101u -> this.processor.di.x
 					0b110u -> when (mod) {
-						0b00u -> this.readBinaryFetch(2).toULong()
+						0b00u -> read16(this::readFetch).toULong()
 						else -> {
 							segment = processor.ss
 							this.processor.bp.x
@@ -304,8 +304,8 @@ class DecodingUtil(private val processor: IA32Processor) {
 				}.toInt().let {
 					when (mod) {
 						0b00u -> it
-						0b01u -> it + this.readBinaryFetch(1).toByte()
-						0b10u -> it + this.readBinaryFetch(2).toShort()
+						0b01u -> it + this.readFetch().toByte()
+						0b10u -> it + read16(this::readFetch).toShort()
 						else -> throw IllegalArgumentException(hex(mod))
 					}
 				}).toUShort().toULong()
@@ -332,7 +332,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					0b011u -> "ebx [${hex(this.processor.b.tex)}]"
 					0b100u -> this.decodeSIBDisassembler()
 					0b101u -> when (mod) {
-						0b00u -> hex(this.readBinaryFetch(4).toUInt())
+						0b00u -> hex(read32(this::readFetch))
 						else -> "ebp [${hex(this.processor.bp.tex)}]"
 					}
 
@@ -342,7 +342,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 				} + when (mod) {
 					0b00u -> ""
 					0b01u -> this.readFetch().toByte().let { "${if (it < 0) "-" else "+"}${hex(absb(it))}" }
-					0b10u -> this.readBinaryFetch(4).toInt().let { "${if (it < 0) "-" else "+"}${hex(abs(it))}" }
+					0b10u -> read32(this::readFetch).toInt().let { "${if (it < 0) "-" else "+"}${hex(abs(it))}" }
 					else -> throw IllegalArgumentException(hex(mod))
 				}
 
@@ -354,7 +354,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 					0b100u -> "si [${hex(this.processor.si.tx)}]"
 					0b101u -> "di [${hex(this.processor.di.tx)}]"
 					0b110u -> when (mod) {
-						0b00u -> hex(this.readBinaryFetch(2).toUShort())
+						0b00u -> hex(read16(this::readFetch))
 						else -> "bp [${hex(this.processor.bp.tx)}]"
 					}
 
@@ -363,7 +363,7 @@ class DecodingUtil(private val processor: IA32Processor) {
 				} + when (mod) {
 					0b00u -> ""
 					0b01u -> this.readFetch().toByte().let { "${if (it < 0) "-" else "+"}${hex(absb(it))}" }
-					0b10u -> this.readBinaryFetch(2).toShort().let { "${if (it < 0) "-" else "+"}${hex(abss(it))}" }
+					0b10u -> read16(this::readFetch).toShort().let { "${if (it < 0) "-" else "+"}${hex(abss(it))}" }
 					else -> throw IllegalArgumentException(hex(mod))
 				}
 
@@ -393,15 +393,15 @@ class DecodingUtil(private val processor: IA32Processor) {
 
 		fun getRMi(): UInt =
 			if (this.register != null) this.register.get().toUInt()
-			else this@DecodingUtil.processor.computer.requestMemoryAt32(this.memory!!)
+			else this@DecodingUtil.processor.computer.getMemoryAt32(this.memory!!)
 
 		fun getRMs(): UShort =
 			if (this.register != null) this.register.get().toUShort()
-			else this@DecodingUtil.processor.computer.requestMemoryAt16(this.memory!!)
+			else this@DecodingUtil.processor.computer.getMemoryAt16(this.memory!!)
 
 		fun getRMb(): UByte =
 			if (this.register != null) this.register.get().toUByte()
-			else this@DecodingUtil.processor.computer.requestMemoryAt(this.memory!!)
+			else this@DecodingUtil.processor.computer.getMemoryAt(this.memory!!)
 	}
 
 	data class ModRMResult(

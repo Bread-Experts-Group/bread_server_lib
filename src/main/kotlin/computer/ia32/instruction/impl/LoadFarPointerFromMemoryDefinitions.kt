@@ -23,8 +23,8 @@ class LoadFarPointerFromMemoryDefinitions : InstructionCluster {
 			val (memRm, register) = processor.rm()
 			when (processor.operandSize) {
 				AddressingLength.R16 -> {
-					this.segmentRegister.tx = processor.computer.requestMemoryAt16(memRm.memory!! + 2u)
-					register.set(processor.computer.requestMemoryAt32(memRm.memory).toULong())
+					this.segmentRegister.tx = processor.computer.getMemoryAt16(memRm.memory!! + 2u)
+					register.set(processor.computer.getMemoryAt32(memRm.memory).toULong())
 				}
 
 				else -> throw UnsupportedOperationException()

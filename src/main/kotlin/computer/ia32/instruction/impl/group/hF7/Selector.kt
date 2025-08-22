@@ -13,23 +13,25 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  * @since 1.0.0
  */
 class Selector : InstructionSelector(0xF7u) {
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to LogicalCompare.TwoOperand(
-			0u,
-			d16MI(processor), dc16MI(processor),
-			d32MI(processor), dc32MI(processor)
-		),
-		2u to OnesComplementNegation.SingleOperand(
-			0u,
-			d16M(processor), dc16M(processor),
-			d32M(processor), dc32M(processor)
-		),
-		3u to TwosComplementNegation.SingleOperand(
-			0u,
-			d16M(processor), dc16M(processor),
-			d32M(processor), dc32M(processor)
-		),
-		4u to MultiplyModRM,
-		6u to DivideModRM
-	)
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to LogicalCompare.TwoOperand(
+				0u,
+				d16MI(processor), dc16MI(processor),
+				d32MI(processor), dc32MI(processor)
+			),
+			2u to OnesComplementNegation.SingleOperand(
+				0u,
+				d16M(processor), dc16M(processor),
+				d32M(processor), dc32M(processor)
+			),
+			3u to TwosComplementNegation.SingleOperand(
+				0u,
+				d16M(processor), dc16M(processor),
+				d32M(processor), dc32M(processor)
+			),
+			4u to MultiplyModRM,
+			6u to DivideModRM
+		)
+	}
 }

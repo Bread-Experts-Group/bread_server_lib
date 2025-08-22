@@ -13,8 +13,8 @@ object FarCallToModRM : Instruction(0u, "callf"), ModRM {
 		val (memRM) = processor.rm()
 		when (processor.operandSize) {
 			AddressingLength.R16 -> {
-				val ip = processor.computer.requestMemoryAt16(memRM.memory!!)
-				val cs = processor.computer.requestMemoryAt16(memRM.memory + 2u)
+				val ip = processor.computer.getMemoryAt16(memRM.memory!!)
+				val cs = processor.computer.getMemoryAt16(memRM.memory + 2u)
 				processor.push16(processor.cs.tx)
 				processor.push16(processor.ip.tx)
 				processor.ip.tex = ip.toUInt()

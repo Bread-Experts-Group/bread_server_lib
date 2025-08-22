@@ -33,14 +33,13 @@ object BinaryUtil {
 	fun Boolean.toUShort(): UShort = if (this) 1u else 0u
 	fun Boolean.toUByte(): UByte = if (this) 1u else 0u
 
-	@OptIn(ExperimentalUnsignedTypes::class)
-	fun readBinary(length: Int, read: () -> UByte, flip: Boolean = false): Long {
-		val buffer = UByteArray(length) { read() }
-		if (flip) buffer.reverse()
-		var final: Long = 0
-		buffer.forEachIndexed { i, b ->
-			final = final or (b.toLong() shl (i * 8))
-		}
-		return final
-	}
+	fun read16(read: () -> UByte): UShort = (read().toUInt() or (read().toUInt() shl 8)).toUShort()
+	fun read32(read: () -> UByte): UInt =
+		read().toUInt() or (read().toUInt() shl 8) or (read().toUInt() shl 16) or (read().toUInt() shl 24)
+
+	fun read64(read: () -> UByte): ULong =
+		read().toULong() or
+				(read().toULong() shl 8) or (read().toULong() shl 16) or (read().toULong() shl 24) or
+				(read().toULong() shl 32) or (read().toULong() shl 40) or (read().toULong() shl 48) or
+				(read().toULong() shl 56)
 }

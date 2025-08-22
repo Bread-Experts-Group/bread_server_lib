@@ -10,11 +10,13 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  * @since 1.0.0
  */
 class SelectorC7h : InstructionSelector(0xC7u) {
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to Move.TwoOperand(
-			0u,
-			d16MI(processor), dc16MI(processor),
-			d32MI(processor), dc32MI(processor)
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to Move.TwoOperand(
+				0u,
+				d16MI(processor), dc16MI(processor),
+				d32MI(processor), dc32MI(processor)
+			)
 		)
-	)
+	}
 }

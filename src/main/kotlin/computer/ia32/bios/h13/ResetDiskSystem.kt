@@ -8,7 +8,7 @@ import org.bread_experts_group.computer.ia32.register.FlagsRegister
 object ResetDiskSystem : BIOSInterruptProvider {
 	override fun handle(processor: IA32Processor) {
 		BIOS_RETURN.handle(processor)
-		if (processor.computer.floppyURLs[processor.d.l.toInt()] != null) {
+		if (processor.computer.floppyURLs.getOrNull(processor.d.l.toInt()) != null) {
 			processor.a.h = 0u
 			processor.flags.setFlag(FlagsRegister.FlagType.CARRY_FLAG, false)
 		} else {

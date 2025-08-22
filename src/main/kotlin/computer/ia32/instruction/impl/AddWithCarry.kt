@@ -14,7 +14,7 @@ class AddWithCarry : InstructionCluster {
 		override fun operands(processor: IA32Processor): String = d()
 		override fun handle(processor: IA32Processor) {
 			val (dest, src) = dc()
-			val result = addAndSetFlagsCFOF8(processor, dest.first(), (src.first() + carry10b(processor)).toUByte())
+			val result = addAndSetFlagsAFCFOF8(processor, dest.first(), (src.first() + carry10b(processor)).toUByte())
 			dest.second(result)
 			setFlagsSFZFPF8(processor, result)
 		}
@@ -37,7 +37,7 @@ class AddWithCarry : InstructionCluster {
 			when (processor.operandSize) {
 				AddressingLength.R16 -> {
 					val (dest16, src16) = dc16()
-					val result = addAndSetFlagsCFOF16(
+					val result = addAndSetFlagsAFCFOF16(
 						processor,
 						dest16.first(), (src16.first() + carry10s(processor)).toUShort()
 					)
@@ -47,7 +47,7 @@ class AddWithCarry : InstructionCluster {
 
 				AddressingLength.R32 -> {
 					val (dest32, src32) = dc32()
-					val result = addAndSetFlagsCFOF32(processor, dest32.first(), src32.first() + carry10i(processor))
+					val result = addAndSetFlagsAFCFOF32(processor, dest32.first(), src32.first() + carry10i(processor))
 					dest32.second(result)
 					setFlagsSFZFPF32(processor, result)
 				}

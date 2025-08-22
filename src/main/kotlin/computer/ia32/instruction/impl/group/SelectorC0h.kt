@@ -11,13 +11,15 @@ import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelecto
  * @since 1.0.0
  */
 class SelectorC0h : InstructionSelector(0xC0u) {
-	override fun instructions(): Map<UInt, Instruction> = mapOf(
-		0u to Rotate.Left8Bit(d8MI8(processor), dc8MI8i(processor)),
-		1u to Rotate.Right8Bit(d8MI8(processor), dc8MI8i(processor)),
-		2u to Rotate.Left8Bit(d8MI8(processor), dc8MI8i(processor)),
-		3u to Rotate.Right8Bit(d8MI8(processor), dc8MI8i(processor)),
-		4u to Shift.Left8Bit(d8MI8(processor), dc8MI8i(processor)),
-		5u to Shift.Right8Bit(d8MI8(processor), dc8MI8i(processor)),
-		7u to Shift.RightArithmetic8Bit(d8MI8(processor), dc8MI8i(processor))
-	)
+	override val instructions: Map<UInt, Instruction> by lazy {
+		mapOf(
+			0u to Rotate.Left8Bit(d8MI8(processor), dc8MI8i(processor)),
+			1u to Rotate.Right8Bit(d8MI8(processor), dc8MI8i(processor)),
+			2u to Rotate.Left8Bit(d8MI8(processor), dc8MI8i(processor)),
+			3u to Rotate.Right8Bit(d8MI8(processor), dc8MI8i(processor)),
+			4u to Shift.Left8Bit(d8MI8(processor), dc8MI8i(processor)),
+			5u to Shift.Right8Bit(d8MI8(processor), dc8MI8i(processor)),
+			7u to Shift.RightArithmetic8Bit(d8MI8(processor), dc8MI8i(processor))
+		)
+	}
 }

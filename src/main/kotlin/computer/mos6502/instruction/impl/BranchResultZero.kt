@@ -12,7 +12,7 @@ object BranchResultZero : Instruction(0xF0u, "beq") {
 		if (flag) {
 			disassembly.append(" [${hex(currentAddr(processor))} -> ")
 			pc.value =
-				((pc.value.toInt() + 2) + processor.computer.requestMemoryAt(pc.value.toULong()).toByte()).toUShort()
+				((pc.value.toInt() + 2) + processor.computer.getMemoryAt(pc.value.toULong()).toByte()).toUShort()
 			disassembly.append(" ${hex(currentAddr(processor))}")
 		}
 		disassembly.append(" (beq)")

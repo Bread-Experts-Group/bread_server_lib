@@ -9,7 +9,7 @@ class DummyBIOS : BIOSProvider {
 		processor.computer = computer
 
 		processor.biosHooks[0xFFFCu] = { processor ->
-			processor.pc.value = computer.requestMemoryAt16(0xFFFCu)
+			processor.pc.value = computer.getMemoryAt16(0xFFFCu)
 		}
 		processor.logger.info(processor.pc.toString())
 	}

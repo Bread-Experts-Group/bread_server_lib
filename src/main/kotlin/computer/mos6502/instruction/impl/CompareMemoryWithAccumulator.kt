@@ -8,7 +8,7 @@ import org.bread_experts_group.hex
 object CompareMemoryWithAccumulator : Instruction(0xC9u, "cmp") {
 	override fun handle(processor: MOS6502Processor, disassembly: StringBuilder) {
 		val addr = currentAddr(processor)
-		val memory = processor.computer.requestMemoryAt(addr.toULong())
+		val memory = processor.computer.getMemoryAt(addr.toULong())
 		val result = processor.a.value - memory
 
 		disassembly.append(" result [$memory/${hex(memory)}]")

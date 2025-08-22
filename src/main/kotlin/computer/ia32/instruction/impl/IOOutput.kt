@@ -85,7 +85,7 @@ class IOOutput : InstructionCluster {
 			0xEEu,
 			{ "dx, al" },
 			{
-				({ processor.d.x.toUShort() } to { _: UShort -> }) to ({ processor.a.tl.toUShort() } to {})
+				({ processor.d.tx } to { _: UShort -> }) to ({ processor.a.tl.toUShort() } to {})
 			}
 		),
 		TwoOperand(

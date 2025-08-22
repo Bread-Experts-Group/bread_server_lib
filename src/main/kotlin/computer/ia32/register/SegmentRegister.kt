@@ -27,7 +27,7 @@ class SegmentRegister(val processor: IA32Processor, name: String, rx: ULong) : R
 	fun readSegmentDescriptor(): SegmentDescriptor {
 		val offset = this.processor.gdtrBase.rx + this.rx
 		if (offset > this.processor.gdtrBase.rx + this.processor.gdtrLimit.rx) TODO("EXCEPTION: GDTR OUT OF BOUNDS")
-		val data = this.processor.computer.requestMemoryAt64(offset)
+		val data = this.processor.computer.getMemoryAt64(offset)
 		return SegmentDescriptor(
 			((data and 0x00_0_0_00_00_0000_FFFFu) or ((data and 0x00_0_F_00_00_0000_0000u) shr 32)).toUInt(),
 			(((data and 0x00_0_0_00_FF_FFFF_0000u) shr 16) or ((data and 0xFF_0_0_00_00_0000_0000u) shr 56)).toUInt(),

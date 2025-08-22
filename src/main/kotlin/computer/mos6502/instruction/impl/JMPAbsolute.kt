@@ -8,7 +8,7 @@ object JMPAbsolute : Instruction(0x4Cu, "jmp") {
 	override fun handle(processor: MOS6502Processor, disassembly: StringBuilder) {
 		val pc = processor.pc
 		disassembly.append(" ${hex(pc.value)} -> ")
-		pc.value = processor.computer.requestMemoryAt16((pc.value).toULong())
+		pc.value = processor.computer.getMemoryAt16((pc.value).toULong())
 		disassembly.append(hex(pc.value))
 		disassembly.append(" (jmp)")
 	}

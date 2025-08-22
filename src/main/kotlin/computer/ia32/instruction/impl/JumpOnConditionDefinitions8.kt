@@ -5,7 +5,7 @@ import org.bread_experts_group.computer.ia32.IA32Processor
 import org.bread_experts_group.computer.ia32.instruction.DecodingUtil.AddressingLength
 import org.bread_experts_group.computer.ia32.instruction.InstructionCluster
 import org.bread_experts_group.computer.ia32.instruction.type.Instruction
-import org.bread_experts_group.computer.ia32.instruction.type.operand.Immediate8
+import org.bread_experts_group.computer.ia32.instruction.type.rel8
 import org.bread_experts_group.computer.ia32.register.FlagsRegister.FlagType
 
 class JumpOnConditionDefinitions8 : InstructionCluster {
@@ -13,7 +13,7 @@ class JumpOnConditionDefinitions8 : InstructionCluster {
 		opcode: UInt,
 		name: String,
 		val condition: (IA32Processor, (FlagType) -> Boolean) -> Boolean
-	) : Instruction(opcode, "j$name"), Immediate8 {
+	) : Instruction(opcode, "j$name") {
 		override fun operands(processor: IA32Processor): String = processor.rel8().let {
 			"${hex(it)} [${hex((processor.ip.tex.toInt() + it).toUInt())}]"
 		}
@@ -35,7 +35,7 @@ class JumpOnConditionDefinitions8 : InstructionCluster {
 		JumpOnConditionImmediate8Displacement(0x76u, "be") { _, f -> f(FlagType.CARRY_FLAG) || f(FlagType.ZERO_FLAG) },
 		JumpOnConditionImmediate8Displacement(0x77u, "a") { _, f -> !f(FlagType.CARRY_FLAG) && !f(FlagType.ZERO_FLAG) },
 		JumpOnConditionImmediate8Displacement(0x78u, "s") { _, f -> f(FlagType.SIGN_FLAG) },
-		JumpOnConditionImmediate8Displacement(0x79u, "s") { _, f -> !f(FlagType.SIGN_FLAG) },
+		JumpOnConditionImmediate8Displacement(0x79u, "ns") { _, f -> !f(FlagType.SIGN_FLAG) },
 		JumpOnConditionImmediate8Displacement(0x7Au, "p") { _, f -> f(FlagType.PARITY_FLAG) },
 		JumpOnConditionImmediate8Displacement(0x7Bu, "np") { _, f -> !f(FlagType.PARITY_FLAG) },
 		JumpOnConditionImmediate8Displacement(0x7Cu, "l") { _, f ->

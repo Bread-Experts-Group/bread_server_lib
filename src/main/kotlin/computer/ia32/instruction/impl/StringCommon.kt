@@ -14,6 +14,16 @@ fun moveDI(processor: IA32Processor, n: UInt) = when (processor.operandSize) {
 	else -> throw UnsupportedOperationException()
 }
 
+fun moveSI(processor: IA32Processor, n: UInt) = when (processor.operandSize) {
+	AddressingLength.R32 -> if (processor.flags.getFlag(FlagType.DIRECTION_FLAG)) processor.si.ex -= n
+	else processor.si.ex += n
+
+	AddressingLength.R16 -> if (processor.flags.getFlag(FlagType.DIRECTION_FLAG)) processor.si.x -= n
+	else processor.si.x += n
+
+	else -> throw UnsupportedOperationException()
+}
+
 fun moveSIDI(processor: IA32Processor, n: UInt) = when (processor.operandSize) {
 	AddressingLength.R32 -> if (processor.flags.getFlag(FlagType.DIRECTION_FLAG)) {
 		processor.di.ex -= n
@@ -34,9 +44,9 @@ fun moveSIDI(processor: IA32Processor, n: UInt) = when (processor.operandSize) {
 	else -> throw UnsupportedOperationException()
 }
 
-fun dsSIOffset(processor: IA32Processor) = when (processor.operandSize) {
-	AddressingLength.R32 -> processor.ds.offset(processor.si.ex)
-	AddressingLength.R16 -> processor.ds.offset(processor.si.x)
+fun sSIOffset(processor: IA32Processor) = when (processor.operandSize) {
+	AddressingLength.R32 -> (processor.segment ?: processor.ds).offset(processor.si.ex)
+	AddressingLength.R16 -> (processor.segment ?: processor.ds).offset(processor.si.x)
 	else -> throw UnsupportedOperationException()
 }
 

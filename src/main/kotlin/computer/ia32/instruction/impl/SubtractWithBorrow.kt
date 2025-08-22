@@ -14,7 +14,7 @@ class SubtractWithBorrow : InstructionCluster {
 		override fun operands(processor: IA32Processor): String = d()
 		override fun handle(processor: IA32Processor) {
 			val (dest, src) = dc()
-			val result = subtractAndSetFlagsCFOF8(
+			val result = subtractAndSetFlagsAFCFOF8(
 				processor,
 				dest.first(), (src.first() + carry10b(processor)).toUByte()
 			)
@@ -40,7 +40,7 @@ class SubtractWithBorrow : InstructionCluster {
 			when (processor.operandSize) {
 				AddressingLength.R16 -> {
 					val (dest16, src16) = dc16()
-					val result = subtractAndSetFlagsCFOF16(
+					val result = subtractAndSetFlagsAFCFOF16(
 						processor,
 						dest16.first(), (src16.first() + carry10s(processor)).toUShort()
 					)
@@ -50,7 +50,7 @@ class SubtractWithBorrow : InstructionCluster {
 
 				AddressingLength.R32 -> {
 					val (dest32, src32) = dc32()
-					val result = subtractAndSetFlagsCFOF32(
+					val result = subtractAndSetFlagsAFCFOF32(
 						processor,
 						dest32.first(), src32.first() + carry10i(processor)
 					)

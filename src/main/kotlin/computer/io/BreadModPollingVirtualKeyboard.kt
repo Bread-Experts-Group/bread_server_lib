@@ -6,7 +6,134 @@ import java.util.concurrent.LinkedBlockingQueue
 
 class BreadModPollingVirtualKeyboard : IODevice {
 	var modifiers: Int = 0
+	var insert: Boolean = false
 	val scancodes: LinkedBlockingQueue<UByte> = LinkedBlockingQueue()
+	fun submitKeycode(keycode: Int, modifiers: Int) {
+		this.modifiers = modifiers
+		val code: UByte? = when (keycode) {
+			KeyEvent.VK_INSERT -> {
+				this.insert = !this.insert
+				if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0xA2u
+				else if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) 0x92u
+				else 0x52u
+			}
+
+			KeyEvent.VK_ENTER -> if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0xA6u else 0x1Cu
+			KeyEvent.VK_BACK_SPACE -> 0x0Eu
+			KeyEvent.VK_SPACE -> 0x39u
+			KeyEvent.VK_MINUS ->
+				if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x82u
+				else 0x0Cu
+
+			KeyEvent.VK_COMMA ->
+				if (
+					(modifiers and
+							(KeyEvent.CTRL_DOWN_MASK or KeyEvent.ALT_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK)) > 0
+				) null
+				else 0x33u
+
+			KeyEvent.VK_SEMICOLON ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else 0x27u
+
+			KeyEvent.VK_A -> 0x1Eu
+			KeyEvent.VK_B -> 0x30u
+			KeyEvent.VK_C -> 0x2Eu
+			KeyEvent.VK_D -> 0x20u
+			KeyEvent.VK_E -> 0x12u
+			KeyEvent.VK_F -> 0x21u
+			KeyEvent.VK_G -> 0x22u
+			KeyEvent.VK_H -> 0x23u
+			KeyEvent.VK_I -> 0x17u
+			KeyEvent.VK_J -> 0x24u
+			KeyEvent.VK_K -> 0x25u
+			KeyEvent.VK_L -> 0x26u
+			KeyEvent.VK_M -> 0x32u
+			KeyEvent.VK_N -> 0x31u
+			KeyEvent.VK_O -> 0x18u
+			KeyEvent.VK_P -> 0x19u
+			KeyEvent.VK_Q -> 0x10u
+			KeyEvent.VK_R -> 0x13u
+			KeyEvent.VK_S -> 0x1Fu
+			KeyEvent.VK_T -> 0x14u
+			KeyEvent.VK_U -> 0x16u
+			KeyEvent.VK_V -> 0x2Fu
+			KeyEvent.VK_W -> 0x11u
+			KeyEvent.VK_X -> 0x2Du
+			KeyEvent.VK_Y -> 0x15u
+			KeyEvent.VK_Z -> 0x2Cu
+			KeyEvent.VK_1 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x78u
+				else 0x02u
+
+			KeyEvent.VK_2 ->
+				if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x79u
+				else 0x03u
+
+			KeyEvent.VK_3 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x7Au
+				else 0x04u
+
+			KeyEvent.VK_4 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x7Bu
+				else 0x05u
+
+			KeyEvent.VK_5 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x7Cu
+				else 0x06u
+
+			KeyEvent.VK_6 ->
+				if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x7Du
+				else 0x07u
+
+			KeyEvent.VK_7 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x7Eu
+				else 0x08u
+
+			KeyEvent.VK_8 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x7Fu
+				else 0x09u
+
+			KeyEvent.VK_9 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x80u
+				else 0x0Au
+
+			KeyEvent.VK_0 ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x81u
+				else 0x0Bu
+
+			KeyEvent.VK_EQUALS ->
+				if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) null
+				else if ((modifiers and KeyEvent.ALT_DOWN_MASK) > 0) 0x83u
+				else 0x0Du
+
+			KeyEvent.VK_PERIOD ->
+				if (
+					(modifiers and
+							(KeyEvent.CTRL_DOWN_MASK or KeyEvent.ALT_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK)) > 0
+				) null
+				else 0x34u
+
+			KeyEvent.VK_SLASH ->
+				if (
+					(modifiers and
+							(KeyEvent.CTRL_DOWN_MASK or KeyEvent.ALT_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK)) > 0
+				) null
+				else 0x35u
+
+			else -> throw UnsupportedOperationException("Key $keycode ?")
+		}
+		if (code != null) this.scancodes.add(code)
+	}
+
 	fun scancodeToChar(scancode: UByte): UByte {
 		if ((modifiers and KeyEvent.CTRL_DOWN_MASK) > 0) return when (scancode.toUInt()) {
 			0x0Cu -> 0x1Fu
@@ -112,6 +239,7 @@ class BreadModPollingVirtualKeyboard : IODevice {
 			0x32u -> 0x6Du
 			0x33u -> 0x2Cu
 			0x34u -> 0x2Eu
+			0x35u -> 0x2Fu
 			0x39u -> 0x20u
 			else -> throw UnsupportedOperationException("Code $scancode (normal)")
 		}

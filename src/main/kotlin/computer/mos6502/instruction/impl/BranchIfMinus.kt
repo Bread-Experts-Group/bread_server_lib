@@ -12,7 +12,7 @@ object BranchIfMinus : Instruction(0x30u, "bmi") {
 		if (flag) {
 			disassembly.append(" ${hex(processor.pc.value)} -> ")
 			pc.value =
-				((pc.value.toInt() + 2) + processor.computer.requestMemoryAt(pc.value.toULong()).toByte()).toUShort()
+				((pc.value.toInt() + 2) + processor.computer.getMemoryAt(pc.value.toULong()).toByte()).toUShort()
 			disassembly.append(hex(processor.pc.value))
 		}
 		disassembly.append(" (bmi)")

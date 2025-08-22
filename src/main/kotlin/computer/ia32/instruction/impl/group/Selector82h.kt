@@ -5,11 +5,11 @@ import org.bread_experts_group.computer.ia32.instruction.type.Instruction
 import org.bread_experts_group.computer.ia32.instruction.type.InstructionSelector
 
 /**
- * TODO: Write an encompassing Javadoc for all instructions defined in this selector.
+ * ALIAS OF SELECTOR 0x80
  * @author Miko Elbrecht
  * @since 1.0.0
  */
-class Selector80h : InstructionSelector(0x80u) {
+class Selector82h : InstructionSelector(0x82u) {
 	override val instructions: Map<UInt, Instruction> by lazy {
 		mapOf(
 			0u to Add.TwoOperand8Bit(0u, d8MI(processor), dc8MI(processor)),
