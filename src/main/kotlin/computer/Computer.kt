@@ -7,6 +7,7 @@ import org.bread_experts_group.computer.disc.ISO9660BootRecord
 import org.bread_experts_group.computer.disc.ISO9660Disc
 import org.bread_experts_group.computer.disc.ISO9660PrimaryVolume
 import org.bread_experts_group.computer.ia32.IA32Processor
+import org.bread_experts_group.computer.ia32.bios.Read
 import org.bread_experts_group.computer.io.BreadModPollingVirtualKeyboard
 import org.bread_experts_group.computer.io.IODevice
 import org.bread_experts_group.computer.io.ProgrammableInterruptTimer
@@ -16,6 +17,7 @@ import java.io.InputStream
 import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
+import java.nio.channels.SeekableByteChannel
 
 /**
  * A Bread Mod computer.
@@ -126,7 +128,7 @@ class Computer(
 		this.discURL = at
 	}
 
-	val floppyURLs: Array<URL?> = arrayOfNulls(4)
+	val floppies: Array<Pair<SeekableByteChannel, Read.FloppyGeometry>?> = arrayOfNulls(4)
 
 	override fun reset() {
 		this.memory.forEach { it.erase() }

@@ -1,12 +1,10 @@
 package org.bread_experts_group
 
 import org.bread_experts_group.coder.LazyPartialResult
-import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.logging.Logger
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteRecursively
+import kotlin.io.path.*
 
 @OptIn(ExperimentalPathApi::class)
 val testBase = Path("./src/test/out").also {
@@ -30,5 +28,12 @@ fun Any.dumpLogSafe(logger: Logger, prepend: String = "") {
 	}
 }
 
-fun getResource(path: String): URI = (MissingResourceError::class.java.getResource(path)
-	?: throw MissingResourceError(path)).toURI()
+fun getResource(path: String): Path {
+	val uri = (MissingResourceError::class.java.getResource(path)
+		?: throw MissingResourceError(path)).toURI()
+	return uri.toURL().openStream().use {
+		val tempFile = Files.createTempFile("test", System.currentTimeMillis().toString())
+		it.transferTo(tempFile.outputStream())
+		tempFile
+	}
+}

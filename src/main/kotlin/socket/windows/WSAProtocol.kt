@@ -1,7 +1,8 @@
 package org.bread_experts_group.socket.windows
 
 import org.bread_experts_group.coder.MappedEnumeration
-import org.bread_experts_group.debugString
+import org.bread_experts_group.ffi.WindowsGUID
+import org.bread_experts_group.ffi.debugString
 import java.lang.foreign.MemorySegment
 import java.nio.ByteOrder
 import java.util.*

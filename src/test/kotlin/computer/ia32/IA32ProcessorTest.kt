@@ -2,6 +2,7 @@ package org.bread_experts_group.computer.ia32
 
 import org.bread_experts_group.computer.Computer
 import org.bread_experts_group.computer.MemoryModule
+import org.bread_experts_group.computer.ia32.bios.Read.FloppyGeometry.Companion.floppy5_14_160K
 import org.bread_experts_group.computer.ia32.bios.StandardBIOS
 import org.bread_experts_group.computer.ia32.register.Register
 import org.bread_experts_group.getResource
@@ -13,6 +14,8 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.File
 import java.io.PrintStream
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 import java.util.concurrent.CountDownLatch
 import java.util.logging.Handler
 import java.util.logging.Level
@@ -32,7 +35,11 @@ class IA32ProcessorTest {
 
 	@Test
 	fun helloWorld() {
-		computer.floppyURLs[0] = getResource("/computer/ia32/floppy/CPM86_10.img").toURL()
+		val temp = getResource("/computer/ia32/floppy/CPM86_10.img")
+		computer.floppies[0] = Files.newByteChannel(
+			temp,
+			StandardOpenOption.WRITE, StandardOpenOption.READ
+		) to floppy5_14_160K
 		computer.reset()
 		val closeWait = CountDownLatch(1)
 		val monitor = ProcessorVisualMonitor(computer)

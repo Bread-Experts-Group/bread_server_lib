@@ -1,7 +1,6 @@
 package org.bread_experts_group.computer.ia32.bios
 
 import org.bread_experts_group.computer.BIOSProvider
-import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.Computer
 import org.bread_experts_group.computer.disc.el_torito.ElToritoBootCatalogDescriptor
 import org.bread_experts_group.computer.disc.el_torito.ElToritoBootCatalogDescriptor.Companion.BOOT_SYSTEM_IDENTIFIER
@@ -9,33 +8,24 @@ import org.bread_experts_group.computer.disc.el_torito.ElToritoBootCatalogInitia
 import org.bread_experts_group.computer.disc.el_torito.ElToritoBootCatalogValidationEntry
 import org.bread_experts_group.computer.disc.el_torito.ElToritoPlatform
 import org.bread_experts_group.computer.ia32.IA32Processor
-import org.bread_experts_group.computer.ia32.bios.h10.*
-import org.bread_experts_group.computer.ia32.bios.h13.*
-import org.bread_experts_group.computer.ia32.bios.h14.InitializeSerial
-import org.bread_experts_group.computer.ia32.bios.h16.CheckKeystroke
-import org.bread_experts_group.computer.ia32.bios.h16.GetKeyboardFunctionality
-import org.bread_experts_group.computer.ia32.bios.h16.GetKeystroke
-import org.bread_experts_group.computer.ia32.bios.h16.GetShiftFlags
-import org.bread_experts_group.computer.ia32.bios.h17.InitializePrinter
-import org.bread_experts_group.computer.ia32.bios.h17.WriteCharacterToPrinter
-import org.bread_experts_group.computer.ia32.bios.h19.BootstrapLoader
-import org.bread_experts_group.computer.ia32.bios.h1A.GetSystemTicks
 import org.bread_experts_group.computer.ia32.instruction.impl.InterruptReturn.Companion.BIOS_RETURN
+import org.bread_experts_group.hex
 import org.bread_experts_group.io.reader.ReadingByteBuffer
 import org.bread_experts_group.io.reader.ReadingByteBuffer.Companion.reading
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
+import java.util.*
 
 class StandardBIOS : BIOSProvider {
-	val teletype: TeletypeOutput = TeletypeOutput()
-	val teletypeString: TeletypeOutputString = TeletypeOutputString(this.teletype)
-	val setVideoMode: SetVideoMode = SetVideoMode(this.teletype)
-	val getVideoMode: GetVideoMode = GetVideoMode(this.teletype)
-	val setCursor: SetCursorPosition = SetCursorPosition(this.teletype)
-	val getCursor: GetCursorPosition = GetCursorPosition(this.teletype)
-	val selectActiveDisplayPage: SelectActiveDisplayPage = SelectActiveDisplayPage(this.teletype)
-	val scrollUp: ScrollUp = ScrollUp(this.teletype)
-	val putCharacter: PutCharacter = PutCharacter(this.teletype)
+	val interrupts = ServiceLoader.load(StandardBIOSInterruptProvider::class.java)
+		.groupBy { it.int }
+		.onEach { (_, interrupts) ->
+			interrupts.forEach { it.bios = this }
+		}
+
+	val teletype = interrupts
+		.flatMap { it.value }
+		.firstNotNullOf { it as? TeletypeOutput }
 
 	override fun initialize(computer: Computer) {
 		val processor = computer.processor as IA32Processor
@@ -55,59 +45,59 @@ class StandardBIOS : BIOSProvider {
 		}
 		// (F000:FE6E) INT 0x1A System-Timer Services
 		processor.computer.setMemoryAt32(0x0068u, 0xF000FE6Eu)
+		val f1A = interrupts[0x1Au]!!
 		processor.setHook(0xF000u, 0xFE6Eu) {
-			when (processor.a.h.toUInt()) {
-				0x00u -> GetSystemTicks
-				else -> throw IllegalArgumentException("Unknown 0x1A ah: ${hex(processor.a.th)}")
-			}.handle(processor)
+			val operation = f1A.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x1A no matching operation found; ${hex(processor.a.th)}")
+			operation.handle(processor)
 		}
 		// (F000:E6F2) INT 0x19 Entry Point
 		processor.computer.setMemoryAt32(0x0064u, 0xF000E6F2u)
+		val f19 = interrupts[0x19u]!!
 		processor.setHook(0xF000u, 0xE6F2u) {
-			when (processor.a.h.toUInt()) {
-				0x00u -> BootstrapLoader
-				else -> throw IllegalArgumentException("Unknown 0x19 ah: ${hex(processor.a.th)}")
-			}.handle(processor)
+			val operation = f19.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x19 no matching operation found")
+			operation.handle(processor)
 		}
 		// (F000:EFD0) INT 0x17 Printer Services
 		processor.computer.setMemoryAt32(0x005Cu, 0xF000EFD0u)
+		val f17 = interrupts[0x17u]!!
 		processor.setHook(0xF000u, 0xEFD0u) {
-			when (processor.a.h.toUInt()) {
-				0x00u -> WriteCharacterToPrinter
-				0x01u -> InitializePrinter
-				else -> throw IllegalArgumentException("Unknown 0x17 ah: ${hex(processor.a.th)}")
-			}.handle(processor)
+			val operation = f17.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x17 no matching operation found")
+			operation.handle(processor)
 		}
 		// (F000:E82E) INT 0x16 Keyboard Services
 		processor.computer.setMemoryAt32(0x0058u, 0xF000E82Eu)
+		val f16 = interrupts[0x16u]!!
 		processor.setHook(0xF000u, 0xE82Eu) {
-			when (processor.a.h.toUInt()) {
-				0x00u -> GetKeystroke
-				0x01u -> CheckKeystroke
-				0x02u -> GetShiftFlags
-				0x09u -> GetKeyboardFunctionality
-				else -> throw IllegalArgumentException("Unknown 0x16 ah: ${hex(processor.a.th)}")
-			}.handle(processor)
+			val operation = f16.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x16 no matching operation found")
+			operation.handle(processor)
+		}
+		// (F000:F859) INT 0x15 System Services
+		processor.computer.setMemoryAt32(0x0054u, 0xF000F859u)
+		val f15 = interrupts[0x15u]!!
+		processor.setHook(0xF000u, 0xF859u) {
+			val operation = f15.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x15 no matching operation found")
+			operation.handle(processor)
 		}
 		// (F000:E739) INT 0x14 Serial
 		processor.computer.setMemoryAt32(0x0050u, 0xF000E739u)
+		val f14 = interrupts[0x14u]!!
 		processor.setHook(0xF000u, 0xE739u) {
-			when (processor.a.h.toUInt()) {
-				0x00u -> InitializeSerial
-				else -> throw IllegalArgumentException("Unknown 0x14 ah: ${hex(processor.a.th)}")
-			}.handle(processor)
+			val operation = f14.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x14 no matching operation found")
+			operation.handle(processor)
 		}
 		// (F000:EC59) INT 0x13 Floppy
 		processor.computer.setMemoryAt32(0x004Cu, 0xF000EC59u)
+		val f13 = interrupts[0x13u]!!
 		processor.setHook(0xF000u, 0xEC59u) {
-			when (processor.a.h.toUInt()) {
-				0x00u -> ResetDiskSystem
-				0x02u -> Read
-				0x08u -> GetDriveParameters
-				0x41u -> InstallationCheck
-				0x42u -> ExtendedRead
-				else -> throw IllegalArgumentException("Unknown 0x13 ah: ${hex(processor.a.th)}")
-			}.handle(processor)
+			val operation = f13.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x13 no matching operation found")
+			operation.handle(processor)
 		}
 		// (F000:F841) INT 0x12 Memory Size
 		processor.computer.setMemoryAt32(0x0048u, 0xF000F841u)
@@ -124,24 +114,16 @@ class StandardBIOS : BIOSProvider {
 			// parallel ports / internal modem / game port / serial ports / _ / floppies / default video mode /
 			// 16K memory banks / 80x87 coprocessor / floppies installed
 			var equipment = 0b00_0_0_001_0_00_10_11_1_1u
-			equipment = equipment or ((computer.floppyURLs.size - 1) shl 6).toUInt()
+			equipment = equipment or ((computer.floppies.size - 1) shl 6).toUInt()
 			processor.a.tex = equipment
 		}
 		// (F000:F065) INT 0x10 Video
 		processor.computer.setMemoryAt32(0x0040u, 0xF000F065u)
+		val f10 = interrupts[0x10u]!!
 		processor.setHook(0xF000u, 0xF065u) {
-			when (processor.a.h.toUInt()) {
-				0x00u -> this.setVideoMode
-				0x02u -> this.setCursor
-				0x03u -> this.getCursor
-				0x05u -> this.selectActiveDisplayPage
-				0x06u -> this.scrollUp
-				0x09u -> this.putCharacter
-				0x0Eu -> this.teletype
-				0x0Fu -> this.getVideoMode
-				0x13u -> this.teletypeString
-				else -> throw IllegalArgumentException("Unknown 0x10 ah: ${hex(processor.a.th)}")
-			}.handle(processor)
+			val operation = f10.firstOrNull { it.matches(processor) }
+				?: throw IllegalArgumentException("0x10 no matching operation found")
+			operation.handle(processor)
 		}
 		// (F000:FEA0) INT 0x08 System Timer
 		processor.computer.setMemoryAt32(0x20u, 0xF000FEA0u)
@@ -153,8 +135,9 @@ class StandardBIOS : BIOSProvider {
 		processor.computer.setMemoryAt((0xF000u * 0x10u) + 0xFF53u, 0xCFu)
 		// (F000:FFF0) "Power-On Entry Point" / Reset Vector
 		processor.setHook(0xF000u, 0xFFF0u) {
-			if (computer.floppyURLs[0] != null) {
-				it.decoding.loadFloppyIntoMemory(0, 0u, 16384u, 0x7C00u)
+			val floppy = computer.floppies.getOrNull(0)
+			if (floppy != null) {
+				it.decoding.loadFloppyIntoMemory(floppy.first, 0u, 16384u, 0x7C00u)
 				it.d.l = 0x00u
 				it.cs.rx = 0u
 				it.ip.rx = 0x7C00u
@@ -192,7 +175,5 @@ class StandardBIOS : BIOSProvider {
 				it.ip.rx = memoryStart
 			}
 		}
-		// (F000:FF54) INT 0x05 Print Screen Entry Point
-		// TODO INT 05
 	}
 }

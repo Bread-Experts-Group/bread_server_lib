@@ -1,7 +1,7 @@
 package org.bread_experts_group.socket.windows
 
-import org.bread_experts_group.getDowncall
-import org.bread_experts_group.getLookup
+import org.bread_experts_group.ffi.getDowncall
+import org.bread_experts_group.ffi.getLookup
 import java.lang.foreign.Arena
 import java.lang.foreign.Linker
 import java.lang.foreign.SymbolLookup
@@ -11,8 +11,6 @@ import java.lang.invoke.MethodHandle
 private val handleArena = Arena.ofAuto()
 private val ws2Lookup: SymbolLookup = handleArena.getLookup("Ws2_32.dll")
 private val linker: Linker = Linker.nativeLinker()
-
-fun makeWord(highByte: UByte, lowByte: UByte): UShort = (highByte.toInt() shl 8 or lowByte.toInt()).toUShort()
 
 val nativeWSAStartup: MethodHandle = ws2Lookup.getDowncall(
 	linker, "WSAStartup", ValueLayout.JAVA_INT,

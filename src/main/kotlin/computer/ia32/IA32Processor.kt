@@ -179,7 +179,7 @@ class IA32Processor : Processor {
 			this.flags.setFlag(FlagType.INTERRUPT_ENABLE_FLAG, false)
 			this.flags.setFlag(FlagType.TRAP_FLAG, false)
 			this.flags.setFlag(FlagType.AUXILIARY_CARRY_FLAG, false)
-//			this.logger.warning("!!! INTERRUPT RECEIVED (${hex(selector)}) !!!")
+			this.logger.warning("!!! INTERRUPT RECEIVED (${hex(selector)}) !!!")
 			this.push16(this.cs.tx)
 			this.push16(this.ip.tx)
 			val addr = selector.toULong() * 4u

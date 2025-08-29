@@ -20,6 +20,7 @@ org.bread_experts_group.computer.ia32.instruction.impl.ScanString
 org.bread_experts_group.computer.ia32.instruction.impl.CompareString
 org.bread_experts_group.computer.ia32.instruction.impl.Loop
 org.bread_experts_group.computer.ia32.instruction.impl.BinaryCodedDecimal
+org.bread_experts_group.computer.ia32.instruction.impl.Convert
 org.bread_experts_group.computer.ia32.instruction.impl.JumpOnConditionDefinitions
 org.bread_experts_group.computer.ia32.instruction.impl.JumpOnConditionDefinitions8
 org.bread_experts_group.computer.ia32.instruction.impl.LoadFarPointerFromMemoryDefinitions

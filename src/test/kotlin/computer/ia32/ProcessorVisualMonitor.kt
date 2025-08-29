@@ -3,7 +3,7 @@ package org.bread_experts_group.computer.ia32
 import org.bread_experts_group.computer.BinaryUtil.shr
 import org.bread_experts_group.computer.Computer
 import org.bread_experts_group.computer.ia32.bios.StandardBIOS
-import org.bread_experts_group.computer.ia32.bios.h10.TeletypeOutput
+import org.bread_experts_group.computer.ia32.bios.TeletypeOutput
 import org.bread_experts_group.getResource
 import java.awt.Color
 import java.awt.Dimension
@@ -12,6 +12,7 @@ import java.awt.Graphics
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
+import kotlin.io.path.inputStream
 
 
 class ProcessorVisualMonitor(computer: Computer) : JFrame() {
@@ -24,7 +25,7 @@ class ProcessorVisualMonitor(computer: Computer) : JFrame() {
 
 		val vgaFont = Font.createFont(
 			Font.TRUETYPE_FONT,
-			getResource("/px437_ibm_vga_9_14.ttf").toURL().openStream()
+			getResource("/px437_ibm_vga_9_14.ttf").inputStream()
 		).deriveFont(17f)
 		val dummy = JLabel("W")
 		dummy.font = vgaFont

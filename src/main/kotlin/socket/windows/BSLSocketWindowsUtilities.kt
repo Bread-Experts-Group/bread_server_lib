@@ -4,6 +4,8 @@ import org.bread_experts_group.channel.array
 import org.bread_experts_group.coder.Flaggable.Companion.from
 import org.bread_experts_group.coder.Flaggable.Companion.raw
 import org.bread_experts_group.coder.Mappable.Companion.id
+import org.bread_experts_group.ffi.WindowsGUID
+import org.bread_experts_group.ffi.makeWord
 import org.bread_experts_group.socket.AddressNotAvailableException
 import org.bread_experts_group.socket.NoSocketAvailableException
 import org.bread_experts_group.socket.SocketAccessDeniedException

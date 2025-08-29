@@ -6,6 +6,8 @@ import org.bread_experts_group.computer.BinaryUtil.hex
 import org.bread_experts_group.computer.BinaryUtil.read16
 import org.bread_experts_group.computer.BinaryUtil.read32
 import org.bread_experts_group.computer.ia32.IA32Processor
+import java.nio.ByteBuffer
+import java.nio.channels.SeekableByteChannel
 import kotlin.math.abs
 import kotlin.reflect.KMutableProperty0
 
@@ -443,14 +445,15 @@ class DecodingUtil(private val processor: IA32Processor) {
 		)
 	}
 
-	fun loadFloppyIntoMemory(n: Int, start: ULong, end: ULong, memoryStart: ULong) {
-		processor.computer.floppyURLs[n]!!.openStream().use {
-			it.skip(start.toLong())
-			this.processor.logger.warning("BIOS FP CPY ${hex(start)} -> ${hex(end)} @ ${hex(memoryStart)}")
-			for (offset in memoryStart..memoryStart + (end - start)) {
+	fun loadFloppyIntoMemory(n: SeekableByteChannel, start: ULong, end: ULong, memoryStart: ULong) {
+		n.position(start.toLong())
+		this.processor.logger.warning("BIOS FP CPY ${hex(start)} -> ${hex(end)} @ ${hex(memoryStart)}")
+		val data = ByteBuffer.allocate((end - start).toInt() + 1)
+		n.read(data)
+		data.clear()
+		for (offset in memoryStart..memoryStart + (end - start)) {
 //			 TODO Send in chunks
-				this.processor.computer.setMemoryAt(offset, it.read().toUByte())
-			}
+			this.processor.computer.setMemoryAt(offset, data.get().toUByte())
 		}
 	}
 

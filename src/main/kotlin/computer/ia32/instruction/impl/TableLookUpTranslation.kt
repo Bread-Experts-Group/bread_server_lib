@@ -9,7 +9,8 @@ class TableLookUpTranslation : Instruction(0xD7u, "xlat") {
 	override fun handle(processor: IA32Processor) {
 		processor.a.tl = processor.computer.getMemoryAt(
 			when (processor.operandSize) {
-				AddressingLength.R32 -> (processor.segment ?: processor.ds).offset(processor.b.x) + processor.a.l
+				AddressingLength.R32 -> (processor.segment ?: processor.ds).offset(processor.b.ex) + processor.a.l
+				AddressingLength.R16 -> (processor.segment ?: processor.ds).offset(processor.b.x) + processor.a.l
 				else -> throw UnsupportedOperationException()
 			}
 		)

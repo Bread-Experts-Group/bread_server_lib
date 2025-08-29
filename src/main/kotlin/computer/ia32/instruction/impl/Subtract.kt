@@ -95,7 +95,7 @@ class Subtract : InstructionCluster {
 		}
 	}
 
-	class TwoOperand8BitIncrement(
+	class TwoOperand8BitDecrement(
 		opcode: UInt,
 		val d: () -> String,
 		val dc: Input1<UByte>
@@ -111,7 +111,7 @@ class Subtract : InstructionCluster {
 		}
 	}
 
-	class TwoOperandIncrement(
+	class TwoOperandDecrement(
 		opcode: UInt,
 		val d16: () -> String,
 		val dc16: Input1<UShort>,
@@ -175,42 +175,42 @@ class Subtract : InstructionCluster {
 			d16AXImm(processor), dc16AXImm(processor),
 			d32EAXImm(processor), dc32EAXImm(processor)
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x48u,
 			d16O(processor, "ax"), dc16O(processor, processor.a::tx),
 			d32O(processor, "eax"), dc32O(processor, processor.a::tex),
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x49u,
 			d16O(processor, "cx"), dc16O(processor, processor.c::tx),
 			d32O(processor, "ecx"), dc32O(processor, processor.c::tex),
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x4Au,
 			d16O(processor, "dx"), dc16O(processor, processor.d::tx),
 			d32O(processor, "edx"), dc32O(processor, processor.d::tex),
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x4Bu,
 			d16O(processor, "bx"), dc16O(processor, processor.b::tx),
 			d32O(processor, "ebx"), dc32O(processor, processor.b::tex),
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x4Cu,
 			d16O(processor, "sp"), dc16O(processor, processor.sp::tx),
 			d32O(processor, "esp"), dc32O(processor, processor.sp::tex),
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x4Du,
 			d16O(processor, "bp"), dc16O(processor, processor.bp::tx),
 			d32O(processor, "ebp"), dc32O(processor, processor.bp::tex),
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x4Eu,
 			d16O(processor, "si"), dc16O(processor, processor.si::tx),
 			d32O(processor, "esi"), dc32O(processor, processor.si::tex),
 		),
-		TwoOperandIncrement(
+		TwoOperandDecrement(
 			0x4Fu,
 			d16O(processor, "di"), dc16O(processor, processor.di::tx),
 			d32O(processor, "edi"), dc32O(processor, processor.di::tex),

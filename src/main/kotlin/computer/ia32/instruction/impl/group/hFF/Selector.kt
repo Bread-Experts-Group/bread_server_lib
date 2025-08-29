@@ -18,7 +18,7 @@ class Selector : InstructionSelector(0xFFu) {
 	override val instructions: Map<UInt, Instruction> by lazy {
 		mapOf(
 			0u to Add.TwoOperandIncrement(0u, d16M(processor), dc16M(processor), d32M(processor), dc32M(processor)),
-			1u to Subtract.TwoOperandIncrement(
+			1u to Subtract.TwoOperandDecrement(
 				0u,
 				d16M(processor),
 				dc16M(processor),

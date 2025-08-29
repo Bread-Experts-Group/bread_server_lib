@@ -2,6 +2,7 @@ org.bread_experts_group.computer.ia32.instruction.impl.CallFarProcedureInOperand
 org.bread_experts_group.computer.ia32.instruction.impl.CallProcedureOperandLengthImmediateDisplacement
 org.bread_experts_group.computer.ia32.instruction.impl.FarJump
 org.bread_experts_group.computer.ia32.instruction.impl.FarReturn
+org.bread_experts_group.computer.ia32.instruction.impl.FarReturnRMF
 org.bread_experts_group.computer.ia32.instruction.impl.HaltProcessor
 org.bread_experts_group.computer.ia32.instruction.impl.InterruptReturn
 org.bread_experts_group.computer.ia32.instruction.impl.LoadEffectiveAddress

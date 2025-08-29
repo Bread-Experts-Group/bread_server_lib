@@ -1,5 +1,7 @@
 package org.bread_experts_group.socket
 
+import org.bread_experts_group.ffi.OperatingSystemException
+
 /**
  * An error involving the internals of a socket has failed, such as the kernel returning an invalid parameter error.
  * @author Miko Elbrecht
