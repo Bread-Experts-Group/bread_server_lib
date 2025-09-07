@@ -1,0 +1,43 @@
+package org.bread_experts_group.api.graphics.windows.window
+
+import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.FeatureImplementationSource
+import org.bread_experts_group.api.graphics.GraphicsFeatures
+import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
+import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowFeature
+import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowTemplate
+import org.bread_experts_group.ffi.windows.*
+import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
+
+class WindowsGraphicsWindowFeature : GraphicsWindowFeature() {
+	override val source: FeatureImplementationSource = FeatureImplementationSource.SYSTEM_NATIVE
+	override val expresses: FeatureExpression<GraphicsWindowFeature> = GraphicsFeatures.WINDOW
+	override fun supported(): Boolean = Arena.ofConfined().use { arena ->
+		val station = nativeOpenWindowStationW.invokeExact(
+			stringToPCWSTR(arena, "WinSta0"),
+			false,
+			WindowStationAccessRights.READ_CONTROL.position.toInt()
+		) as MemorySegment
+		if (station == MemorySegment.NULL) return false
+		val savedStation = nativeGetProcessWindowStation.invokeExact() as MemorySegment
+		val setStationCheck = nativeSetProcessWindowStation.invokeExact(station) as Boolean
+		if (!setStationCheck) return false
+		val stationDesktop = nativeOpenDesktopW.invokeExact(
+			stringToPCWSTR(arena, "Default"),
+			0,
+			false,
+			WindowStationAccessRights.READ_CONTROL.position.toInt()
+		) as MemorySegment
+		nativeSetProcessWindowStation.invokeExact(savedStation) as Boolean
+		val stationDesktopOK = stationDesktop != MemorySegment.NULL
+		nativeCloseWindowStation.invokeExact(station) as Boolean
+		nativeCloseDesktop.invokeExact(stationDesktop) as Boolean
+		return stationDesktopOK
+	}
+
+	override fun createTemplate(): GraphicsWindowTemplate = WindowsGraphicsWindowTemplate()
+	override fun createWindow(template: GraphicsWindowTemplate): GraphicsWindow = WindowsGraphicsWindow(
+		template as WindowsGraphicsWindowTemplate
+	)
+}

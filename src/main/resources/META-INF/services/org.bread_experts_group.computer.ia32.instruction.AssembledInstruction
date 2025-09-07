@@ -1,4 +1,0 @@
-org.bread_experts_group.computer.ia32.instruction.impl.HaltProcessor
-org.bread_experts_group.computer.ia32.instruction.impl.group.hC7.MoveImmediateToModRM
-org.bread_experts_group.computer.ia32.instruction.impl.group.hFF.IncrementModRM
-org.bread_experts_group.computer.ia32.instruction.impl.FireSoftwareInterrupt

@@ -1,9 +1,9 @@
 package org.bread_experts_group.protocol.ip.v4
 
+import org.bread_experts_group.api.computer.BinaryUtil.shr
 import org.bread_experts_group.coder.Flaggable.Companion.from
 import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.MappedEnumeration
-import org.bread_experts_group.computer.BinaryUtil.shr
 import org.bread_experts_group.io.*
 import org.bread_experts_group.protocol.ip.InternetProtocol
 import java.net.Inet4Address

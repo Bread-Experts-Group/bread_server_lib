@@ -1,0 +1,20 @@
+package org.bread_experts_group.api.computer.mos6502.instruction.impl
+
+import org.bread_experts_group.api.computer.mos6502.MOS6502Processor
+import org.bread_experts_group.api.computer.mos6502.instruction.Instruction
+import org.bread_experts_group.api.computer.mos6502.register.StatusRegister
+import org.bread_experts_group.hex
+
+object BranchIfMinus : Instruction(0x30u, "bmi") {
+	override fun handle(processor: MOS6502Processor, disassembly: StringBuilder) {
+		val flag = processor.status.getFlag(StatusRegister.FlagType.NEGATIVE)
+		val pc = processor.pc
+		if (flag) {
+			disassembly.append(" ${hex(processor.pc.value)} -> ")
+			pc.value =
+				((pc.value.toInt() + 2) + processor.computer.getMemoryAt(pc.value.toULong()).toByte()).toUShort()
+			disassembly.append(hex(processor.pc.value))
+		}
+		disassembly.append(" (bmi)")
+	}
+}
