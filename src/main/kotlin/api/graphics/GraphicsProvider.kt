@@ -28,8 +28,10 @@ object GraphicsProvider : FeatureProvider<GFI> {
 				true
 			}
 		}
-		val found = (if (allowEmulated) features.firstOrNull()
-		else features.firstOrNull { it.source != FeatureImplementationSource.JVM_EMULATED }) ?: return null
+		val found = features.firstOrNull {
+			it.expresses == feature &&
+					(if (allowEmulated) true else it.source != FeatureImplementationSource.JVM_EMULATED)
+		} ?: return null
 		supportedFeatures.getOrPut(feature) { mutableListOf() }.add(found)
 		@Suppress("UNCHECKED_CAST")
 		return found as I

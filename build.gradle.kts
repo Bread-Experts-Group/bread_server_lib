@@ -37,59 +37,59 @@ tasks.register<Jar>("dokkaJavadocJar") {
 	from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
 	archiveClassifier.set("javadoc")
 }
-val localProperties: Properties = Properties().apply {
-	rootProject.file("local.properties").reader().use(::load)
-}
-publishing {
-	publications {
-		create<MavenPublication>("mavenKotlin") {
-			artifactId = "$artifactId-code"
-			from(components["kotlin"])
-			artifact(tasks.kotlinSourcesJar)
-			artifact(tasks["dokkaJavadocJar"])
-			pom {
-				name = "Bread Server Library"
-				description = "Distribution of software for Bread Experts Group operated servers."
-				url = "https://breadexperts.group"
-				signing {
-					sign(publishing.publications["mavenKotlin"])
-					sign(configurations.archives.get())
-				}
-				licenses {
-					license {
-						name = "GNU General Public License v3.0"
-						url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
-					}
-				}
-				developers {
-					developer {
-						id = "mikoe"
-						name = "Miko Elbrecht"
-						email = "miko@breadexperts.group"
-					}
-				}
-				scm {
-					connection = "scm:git:git://github.com/Bread-Experts-Group/bread_server_lib.git"
-					developerConnection = "scm:git:ssh://git@github.com:Bread-Experts-Group/maven_micro_server.git"
-					url = "https://breadexperts.group"
-				}
-			}
-		}
-	}
-	repositories {
-		maven {
-			url = uri("https://maven.breadexperts.group/")
-			credentials {
-				username = localProperties["mavenUser"] as String
-				password = localProperties["mavenPassword"] as String
-			}
-		}
-	}
-}
-signing {
-	useGpgCmd()
-	sign(publishing.publications["mavenKotlin"])
-}
+//val localProperties: Properties = Properties().apply {
+//	rootProject.file("local.properties").reader().use(::load)
+//}
+//publishing {
+//	publications {
+//		create<MavenPublication>("mavenKotlin") {
+//			artifactId = "$artifactId-code"
+//			from(components["kotlin"])
+//			artifact(tasks.kotlinSourcesJar)
+//			artifact(tasks["dokkaJavadocJar"])
+//			pom {
+//				name = "Bread Server Library"
+//				description = "Distribution of software for Bread Experts Group operated servers."
+//				url = "https://breadexperts.group"
+//				signing {
+//					sign(publishing.publications["mavenKotlin"])
+//					sign(configurations.archives.get())
+//				}
+//				licenses {
+//					license {
+//						name = "GNU General Public License v3.0"
+//						url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
+//					}
+//				}
+//				developers {
+//					developer {
+//						id = "mikoe"
+//						name = "Miko Elbrecht"
+//						email = "miko@breadexperts.group"
+//					}
+//				}
+//				scm {
+//					connection = "scm:git:git://github.com/Bread-Experts-Group/bread_server_lib.git"
+//					developerConnection = "scm:git:ssh://git@github.com:Bread-Experts-Group/maven_micro_server.git"
+//					url = "https://breadexperts.group"
+//				}
+//			}
+//		}
+//	}
+//	repositories {
+//		maven {
+//			url = uri("https://maven.breadexperts.group/")
+//			credentials {
+//				username = localProperties["mavenUser"] as String
+//				password = localProperties["mavenPassword"] as String
+//			}
+//		}
+//	}
+//}
+//signing {
+//	useGpgCmd()
+//	sign(publishing.publications["mavenKotlin"])
+//}
 tasks.javadoc {
 	if (JavaVersion.current().isJava9Compatible) {
 		(options as StandardJavadocDocletOptions).addBooleanOption("html5", true)

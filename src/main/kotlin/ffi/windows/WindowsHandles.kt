@@ -89,3 +89,9 @@ val nativeDefWindowProcW: MethodHandle = user32Lookup.getDowncall(
 	ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG,
 	ValueLayout.JAVA_LONG
 )
+
+val nativeSendMessageW: MethodHandle = user32Lookup.getDowncall(
+	linker, "SendMessageW", ValueLayout.JAVA_INT,
+	ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG,
+	ValueLayout.JAVA_LONG
+)

@@ -44,7 +44,7 @@ fun stringToPCWSTR(arena: Arena, string: String): MemorySegment {
 fun wPCWSTRToString(from: MemorySegment): String {
 	var filePath = ""
 	var offset = 0L
-	while (true) {
+	while (offset < from.byteSize()) {
 		val next = from.get(ValueLayout.JAVA_SHORT, offset).toUShort()
 		if (next == UShort.MIN_VALUE) break
 		offset += 2
