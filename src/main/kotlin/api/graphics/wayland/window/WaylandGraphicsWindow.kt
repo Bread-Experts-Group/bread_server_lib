@@ -5,6 +5,13 @@ import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindo
 
 class WaylandGraphicsWindow(template: WaylandGraphicsWindowTemplate) : GraphicsWindow() {
 	override val features: Set<GraphicsWindowFeatureImplementation<*>> = TODO()
+	override fun open() {
+		TODO("Not yet implemented")
+	}
+
+	override fun close() {
+		TODO("Not yet implemented")
+	}
 
 	init {
 		println("I haven't coded this part yet, but I know you're using wayland")

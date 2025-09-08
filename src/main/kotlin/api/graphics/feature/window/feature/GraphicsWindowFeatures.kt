@@ -4,4 +4,5 @@ import org.bread_experts_group.api.FeatureExpression
 
 object GraphicsWindowFeatures {
 	val WINDOW_NAME = object : FeatureExpression<GraphicsWindowNameFeature> {}
+	val OPENGL_CONTEXT = object : FeatureExpression<GraphicsWindowOpenGLContextFeature> {}
 }

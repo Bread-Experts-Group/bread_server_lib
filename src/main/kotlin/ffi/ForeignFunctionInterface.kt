@@ -47,7 +47,7 @@ fun SymbolLookup.getAddress(name: String): MemorySegment {
 }
 
 fun MemorySegment.getDowncall(linker: Linker, vararg layouts: ValueLayout): MethodHandle {
-	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1..layouts.size - 1))
+	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1..<layouts.size))
 	return linker.downcallHandle(this, descriptor)
 }
 
@@ -57,7 +57,7 @@ fun MemorySegment.getDowncallVoid(linker: Linker, vararg layouts: ValueLayout): 
 }
 
 fun SymbolLookup.getDowncall(linker: Linker, name: String, vararg layouts: ValueLayout): MethodHandle {
-	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1..layouts.size - 1))
+	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1..<layouts.size))
 	return linker.downcallHandle(this.getAddress(name), descriptor)
 }
 

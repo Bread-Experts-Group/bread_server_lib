@@ -1,33 +1,47 @@
 package org.bread_experts_group.api.graphics.windows.window
 
-import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.FeatureImplementationSource
-import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowFeatures
+import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowNameFeature
+import org.bread_experts_group.ffi.windows.WindowsMessageTypes
 import org.bread_experts_group.ffi.windows.stringToPCWSTR
 import org.bread_experts_group.ffi.windows.wPCWSTRToString
 import java.lang.foreign.Arena
 
-class WindowsGraphicsWindowNameFeature(private val window: WindowsGraphicsWindow) : GraphicsWindowNameFeature() {
-	override val expresses: FeatureExpression<GraphicsWindowNameFeature> = GraphicsWindowFeatures.WINDOW_NAME
+class WindowsGraphicsWindowNameFeature(private val window: WindowsGraphicsWindow) : GraphicsWindowNameFeature(),
+	PreInitializableClosable {
 	override val source: FeatureImplementationSource = FeatureImplementationSource.SYSTEM_NATIVE
+
+	private var internalName: String? = "BSL Window"
+
+	override fun open() {
+		internalName = null
+	}
+
+	override fun close() {}
 
 	override var name: String
 		get() {
-			Arena.ofConfined().use { arena ->
-				val buffer = arena.allocate(32767 * 2)
+			return internalName ?: Arena.ofConfined().use { arena ->
+				val textLength = window.sendMessage(
+					WindowsMessageTypes.WM_GETTEXTLENGTH,
+					0,
+					0
+				) + 1L
+				val buffer = arena.allocate(textLength * 2)
 				window.sendMessage(
-					0x000D, // WM_GETTEXT
-					32767,
+					WindowsMessageTypes.WM_GETTEXT,
+					textLength,
 					buffer.address()
 				)
-				return wPCWSTRToString(buffer)
+				wPCWSTRToString(buffer)
 			}
 		}
 		set(value) {
-			Arena.ofConfined().use { arena ->
+			if (internalName != null) internalName = value
+			else Arena.ofConfined().use { arena ->
 				window.sendMessage(
-					0x000C, // WM_SETTEXT
+					WindowsMessageTypes.WM_SETTEXT,
 					0,
 					stringToPCWSTR(arena, value).address()
 				)

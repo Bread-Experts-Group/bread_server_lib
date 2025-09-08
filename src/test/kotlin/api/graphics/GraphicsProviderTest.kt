@@ -17,12 +17,12 @@ class GraphicsProviderTest {
 		val template = windowing.createTemplate()
 		val window = windowing.createWindow(template)
 		val windowName = window.get(GraphicsWindowFeatures.WINDOW_NAME)
-		if (windowName != null) {
-			logger.info(windowName.name)
-			windowName.name = "kohaku no mae!"
-			logger.info(windowName.name)
-		}
-		logger.info(window.toString())
+		windowName?.name = "Hello World"
+		window.get(GraphicsWindowFeatures.OPENGL_CONTEXT)?.use = true
+		assert(windowName?.name == "Hello World")
+		window.open()
+		assert(windowName?.name == "Hello World")
+		window.get(GraphicsWindowFeatures.OPENGL_CONTEXT)
 		Thread.sleep(90000)
 	}
 }

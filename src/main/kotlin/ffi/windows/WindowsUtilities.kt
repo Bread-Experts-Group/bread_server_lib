@@ -1,9 +1,10 @@
 package org.bread_experts_group.ffi.windows
 
-import org.bread_experts_group.ffi.COMException
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+
+fun makeWord(highByte: UByte, lowByte: UByte): UShort = (highByte.toInt() shl 8 or lowByte.toInt()).toUShort()
 
 fun decodeCOMError(arena: Arena, err: Int) {
 	if (err != 0) {
@@ -34,23 +35,30 @@ fun decodeCOMError(arena: Arena, err: Int) {
 
 fun decodeLastError(arena: Arena) = decodeCOMError(arena, nativeGetLastError.invokeExact() as Int)
 
+fun stringToPCSTR(arena: Arena, string: String): MemorySegment {
+	val encoded = string.toByteArray(Charsets.US_ASCII)
+	val allocated = arena.allocate(encoded.size + 1L)
+	encoded.forEachIndexed { i, b -> allocated.set(ValueLayout.JAVA_BYTE, i.toLong(), b) }
+	return allocated
+}
+
 fun stringToPCWSTR(arena: Arena, string: String): MemorySegment {
 	val encoded = string.toByteArray(Charsets.UTF_16LE)
-	val pathAllocated = arena.allocate(encoded.size + 2L)
-	encoded.forEachIndexed { i, b -> pathAllocated.set(ValueLayout.JAVA_BYTE, i.toLong(), b) }
-	return pathAllocated
+	val allocated = arena.allocate(encoded.size + 2L)
+	encoded.forEachIndexed { i, b -> allocated.set(ValueLayout.JAVA_BYTE, i.toLong(), b) }
+	return allocated
 }
 
 fun wPCWSTRToString(from: MemorySegment): String {
-	var filePath = ""
+	var concatenated = ""
 	var offset = 0L
 	while (offset < from.byteSize()) {
 		val next = from.get(ValueLayout.JAVA_SHORT, offset).toUShort()
 		if (next == UShort.MIN_VALUE) break
 		offset += 2
-		filePath += Char(next)
+		concatenated += Char(next)
 	}
-	return filePath
+	return concatenated
 }
 
 fun segmentToGUID(s: MemorySegment, offset: Long): WindowsGUID = WindowsGUID(

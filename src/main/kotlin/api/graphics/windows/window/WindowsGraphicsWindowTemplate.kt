@@ -14,10 +14,12 @@ class WindowsGraphicsWindowTemplate : GraphicsWindowTemplate() {
 	private val arena: Arena = Arena.ofConfined()
 	private val linker: Linker = Linker.nativeLinker()
 	val classAtom: Short
+	val windows: MutableMap<MemorySegment, (MemorySegment, Int, Long, Long) -> Int> = mutableMapOf()
 
 	@Suppress("unused")
 	fun wndProc(hWnd: MemorySegment, message: Int, wParam: Long, lParam: Long): Int {
-		return nativeDefWindowProcW.invokeExact(hWnd, message, wParam, lParam) as Int
+		val proc = windows[hWnd] ?: return nativeDefWindowProcW.invokeExact(hWnd, message, wParam, lParam) as Int
+		return proc(hWnd, message, wParam, lParam)
 	}
 
 	init {
