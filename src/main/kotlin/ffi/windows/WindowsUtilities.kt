@@ -42,6 +42,17 @@ fun stringToPCSTR(arena: Arena, string: String): MemorySegment {
 	return allocated
 }
 
+fun wPCSTRToString(from: MemorySegment): String {
+	var concatenated = ""
+	var offset = 0L
+	while (offset < from.byteSize()) {
+		val next = from.get(ValueLayout.JAVA_BYTE, offset++).toUShort()
+		if (next == UShort.MIN_VALUE) break
+		concatenated += Char(next)
+	}
+	return concatenated
+}
+
 fun stringToPCWSTR(arena: Arena, string: String): MemorySegment {
 	val encoded = string.toByteArray(Charsets.UTF_16LE)
 	val allocated = arena.allocate(encoded.size + 2L)
