@@ -13,8 +13,13 @@ abstract class IOLayout<O> {
 		)
 
 		val UNSIGNED_BYTE: PrimitiveIOLayout<UByte> = PrimitiveIOLayout(
-			{ r -> r.u8() },
-			{ w, i -> TODO("W") }
+			{ r ->
+				this.name?.let { r.enter(it) }
+				val v = r.u8()
+				this.name?.let { r.exit() }
+				v
+			},
+			{ w, i -> w.u8(i) }
 		)
 
 		val CHAR: PrimitiveIOLayout<Char> = PrimitiveIOLayout(
@@ -23,13 +28,23 @@ abstract class IOLayout<O> {
 		)
 
 		val UNSIGNED_SHORT: PrimitiveEndianIOLayout<UShort> = PrimitiveEndianIOLayout(
-			{ r -> r.u16() },
-			{ w, i -> TODO("W") }
+			{ r ->
+				this.name?.let { r.enter(it) }
+				val v = r.u16()
+				this.name?.let { r.exit() }
+				v
+			},
+			{ w, i -> w.u16(i) }
 		)
 
 		val UNSIGNED_INT: PrimitiveEndianIOLayout<UInt> = PrimitiveEndianIOLayout(
-			{ r -> r.u32() },
-			{ w, i -> TODO("W") }
+			{ r ->
+				this.name?.let { r.enter(it) }
+				val v = r.u32()
+				this.name?.let { r.exit() }
+				v
+			},
+			{ w, i -> w.u32(i) }
 		)
 
 		inline fun <reified E, T> enum(
@@ -43,9 +58,12 @@ abstract class IOLayout<O> {
 
 	var considerInIO: Boolean = true
 	var passedUpwards: Boolean = false
+	var name: String? = null
 
 	abstract fun read(from: BaseReadingIO): O
 	abstract fun write(to: BaseWritingIO, of: O)
 	abstract fun padding(): IOLayout<O>
 	abstract fun passedUpwards(): IOLayout<O>
+	abstract fun withName(name: String): IOLayout<O>
+	abstract fun nullable(): IOLayout<O?>
 }

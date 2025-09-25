@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.graphics.feature.window.feature.opengl
 
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowOpenGLContextFeature
-import org.bread_experts_group.ffi.windows.wPCSTRToString
+import org.bread_experts_group.ffi.readString
 import java.lang.foreign.Arena
 import java.lang.foreign.ValueLayout
 
@@ -32,7 +32,7 @@ class OpenGLProgram(private val from: GraphicsWindowOpenGLContextFeature) : Auto
 		val infoLog = arena.allocate(infoLogLength.toLong())
 		from.glGetProgramInfoLog(handle, infoLogLength, length, infoLog)
 		from.glGetError().checkAndThrow()
-		wPCSTRToString(infoLog)
+		infoLog.readString(Charsets.US_ASCII)
 	}
 
 	override fun close() {

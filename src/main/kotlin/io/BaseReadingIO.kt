@@ -11,4 +11,6 @@ interface BaseReadingIO {
 	fun u16(): UShort
 	fun u8(): UByte
 	fun invalidateData()
+	fun enter(name: Any)
+	fun exit()
 }

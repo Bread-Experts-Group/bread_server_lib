@@ -51,6 +51,8 @@ val wsaData: WSAData
 		}
 		return wsaDataReal!!
 	}
+
+@OptIn(ExperimentalUnsignedTypes::class)
 val wsaProtocols: WSAProtocolManagedList by lazy {
 	wsaData
 	val arena = Arena.ofConfined()
@@ -87,8 +89,8 @@ val wsaProtocols: WSAProtocolManagedList by lazy {
 			buffer.int.toUInt(),
 			buffer.short.toUShort(),
 			buffer.short.toUShort(),
-			buffer.array(2),
-			buffer.array(6)
+			buffer.array(2).toUByteArray(),
+			buffer.array(6).toUByteArray()
 		)
 		val catalogID = buffer.int
 		val protocolLen = buffer.int

@@ -1,8 +1,8 @@
 package org.bread_experts_group.api.graphics.feature.window.feature.opengl
 
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowOpenGLContextFeature
+import org.bread_experts_group.ffi.readString
 import org.bread_experts_group.ffi.windows.stringToPCSTR
-import org.bread_experts_group.ffi.windows.wPCSTRToString
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -12,7 +12,10 @@ class OpenGLShader(private val from: GraphicsWindowOpenGLContextFeature, type: O
 	var source = arrayOf<String>()
 
 	fun compile() = Arena.ofConfined().use { arena ->
-		val sourceArray = arena.allocateArray(ValueLayout.ADDRESS, source.size.toLong())
+		val sourceArray = arena.allocate(
+			ValueLayout.ADDRESS,
+			source.size.toLong()
+		)
 		source.forEachIndexed { i, source ->
 			sourceArray.set(ValueLayout.ADDRESS, i.toLong(), stringToPCSTR(arena, source))
 		}
@@ -38,7 +41,7 @@ class OpenGLShader(private val from: GraphicsWindowOpenGLContextFeature, type: O
 		val infoLog = arena.allocate(infoLogLength.toLong())
 		from.glGetShaderInfoLog(handle, infoLogLength, length, infoLog)
 		from.glGetError().checkAndThrow()
-		wPCSTRToString(infoLog)
+		infoLog.readString(Charsets.US_ASCII)
 	}
 
 	override fun close() {

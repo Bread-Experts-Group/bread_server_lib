@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.vfs.windows
 
 import org.bread_experts_group.api.vfs.*
+import org.bread_experts_group.ffi.readString
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandles
@@ -16,7 +17,7 @@ private typealias EnumSession = Pair<Iterator<Pair<String, VirtualEntry>>, Memor
 class ProjFSWindows : VirtualFileSystemProvider(arrayOf("Windows 11")) {
 	private val arena: Arena = Arena.ofAuto()
 	private val linker: Linker = Linker.nativeLinker()
-	private val virtualizationInstanceID: MemorySegment = arena.allocate(win32GUID)
+	private val virtualizationInstanceID: MemorySegment = arena.allocate(GUID)
 	private val namespaceVirtualizationContext: MemorySegment = arena.allocate(ValueLayout.ADDRESS)
 
 	init {
@@ -58,15 +59,17 @@ class ProjFSWindows : VirtualFileSystemProvider(arrayOf("Windows 11")) {
 		return 0
 	}
 
+	@OptIn(ExperimentalUnsignedTypes::class)
 	private fun upcPRJaENDaDIRECTORYaENUMERATIONaCB(
 		callbackData: MemorySegment,
 		enumerationGUID: MemorySegment
 	): Int {
-		val enumeration = segmentToGUID(enumerationGUID.reinterpret(win32GUID.byteSize()), 0)
+		val enumeration = segmentToGUID(enumerationGUID.reinterpret(GUID.byteSize()), 0)
 		enumerations.remove(enumeration)
 		return 0
 	}
 
+	@OptIn(ExperimentalUnsignedTypes::class)
 	private fun upcPRJaGETaDIRECTORYaENUMERATIONaCB(
 		callbackData: MemorySegment,
 		enumerationGUID: MemorySegment,
@@ -77,10 +80,10 @@ class ProjFSWindows : VirtualFileSystemProvider(arrayOf("Windows 11")) {
 		val filePathName = (prjCallbackDataFilePathName.get(callbackData) as MemorySegment)
 			.reinterpret(Long.MAX_VALUE)
 		val flags = prjCallbackDataFlags.get(callbackData) as Int
-		val enumeration = segmentToGUID(enumerationGUID.reinterpret(win32GUID.byteSize()), 0)
+		val enumeration = segmentToGUID(enumerationGUID.reinterpret(GUID.byteSize()), 0)
 		if (flags and 1 == 1 || !enumerations.containsKey(enumeration)) {
 			val enumerated = enumerateDirectory(
-				DirectoryEnumerationContext(Path(wPCWSTRToString(filePathName)))
+				DirectoryEnumerationContext(Path(filePathName.readString(Charsets.UTF_16LE)))
 			).iterator()
 			enumerations[enumeration] = enumerated to if (searchExpression != MemorySegment.NULL)
 				searchExpression.reinterpret(Long.MAX_VALUE)
@@ -116,7 +119,7 @@ class ProjFSWindows : VirtualFileSystemProvider(arrayOf("Windows 11")) {
 		val filePathName = (prjCallbackDataFilePathName.get(callbackData) as MemorySegment)
 			.reinterpret(Long.MAX_VALUE)
 		val entry = placeholderInformation(
-			PlaceholderInformationContext(Path(wPCWSTRToString(filePathName)))
+			PlaceholderInformationContext(Path(filePathName.readString(Charsets.UTF_16LE))),
 		) ?: return win32ToHResult(2)
 		val placeholder = arena.allocate(prjPlaceholderInfo)
 		val basic = prjPlaceholderInfoFileBasicInfo.invokeExact(placeholder) as MemorySegment
@@ -142,7 +145,7 @@ class ProjFSWindows : VirtualFileSystemProvider(arrayOf("Windows 11")) {
 			.reinterpret(Long.MAX_VALUE)
 		val dataStreamID = prjCallbackDataDataStreamID.invokeExact(callbackData) as MemorySegment
 		val buffer = fileData(
-			FileDataContext(Path(wPCWSTRToString(filePathName)), byteOffset.toULong(), length.toUInt())
+			FileDataContext(Path(filePathName.readString(Charsets.UTF_16LE)), byteOffset.toULong(), length.toUInt())
 		) ?: return 0
 		val remaining = buffer.remaining()
 		if (remaining == 0) return 0
@@ -304,7 +307,7 @@ class ProjFSWindows : VirtualFileSystemProvider(arrayOf("Windows 11")) {
 				arena
 			)
 		)
-		val mappings = arena.allocateArray(prjNotificationMapping, 1)
+		val mappings = arena.allocate(prjNotificationMapping, 1)
 		prjNotificationMappingNotificationBitMask.set(mappings, 0x00000000) // TODO: Notifications
 		prjNotificationMappingNotificationRoot.set(mappings, stringToPCWSTR(arena, ""))
 		val startVirtualizingOptions = arena.allocate(prjStartVirtualizingOptions)

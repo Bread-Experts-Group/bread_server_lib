@@ -23,5 +23,5 @@ enum class PNGDisposeOperation(
 	 */
 	APNG_DISPOSE_OP_PREVIOUS(2, "Dispose To Previous");
 
-	override fun stringForm(): String = stringForm()
+	override fun toString(): String = stringForm()
 }

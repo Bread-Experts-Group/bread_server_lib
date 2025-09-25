@@ -12,7 +12,16 @@ plugins {
 }
 
 group = "org.bread_experts_group"
-version = "4.2.0-exp2"
+version = "D0F0N0P0"
+// Bread Experts Group Versioning System, revision 1
+//                          Pertains to the ...
+// Dx ... Design x       //  entire architecture of the project, like usage of I/O in features/native
+// Fx ... Feature Set x  //  current feature set exposed by the project
+// Nx ... Native Set x   //  current native set supported by this current feature set
+//                       //   (native sets are any additions to the native OS/hardware support of the project)
+// Px ... Patch x        //  current code revision, like a fix or logic change
+// This system does not prescribe "safe" versions to update to, like that of major/minor/patch in semantic versioning
+// Check before updating or do not update at all
 
 repositories {
 	mavenCentral()
@@ -26,7 +35,7 @@ tasks.test {
 	maxHeapSize = "20G"
 }
 kotlin {
-	jvmToolchain(21)
+	jvmToolchain(24)
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
 		freeCompilerArgs.add("-Xannotations-in-metadata")
@@ -37,59 +46,59 @@ tasks.register<Jar>("dokkaJavadocJar") {
 	from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
 	archiveClassifier.set("javadoc")
 }
-//val localProperties: Properties = Properties().apply {
-//	rootProject.file("local.properties").reader().use(::load)
-//}
-//publishing {
-//	publications {
-//		create<MavenPublication>("mavenKotlin") {
-//			artifactId = "$artifactId-code"
-//			from(components["kotlin"])
-//			artifact(tasks.kotlinSourcesJar)
-//			artifact(tasks["dokkaJavadocJar"])
-//			pom {
-//				name = "Bread Server Library"
-//				description = "Distribution of software for Bread Experts Group operated servers."
-//				url = "https://breadexperts.group"
-//				signing {
-//					sign(publishing.publications["mavenKotlin"])
-//					sign(configurations.archives.get())
-//				}
-//				licenses {
-//					license {
-//						name = "GNU General Public License v3.0"
-//						url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
-//					}
-//				}
-//				developers {
-//					developer {
-//						id = "mikoe"
-//						name = "Miko Elbrecht"
-//						email = "miko@breadexperts.group"
-//					}
-//				}
-//				scm {
-//					connection = "scm:git:git://github.com/Bread-Experts-Group/bread_server_lib.git"
-//					developerConnection = "scm:git:ssh://git@github.com:Bread-Experts-Group/maven_micro_server.git"
-//					url = "https://breadexperts.group"
-//				}
-//			}
-//		}
-//	}
-//	repositories {
-//		maven {
-//			url = uri("https://maven.breadexperts.group/")
-//			credentials {
-//				username = localProperties["mavenUser"] as String
-//				password = localProperties["mavenPassword"] as String
-//			}
-//		}
-//	}
-//}
-//signing {
-//	useGpgCmd()
-//	sign(publishing.publications["mavenKotlin"])
-//}
+val localProperties: Properties = Properties().apply {
+	rootProject.file("local.properties").reader().use(::load)
+}
+publishing {
+	publications {
+		create<MavenPublication>("mavenKotlin") {
+			artifactId = "$artifactId-code"
+			from(components["kotlin"])
+			artifact(tasks.kotlinSourcesJar)
+			artifact(tasks["dokkaJavadocJar"])
+			pom {
+				name = "Bread Server Library"
+				description = "Distribution of software for Bread Experts Group operated servers."
+				url = "https://breadexperts.group"
+				signing {
+					sign(publishing.publications["mavenKotlin"])
+					sign(configurations.archives.get())
+				}
+				licenses {
+					license {
+						name = "GNU General Public License v3.0"
+						url = "https://www.gnu.org/licenses/gpl-3.0.en.html"
+					}
+				}
+				developers {
+					developer {
+						id = "mikoe"
+						name = "Miko Elbrecht"
+						email = "miko@breadexperts.group"
+					}
+				}
+				scm {
+					connection = "scm:git:git://github.com/Bread-Experts-Group/bread_server_lib.git"
+					developerConnection = "scm:git:ssh://git@github.com:Bread-Experts-Group/maven_micro_server.git"
+					url = "https://breadexperts.group"
+				}
+			}
+		}
+	}
+	repositories {
+		maven {
+			url = uri("https://maven.breadexperts.group/")
+			credentials {
+				username = localProperties["mavenUser"] as String
+				password = localProperties["mavenPassword"] as String
+			}
+		}
+	}
+}
+signing {
+	useGpgCmd()
+	sign(publishing.publications["mavenKotlin"])
+}
 tasks.javadoc {
 	if (JavaVersion.current().isJava9Compatible) {
 		(options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
@@ -119,12 +128,19 @@ object BuildInfo {
 	}
 }
 
-sourceSets["main"].kotlin.srcDir(generatedDir)
+sourceSets {
+	main {
+		kotlin.srcDirs("src/main/kotlin", generatedDir)
+		// DO NOT redefine java.srcDirs unless you have a special case
+	}
+}
+
 tasks.dokkaGeneratePublicationJavadoc { dependsOn(generateBuildInfo) }
 tasks.kotlinSourcesJar {
 	dependsOn(generateBuildInfo)
-	dependsOn(tasks.compileJava)
+
 }
 tasks.compileKotlin {
 	dependsOn(generateBuildInfo)
+
 }

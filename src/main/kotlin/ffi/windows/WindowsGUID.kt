@@ -1,12 +1,28 @@
 package org.bread_experts_group.ffi.windows
 
+import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
+import java.lang.foreign.ValueLayout
+
+@OptIn(ExperimentalUnsignedTypes::class)
 data class WindowsGUID(
 	val data1: UInt,
 	val data2: UShort,
 	val data3: UShort,
-	val data41: ByteArray,
-	val data42: ByteArray,
+	val data41: UByteArray,
+	val data42: UByteArray,
 ) {
+	fun allocate(arena: Arena): MemorySegment {
+		val newGUID = arena.allocate(GUID)
+		newGUID.set(ValueLayout.JAVA_INT, 0, data1.toInt())
+		newGUID.set(ValueLayout.JAVA_SHORT, 4, data2.toShort())
+		newGUID.set(ValueLayout.JAVA_SHORT, 6, data3.toShort())
+		(data41 + data42).toByteArray().forEachIndexed { i, b ->
+			newGUID.set(ValueLayout.JAVA_BYTE, 8L + i, b)
+		}
+		return newGUID
+	}
+
 	override fun toString(): String = '{' +
 			data1.toHexString(HexFormat.UpperCase) + '-' +
 			data2.toHexString(HexFormat.UpperCase) + '-' +

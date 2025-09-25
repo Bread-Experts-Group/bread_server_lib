@@ -4,6 +4,7 @@ import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
 import org.bread_experts_group.coder.MappedEnumeration
+import org.bread_experts_group.numeric.geometry.Matrix4F
 import java.lang.foreign.MemorySegment
 
 abstract class GraphicsWindowOpenGLContextFeature :
@@ -35,9 +36,11 @@ abstract class GraphicsWindowOpenGLContextFeature :
 	abstract fun glDeleteShader(shader: Int)
 	abstract fun glDeleteProgram(program: Int)
 	abstract fun glPolygonMode(face: OpenGLPolygonFace, mode: OpenGLPolygonMode)
+	abstract fun glGetUniformLocation(program: Int, name: String): Int
 	abstract fun glUniform(location: Int, v0: Int)
 	abstract fun glUniform(location: Int, v0: Int, v1: Int)
 	abstract fun glUniform(location: Int, v0: Float, v1: Float, v2: Float, v3: Float)
+	abstract fun glUniformMatrix(location: Int, count: Int, transpose: Boolean, value: Matrix4F)
 	abstract fun glGenTextures(n: Int, textures: MemorySegment)
 	abstract fun glBindTexture(target: OpenGLTextureTarget, texture: Int)
 	abstract fun glTexImage2D(
@@ -57,6 +60,13 @@ abstract class GraphicsWindowOpenGLContextFeature :
 		mode: OpenGLPrimitiveRenderMode,
 		count: Int, type: OpenGLDataType, indices: MemorySegment
 	)
+
+	abstract fun glEnable(cap: OpenGLCapability)
+	abstract fun glTexParameter(target: OpenGLTextureTarget, pName: OpenGLTextureParameter, param: Int)
+
+	abstract fun releaseContext()
+	abstract fun acquireContext()
+	abstract fun swapBuffers()
 
 	fun bGLCreateShader(type: OpenGLShaderType) = OpenGLShader(this, type)
 	fun bGLCreateProgram() = OpenGLProgram(this)

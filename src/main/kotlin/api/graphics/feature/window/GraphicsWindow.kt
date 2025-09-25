@@ -1,11 +1,11 @@
 package org.bread_experts_group.api.graphics.feature.window
 
 import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.FeatureImplementationSource
 import org.bread_experts_group.api.FeatureProvider
+import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowFeatureImplementation
-import kotlin.collections.firstOrNull
+import java.util.concurrent.Semaphore
 
 abstract class GraphicsWindow : FeatureProvider<GraphicsWindowFeatureImplementation<*>>, PreInitializableClosable {
 	abstract val features: Set<GraphicsWindowFeatureImplementation<*>>
@@ -15,9 +15,11 @@ abstract class GraphicsWindow : FeatureProvider<GraphicsWindowFeatureImplementat
 	): I? {
 		val found = features.firstOrNull {
 			it.expresses == feature &&
-					(if (allowEmulated) true else it.source != FeatureImplementationSource.JVM_EMULATED)
+					(if (allowEmulated) true else it.source != ImplementationSource.JVM_EMULATED)
 		} ?: return null
 		@Suppress("UNCHECKED_CAST")
 		return found as I
 	}
+
+	val processingLock: Semaphore = Semaphore(1)
 }

@@ -3,11 +3,12 @@ package org.bread_experts_group.io
 import kotlin.reflect.KFunction
 
 class SelectiveIOLayout<O>(
-	private val selectors: Map<KFunction<Boolean>, IOLayout<O>>,
+	private val selectors: Map<KFunction<Boolean>, IOLayout<out O>>,
+	private val writeAction: (BaseWritingIO, O) -> Unit,
 	private vararg val layouts: IOLayout<out Any?>
 ) : IOLayout<O>() {
+	val ioConsidered = layouts.filter { it.considerInIO }
 	private val readAction by lazy {
-		val ioConsidered = layouts.filter { it.considerInIO };
 		for ((selector, _) in selectors) {
 			if ((selector.parameters.size - ioConsidered.size) !in 0..1) throw IOReadException(
 				"Selector and IO parameters do not match " +
@@ -39,7 +40,9 @@ class SelectiveIOLayout<O>(
 	}
 
 	override fun read(from: BaseReadingIO): O = readAction(from)
-	override fun write(to: BaseWritingIO, of: O) = TODO("LAMBDA")
+	override fun write(to: BaseWritingIO, of: O) = writeAction(to, of)
 	override fun padding(): SequentialIOLayout<O> = TODO("RHO")
 	override fun passedUpwards(): SequentialIOLayout<O> = TODO("RHO")
+	override fun withName(name: String): SequentialIOLayout<O> = TODO("RHO")
+	override fun nullable(): IOLayout<O?> = TODO("RHO")
 }

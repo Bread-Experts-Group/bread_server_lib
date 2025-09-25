@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.vfs.windows
 
-import org.bread_experts_group.ffi.windows.win32GUID
+import org.bread_experts_group.ffi.windows.GUID
 import java.lang.foreign.MemoryLayout
 import java.lang.foreign.MemoryLayout.PathElement.groupElement
 import java.lang.foreign.StructLayout
@@ -32,8 +32,8 @@ val prjCallbackData: StructLayout = MemoryLayout.structLayout(
 	ValueLayout.JAVA_INT.withName("Flags"),
 	ValueLayout.ADDRESS.withName("NamespaceVirtualizationContext"),
 	ValueLayout.JAVA_INT.withName("CommandId"),
-	win32GUID.withName("FileId"),
-	win32GUID.withName("DataStreamId"),
+	GUID.withName("FileId"),
+	GUID.withName("DataStreamId"),
 	MemoryLayout.paddingLayout(4),
 	ValueLayout.ADDRESS.withName("FilePathName"),
 	ValueLayout.ADDRESS.withName("VersionInfo"),

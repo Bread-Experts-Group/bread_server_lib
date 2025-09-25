@@ -1,16 +1,16 @@
 package org.bread_experts_group.api.graphics.windows.window
 
-import org.bread_experts_group.api.FeatureImplementationSource
+import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowNameFeature
+import org.bread_experts_group.ffi.readString
 import org.bread_experts_group.ffi.windows.WindowsMessageTypes
 import org.bread_experts_group.ffi.windows.stringToPCWSTR
-import org.bread_experts_group.ffi.windows.wPCWSTRToString
 import java.lang.foreign.Arena
 
 class WindowsGraphicsWindowNameFeature(private val window: WindowsGraphicsWindow) : GraphicsWindowNameFeature(),
 	PreInitializableClosable {
-	override val source: FeatureImplementationSource = FeatureImplementationSource.SYSTEM_NATIVE
+	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 
 	private var internalName: String? = "BSL Window"
 
@@ -34,7 +34,7 @@ class WindowsGraphicsWindowNameFeature(private val window: WindowsGraphicsWindow
 					textLength,
 					buffer.address()
 				)
-				wPCWSTRToString(buffer)
+				buffer.readString(Charsets.UTF_16LE)
 			}
 		}
 		set(value) {

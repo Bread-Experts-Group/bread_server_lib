@@ -1,32 +1,33 @@
 package org.bread_experts_group.api.graphics.windows.window
 
-import org.bread_experts_group.api.FeatureImplementationSource
+import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowOpenGLContextFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
 import org.bread_experts_group.coder.Flaggable.Companion.raw
 import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.coder.MappedEnumeration
+import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.getDowncall
 import org.bread_experts_group.ffi.getDowncallVoid
 import org.bread_experts_group.ffi.windows.*
-import java.io.File
+import org.bread_experts_group.numeric.geometry.Matrix4F
 import java.lang.foreign.Arena
 import java.lang.foreign.Linker
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
-import javax.imageio.ImageIO
 
 class WindowsGraphicsWindowOpenGLContextFeature(
 	private val window: WindowsGraphicsWindow
 ) : GraphicsWindowOpenGLContextFeature() {
-	private val arena = Arena.ofShared()
-	override val source: FeatureImplementationSource = FeatureImplementationSource.SYSTEM_NATIVE
+	private val arena = Arena.ofAuto()
+	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	private lateinit var hglrc: MemorySegment
 	private val procedures: MutableMap<String, MethodHandle> = mutableMapOf()
 
 	private val linker = Linker.nativeLinker()
 	private val oglM = (nativeLoadLibraryExW.invokeExact(
+		capturedStateSegment,
 		stringToPCWSTR(arena, "Opengl32.dll"),
 		MemorySegment.NULL,
 		0
@@ -35,10 +36,11 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	fun procedureAddress(name: String): MemorySegment {
-		val address = nativeWGLGetProcAddress.invokeExact(stringToPCSTR(arena, name)) as MemorySegment
+		val namePCSTR = stringToPCSTR(arena, name)
+		val address = nativeWGLGetProcAddress.invokeExact(capturedStateSegment, namePCSTR) as MemorySegment
 		if (address == MemorySegment.NULL) {
-			if (nativeGetLastError.invokeExact() as Int != 0x7F) decodeLastError(arena)
-			val oglAddress = nativeGetProcAddress.invokeExact(oglM, stringToPCSTR(arena, name)) as MemorySegment
+			if (nativeGetLastError.get(capturedStateSegment, 0L) as Int != 0x7F) decodeLastError(arena)
+			val oglAddress = nativeGetProcAddress.invokeExact(capturedStateSegment, oglM, namePCSTR) as MemorySegment
 			if (oglAddress == MemorySegment.NULL) decodeLastError(arena)
 			return oglAddress
 		}
@@ -247,7 +249,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 		).invokeExact(face.id.toInt(), mode.id.toInt())
 	}
 
-	fun glGetUniformLocation(program: Int, name: String): Int = getHandle(
+	override fun glGetUniformLocation(program: Int, name: String): Int = getHandle(
 		"glGetUniformLocation",
 		ValueLayout.JAVA_INT,
 		ValueLayout.JAVA_INT, ValueLayout.ADDRESS
@@ -273,6 +275,15 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 			ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT,
 			ValueLayout.JAVA_FLOAT
 		).invokeExact(location, v0, v1, v2, v3)
+	}
+
+	override fun glUniformMatrix(location: Int, count: Int, transpose: Boolean, value: Matrix4F) {
+		val allocated = arena.allocate(ValueLayout.JAVA_FLOAT, 4 * 4)
+		value.fillArray(allocated, 0)
+		getHandleVoid(
+			"glUniformMatrix4fv",
+			ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BOOLEAN, ValueLayout.ADDRESS
+		).invokeExact(location, count, transpose, allocated)
 	}
 
 	override fun glGenTextures(n: Int, textures: MemorySegment) {
@@ -312,141 +323,47 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 		).invokeExact(target.id.toInt())
 	}
 
+	override fun glEnable(cap: OpenGLCapability) {
+		getHandleVoid(
+			"glEnable",
+			ValueLayout.JAVA_INT
+		).invokeExact(cap.id.toInt())
+	}
+
+	override fun glTexParameter(target: OpenGLTextureTarget, pName: OpenGLTextureParameter, param: Int) {
+		getHandleVoid(
+			"glTexParameteri",
+			ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT
+		).invokeExact(target.id.toInt(), pName.id.toInt(), param)
+	}
+
+	override fun releaseContext() {
+		val makeStatus = nativeWGLMakeCurrent.invokeExact(
+			capturedStateSegment,
+			MemorySegment.NULL, MemorySegment.NULL
+		) as Int
+		if (makeStatus == 0) decodeLastError(arena)
+	}
+
+	override fun acquireContext() {
+		val makeStatus = nativeWGLMakeCurrent.invokeExact(
+			capturedStateSegment,
+			window.hdc, hglrc
+		) as Int
+		if (makeStatus == 0) decodeLastError(arena)
+	}
+
+	override fun swapBuffers() {
+		nativeSwapBuffers.invokeExact(window.hdc) as Int
+	}
+
 	override fun open() {
 		if (!use) return
-		hglrc = nativeWGLCreateContext.invokeExact(window.hdc) as MemorySegment
+		hglrc = nativeWGLCreateContext.invokeExact(
+			capturedStateSegment,
+			window.hdc
+		) as MemorySegment
 		if (hglrc == MemorySegment.NULL) decodeLastError(arena)
-		val makeStatus = nativeWGLMakeCurrent.invokeExact(window.hdc, hglrc) as Boolean
-		if (!makeStatus) decodeLastError(arena)
-		window.procedures[WindowsMessageTypes.WM_SIZE.position.toInt()] = { _, _, _, clientSize ->
-			glViewport(
-				0, 0,
-				clientSize.toInt() and 0xFFFF, (clientSize.toInt() shr 16) and 0xFFFF
-			)
-			0
-		}
-		// Shaders
-		val vertex = bGLCreateShader(OpenGLShaderType.GL_VERTEX_SHADER)
-		vertex.source = arrayOf(
-			"#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec3 aColor;\nlayout (location = 2) in vec2 aTexCoord;\nout vec3 vColor;\nout vec2 vTexCoord;\nvoid main(){\ngl_Position = vec4(aPos, 1.0);\nvColor = aColor;\nvTexCoord = aTexCoord;\n}"
-		)
-		if (!vertex.compile()) println("V:C: ${vertex.compileInfoLog()}")
-		val fragment = bGLCreateShader(OpenGLShaderType.GL_FRAGMENT_SHADER)
-		fragment.source = arrayOf(
-			"#version 330 core\nin vec3 vColor;\nin vec2 vTexCoord;\nout vec4 FragColor;\nuniform uint time;\nuniform sampler2D tTexture;\nvoid main(){\nFragColor = texture(tTexture, vTexCoord);\n}"
-		)
-		if (!fragment.compile()) println("F:C: ${fragment.compileInfoLog()}")
-		val program = bGLCreateProgram()
-		program.attach(vertex, fragment)
-		if (!program.link()) println("P:L: ${program.linkInfoLog()}")
-		// Buffers
-		val vertices = arena.allocateArray(
-			ValueLayout.JAVA_FLOAT,
-			// positions          // colors           // texture coords
-			0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-			0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-			-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
-		)
-		val indices = arena.allocateArray(
-			ValueLayout.JAVA_INT,
-			0, 1, 3, // first triangle
-			1, 2, 3  // second triangle
-		)
-		val vao = arena.allocate(ValueLayout.JAVA_INT)
-		val vbo = arena.allocate(ValueLayout.JAVA_INT)
-		val ebo = arena.allocate(ValueLayout.JAVA_INT)
-		glGenVertexArrays(1, vao)
-		glGenBuffers(1, vbo)
-		glGenBuffers(1, ebo)
-
-		glBindVertexArray(vao.get(ValueLayout.JAVA_INT, 0))
-
-		glBindBuffer(
-			OpenGLBufferTarget.GL_ARRAY_BUFFER,
-			vbo.get(ValueLayout.JAVA_INT, 0)
-		)
-		glBufferData(
-			OpenGLBufferTarget.GL_ARRAY_BUFFER,
-			vertices.byteSize().toInt(),
-			vertices,
-			OpenGLBufferUsage.GL_STATIC_DRAW
-		)
-
-		glBindBuffer(
-			OpenGLBufferTarget.GL_ELEMENT_ARRAY_BUFFER,
-			ebo.get(ValueLayout.JAVA_INT, 0)
-		)
-		glBufferData(
-			OpenGLBufferTarget.GL_ELEMENT_ARRAY_BUFFER,
-			indices.byteSize().toInt(),
-			indices,
-			OpenGLBufferUsage.GL_STATIC_DRAW
-		)
-
-		glVertexAttribPointer(
-			0, 3, OpenGLDataType.GL_FLOAT, false, 8 * 4,
-			MemorySegment.NULL
-		)
-		glEnableVertexAttribArray(0)
-
-		glVertexAttribPointer(
-			1, 3, OpenGLDataType.GL_FLOAT, false, 8 * 4,
-			MemorySegment.ofAddress(3 * 4)
-		)
-		glEnableVertexAttribArray(1)
-
-		glVertexAttribPointer(
-			2, 2, OpenGLDataType.GL_FLOAT, false, 8 * 4,
-			MemorySegment.ofAddress(6 * 4)
-		)
-		glEnableVertexAttribArray(2)
-
-		glBindBuffer(OpenGLBufferTarget.GL_ARRAY_BUFFER, 0)
-		glBindVertexArray(0)
-		// Texture
-		val texture = arena.allocate(ValueLayout.JAVA_INT)
-		glGenTextures(1, texture)
-		glBindTexture(OpenGLTextureTarget.GL_TEXTURE_2D, texture.get(ValueLayout.JAVA_INT, 0))
-		val random = arena.allocate(300 * 300 * 3)
-		val image = ImageIO.read(File("C:\\Users\\Adenosine3Phosphate\\Desktop\\185694081.png"))
-		for (pixel in 0 until (image.width * image.height)) {
-			val x = pixel % image.width
-			val y = image.height - 1 - (pixel / image.width)
-			val rgb = image.getRGB(x, y)
-
-			val base = pixel * 3L
-			random.set(ValueLayout.JAVA_BYTE, base, (rgb shr 16).toByte()) // R
-			random.set(ValueLayout.JAVA_BYTE, base + 1, (rgb shr 8).toByte())  // G
-			random.set(ValueLayout.JAVA_BYTE, base + 2, rgb.toByte())          // B
-		}
-
-		glTexImage2D(
-			OpenGLTextureTarget.GL_TEXTURE_2D, 0,
-			OpenGLTextureInternalFormat.GL_RGB8,
-			300, 300, 0,
-			OpenGLTextureFormat.GL_RGB,
-			OpenGLDataType.GL_UNSIGNED_BYTE,
-			random
-		)
-		glGenerateMipmap(OpenGLTextureTarget.GL_TEXTURE_2D)
-		// Render
-		glPolygonMode(OpenGLPolygonFace.GL_FRONT_AND_BACK, OpenGLPolygonMode.GL_FILL)
-		window.procedures[WindowsMessageTypes.WM_PAINT.position.toInt()] = { _, _, _, _ ->
-			glClearColor(0f, 0f, 0.5f, 1f)
-			glClear(OpenGLClearFlags.GL_COLOR_BUFFER_BIT, OpenGLClearFlags.GL_DEPTH_BUFFER_BIT)
-			glBindTexture(OpenGLTextureTarget.GL_TEXTURE_2D, texture.get(ValueLayout.JAVA_INT, 0))
-			glUseProgram(program.handle)
-//			val location = glGetUniformLocation(program.handle, "time")
-//			glUniform(location, (System.currentTimeMillis() / 1000).toInt())
-			glBindVertexArray(vao.get(ValueLayout.JAVA_INT, 0))
-			glDrawElements(
-				OpenGLPrimitiveRenderMode.GL_TRIANGLES,
-				6, OpenGLDataType.GL_UNSIGNED_INT, MemorySegment.NULL
-			)
-			nativeSwapBuffers.invokeExact(window.hdc) as Boolean
-			0
-		}
 	}
 
 	override fun close() {

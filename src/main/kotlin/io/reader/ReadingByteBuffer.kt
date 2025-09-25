@@ -46,13 +46,22 @@ open class ReadingByteBuffer(
 		buffer.flip()
 	}
 
+	override var pass: Array<Any?>? = null
+
 	fun get(b: ByteArray) {
 		refill(b.size)
 		present -= b.size
 		buffer.get(b)
 	}
 
-	override var pass: Array<Any?>? = null
+	override fun enter(name: Any) {
+		TODO("Not yet implemented")
+	}
+
+	override fun exit() {
+		TODO("Not yet implemented")
+	}
+
 	override fun invalidateData() {
 		buffer.clear()
 		buffer.limit(0)
