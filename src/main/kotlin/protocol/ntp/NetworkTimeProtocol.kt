@@ -30,11 +30,9 @@ abstract class NetworkTimeProtocol(
 		@JvmStatic
 		val intPrecision = MathContext(9, RoundingMode.HALF_EVEN)
 
-		fun selectV3(n: UByte) = n and 0b00111000u == 0b00011000u.toUByte()
 		fun selectV4(n: UByte) = n and 0b00111000u == 0b00100000u.toUByte()
 		val layout = SelectiveIOLayout<NetworkTimeProtocol>(
 			mapOf(
-				::selectV3 to NetworkTimeProtocolV3.layout,
 				::selectV4 to NetworkTimeProtocolV4.layout
 			),
 			{ w, ntp -> ntp.write(w) },

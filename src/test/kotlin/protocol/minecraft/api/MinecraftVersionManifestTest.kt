@@ -220,7 +220,7 @@ class MinecraftVersionManifestTest {
 						)
 					}
 
-					fun List<Annotation>.convert(): List<Annotation> = this.mapNotNull { it.convert() }
+					fun List<Annotation>.convert(): List<Annotation> = this.map { it.convert() }
 					fun List<TypeAnnotation>.convert(): List<TypeAnnotation> = this.mapNotNull {
 						TypeAnnotation.of(
 							it.targetInfo(),

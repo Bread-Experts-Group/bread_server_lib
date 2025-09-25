@@ -8,6 +8,8 @@ class SelectiveIOLayout<O>(
 	private vararg val layouts: IOLayout<out Any?>
 ) : IOLayout<O>() {
 	val ioConsidered = layouts.filter { it.considerInIO }
+
+	@Suppress("RedundantSemicolon")
 	private val readAction by lazy {
 		for ((selector, _) in selectors) {
 			if ((selector.parameters.size - ioConsidered.size) !in 0..1) throw IOReadException(

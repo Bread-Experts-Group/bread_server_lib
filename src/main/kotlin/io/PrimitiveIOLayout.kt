@@ -31,6 +31,7 @@ open class PrimitiveIOLayout<O>(
 		return layout
 	}
 
+	@Suppress("RemoveExplicitTypeArguments")
 	override fun nullable(): IOLayout<O?> {
 		val mainImpl = this.readImpl
 		val layout = PrimitiveIOLayout<O?>(

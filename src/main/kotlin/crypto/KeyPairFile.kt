@@ -54,10 +54,7 @@ fun KeyPairFile?.read(keyFactoryAlgorithm: String = "Ed25519"): KeyPair {
 			)
 		)
 	} else {
-		val newKeyPair = KeyPairGenerator.getInstance(keyFactoryAlgorithm).let {
-//			it.initialize(ECGenParameterSpec(algorithm))
-			it.generateKeyPair()
-		}
+		val newKeyPair = KeyPairGenerator.getInstance(keyFactoryAlgorithm).generateKeyPair()
 		if (saveToFiles) {
 			this.publicKey.createNewFile()
 			this.privateKey.createNewFile()

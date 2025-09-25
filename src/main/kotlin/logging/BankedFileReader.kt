@@ -56,8 +56,8 @@ class BankedFileReader(
 	}
 
 	var nanos: Long = 0L
-	val savedLevels: MutableMap<ULong, Level> = mutableMapOf<ULong, Level>()
-	val messages: MutableList<String> = mutableListOf<String>()
+	val savedLevels: MutableMap<ULong, Level> = mutableMapOf()
+	val messages: MutableList<String> = mutableListOf()
 	fun nextRecord(): LogRecord {
 		val initialPosition = content.position()
 		val data = ByteBuffer.allocate(90)

@@ -7,7 +7,6 @@ import java.util.*
  * Translator
  * @since 2.41.0
  */
-@Suppress("unused")
 class LoggerResource : ListResourceBundle() {
 	override fun getContents(): Array<out Array<out Any>> = arrayOf(
 		arrayOf("tests.huffman", "Huffman Branch Tests"),

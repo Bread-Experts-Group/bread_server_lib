@@ -8,9 +8,11 @@ import org.bread_experts_group.coder.MappedEnumeration
 import org.bread_experts_group.ffi.readString
 import org.bread_experts_group.io.reader.ReadingByteBuffer
 import org.bread_experts_group.io.writer.DatagramWriter
-import org.bread_experts_group.protocol.ntp.*
+import org.bread_experts_group.protocol.ntp.NTPAssociationMode
+import org.bread_experts_group.protocol.ntp.NTPLeapIndicator
+import org.bread_experts_group.protocol.ntp.NetworkTimeProtocol
+import org.bread_experts_group.protocol.ntp.NetworkTimeProtocolV4
 import org.junit.jupiter.api.Test
-import java.io.EOFException
 import java.lang.foreign.Arena
 import java.math.BigDecimal
 import java.net.InetAddress
@@ -65,55 +67,48 @@ class SerialInterfaceTest {
 			}
 		}
 		val udp = DatagramChannel.open()
-		udp.bind(InetSocketAddress(InetAddress.getByName("0.0.0.0"), 123))
+		udp.bind(InetSocketAddress(InetAddress.getByName("0.0.0.0"), 53))
 		while (true) {
 			val data = ByteBuffer.allocate(65535)
 			val client = udp.receive(data)
+			println("$client")
+			val initialRead = System.nanoTime()
 			data.flip()
 			val data2 = ByteBuffer.allocate(65535)
 			val read = ByteBufferChannel(data)
 			val reading = ReadingByteBuffer(read, data2, null)
 			val ntp = try {
 				NetworkTimeProtocol.layout.read(reading)
-			} catch (_: EOFException) {
+			} catch (e: Exception) {
+				e.printStackTrace()
 				continue
 			}
-			println("$client: $ntp")
-			val tickingReference = referenceTimestamp + (BigDecimal.valueOf(
+			val reference = referenceTimestamp
+			val tickingReference = reference + (BigDecimal.valueOf(
 				System.nanoTime() - lastNanos
 			).divide(BigDecimal.valueOf(1000000000), NetworkTimeProtocol.intPrecision))
 			val rootDelayTS = rootDelay
 				.toLong(DurationUnit.NANOSECONDS)
 				.toBigDecimal()
 				.divide(BigDecimal.valueOf(1000000000), NetworkTimeProtocol.intPrecision)
+			val transmitTS = tickingReference + (BigDecimal.valueOf(
+				System.nanoTime() - initialRead
+			).divide(BigDecimal.valueOf(1000000000), NetworkTimeProtocol.intPrecision))
 			NetworkTimeProtocol.layout.write(
 				DatagramWriter(client, udp, ByteBuffer.allocate(65535)),
-				if (ntp.version == 3) NetworkTimeProtocolV3(
+				NetworkTimeProtocolV4(
 					MappedEnumeration(NTPLeapIndicator.NONE),
 					MappedEnumeration(NTPAssociationMode.SERVER),
 					1,
-					0.0,
-					0.0,
+					6,
+					-18,
 					rootDelayTS,
 					BigDecimal.ZERO,
 					"GPS\u0000",
-					tickingReference,
-					(ntp as NetworkTimeProtocolV3).transmitTimestamp,
-					tickingReference,
-					tickingReference
-				) else NetworkTimeProtocolV4(
-					MappedEnumeration(NTPLeapIndicator.NONE),
-					MappedEnumeration(NTPAssociationMode.SERVER),
-					1,
-					0.0,
-					0.0,
-					rootDelayTS,
-					BigDecimal.ZERO,
-					"GPS\u0000",
-					tickingReference,
+					reference,
 					(ntp as NetworkTimeProtocolV4).transmitTimestamp,
 					tickingReference,
-					tickingReference
+					transmitTS
 				)
 			)
 		}

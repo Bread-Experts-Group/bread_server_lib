@@ -8,14 +8,13 @@ import org.bread_experts_group.io.SequencedIOLayout.Companion.isoLatin1
 import org.bread_experts_group.io.SequentialIOLayout
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlin.math.log2
 
 data class NetworkTimeProtocolV4(
 	val leapStatus: MappedEnumeration<Int, NTPLeapIndicator>,
 	val associationMode: MappedEnumeration<Int, NTPAssociationMode>,
 	val stratum: Int,
-	val poll: Double,
-	val precision: Double,
+	val poll: Int,
+	val precision: Int,
 	val rootDelay: BigDecimal,
 	val rootDispersion: BigDecimal,
 	val referenceID: String,
@@ -48,8 +47,8 @@ data class NetworkTimeProtocolV4(
 				NTPLeapIndicator.entries.id(flags.toInt() shr 6),
 				NTPAssociationMode.entries.id(flags.toInt() and 0b111),
 				stratum.toInt(),
-				log2(poll.toDouble()),
-				log2(precision.toDouble()),
+				poll.toByte().toInt(),
+				precision.toByte().toInt(),
 				BigDecimal.valueOf(rootDelaySeconds.toLong()).add(
 					BigDecimal(rootDelayFraction.toInt()).divide(b16, shortPrecision)
 				),
@@ -100,8 +99,8 @@ data class NetworkTimeProtocolV4(
 		flags = flags or associationMode.raw.toUInt()
 		IOLayout.UNSIGNED_BYTE.write(to, flags.toUByte())
 		IOLayout.UNSIGNED_BYTE.write(to, stratum.toUByte())
-		IOLayout.UNSIGNED_BYTE.write(to, 0u) // POLL
-		IOLayout.UNSIGNED_BYTE.write(to, 0u) // PRECISION
+		IOLayout.UNSIGNED_BYTE.write(to, poll.toUByte())
+		IOLayout.UNSIGNED_BYTE.write(to, precision.toUByte())
 		shortBig.write(to, rootDelay.setScale(0, RoundingMode.DOWN).toShort().toUShort())
 		shortBig.write(to, rootDelay.remainder(BigDecimal.ONE).multiply(b16).toShort().toUShort())
 		shortBig.write(to, rootDispersion.setScale(0, RoundingMode.DOWN).toShort().toUShort())

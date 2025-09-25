@@ -16,7 +16,7 @@ class ANSIString(var total: String = "") {
 		length += s.length
 	}
 
-	override fun toString(): String = total.toString()
+	override fun toString(): String = total
 
 	fun color(n: ANSIColorSpace, init: ANSIString.() -> Unit): ANSIString = this.also {
 		val last = reset

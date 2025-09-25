@@ -3,11 +3,8 @@ package org.bread_experts_group.stream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
-import java.io.Reader
-import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.Charset
-import java.nio.charset.CharsetDecoder
 
 fun Short.le(): Short = java.lang.Short.reverseBytes(this)
 fun Int.le(): Int = Integer.reverseBytes(this)
@@ -63,44 +60,6 @@ fun OutputStream.write32(data: Long): Unit = this.write32(data.toInt())
 fun OutputStream.write64(data: Long): Unit = this.write32((data shr 32).toInt()).also { this.write32((data).toInt()) }
 fun OutputStream.write64u(data: ULong): Unit = this.write64(data.toLong())
 fun OutputStream.writeString(s: String, c: Charset = Charsets.UTF_8): Unit = this.write(s.toByteArray(c))
-
-val SP = byteArrayOf(0x20)
-val CRLF = byteArrayOf(0x0D, 0x0A)
-fun InputStream.scanPattern(pattern: ByteArray): ByteArray {
-	var bucket = ByteArrayOutputStream()
-	val pool = ByteArrayOutputStream()
-	while (bucket.size() < pattern.size) {
-		val read = this.read()
-		if (read == -1) break
-		if (pattern[bucket.size()] == read.toByte()) bucket.write(read)
-		else {
-			pool.write(bucket.toByteArray())
-			pool.write(read)
-			bucket = ByteArrayOutputStream()
-		}
-	}
-	return pool.toByteArray()
-}
-
-fun CharsetDecoder.next(from: InputStream, pattern: ByteArray) = this
-	.decode(ByteBuffer.wrap(from.scanPattern(pattern)))
-	.toString()
-
-fun Reader.scanDelimiter(lookFor: String): String {
-	var bucket = ""
-	var pool = ""
-	while (bucket.length < lookFor.length) {
-		val read = this.read()
-		if (read == -1) break
-		val next = read.toChar()
-		if (lookFor[bucket.length] == next) bucket += next
-		else {
-			pool += bucket + next
-			bucket = ""
-		}
-	}
-	return pool
-}
 
 fun <R> FileChannel.resetPosition(offset: Long, run: FileChannel.() -> R): R {
 	val save = this.position()

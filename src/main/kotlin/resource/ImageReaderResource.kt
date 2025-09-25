@@ -7,7 +7,6 @@ import java.util.*
  * Translator
  * @since 2.39.0
  */
-@Suppress("unused")
 class ImageReaderResource : ListResourceBundle() {
 	override fun getContents(): Array<out Array<out Any>> = arrayOf(
 		arrayOf("apng_reader_spi_description", "Animated PNG (Portable Network Graphics) Reader Provider"),
