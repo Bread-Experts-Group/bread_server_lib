@@ -18,24 +18,24 @@ private val linker: Linker = Linker.nativeLinker()
 val gleCapture: Linker.Option = Linker.Option.captureCallState("GetLastError")
 val nativeGetLastError: VarHandle = capturedStateLayout.varHandle(groupElement("GetLastError"))
 
-val nativeFormatMessageW: MethodHandle = kernel32Lookup.getDowncall(
+val nativeFormatMessageW: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "FormatMessageW", DWORD,
 	DWORD, LPCVOID, DWORD,
 	DWORD, LPWSTR, DWORD,
 	ValueLayout.ADDRESS
 )
 
-val nativeLocalFree: MethodHandle = kernel32Lookup.getDowncall(
+val nativeLocalFree: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "LocalFree", HLOCAL,
 	HLOCAL
 )
 
-val nativeGetModuleHandleW: MethodHandle = kernel32Lookup.getDowncall(
+val nativeGetModuleHandleW: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "GetModuleHandleW", HMODULE,
 	LPCWSTR
 )
 
-val nativeLoadLibraryExW: MethodHandle = kernel32Lookup.getDowncall(
+val nativeLoadLibraryExW: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "LoadLibraryExW",
 	arrayOf(
 		HMODULE,
@@ -46,7 +46,7 @@ val nativeLoadLibraryExW: MethodHandle = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeGetProcAddress: MethodHandle = kernel32Lookup.getDowncall(
+val nativeGetProcAddress: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "GetProcAddress",
 	arrayOf(
 		FARPROC,
@@ -57,7 +57,7 @@ val nativeGetProcAddress: MethodHandle = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeCreateFile3: MethodHandle = kernel32Lookup.getDowncall(
+val nativeCreateFile3: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "CreateFile3",
 	arrayOf(
 		HANDLE,
@@ -68,7 +68,7 @@ val nativeCreateFile3: MethodHandle = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeReadFile: MethodHandle = kernel32Lookup.getDowncall(
+val nativeReadFile: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "ReadFile",
 	arrayOf(
 		BOOL,
@@ -85,11 +85,11 @@ fun createFile3(
 	dwDesiredAccess: EnumSet<WindowsGenericAccessRights>,
 	dwShareMode: EnumSet<WindowsFileSharingTypes>,
 	dwCreationDisposition: WindowsCreationDisposition,
-	pCreateExParams: Any? // TODO LPCREATEFILE3_EXTENDED_PARAMETERS
+	//pCreateExParams: Any? // TODO LPCREATEFILE3_EXTENDED_PARAMETERS
 ): MemorySegment {
-	val serialFile = nativeCreateFile3.invokeExact(
+	val serialFile = nativeCreateFile3!!.invokeExact(
 		capturedStateSegment,
-		stringToPCWSTR(arena, lpFileName),
+		arena.allocateFrom(lpFileName, Charsets.UTF_16LE),
 		dwDesiredAccess.raw().toInt(),
 		dwShareMode.raw().toInt(),
 		dwCreationDisposition.id.toInt(),
@@ -99,7 +99,7 @@ fun createFile3(
 	return serialFile
 }
 
-val nativeGetCommState: MethodHandle = kernel32Lookup.getDowncall(
+val nativeGetCommState: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "GetCommState",
 	arrayOf(
 		BOOL,
@@ -110,7 +110,7 @@ val nativeGetCommState: MethodHandle = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeSetCommState: MethodHandle = kernel32Lookup.getDowncall(
+val nativeSetCommState: MethodHandle? = kernel32Lookup.getDowncall(
 	linker, "SetCommState",
 	arrayOf(
 		BOOL,

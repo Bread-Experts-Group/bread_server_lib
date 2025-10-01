@@ -13,36 +13,36 @@ private val handleArena = Arena.ofAuto()
 private val user32Lookup: SymbolLookup = handleArena.getLookup("User32.dll")
 private val linker: Linker = Linker.nativeLinker()
 
-val nativeOpenWindowStationW: MethodHandle = user32Lookup.getDowncall(
+val nativeOpenWindowStationW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "OpenWindowStationW", HWINSTA,
 	LPCWSTR, BOOL, ACCESS_MASK
 )
 
-val nativeCloseWindowStation: MethodHandle = user32Lookup.getDowncall(
+val nativeCloseWindowStation: MethodHandle? = user32Lookup.getDowncall(
 	linker, "CloseWindowStation", BOOL,
 	HWINSTA
 )
 
-val nativeGetProcessWindowStation: MethodHandle = user32Lookup.getDowncall(
+val nativeGetProcessWindowStation: MethodHandle? = user32Lookup.getDowncall(
 	linker, "GetProcessWindowStation", HWINSTA
 )
 
-val nativeSetProcessWindowStation: MethodHandle = user32Lookup.getDowncall(
+val nativeSetProcessWindowStation: MethodHandle? = user32Lookup.getDowncall(
 	linker, "SetProcessWindowStation", BOOL,
 	HWINSTA
 )
 
-val nativeOpenDesktopW: MethodHandle = user32Lookup.getDowncall(
+val nativeOpenDesktopW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "OpenDesktopW", HDESK,
 	LPCWSTR, DWORD, BOOL, ACCESS_MASK
 )
 
-val nativeCloseDesktop: MethodHandle = user32Lookup.getDowncall(
+val nativeCloseDesktop: MethodHandle? = user32Lookup.getDowncall(
 	linker, "CloseDesktop", BOOL,
 	HDESK
 )
 
-val nativeRegisterClassExW: MethodHandle = user32Lookup.getDowncall(
+val nativeRegisterClassExW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "RegisterClassExW",
 	arrayOf(
 		ATOM,
@@ -53,7 +53,7 @@ val nativeRegisterClassExW: MethodHandle = user32Lookup.getDowncall(
 	)
 )
 
-val nativeCreateWindowExW: MethodHandle = user32Lookup.getDowncall(
+val nativeCreateWindowExW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "CreateWindowExW",
 	arrayOf(
 		HWND,
@@ -67,29 +67,29 @@ val nativeCreateWindowExW: MethodHandle = user32Lookup.getDowncall(
 	)
 )
 
-val nativeDefWindowProcW: MethodHandle = user32Lookup.getDowncall(
+val nativeDefWindowProcW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "DefWindowProcW", LRESULT,
 	HWND, UINT, WPARAM,
 	LPARAM
 )
 
-val nativeSendMessageW: MethodHandle = user32Lookup.getDowncall(
+val nativeSendMessageW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "SendMessageW", LRESULT,
 	HWND, UINT, WPARAM,
 	LPARAM
 )
 
-val nativeGetDCEx: MethodHandle = user32Lookup.getDowncall(
+val nativeGetDCEx: MethodHandle? = user32Lookup.getDowncall(
 	linker, "GetDCEx", HDC,
 	HWND, HRGN, DWORD
 )
 
-val nativeReleaseDC: MethodHandle = user32Lookup.getDowncall(
+val nativeReleaseDC: MethodHandle? = user32Lookup.getDowncall(
 	linker, "ReleaseDC", ValueLayout.JAVA_INT,
 	HWND, HDC
 )
 
-val nativeGetMessageW: MethodHandle = user32Lookup.getDowncall(
+val nativeGetMessageW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "GetMessageW",
 	arrayOf(
 		BOOL,
@@ -101,16 +101,16 @@ val nativeGetMessageW: MethodHandle = user32Lookup.getDowncall(
 	)
 )
 
-val nativeTranslateMessage: MethodHandle = user32Lookup.getDowncall(
+val nativeTranslateMessage: MethodHandle? = user32Lookup.getDowncall(
 	linker, "TranslateMessage", BOOL,
 	ValueLayout.ADDRESS // of MSG
 )
 
-val nativeDispatchMessageW: MethodHandle = user32Lookup.getDowncall(
+val nativeDispatchMessageW: MethodHandle? = user32Lookup.getDowncall(
 	linker, "DispatchMessageW", LRESULT,
 	ValueLayout.ADDRESS // of MSG
 )
 
-val nativePostQuitMessage: MethodHandle = user32Lookup.getDowncallVoid(
+val nativePostQuitMessage: MethodHandle? = user32Lookup.getDowncallVoid(
 	linker, "PostQuitMessage", ValueLayout.JAVA_INT
 )

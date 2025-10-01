@@ -19,7 +19,7 @@ class WaylandGraphicsWindowFeature : GraphicsWindowFeature() {
 	)
 
 	override fun supported(): Boolean {
-		val display = nativeWLDisplayConnect.invokeExact(MemorySegment.NULL) as MemorySegment
+		val display = (nativeWLDisplayConnect ?: return false).invokeExact(MemorySegment.NULL) as MemorySegment
 		if (display == MemorySegment.NULL) return false
 		nativeWLDisplayDisconnect.invokeExact(display)
 		return true

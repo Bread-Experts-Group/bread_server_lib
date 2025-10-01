@@ -26,9 +26,9 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	private val procedures: MutableMap<String, MethodHandle> = mutableMapOf()
 
 	private val linker = Linker.nativeLinker()
-	private val oglM = (nativeLoadLibraryExW.invokeExact(
+	private val oglM = (nativeLoadLibraryExW!!.invokeExact(
 		capturedStateSegment,
-		stringToPCWSTR(arena, "Opengl32.dll"),
+		arena.allocateFrom("Opengl32.dll", Charsets.UTF_16LE),
 		MemorySegment.NULL,
 		0
 	) as MemorySegment).also {
@@ -36,11 +36,11 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	fun procedureAddress(name: String): MemorySegment {
-		val namePCSTR = stringToPCSTR(arena, name)
-		val address = nativeWGLGetProcAddress.invokeExact(capturedStateSegment, namePCSTR) as MemorySegment
+		val namePCSTR = arena.allocateFrom(name, Charsets.US_ASCII)
+		val address = nativeWGLGetProcAddress!!.invokeExact(capturedStateSegment, namePCSTR) as MemorySegment
 		if (address == MemorySegment.NULL) {
 			if (nativeGetLastError.get(capturedStateSegment, 0L) as Int != 0x7F) decodeLastError(arena)
-			val oglAddress = nativeGetProcAddress.invokeExact(capturedStateSegment, oglM, namePCSTR) as MemorySegment
+			val oglAddress = nativeGetProcAddress!!.invokeExact(capturedStateSegment, oglM, namePCSTR) as MemorySegment
 			if (oglAddress == MemorySegment.NULL) decodeLastError(arena)
 			return oglAddress
 		}
@@ -253,7 +253,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 		"glGetUniformLocation",
 		ValueLayout.JAVA_INT,
 		ValueLayout.JAVA_INT, ValueLayout.ADDRESS
-	).invokeExact(program, stringToPCSTR(arena, name)) as Int
+	).invokeExact(program, arena.allocateFrom(name, Charsets.US_ASCII)) as Int
 
 	override fun glUniform(location: Int, v0: Int) {
 		getHandleVoid(
@@ -338,7 +338,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	override fun releaseContext() {
-		val makeStatus = nativeWGLMakeCurrent.invokeExact(
+		val makeStatus = nativeWGLMakeCurrent!!.invokeExact(
 			capturedStateSegment,
 			MemorySegment.NULL, MemorySegment.NULL
 		) as Int
@@ -346,7 +346,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	override fun acquireContext() {
-		val makeStatus = nativeWGLMakeCurrent.invokeExact(
+		val makeStatus = nativeWGLMakeCurrent!!.invokeExact(
 			capturedStateSegment,
 			window.hdc, hglrc
 		) as Int
@@ -354,12 +354,12 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	override fun swapBuffers() {
-		nativeSwapBuffers.invokeExact(window.hdc) as Int
+		nativeSwapBuffers!!.invokeExact(window.hdc) as Int
 	}
 
 	override fun open() {
 		if (!use) return
-		hglrc = nativeWGLCreateContext.invokeExact(
+		hglrc = nativeWGLCreateContext!!.invokeExact(
 			capturedStateSegment,
 			window.hdc
 		) as MemorySegment
@@ -367,8 +367,8 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	override fun close() {
-		nativeWGLMakeCurrent.invokeExact(MemorySegment.NULL, MemorySegment.NULL) as Boolean
-		nativeWGLDeleteContext.invokeExact(hglrc) as Boolean
+		nativeWGLMakeCurrent!!.invokeExact(MemorySegment.NULL, MemorySegment.NULL) as Boolean
+		nativeWGLDeleteContext!!.invokeExact(hglrc) as Boolean
 		arena.close()
 	}
 }

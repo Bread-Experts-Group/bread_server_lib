@@ -25,7 +25,7 @@ val nativeIID_IDXGIFactory3 = WindowsGUID(
 	ubyteArrayOf(0x47u, 0xAAu, 0x95u, 0xB8u, 0x37u, 0xBDu)
 ).allocate(handleArena)
 
-val nativeCreateDXGIFactory2: MethodHandle = dxgiLookup.getDowncall(
+val nativeCreateDXGIFactory2: MethodHandle? = dxgiLookup.getDowncall(
 	linker, "CreateDXGIFactory2", HRESULT,
 	UINT, REFIID, ValueLayout.ADDRESS // of IDXGIFactory2**
 )

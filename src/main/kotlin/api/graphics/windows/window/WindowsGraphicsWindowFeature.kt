@@ -14,8 +14,16 @@ class WindowsGraphicsWindowFeature : GraphicsWindowFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override val expresses: FeatureExpression<GraphicsWindowFeature> = GraphicsFeatures.WINDOW
 	override fun supported(): Boolean = Arena.ofConfined().use { arena ->
+		if (
+			nativeOpenWindowStationW == null ||
+			nativeGetProcessWindowStation == null ||
+			nativeSetProcessWindowStation == null ||
+			nativeOpenDesktopW == null ||
+			nativeCloseWindowStation == null ||
+			nativeCloseDesktop == null
+		) return@use false
 		val station = nativeOpenWindowStationW.invokeExact(
-			stringToPCWSTR(arena, "WinSta0"),
+			arena.allocateFrom("WinSta0", Charsets.UTF_16LE),
 			0,
 			WindowStationAccessRights.READ_CONTROL.position.toInt()
 		) as MemorySegment
@@ -24,7 +32,7 @@ class WindowsGraphicsWindowFeature : GraphicsWindowFeature() {
 		val setStationCheck = nativeSetProcessWindowStation.invokeExact(station) as Int
 		if (setStationCheck == 0) return false
 		val stationDesktop = nativeOpenDesktopW.invokeExact(
-			stringToPCWSTR(arena, "Default"),
+			arena.allocateFrom("Default", Charsets.UTF_16LE),
 			0,
 			0,
 			WindowStationAccessRights.READ_CONTROL.position.toInt()

@@ -1,3 +1,5 @@
 package org.bread_experts_group.api
 
-interface FeatureExpression<I : FeatureImplementation<I>>
+interface FeatureExpression<I : FeatureImplementation<I>> {
+	val name: String
+}

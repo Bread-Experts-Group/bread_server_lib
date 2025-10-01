@@ -11,7 +11,7 @@ private val handleArena = Arena.ofAuto()
 private val opengl32Lookup: SymbolLookup = handleArena.getLookup("OpenGL32.dll")
 private val linker: Linker = Linker.nativeLinker()
 
-val nativeWGLCreateContext: MethodHandle = opengl32Lookup.getDowncall(
+val nativeWGLCreateContext: MethodHandle? = opengl32Lookup.getDowncall(
 	linker, "wglCreateContext",
 	arrayOf(
 		HGLRC,
@@ -22,12 +22,12 @@ val nativeWGLCreateContext: MethodHandle = opengl32Lookup.getDowncall(
 	)
 )
 
-val nativeWGLDeleteContext: MethodHandle = opengl32Lookup.getDowncall(
+val nativeWGLDeleteContext: MethodHandle? = opengl32Lookup.getDowncall(
 	linker, "wglDeleteContext", BOOL,
 	HGLRC
 )
 
-val nativeWGLMakeCurrent: MethodHandle = opengl32Lookup.getDowncall(
+val nativeWGLMakeCurrent: MethodHandle? = opengl32Lookup.getDowncall(
 	linker, "wglMakeCurrent",
 	arrayOf(
 		BOOL,
@@ -38,7 +38,7 @@ val nativeWGLMakeCurrent: MethodHandle = opengl32Lookup.getDowncall(
 	)
 )
 
-val nativeWGLGetProcAddress: MethodHandle = opengl32Lookup.getDowncall(
+val nativeWGLGetProcAddress: MethodHandle? = opengl32Lookup.getDowncall(
 	linker, "wglGetProcAddress",
 	arrayOf(
 		PROC,

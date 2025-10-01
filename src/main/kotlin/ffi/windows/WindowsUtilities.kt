@@ -45,12 +45,10 @@ val ACCESS_MASK = DWORD
 
 val INVALID_HANDLE_VALUE: MemorySegment = MemorySegment.ofAddress(0L - 1)
 
-fun makeWord(highByte: UByte, lowByte: UByte): UShort = (highByte.toInt() shl 8 or lowByte.toInt()).toUShort()
-
 fun decodeCOMError(arena: Arena, err: Int) {
 	if (err != 0) {
 		val bufferPointer = arena.allocate(ValueLayout.ADDRESS)
-		val count = nativeFormatMessageW.invokeExact(
+		val count = nativeFormatMessageW!!.invokeExact(
 			0x00001100, // FORMAT_MESSAGE_ALLOCATE_BUFFER, FORMAT_MESSAGE_FROM_SYSTEM
 			MemorySegment.NULL,
 			err,
@@ -66,7 +64,7 @@ fun decodeCOMError(arena: Arena, err: Int) {
 			.toArray(ValueLayout.JAVA_BYTE)
 			.toString(Charsets.UTF_16LE)
 			.trim()
-		val deallocated = nativeLocalFree.invokeExact(
+		val deallocated = nativeLocalFree!!.invokeExact(
 			bufferPointer.get(ValueLayout.ADDRESS, 0)
 		) as MemorySegment
 		if (deallocated != MemorySegment.NULL) TODO("LOCAL FREE GET LAST ERROR")
@@ -78,28 +76,3 @@ fun decodeLastError(arena: Arena) {
 	decodeCOMError(arena, nativeGetLastError.get(capturedStateSegment, 0L) as Int)
 	throw COMException("General exception (GetLastError did not produce error code).")
 }
-
-fun stringToPCSTR(arena: Arena, string: String): MemorySegment {
-	val encoded = string.toByteArray(Charsets.US_ASCII)
-	val allocated = arena.allocate(encoded.size + 1L)
-	encoded.forEachIndexed { i, b -> allocated.set(ValueLayout.JAVA_BYTE, i.toLong(), b) }
-	return allocated
-}
-
-fun stringToPCWSTR(arena: Arena, string: String): MemorySegment {
-	val encoded = string.toByteArray(Charsets.UTF_16LE)
-	val allocated = arena.allocate(encoded.size + 2L)
-	encoded.forEachIndexed { i, b -> allocated.set(ValueLayout.JAVA_BYTE, i.toLong(), b) }
-	return allocated
-}
-
-@ExperimentalUnsignedTypes
-fun segmentToGUID(s: MemorySegment, offset: Long): WindowsGUID = WindowsGUID(
-	s.get(ValueLayout.JAVA_INT, offset).toUInt(),
-	s.get(ValueLayout.JAVA_SHORT, offset + 2).toUShort(),
-	s.get(ValueLayout.JAVA_SHORT, offset + 4).toUShort(),
-	s.asSlice(offset + 6, 2).toArray(ValueLayout.JAVA_BYTE).toUByteArray(),
-	s.asSlice(offset + 8, 6).toArray(ValueLayout.JAVA_BYTE).toUByteArray(),
-)
-
-fun win32ToHResult(x: Int): Int = if (x <= 0) x else ((x and 0x0000FFFF) or (8 shl 16) or 0x80000000.toInt())

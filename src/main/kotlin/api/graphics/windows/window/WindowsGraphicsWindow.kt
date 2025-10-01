@@ -29,7 +29,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 
 	val procedures: MutableMap<Int, (MemorySegment, Int, Long, Long) -> Long> = mutableMapOf(
 		WindowsMessageTypes.WM_DESTROY.position.toInt() to { _, _, _, _ ->
-			nativePostQuitMessage.invokeExact(0)
+			nativePostQuitMessage!!.invokeExact(0)
 			0
 		},
 		WindowsMessageTypes.WM_PAINT.position.toInt() to { _, _, _, _ ->
@@ -46,7 +46,8 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 	)
 
 	fun wndProc(hWnd: MemorySegment, message: Int, wParam: Long, lParam: Long): Long {
-		val proc = procedures[message] ?: return nativeDefWindowProcW.invokeExact(hWnd, message, wParam, lParam) as Long
+		val proc = procedures[message]
+			?: return nativeDefWindowProcW!!.invokeExact(hWnd, message, wParam, lParam) as Long
 		return proc(hWnd, message, wParam, lParam)
 	}
 
@@ -54,12 +55,12 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 		val initLatch = CountDownLatch(1)
 		processingLock.acquire()
 		Thread.ofPlatform().daemon().start {
-			val localHandle = nativeGetModuleHandleW.invokeExact(MemorySegment.NULL) as MemorySegment
-			hWnd = nativeCreateWindowExW.invokeExact(
+			val localHandle = nativeGetModuleHandleW!!.invokeExact(MemorySegment.NULL) as MemorySegment
+			hWnd = nativeCreateWindowExW!!.invokeExact(
 				capturedStateSegment,
 				0x00000300,
 				MemorySegment.ofAddress(template.classAtom.toLong() and 0xFFFF),
-				stringToPCWSTR(arena, this.get(GraphicsWindowFeatures.WINDOW_NAME)!!.name),
+				arena.allocateFrom(this.get(GraphicsWindowFeatures.WINDOW_NAME)!!.name, Charsets.UTF_16LE),
 				0x10CC0000,
 				0, 0,
 				300, 400,
@@ -71,7 +72,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 			if (hWnd == MemorySegment.NULL) decodeLastError(arena)
 			Thread.currentThread().name = "$hWnd Message Management"
 			template.windows[hWnd] = this::wndProc
-			hdc = nativeGetDCEx.invokeExact(
+			hdc = nativeGetDCEx!!.invokeExact(
 				hWnd,
 				MemorySegment.NULL,
 				0x00000002
@@ -97,13 +98,13 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 			)
 			PIXELFORMATDESCRIPTOR_cColorBits.set(pixelFormatDescriptor, 0, 24.toByte())
 			PIXELFORMATDESCRIPTOR_cDepthBits.set(pixelFormatDescriptor, 0, 32.toByte())
-			val pixelFormat = nativeChoosePixelFormat.invokeExact(
+			val pixelFormat = nativeChoosePixelFormat!!.invokeExact(
 				capturedStateSegment,
 				hdc,
 				pixelFormatDescriptor
 			) as Int
 			if (pixelFormat == 0) decodeLastError(arena)
-			val formatSet = nativeSetPixelFormat.invokeExact(
+			val formatSet = nativeSetPixelFormat!!.invokeExact(
 				capturedStateSegment,
 				hdc,
 				pixelFormat,
@@ -114,7 +115,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 			initLatch.countDown()
 			val message = arena.allocate(MSG)
 			while (true) {
-				val status = nativeGetMessageW.invokeExact(
+				val status = nativeGetMessageW!!.invokeExact(
 					capturedStateSegment,
 					message, MemorySegment.NULL, 0, 0
 				) as Int
@@ -122,8 +123,8 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 					-1 -> decodeLastError(arena)
 					0 -> break
 					else -> {
-						nativeTranslateMessage.invokeExact(message) as Int
-						nativeDispatchMessageW.invokeExact(message) as Long
+						nativeTranslateMessage!!.invokeExact(message) as Int
+						nativeDispatchMessageW!!.invokeExact(message) as Long
 					}
 				}
 			}
@@ -134,11 +135,11 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 
 	override fun close() {
 		for (feature in this.features) if (feature is AutoCloseable) feature.close()
-		nativeReleaseDC.invokeExact(hWnd, hdc) as Int
+		nativeReleaseDC!!.invokeExact(hWnd, hdc) as Int
 		arena.close()
 	}
 
 	internal fun sendMessage(message: WindowsMessageTypes, wParam: Long, lParam: Long): Long {
-		return nativeSendMessageW.invokeExact(hWnd, message.position.toInt(), wParam, lParam) as Long
+		return nativeSendMessageW!!.invokeExact(hWnd, message.position.toInt(), wParam, lParam) as Long
 	}
 }

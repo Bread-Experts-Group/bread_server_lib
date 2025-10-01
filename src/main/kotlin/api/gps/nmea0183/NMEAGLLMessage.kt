@@ -16,7 +16,7 @@ class NMEAGLLMessage(
 	val ns: MappedEnumeration<Char, NMEANorthSouth>?,
 	val longitude: NMEACoordinate?,
 	val ew: MappedEnumeration<Char, NMEAEastWest>?,
-	val time: OffsetTime,
+	val time: OffsetTime?,
 	val status: MappedEnumeration<Char, NMEAReceiverStatus>,
 	val positioning: MappedEnumeration<Char, NMEAPositioningMode>?
 ) : NMEAMessage(talker, format, fields, checksum, checksumValid) {
@@ -49,6 +49,7 @@ class NMEAGLLMessage(
 			else NMEAEastWest.entries.id(it[0])
 		},
 		message.fields[4].let {
+			if (it.isEmpty()) return@let null
 			val parsed = utcTimeFormat.parse(it)
 			OffsetTime.of(
 				parsed.get(ChronoField.HOUR_OF_AMPM),

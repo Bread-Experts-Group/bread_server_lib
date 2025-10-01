@@ -58,12 +58,12 @@ val nativeID3D12DescriptorHeap = WindowsGUID(
 	ubyteArrayOf(0x12u, 0x7Bu, 0xB7u, 0x63u, 0xFAu, 0x51u)
 ).allocate(handleArena)
 
-val nativeD3D12GetInterface: MethodHandle = d3d12Lookup.getDowncall(
+val nativeD3D12GetInterface: MethodHandle? = d3d12Lookup.getDowncall(
 	linker, "D3D12GetInterface", HRESULT,
 	REFCLSID, REFIID, ValueLayout.ADDRESS // of void*
 )
 
-val nativeD3D12CreateDevice: MethodHandle = d3d12Lookup.getDowncall(
+val nativeD3D12CreateDevice: MethodHandle? = d3d12Lookup.getDowncall(
 	linker, "D3D12CreateDevice", HRESULT,
 	ValueLayout.ADDRESS /* of IUnknown* */,
 	AddressLayout.JAVA_INT /* of D3D_FEATURE_LEVEL */,

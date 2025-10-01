@@ -38,11 +38,10 @@ class WindowsSerialInterface : SerialInterface() {
 				WindowsGenericAccessRights.GENERIC_WRITE
 			),
 			EnumSet.noneOf(WindowsFileSharingTypes::class.java),
-			WindowsCreationDisposition.OPEN_EXISTING,
-			null
+			WindowsCreationDisposition.OPEN_EXISTING
 		)
 		val dcb = SerialCommunicationDeviceControl(arena)
-		if (nativeGetCommState.invokeExact(capturedStateSegment, serialHandle, dcb.ptr) as Int == 0)
+		if (nativeGetCommState!!.invokeExact(capturedStateSegment, serialHandle, dcb.ptr) as Int == 0)
 			decodeLastError(arena)
 		dcb.baudRate = WindowsBaudRate.entries.id(baudRate)
 		dcb.dataBits = dataBits
@@ -59,14 +58,14 @@ class WindowsSerialInterface : SerialInterface() {
 				SerialParityScheme.NO_PARITY -> WindowsParityScheme.NOPARITY
 			}
 		)
-		if (nativeSetCommState.invokeExact(capturedStateSegment, serialHandle, dcb.ptr) as Int == 0)
+		if (nativeSetCommState!!.invokeExact(capturedStateSegment, serialHandle, dcb.ptr) as Int == 0)
 			decodeLastError(arena)
 	}
 
 	override fun read(b: MemorySegment, length: Long): Long = Arena.ofConfined().use { arena ->
 		val read = arena.allocate(DWORD)
 		if (
-			nativeReadFile.invokeExact(
+			nativeReadFile!!.invokeExact(
 				capturedStateSegment,
 				serialHandle,
 				b,

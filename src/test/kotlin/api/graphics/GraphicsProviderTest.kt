@@ -21,10 +21,7 @@ class GraphicsProviderTest {
 	val logger = ColoredHandler.newLogger("tmp logger")
 
 	fun window(): GraphicsWindow {
-		val windowing = GraphicsProvider.get(GraphicsFeatures.WINDOW)
-		if (windowing == null) throw UnsupportedOperationException(
-			"Cannot test windowing, local system does not support ${GraphicsFeatures.WINDOW}"
-		)
+		val windowing = GraphicsProvider.get(GraphicsFeatures.WINDOW, false)
 		val template = windowing.createTemplate()
 		val window = windowing.createWindow(template)
 		return window

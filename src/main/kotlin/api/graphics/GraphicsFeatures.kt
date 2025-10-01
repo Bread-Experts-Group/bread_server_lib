@@ -4,5 +4,7 @@ import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowFeature
 
 object GraphicsFeatures {
-	val WINDOW = object : FeatureExpression<GraphicsWindowFeature> {}
+	val WINDOW = object : FeatureExpression<GraphicsWindowFeature> {
+		override val name: String = "Windowing"
+	}
 }

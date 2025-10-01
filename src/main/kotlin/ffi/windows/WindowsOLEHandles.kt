@@ -13,7 +13,7 @@ private val handleArena = Arena.ofAuto()
 private val ole32Lookup: SymbolLookup = handleArena.getLookup("Ole32.dll")
 private val linker: Linker = Linker.nativeLinker()
 
-val nativeCoCreateGuid: MethodHandle = ole32Lookup.getDowncall(
+val nativeCoCreateGuid: MethodHandle? = ole32Lookup.getDowncall(
 	linker, "CoCreateGuid", HRESULT,
 	ValueLayout.ADDRESS // of GUID
 )

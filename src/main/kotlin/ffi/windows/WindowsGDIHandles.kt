@@ -11,7 +11,7 @@ private val handleArena = Arena.ofAuto()
 private val gdi32Lookup: SymbolLookup = handleArena.getLookup("Gdi32.dll")
 private val linker: Linker = Linker.nativeLinker()
 
-val nativeSetPixelFormat: MethodHandle = gdi32Lookup.getDowncall(
+val nativeSetPixelFormat: MethodHandle? = gdi32Lookup.getDowncall(
 	linker, "SetPixelFormat",
 	arrayOf(
 		BOOL,
@@ -22,7 +22,7 @@ val nativeSetPixelFormat: MethodHandle = gdi32Lookup.getDowncall(
 	)
 )
 
-val nativeChoosePixelFormat: MethodHandle = gdi32Lookup.getDowncall(
+val nativeChoosePixelFormat: MethodHandle? = gdi32Lookup.getDowncall(
 	linker, "ChoosePixelFormat",
 	arrayOf(
 		ValueLayout.JAVA_INT,
@@ -33,7 +33,7 @@ val nativeChoosePixelFormat: MethodHandle = gdi32Lookup.getDowncall(
 	)
 )
 
-val nativeSwapBuffers: MethodHandle = gdi32Lookup.getDowncall(
+val nativeSwapBuffers: MethodHandle? = gdi32Lookup.getDowncall(
 	linker, "SwapBuffers", BOOL,
 	HDC
 )

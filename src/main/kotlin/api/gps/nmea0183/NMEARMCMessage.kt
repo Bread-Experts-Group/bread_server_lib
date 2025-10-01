@@ -14,7 +14,7 @@ class NMEARMCMessage(
 	fields: List<String>,
 	checksum: UByte,
 	checksumValid: Boolean,
-	val time: OffsetTime,
+	val time: OffsetTime?,
 	val status: MappedEnumeration<Char, NMEAReceiverStatus>,
 	val latitude: NMEACoordinate?,
 	val ns: MappedEnumeration<Char, NMEANorthSouth>?,
@@ -22,7 +22,7 @@ class NMEARMCMessage(
 	val ew: MappedEnumeration<Char, NMEAEastWest>?,
 	val speed: BigDecimal?,
 	val course: BigDecimal?,
-	val date: LocalDate,
+	val date: LocalDate?,
 	val positioning: MappedEnumeration<Char, NMEAPositioningMode>
 ) : NMEAMessage(talker, format, fields, checksum, checksumValid) {
 	constructor(message: NMEAMessage) : this(
@@ -32,6 +32,7 @@ class NMEARMCMessage(
 		message.checksum,
 		message.checksumValid,
 		message.fields[0].let {
+			if (it.isEmpty()) return@let null
 			val parsed = utcTimeFormat.parse(it)
 			OffsetTime.of(
 				parsed.get(ChronoField.HOUR_OF_DAY),
@@ -67,6 +68,7 @@ class NMEARMCMessage(
 		message.fields[6].toBigDecimalOrNull(),
 		message.fields[7].toBigDecimalOrNull(),
 		message.fields[8].let {
+			if (it.isEmpty()) return@let null
 			LocalDate.from(utcDateFormat.parse(it))
 		},
 		NMEAPositioningMode.entries.id(message.fields[11][0]),

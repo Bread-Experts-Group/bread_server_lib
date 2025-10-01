@@ -13,7 +13,7 @@ class NMEAGGAMessage(
 	fields: List<String>,
 	checksum: UByte,
 	checksumValid: Boolean,
-	val time: OffsetTime,
+	val time: OffsetTime?,
 	val latitude: NMEACoordinate?,
 	val ns: MappedEnumeration<Char, NMEANorthSouth>?,
 	val longitude: NMEACoordinate?,
@@ -33,6 +33,7 @@ class NMEAGGAMessage(
 		message.checksum,
 		message.checksumValid,
 		message.fields[0].let {
+			if (it.isEmpty()) return@let null
 			val parsed = utcTimeFormat.parse(it)
 			OffsetTime.of(
 				parsed.get(ChronoField.HOUR_OF_AMPM),

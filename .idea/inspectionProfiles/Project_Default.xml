@@ -58,6 +58,8 @@
           <option value="LongLine" />
           <option value="IncorrectFormatting" />
           <option value="HardCodedStringLiteral" />
+          <option value="RedundantSemicolon" />
+          <option value="RemoveExplicitTypeArguments" />
         </list>
       </option>
     </inspection_tool>
