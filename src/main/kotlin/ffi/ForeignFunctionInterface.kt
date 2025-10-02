@@ -71,9 +71,12 @@ fun SymbolLookup.getDowncall(linker: Linker, name: String, vararg layouts: Value
 	return getDowncall(linker, name, layouts, emptyList())
 }
 
-fun SymbolLookup.getDowncallVoid(linker: Linker, name: String, vararg layouts: ValueLayout): MethodHandle {
+fun SymbolLookup.getDowncallVoid(linker: Linker, name: String, vararg layouts: ValueLayout): MethodHandle? {
 	val descriptor = FunctionDescriptor.ofVoid(*layouts)
-	return linker.downcallHandle(this.getAddress(name), descriptor)
+	return linker.downcallHandle(
+		this.getAddress(name) ?: return null,
+		descriptor
+	)
 }
 
 private val gcArena = Arena.ofAuto()

@@ -9,7 +9,7 @@ abstract class FeatureProvisioner<X>(
 	vararg features: X
 ) where X : FeatureImplementation<out X>, X : CheckedImplementation {
 	protected val features = (ServiceLoader.load(clazz) + features).toMutableList()
-	protected val supportedFeatures = mutableMapOf<FeatureExpression<out X>, MutableList<X>>()
+	private val supportedFeatures = mutableMapOf<FeatureExpression<out X>, MutableList<X>>()
 	protected val logger = ColoredHandler.newLogger("TMP logger")
 	fun <I : X, E : FeatureExpression<I>> get(feature: E, allowEmulated: Boolean): I {
 		val supported = supportedFeatures[feature]
