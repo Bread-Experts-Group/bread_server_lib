@@ -7,7 +7,7 @@ import org.bread_experts_group.api.computer.ia32.instruction.type.InstructionSel
 /**
  * TODO: Write an encompassing Javadoc for all instructions defined in this selector.
  * @author Miko Elbrecht
- * @since 1.0.0
+ * @since D0F0N0P0
  */
 class SelectorC6h : InstructionSelector(0xC6u) {
 	override val instructions: Map<UInt, Instruction> by lazy {

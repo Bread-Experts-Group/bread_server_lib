@@ -14,7 +14,7 @@ class PopIntoRegisterDefinitions : InstructionCluster {
 	 * Instruction: `POP r(16/32)` |
 	 * Flags Modified: `none`
 	 * @author Miko Elbrecht
-	 * @since 1.0.0
+	 * @since D0F0N0P0
 	 */
 	class PopIntoRegister(
 		opcode: UInt,
@@ -40,7 +40,7 @@ class PopIntoRegisterDefinitions : InstructionCluster {
 	 * Instruction: `POP (D/E/S)S` |
 	 * Flags Modified: `none`
 	 * @author Miko Elbrecht
-	 * @since 1.0.0
+	 * @since D0F0N0P0
 	 */
 	class PopIntoSegmentRegister(
 		opcode: UInt,

@@ -14,7 +14,7 @@ class PushFromRegisterDefinitions : InstructionCluster {
 	 * Instruction: `PUSH r(16/32)` |
 	 * Flags Modified: `none`
 	 * @author Miko Elbrecht
-	 * @since 1.0.0
+	 * @since D0F0N0P0
 	 */
 	class PushFromRegister(
 		opcode: UInt,
@@ -40,7 +40,7 @@ class PushFromRegisterDefinitions : InstructionCluster {
 	 * Instruction: `PUSH (C/S/D/E/F/G)S` |
 	 * Flags Modified: `none`
 	 * @author Miko Elbrecht
-	 * @since 1.0.0
+	 * @since D0F0N0P0
 	 */
 	class PushFromSegmentRegister(
 		opcode: UInt,

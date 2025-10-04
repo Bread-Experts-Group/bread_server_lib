@@ -41,3 +41,17 @@ val CRYPT_PROVIDER_REG_cAliases: VarHandle = CRYPT_PROVIDER_REG.varHandle(groupE
 val CRYPT_PROVIDER_REG_rgpszAliases: VarHandle = CRYPT_PROVIDER_REG.varHandle(groupElement("rgpszAliases"))
 val CRYPT_PROVIDER_REG_pUM: VarHandle = CRYPT_PROVIDER_REG.varHandle(groupElement("pUM"))
 val CRYPT_PROVIDER_REG_pKM: VarHandle = CRYPT_PROVIDER_REG.varHandle(groupElement("pKM"))
+
+val BCRYPT_MULTI_HASH_OPERATION: StructLayout = MemoryLayout.structLayout(
+	ULONG.withName("iHash"),
+	BCRYPT_HASH_OPERATION_TYPE.withName("hashOperation"),
+	ValueLayout.ADDRESS.withName("pbBuffer").withByteAlignment(4),
+	ULONG.withName("cbBuffer"),
+	MemoryLayout.paddingLayout(4)
+)
+val BCRYPT_MULTI_HASH_OPERATION_iHash: VarHandle = BCRYPT_MULTI_HASH_OPERATION.varHandle(groupElement("iHash"))
+val BCRYPT_MULTI_HASH_OPERATION_hashOperation: VarHandle = BCRYPT_MULTI_HASH_OPERATION.varHandle(
+	groupElement("hashOperation")
+)
+val BCRYPT_MULTI_HASH_OPERATION_pbBuffer: VarHandle = BCRYPT_MULTI_HASH_OPERATION.varHandle(groupElement("pbBuffer"))
+val BCRYPT_MULTI_HASH_OPERATION_cbBuffer: VarHandle = BCRYPT_MULTI_HASH_OPERATION.varHandle(groupElement("cbBuffer"))

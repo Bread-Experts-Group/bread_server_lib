@@ -7,7 +7,7 @@ import org.bread_experts_group.api.computer.ia32.instruction.type.InstructionSel
 /**
  * ALIAS OF SELECTOR 0x80
  * @author Miko Elbrecht
- * @since 1.0.0
+ * @since D0F0N0P0
  */
 class Selector82h : InstructionSelector(0x82u) {
 	override val instructions: Map<UInt, Instruction> by lazy {

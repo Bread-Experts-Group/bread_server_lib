@@ -5,7 +5,7 @@ import java.util.*
 /**
  * @author <a href="https://github.com/ATPStorages">Miko Elbrecht (EN)</a>
  * Translator
- * @since 2.41.0
+ * @since D0F0N0P0
  */
 @Suppress("unused", "ClassName")
 class ImageReaderResource_ja : ListResourceBundle() {

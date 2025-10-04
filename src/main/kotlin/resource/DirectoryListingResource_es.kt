@@ -7,7 +7,7 @@ import java.util.*
  * Translator (MX)
  * @author <a href="https://ricardetex.carrd.co/">XxricardetexXPro</a>
  * Peer review translator (folder_inaccessible, outside_of_store) (CL)
- * @since 2.23.0
+ * @since D0F0N0P0
  */
 @Suppress("unused", "ClassName")
 class DirectoryListingResource_es : ListResourceBundle() {

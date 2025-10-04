@@ -13,7 +13,7 @@ import org.bread_experts_group.api.computer.ia32.instruction.type.operand.Immedi
  * Flags Modified: `none`
  * TODO: Please see the operation listing for CALL on the manual
  * @author Miko Elbrecht
- * @since 1.0.0
+ * @since D0F0N0P0
  */
 class CallProcedureOperandLengthImmediateDisplacement : Instruction(0xE8u, "call"), Immediate16, Immediate32 {
 	override fun operands(processor: IA32Processor): String = when (processor.operandSize) {

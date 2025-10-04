@@ -9,7 +9,7 @@ import kotlin.ByteArray
  * A thin wrapper around a [ByteArray] for use with [SecureDataBlob]. Includes [AutoCloseable] to securely erase
  *  data when no longer needed.
  * @author Miko Elbrecht
- * @since 4.0.0
+ * @since D0F0N0P0
  */
 class SecuredByteArray(val around: ByteArray) : AutoCloseable {
 	companion object {

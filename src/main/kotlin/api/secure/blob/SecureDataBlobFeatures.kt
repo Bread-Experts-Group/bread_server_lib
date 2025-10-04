@@ -9,7 +9,7 @@ object SecureDataBlobFeatures {
 	/**
 	 * Data stored in a [SecureDataBlob] will only able to be decrypted by local process.
 	 * @author Miko Elbrecht
-	 * @since 4.0.0
+	 * @since D0F0N0P0
 	 */
 	val LOCAL_PROCESS_ENCRYPTED = object : FeatureExpression<LocalProcessEncryptedSecureDataBlobFeature> {
 		override val name: String = "Local-Process Specific Decryption"
@@ -18,7 +18,7 @@ object SecureDataBlobFeatures {
 	/**
 	 * Data stored in a [SecureDataBlob] will be able to be decrypted by other processes.
 	 * @author Miko Elbrecht
-	 * @since 4.0.0
+	 * @since D0F0N0P0
 	 */
 	val CROSS_PROCESS_ENCRYPTED = object : FeatureExpression<CrossProcessEncryptedSecureDataBlobFeature> {
 		override val name: String = "Cross-Process Specific Decryption"
@@ -27,7 +27,7 @@ object SecureDataBlobFeatures {
 	/**
 	 * Data stored in a [SecureDataBlob] will be able to be decrypted by processes running under the local user.
 	 * @author Miko Elbrecht
-	 * @since 4.0.0
+	 * @since D0F0N0P0
 	 */
 	val LOCAL_USER_ENCRYPTED = object : FeatureExpression<LocalUserEncryptedSecureDataBlobFeature> {
 		override val name: String = "Local-User Specific Decryption"

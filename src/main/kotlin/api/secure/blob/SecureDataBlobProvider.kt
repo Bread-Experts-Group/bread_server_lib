@@ -9,7 +9,7 @@ abstract class SecureDataBlobProvider : CheckedImplementation {
 		/**
 		 * Opens a new [SecureDataBlob] for use. The [SecureDataBlob] is not initialized for writing / reading.
 		 * @author Miko Elbrecht
-		 * @since 4.0.0
+		 * @since D0F0N0P0
 		 */
 		fun open(): SecureDataBlob {
 			val blob = ServiceLoader.load(SecureDataBlobProvider::class.java)

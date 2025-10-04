@@ -5,7 +5,7 @@ import org.bread_experts_group.coder.MappedEnumeration
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
-class BCryptProviderInterfaceDescription(ptr: MemorySegment) {
+class WindowsBCryptProviderInterfaceDescription(ptr: MemorySegment) {
 	val bcInterface: MappedEnumeration<UInt, WindowsBCryptInterface> = WindowsBCryptInterface.entries.id(
 		(CRYPT_INTERFACE_REG_dwInterface.get(ptr, 0) as Int).toUInt()
 	)

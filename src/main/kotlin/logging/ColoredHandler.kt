@@ -16,7 +16,7 @@ import kotlin.math.max
 /**
  * A handler for colored, formatted logging towards a [PrintStream].
  * @author Miko Elbrecht
- * @since 2.4.0
+ * @since D0F0N0P0
  */
 class ColoredHandler(
 	var dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/dd HH:mm:ss.SSSSSS"),

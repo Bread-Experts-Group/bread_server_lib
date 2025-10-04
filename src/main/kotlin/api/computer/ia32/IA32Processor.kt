@@ -20,15 +20,11 @@ import kotlin.reflect.KProperty0
 
 /**
  * A [Processor] capable of virtualizing the IA-32 architecture.
- * @since 1.0.0
+ * @since D0F0N0P0
  * @see Computer
  * @author Miko Elbrecht
  */
 class IA32Processor : Processor {
-	companion object {
-		val dummyProcessor = IA32Processor()
-	}
-
 	override lateinit var computer: Computer
 	override fun step() {
 		this.fetch()
@@ -92,7 +88,7 @@ class IA32Processor : Processor {
 	 * For ease of implementation, the BIOS is not present in ROMs on Bread Mod computers;
 	 * instead, a Kotlin-written BIOS will be run, which will then do the boot loading process.
 	 * @see fetch
-	 * @since 1.0.0
+	 * @since D0F0N0P0
 	 * @author Miko Elbrecht
 	 */
 	var ip: Register = Register(this.logger, "ip", 0xFFF0u)
@@ -351,7 +347,7 @@ class IA32Processor : Processor {
 				}
 			}
 		}
-//		this.logger.warning { "${this.cs.hex(this.ip.rx - 1u)} ${hex(this.cir)}: ${instruction.getDisassembly(this)}" }
+//	this.logger.warning { "${this.cs.hex(this.ip.rx - 1u)} ${hex(this.cir)}: ${instruction.getDisassembly(this)}" }
 		localExecutor?.invoke(instruction) ?: instruction.handle(this)
 		this.localExecutor = null
 		this.segment = null

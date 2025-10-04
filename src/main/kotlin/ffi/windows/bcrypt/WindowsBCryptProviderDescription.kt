@@ -3,7 +3,7 @@ package org.bread_experts_group.ffi.windows.bcrypt
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
-class BCryptProviderDescription(ptr: MemorySegment) {
+class WindowsBCryptProviderDescription(ptr: MemorySegment) {
 	val aliases = run {
 		val count = CRYPT_PROVIDER_REG_cAliases.get(ptr, 0) as Int
 		val aliasArray = (CRYPT_PROVIDER_REG_rgpszAliases.get(ptr, 0) as MemorySegment)
@@ -16,11 +16,11 @@ class BCryptProviderDescription(ptr: MemorySegment) {
 		}
 	}
 	val userMode = (CRYPT_PROVIDER_REG_pUM.get(ptr, 0) as MemorySegment).let {
-		if (it != MemorySegment.NULL) BCryptProviderImageDescription(it.reinterpret(CRYPT_IMAGE_REG.byteSize()))
+		if (it != MemorySegment.NULL) WindowsBCryptProviderImageDescription(it.reinterpret(CRYPT_IMAGE_REG.byteSize()))
 		else null
 	}
 	val kernelMode = (CRYPT_PROVIDER_REG_pKM.get(ptr, 0) as MemorySegment).let {
-		if (it != MemorySegment.NULL) BCryptProviderImageDescription(it.reinterpret(CRYPT_IMAGE_REG.byteSize()))
+		if (it != MemorySegment.NULL) WindowsBCryptProviderImageDescription(it.reinterpret(CRYPT_IMAGE_REG.byteSize()))
 		else null
 	}
 

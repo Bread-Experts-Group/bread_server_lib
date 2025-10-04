@@ -1,10 +1,12 @@
 package org.bread_experts_group.ffi.windows
 
+import org.bread_experts_group.coder.Mappable.Companion.id
 import org.bread_experts_group.ffi.capturedStateSegment
 import java.lang.foreign.AddressLayout
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+import java.lang.invoke.MethodHandle
 
 val char: ValueLayout.OfByte = ValueLayout.JAVA_BYTE
 val BYTE: ValueLayout.OfByte = ValueLayout.JAVA_BYTE
@@ -77,4 +79,37 @@ fun decodeCOMError(arena: Arena, err: Int) {
 fun decodeLastError(arena: Arena) {
 	decodeCOMError(arena, nativeGetLastError.get(capturedStateSegment, 0L) as Int)
 	throw COMException("General exception (GetLastError did not produce error code).")
+}
+
+fun MethodHandle.returnsNTRESULT(p0: Any) {
+	(this.invoke(p0) as Int).decodeNTRESULT()
+}
+
+fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any) {
+	(this.invoke(p0, p1) as Int).decodeNTRESULT()
+}
+
+fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any) {
+	(this.invoke(p0, p1, p2, p3) as Int).decodeNTRESULT()
+}
+
+fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any) {
+	(this.invoke(p0, p1, p2, p3, p4) as Int).decodeNTRESULT()
+}
+
+fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any) {
+	(this.invoke(p0, p1, p2, p3, p4, p5) as Int).decodeNTRESULT()
+}
+
+fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any, p6: Any) {
+	(this.invoke(p0, p1, p2, p3, p4, p5, p6) as Int).decodeNTRESULT()
+}
+
+fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any, p6: Any, p7: Any) {
+	(this.invoke(p0, p1, p2, p3, p4, p5, p6, p7) as Int).decodeNTRESULT()
+}
+
+private fun Int.decodeNTRESULT() {
+	val status = WindowsNTStatus.entries.id(this.toUInt())
+	if (status.enum != WindowsNTStatus.STATUS_SUCCESS) throw WindowsNTRESULTException(status)
 }

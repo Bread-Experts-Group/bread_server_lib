@@ -11,7 +11,7 @@ abstract class EncryptedSecureDataBlobFeature<I : SDBFIG<I>> : SDBFIG<I>() {
 	 * however, an [IndexOutOfBoundsException] will still be thrown if an attempt is made to access memory beyond
 	 * [size] bytes.
 	 * @author Miko Elbrecht
-	 * @since 4.0.0
+	 * @since D0F0N0P0
 	 */
 	abstract fun initialize(size: Long)
 }

@@ -20,7 +20,7 @@ import java.util.logging.LogRecord
 /**
  * A handler for file-based, banked logging.
  * @author Miko Elbrecht
- * @since 2.32.0
+ * @since D0F0N0P0
  */
 class BankedFileHandler(
 	val bankPath: Path,

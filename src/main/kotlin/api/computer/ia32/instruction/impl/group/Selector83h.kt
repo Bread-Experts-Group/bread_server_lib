@@ -9,7 +9,7 @@ import org.bread_experts_group.hex
 /**
  * TODO: Write an encompassing Javadoc for all instructions defined in this selector.
  * @author Miko Elbrecht
- * @since 1.0.0
+ * @since D0F0N0P0
  */
 class Selector83h : InstructionSelector(0x83u) {
 	val d16 = {

@@ -4,7 +4,7 @@ import org.bread_experts_group.logging.ansiEscape
 
 /**
  * @author Miko Elbrecht
- * @since 2.31.0
+ * @since D0F0N0P0
  */
 data class ANSI16Color(
 	val baseColor: ANSI16,

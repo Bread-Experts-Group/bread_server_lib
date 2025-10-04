@@ -20,8 +20,8 @@ import java.nio.channels.Channels
 import java.nio.channels.SeekableByteChannel
 
 /**
- * A Bread Mod computer.
- * @since 1.0.0
+ * A simulation of a computer.
+ * @since D0F0N0P0
  * @see MemoryModule
  * @see Processor
  * @author Miko Elbrecht

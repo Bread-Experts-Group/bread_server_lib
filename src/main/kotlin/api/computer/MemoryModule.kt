@@ -9,7 +9,7 @@ package org.bread_experts_group.api.computer
  * @param capacity The capacity of the memory module.
  * @param effectiveAddress The address on which this memory segment begins for the computer (not set for contiguous).
  * @throws IllegalArgumentException If the capacity is negative.
- * @since 1.0.0
+ * @since D0F0N0P0
  * @author Miko Elbrecht
  */
 class MemoryModule(val capacity: UInt, val effectiveAddress: ULong? = null) {
@@ -29,9 +29,8 @@ class MemoryModule(val capacity: UInt, val effectiveAddress: ULong? = null) {
 	 * @return The value at the specified address.
 	 * @throws ArrayIndexOutOfBoundsException If the address is out of bounds.
 	 * @throws IllegalArgumentException If the address is negative.
-	 * @since 1.0.0
 	 * @see set
-	 * @since 1.0.0
+	 * @since D0F0N0P0
 	 * @author Miko Elbrecht
 	 */
 	@OptIn(ExperimentalUnsignedTypes::class)
@@ -43,9 +42,8 @@ class MemoryModule(val capacity: UInt, val effectiveAddress: ULong? = null) {
 	 * @param value The value to write.
 	 * @throws ArrayIndexOutOfBoundsException If the address is out of bounds.
 	 * @throws IllegalArgumentException If the address is negative.
-	 * @since 1.0.0
 	 * @see get
-	 * @since 1.0.0
+	 * @since D0F0N0P0
 	 * @author Miko Elbrecht
 	 */
 	@OptIn(ExperimentalUnsignedTypes::class)

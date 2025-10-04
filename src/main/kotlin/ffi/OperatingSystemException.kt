@@ -5,6 +5,6 @@ import java.io.IOException
 /**
  * An error has occurred while interacting with the operating system natively.
  * @author Miko Elbrecht
- * @since 4.0.0
+ * @since D0F0N0P0
  */
 abstract class OperatingSystemException(message: String) : IOException(message)

@@ -3,11 +3,11 @@ package org.bread_experts_group.ffi.windows.bcrypt
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
-class BCryptProviderImageDescription(ptr: MemorySegment) {
+class WindowsBCryptProviderImageDescription(ptr: MemorySegment) {
 	val moduleFile: String = (CRYPT_IMAGE_REG_pszImage.get(ptr, 0) as MemorySegment)
 		.reinterpret(Long.MAX_VALUE)
 		.getString(0, Charsets.UTF_16LE)
-	val interfaces: List<BCryptProviderInterfaceDescription> = run {
+	val interfaces: List<WindowsBCryptProviderInterfaceDescription> = run {
 		val ptr = ptr.reinterpret(CRYPT_IMAGE_REG.byteSize())
 		val count = CRYPT_IMAGE_REG_cInterfaces.get(ptr, 0) as Int
 		val interfaceArray = (CRYPT_IMAGE_REG_rgpInterfaces.get(ptr, 0) as MemorySegment)
@@ -17,7 +17,7 @@ class BCryptProviderImageDescription(ptr: MemorySegment) {
 			val interfacePtr = interfaceArray.get(ValueLayout.ADDRESS, offset)
 				.reinterpret(CRYPT_INTERFACE_REG.byteSize())
 			offset += ValueLayout.ADDRESS.byteSize()
-			BCryptProviderInterfaceDescription(interfacePtr)
+			WindowsBCryptProviderInterfaceDescription(interfacePtr)
 		}
 	}
 

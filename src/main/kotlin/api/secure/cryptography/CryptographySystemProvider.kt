@@ -9,7 +9,7 @@ abstract class CryptographySystemProvider : CheckedImplementation {
 		/**
 		 * Opens a new [CryptographySystem] for use.
 		 * @author Miko Elbrecht
-		 * @since 4.0.0
+		 * @since D0F0N0P0
 		 */
 		fun open(): CryptographySystem {
 			val system = ServiceLoader.load(CryptographySystemProvider::class.java)

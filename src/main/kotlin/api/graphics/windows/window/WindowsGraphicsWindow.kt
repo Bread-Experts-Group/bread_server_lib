@@ -2,7 +2,6 @@ package org.bread_experts_group.api.graphics.windows.window
 
 import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
-import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowFeatureImplementation
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowFeatures
 import org.bread_experts_group.coder.Flaggable.Companion.raw
 import org.bread_experts_group.ffi.capturedStateSegment
@@ -19,13 +18,14 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 
 	val renderFeature = WindowsGraphicsWindowRenderEventFeature()
 	val resizeFeature = WindowsGraphicsWindowResizeEventFeature()
-	override val features: Set<GraphicsWindowFeatureImplementation<*>> = setOf(
-		WindowsGraphicsWindowNameFeature(this),
-		WindowsGraphicsWindowOpenGLContextFeature(this),
-		WindowsGraphicsWindowDirectXContext(this),
-		renderFeature,
-		resizeFeature
-	)
+
+	init {
+		this.features += WindowsGraphicsWindowNameFeature(this)
+		this.features += WindowsGraphicsWindowOpenGLContextFeature(this)
+		this.features += WindowsGraphicsWindowDirectXContext(this)
+		this.features += renderFeature
+		this.features += resizeFeature
+	}
 
 	val procedures: MutableMap<Int, (MemorySegment, Int, Long, Long) -> Long> = mutableMapOf(
 		WindowsMessageTypes.WM_DESTROY.position.toInt() to { _, _, _, _ ->

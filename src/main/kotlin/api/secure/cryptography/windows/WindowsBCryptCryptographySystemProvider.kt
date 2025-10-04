@@ -4,12 +4,10 @@ import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.CryptographySystem
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemProvider
-import org.bread_experts_group.api.secure.cryptography.windows.feature.WindowsHashingFeature
-import org.bread_experts_group.coder.Mappable.Companion.id
-import org.bread_experts_group.ffi.windows.COMException
+import org.bread_experts_group.api.secure.cryptography.windows.feature.hash.*
 import org.bread_experts_group.ffi.windows.ULONG
-import org.bread_experts_group.ffi.windows.WindowsNTStatus
 import org.bread_experts_group.ffi.windows.bcrypt.*
+import org.bread_experts_group.ffi.windows.returnsNTRESULT
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -21,13 +19,10 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 		val bufferSz = arena.allocate(ULONG)
 		val bufferLoc = arena.allocate(ValueLayout.ADDRESS)
 		val readStrings = buildList {
-			val status = WindowsNTStatus.entries.id(
-				((nativeBCryptEnumRegisteredProviders ?: return false).invokeExact(
-					bufferSz,
-					bufferLoc
-				) as Int).toUInt()
+			(nativeBCryptEnumRegisteredProviders ?: return false).returnsNTRESULT(
+				bufferSz,
+				bufferLoc
 			)
-			if (status.enum != WindowsNTStatus.STATUS_SUCCESS) throw COMException(status.toString())
 			val buffer = bufferLoc.get(ValueLayout.ADDRESS, 0).reinterpret(
 				bufferSz.get(ULONG, 0).toUInt().toLong(),
 				arena
@@ -51,17 +46,14 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 			for (providerName in readStrings) {
 				bufferSz.set(ULONG, 0, 0)
 				bufferLoc.set(ValueLayout.ADDRESS, 0, MemorySegment.NULL)
-				val status = WindowsNTStatus.entries.id(
-					((nativeBCryptQueryProviderRegistration ?: return@use false).invokeExact(
-						allocatedStrings[providerName],
-						WindowsBCryptProviderMode.CRYPT_ANY.id.toInt(),
-						bcInterface.id.toInt(),
-						bufferSz,
-						bufferLoc
-					) as Int).toUInt()
+				(nativeBCryptQueryProviderRegistration ?: return@use false).returnsNTRESULT(
+					allocatedStrings[providerName]!!,
+					WindowsBCryptProviderMode.CRYPT_ANY.id.toInt(),
+					bcInterface.id.toInt(),
+					bufferSz,
+					bufferLoc
 				)
-				if (status.enum != WindowsNTStatus.STATUS_SUCCESS) throw COMException(status.toString())
-				val provider = BCryptProviderDescription(
+				val provider = WindowsBCryptProviderDescription(
 					bufferLoc.get(ValueLayout.ADDRESS, 0).reinterpret(
 						bufferSz.get(ULONG, 0).toUInt().toLong(),
 						arena
@@ -86,75 +78,344 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 		val system = WindowsBCryptCryptographySystem()
 		for ((iface, functions) in providerInterfaceMap) when (iface) {
 			WindowsBCryptInterface.BCRYPT_HASH_INTERFACE -> for ((function, providers) in functions) when (function) {
-				"SHA1" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_SHA1,
-						function, providers.first()
+				"MD2" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_MD2,
+							BCRYPT_MD2_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_MD2_SIMD,
+							BCRYPT_MD2_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_MD2_HMAC,
+							BCRYPT_HMAC_MD2_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_MD2_HMAC_SIMD,
+							BCRYPT_HMAC_MD2_ALG_HANDLE
+						)
+					)
+				}
+
+				"MD4" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_MD4,
+							BCRYPT_MD4_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_MD4_SIMD,
+							BCRYPT_MD4_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_MD4_HMAC,
+							BCRYPT_HMAC_MD4_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_MD4_HMAC_SIMD,
+							BCRYPT_HMAC_MD4_ALG_HANDLE
+						)
+					)
+				}
+
+				"MD5" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_MD5,
+							BCRYPT_MD5_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_MD5_SIMD,
+							BCRYPT_MD5_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_MD5_HMAC,
+							BCRYPT_HMAC_MD5_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_MD5_HMAC_SIMD,
+							BCRYPT_HMAC_MD5_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHA1" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA1,
+							BCRYPT_SHA1_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA1_SIMD,
+							BCRYPT_SHA1_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA1_HMAC,
+							BCRYPT_HMAC_SHA1_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA1_HMAC_SIMD,
+							BCRYPT_HMAC_SHA1_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHA256" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA256,
+							BCRYPT_SHA256_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA256_SIMD,
+							BCRYPT_SHA256_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA256_HMAC,
+							BCRYPT_HMAC_SHA256_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA256_HMAC_SIMD,
+							BCRYPT_HMAC_SHA256_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHA384" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA384,
+							BCRYPT_SHA384_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA384_SIMD,
+							BCRYPT_SHA384_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA384_HMAC,
+							BCRYPT_HMAC_SHA384_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA384_HMAC_SIMD,
+							BCRYPT_HMAC_SHA384_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHA512" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA512,
+							BCRYPT_SHA512_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA512_SIMD,
+							BCRYPT_SHA512_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA512_HMAC,
+							BCRYPT_HMAC_SHA512_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA512_HMAC_SIMD,
+							BCRYPT_HMAC_SHA512_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHA3-256" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_256,
+							BCRYPT_SHA3_256_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_256_SIMD,
+							BCRYPT_SHA3_256_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_256_HMAC,
+							BCRYPT_HMAC_SHA3_256_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_256_HMAC_SIMD,
+							BCRYPT_HMAC_SHA3_256_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHA3-384" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_384,
+							BCRYPT_SHA3_384_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_384_SIMD,
+							BCRYPT_SHA3_384_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_384_HMAC,
+							BCRYPT_HMAC_SHA3_384_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_384_HMAC_SIMD,
+							BCRYPT_HMAC_SHA3_384_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHA3-512" -> {
+					system.exposedFeatures.add(
+						WindowsHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_512,
+							BCRYPT_SHA3_512_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_512_SIMD,
+							BCRYPT_SHA3_512_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_512_HMAC,
+							BCRYPT_HMAC_SHA3_512_ALG_HANDLE
+						)
+					)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_SHA3_512_HMAC_SIMD,
+							BCRYPT_HMAC_SHA3_512_ALG_HANDLE
+						)
+					)
+				}
+
+				"SHAKE128" -> Arena.ofShared().let {
+					val algorithm = createBCryptAlgorithm(function, providers.first(), it)
+					system.exposedFeatures.add(
+						WindowsXOFHashingFeature(
+							CryptographySystemFeatures.HASHING_SHAKE128,
+							algorithm, it
+						)
+					)
+				}
+
+				"SHAKE256" -> Arena.ofShared().let {
+					val algorithm = createBCryptAlgorithm(function, providers.first(), it)
+					system.exposedFeatures.add(
+						WindowsXOFHashingFeature(
+							CryptographySystemFeatures.HASHING_SHAKE256,
+							algorithm, it
+						)
+					)
+				}
+
+				"CSHAKE128" -> system.exposedFeatures.add(
+					WindowsCSHAKEXOFHashingFeature(
+						CryptographySystemFeatures.HASHING_CSHAKE128,
+						BCRYPT_CSHAKE128_ALG_HANDLE
 					)
 				)
 
-				"SHA256" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_SHA256,
-						function, providers.first()
+				"CSHAKE256" -> system.exposedFeatures.add(
+					WindowsCSHAKEXOFHashingFeature(
+						CryptographySystemFeatures.HASHING_CSHAKE256,
+						BCRYPT_CSHAKE256_ALG_HANDLE
 					)
 				)
 
-				"SHA384" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_SHA384,
-						function, providers.first()
+				"AES-CMAC" -> {
+					system.exposedFeatures.add(
+						WindowsMACHashingFeature(
+							CryptographySystemFeatures.HASHING_AES_CMAC,
+							BCRYPT_AES_CMAC_ALG_HANDLE
+						)
 					)
-				)
+					system.exposedFeatures.add(
+						WindowsMACSIMDHashingFeature(
+							CryptographySystemFeatures.HASHING_AES_CMAC_SIMD,
+							BCRYPT_AES_CMAC_ALG_HANDLE
+						)
+					)
+				}
 
-				"SHA512" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_SHA512,
-						function, providers.first()
-					)
-				)
+				"AES-GMAC" -> {}
 
-				"MD5" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_MD5,
-						function, providers.first()
+				"KMAC128" -> {
+					system.exposedFeatures.add(
+						WindowsKMACXOFHashingFeature(
+							CryptographySystemFeatures.HASHING_KMAC128,
+							BCRYPT_KMAC128_ALG_HANDLE
+						)
 					)
-				)
+				}
 
-				"MD4" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_MD4,
-						function, providers.first()
+				"KMAC256" -> {
+					system.exposedFeatures.add(
+						WindowsKMACXOFHashingFeature(
+							CryptographySystemFeatures.HASHING_KMAC256,
+							BCRYPT_KMAC256_ALG_HANDLE
+						)
 					)
-				)
-
-				"MD2" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_MD2,
-						function, providers.first()
-					)
-				)
-
-				"SHA3-256" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_SHA3_256,
-						function, providers.first()
-					)
-				)
-
-				"SHA3-384" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_SHA3_384,
-						function, providers.first()
-					)
-				)
-
-				"SHA3-512" -> system.exposedFeatures.add(
-					WindowsHashingFeature(
-						CryptographySystemFeatures.HASHING_SHA3_512,
-						function, providers.first()
-					)
-				)
+				}
 
 				else -> println(" $iface: Needs implementation: $function")
 			}

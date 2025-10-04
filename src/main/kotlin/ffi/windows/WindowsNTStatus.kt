@@ -13,6 +13,11 @@ enum class WindowsNTStatus(
 	STATUS_BUFFER_TOO_SMALL(
 		0xC0000023u, "The buffer is too small to contain the entry." +
 				" No information has been written to the buffer."
+	),
+	STATUS_NOT_SUPPORTED(0xC00000BBu, "The request is not supported."),
+	STATUS_REQUEST_OUT_OF_SEQUENCE(
+		0xC000042Au,
+		"The requested operation is out of order with respect to other operations."
 	);
 
 	override fun toString(): String = stringForm()

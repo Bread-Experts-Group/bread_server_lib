@@ -5,7 +5,7 @@ import java.util.*
 /**
  * @author <a href="https://github.com/ATPStorages">Miko Elbrecht (EN)</a>
  * Translator
- * @since 2.41.0
+ * @since D0F0N0P0
  */
 class LoggerResource : ListResourceBundle() {
 	override fun getContents(): Array<out Array<out Any>> = arrayOf(
