@@ -81,35 +81,35 @@ fun decodeLastError(arena: Arena) {
 	throw COMException("General exception (GetLastError did not produce error code).")
 }
 
-fun MethodHandle.returnsNTRESULT(p0: Any) {
-	(this.invoke(p0) as Int).decodeNTRESULT()
+fun MethodHandle.returnsNTSTATUS(p0: Any) {
+	(this.invoke(p0) as Int).decodeNTSTATUS()
 }
 
-fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any) {
-	(this.invoke(p0, p1) as Int).decodeNTRESULT()
+fun MethodHandle.returnsNTSTATUS(p0: Any, p1: Any) {
+	(this.invoke(p0, p1) as Int).decodeNTSTATUS()
 }
 
-fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any) {
-	(this.invoke(p0, p1, p2, p3) as Int).decodeNTRESULT()
+fun MethodHandle.returnsNTSTATUS(p0: Any, p1: Any, p2: Any, p3: Any) {
+	(this.invoke(p0, p1, p2, p3) as Int).decodeNTSTATUS()
 }
 
-fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any) {
-	(this.invoke(p0, p1, p2, p3, p4) as Int).decodeNTRESULT()
+fun MethodHandle.returnsNTSTATUS(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any) {
+	(this.invoke(p0, p1, p2, p3, p4) as Int).decodeNTSTATUS()
 }
 
-fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any) {
-	(this.invoke(p0, p1, p2, p3, p4, p5) as Int).decodeNTRESULT()
+fun MethodHandle.returnsNTSTATUS(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any) {
+	(this.invoke(p0, p1, p2, p3, p4, p5) as Int).decodeNTSTATUS()
 }
 
-fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any, p6: Any) {
-	(this.invoke(p0, p1, p2, p3, p4, p5, p6) as Int).decodeNTRESULT()
+fun MethodHandle.returnsNTSTATUS(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any, p6: Any) {
+	(this.invoke(p0, p1, p2, p3, p4, p5, p6) as Int).decodeNTSTATUS()
 }
 
-fun MethodHandle.returnsNTRESULT(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any, p6: Any, p7: Any) {
-	(this.invoke(p0, p1, p2, p3, p4, p5, p6, p7) as Int).decodeNTRESULT()
+fun MethodHandle.returnsNTSTATUS(p0: Any, p1: Any, p2: Any, p3: Any, p4: Any, p5: Any, p6: Any, p7: Any) {
+	(this.invoke(p0, p1, p2, p3, p4, p5, p6, p7) as Int).decodeNTSTATUS()
 }
 
-private fun Int.decodeNTRESULT() {
+private fun Int.decodeNTSTATUS() {
 	val status = WindowsNTStatus.entries.id(this.toUInt())
-	if (status.enum != WindowsNTStatus.STATUS_SUCCESS) throw WindowsNTRESULTException(status)
+	if (status.enum != WindowsNTStatus.STATUS_SUCCESS) throw WindowsNTSTATUSException(status)
 }

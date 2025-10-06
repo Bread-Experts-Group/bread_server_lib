@@ -4,7 +4,7 @@ import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.feature.hash.HashingMACFeature
-import org.bread_experts_group.ffi.windows.WindowsNTRESULTException
+import org.bread_experts_group.ffi.windows.WindowsNTSTATUSException
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
@@ -24,7 +24,7 @@ class WindowsMACHashingFeature(
 			plusAssign(1)
 			flush()
 			internalHash = null
-		} catch (e: WindowsNTRESULTException) {
+		} catch (e: WindowsNTSTATUSException) {
 			e.printStackTrace()
 			return false
 		}

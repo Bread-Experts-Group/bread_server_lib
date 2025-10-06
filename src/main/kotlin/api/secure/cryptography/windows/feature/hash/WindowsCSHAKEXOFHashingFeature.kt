@@ -4,9 +4,9 @@ import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.feature.hash.CSHAKEXOFHashingFeature
-import org.bread_experts_group.ffi.windows.WindowsNTRESULTException
+import org.bread_experts_group.ffi.windows.WindowsNTSTATUSException
 import org.bread_experts_group.ffi.windows.bcrypt.nativeBCryptSetProperty
-import org.bread_experts_group.ffi.windows.returnsNTRESULT
+import org.bread_experts_group.ffi.windows.returnsNTSTATUS
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -33,7 +33,7 @@ class WindowsCSHAKEXOFHashingFeature(
 			plusAssign(1)
 			flush()
 			deference.internalHash = null
-		} catch (_: WindowsNTRESULTException) {
+		} catch (_: WindowsNTSTATUSException) {
 			return false
 		}
 		return true
@@ -43,7 +43,7 @@ class WindowsCSHAKEXOFHashingFeature(
 		val fs = tempArena.allocateFrom("FunctionNameString", Charsets.UTF_16LE)
 		val fsA = tempArena.allocate(n.size.toLong())
 		MemorySegment.copy(n, 0, fsA, ValueLayout.JAVA_BYTE, 0, n.size)
-		nativeBCryptSetProperty!!.returnsNTRESULT(
+		nativeBCryptSetProperty!!.returnsNTSTATUS(
 			deference.hash,
 			fs,
 			fsA,
@@ -56,7 +56,7 @@ class WindowsCSHAKEXOFHashingFeature(
 		val cs = tempArena.allocateFrom("CustomizationString", Charsets.UTF_16LE)
 		val csA = tempArena.allocate(s.size.toLong())
 		MemorySegment.copy(s, 0, csA, ValueLayout.JAVA_BYTE, 0, s.size)
-		nativeBCryptSetProperty!!.returnsNTRESULT(
+		nativeBCryptSetProperty!!.returnsNTSTATUS(
 			deference.hash,
 			cs,
 			csA,

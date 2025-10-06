@@ -16,6 +16,7 @@ val BCRYPT_SHA1_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000031)
 val BCRYPT_SHA256_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000041)
 val BCRYPT_SHA384_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000051)
 val BCRYPT_SHA512_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000061)
+val BCRYPT_RNG_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000081)
 val BCRYPT_HMAC_MD5_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000091)
 val BCRYPT_HMAC_SHA1_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x000000A1)
 val BCRYPT_HMAC_SHA256_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x000000B1)
@@ -110,4 +111,9 @@ val nativeBCryptDuplicateHash = bcrypt32Lookup.getDowncall(
 
 val nativeBCryptFreeBuffer = bcrypt32Lookup.getDowncallVoid(
 	linker, "BCryptFreeBuffer", PVOID
+)
+
+val nativeBCryptGenRandom = bcrypt32Lookup.getDowncall(
+	linker, "BCryptGenRandom", NTSTATUS,
+	BCRYPT_ALG_HANDLE, ValueLayout.ADDRESS, ULONG, ULONG
 )

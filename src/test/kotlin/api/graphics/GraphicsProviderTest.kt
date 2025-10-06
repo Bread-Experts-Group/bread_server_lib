@@ -43,12 +43,12 @@ class GraphicsProviderTest {
 	fun openGLWindow() {
 		val window = window()
 		val windowName = window.get(GraphicsWindowFeatures.WINDOW_NAME)
-		windowName?.name = "Hello World"
-		window.get(GraphicsWindowFeatures.OPENGL_CONTEXT)?.use = true
-		assertEquals("Hello World", windowName?.name)
+		windowName.name = "Hello World"
+		window.get(GraphicsWindowFeatures.OPENGL_CONTEXT).use = true
+		assertEquals("Hello World", windowName.name)
 		window.open()
-		assertEquals("Hello World", windowName?.name)
-		window.get(GraphicsWindowFeatures.OPENGL_CONTEXT)?.apply {
+		assertEquals("Hello World", windowName.name)
+		window.get(GraphicsWindowFeatures.OPENGL_CONTEXT).apply {
 			acquireContext()
 			val arena = Arena.ofConfined()
 			// Shaders

@@ -2,6 +2,9 @@ package org.bread_experts_group.api.secure.cryptography
 
 import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.secure.cryptography.feature.hash.*
+import org.bread_experts_group.api.secure.cryptography.feature.random.RandomFeature
+import org.bread_experts_group.api.secure.cryptography.feature.symencrypt.AESKey
+import org.bread_experts_group.api.secure.cryptography.feature.symencrypt.SymmetricEncryptionFeature
 
 /**
  * The generic set of features for [CryptographySystem].
@@ -200,5 +203,33 @@ object CryptographySystemFeatures {
 
 	val HASHING_AES_CMAC_SIMD = object : FeatureExpression<HashingMACSIMDFeature> {
 		override val name: String = "Hashing: AES CMAC (SIMD)"
+	}
+
+	val RANDOM_SYSTEM_PREFERRED = object : FeatureExpression<RandomFeature> {
+		override val name: String = "Random Number Generation: System-Preferred"
+	}
+
+	val RANDOM = object : FeatureExpression<RandomFeature> {
+		override val name: String = "Random Number Generation: Secure"
+	}
+
+	val RANDOM_FIPS_186_2_DSA = object : FeatureExpression<RandomFeature> {
+		override val name: String = "Random Number Generation: FIPS 186-2 (DSA suitable)"
+	}
+
+	val SYMMETRIC_ENCRYPTION_AES_CBC = object : FeatureExpression<SymmetricEncryptionFeature<AESKey>> {
+		override val name: String = "Symmetric Encryption: AES (CBC mode)"
+	}
+
+	val SYMMETRIC_ENCRYPTION_AES_ECB = object : FeatureExpression<SymmetricEncryptionFeature<AESKey>> {
+		override val name: String = "Symmetric Encryption: AES (ECB mode)"
+	}
+
+	val SYMMETRIC_ENCRYPTION_AES_CCM = object : FeatureExpression<SymmetricEncryptionFeature<AESKey>> {
+		override val name: String = "Symmetric Encryption: AES (CCM mode)"
+	}
+
+	val SYMMETRIC_ENCRYPTION_AES_GCM = object : FeatureExpression<SymmetricEncryptionFeature<AESKey>> {
+		override val name: String = "Symmetric Encryption: AES (GCM mode)"
 	}
 }

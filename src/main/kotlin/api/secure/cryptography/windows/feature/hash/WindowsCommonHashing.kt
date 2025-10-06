@@ -4,7 +4,7 @@ import org.bread_experts_group.coder.Flaggable.Companion.raw
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.ULONG
 import org.bread_experts_group.ffi.windows.bcrypt.*
-import org.bread_experts_group.ffi.windows.returnsNTRESULT
+import org.bread_experts_group.ffi.windows.returnsNTSTATUS
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -12,19 +12,17 @@ import java.util.*
 
 fun createBCryptAlgorithm(
 	algorithmID: String, algorithmProvider: String,
-	arena: Arena, hmac: Boolean = false
+	arena: Arena, flags: EnumSet<WindowsBCryptAlgorithmFlags>
 ): MemorySegment = Arena.ofConfined().use { tempArena ->
 	val handleRec = tempArena.allocate(ValueLayout.ADDRESS)
-	val flags = EnumSet.of(WindowsBCryptAlgorithmFlags.BCRYPT_HASH_REUSABLE_FLAG)
-	if (hmac) flags.add(WindowsBCryptAlgorithmFlags.BCRYPT_ALG_HANDLE_HMAC_FLAG)
-	nativeBCryptOpenAlgorithmProvider!!.returnsNTRESULT(
+	nativeBCryptOpenAlgorithmProvider!!.returnsNTSTATUS(
 		handleRec,
 		tempArena.allocateFrom(algorithmID, Charsets.UTF_16LE),
 		tempArena.allocateFrom(algorithmProvider, Charsets.UTF_16LE),
 		flags.raw().toInt()
 	)
 	handleRec.get(ValueLayout.ADDRESS, 0).reinterpret(arena) {
-		nativeBCryptCloseAlgorithmProvider!!.returnsNTRESULT(
+		nativeBCryptCloseAlgorithmProvider!!.returnsNTSTATUS(
 			it,
 			0
 		)
@@ -43,7 +41,7 @@ fun createBCryptHashHandle(
 ): MemorySegment = Arena.ofConfined().use { tempArena ->
 	val objectHandle = tempArena.allocate(BCRYPT_HASH_HANDLE)
 	val (secretAlloc, secretSize) = secretPair(tempArena, secret)
-	nativeBCryptCreateHash!!.returnsNTRESULT(
+	nativeBCryptCreateHash!!.returnsNTSTATUS(
 		algorithm,
 		objectHandle,
 		MemorySegment.NULL,
@@ -53,7 +51,7 @@ fun createBCryptHashHandle(
 		WindowsBCryptAlgorithmFlags.BCRYPT_HASH_REUSABLE_FLAG.position.toInt()
 	)
 	return objectHandle.get(BCRYPT_HASH_HANDLE, 0).reinterpret(arena) {
-		nativeBCryptDestroyHash!!.returnsNTRESULT(it)
+		nativeBCryptDestroyHash!!.returnsNTSTATUS(it)
 	}
 }
 
@@ -65,7 +63,7 @@ fun createBCryptMultiHashHandle(
 ): MemorySegment = Arena.ofConfined().use { tempArena ->
 	val objectHandle = tempArena.allocate(BCRYPT_HASH_HANDLE)
 	val (secretAlloc, secretSize) = secretPair(tempArena, secret)
-	nativeBCryptCreateMultiHash!!.returnsNTRESULT(
+	nativeBCryptCreateMultiHash!!.returnsNTSTATUS(
 		algorithm,
 		objectHandle,
 		n,
@@ -76,14 +74,14 @@ fun createBCryptMultiHashHandle(
 		WindowsBCryptAlgorithmFlags.BCRYPT_HASH_REUSABLE_FLAG.position.toInt() // redundant, for consistency
 	)
 	return objectHandle.get(BCRYPT_HASH_HANDLE, 0).reinterpret(arena) {
-		nativeBCryptDestroyHash!!.returnsNTRESULT(it)
+		nativeBCryptDestroyHash!!.returnsNTSTATUS(it)
 	}
 }
 
 private val singleAlloc = ThreadLocal.withInitial { Arena.ofConfined().allocate(ValueLayout.JAVA_BYTE) }
 fun hashAddSingle(b: Byte, hashHandle: MemorySegment) = singleAlloc.get().let {
 	it.set(ValueLayout.JAVA_BYTE, 0, b)
-	nativeBCryptHashData!!.returnsNTRESULT(
+	nativeBCryptHashData!!.returnsNTSTATUS(
 		hashHandle,
 		it,
 		1,
@@ -94,7 +92,7 @@ fun hashAddSingle(b: Byte, hashHandle: MemorySegment) = singleAlloc.get().let {
 fun hashAddArray(b: ByteArray, hashHandle: MemorySegment) = Arena.ofConfined().use { tempArena ->
 	val copy = tempArena.allocate(b.size.toLong())
 	MemorySegment.copy(b, 0, copy, ValueLayout.JAVA_BYTE, 0, b.size)
-	nativeBCryptHashData!!.returnsNTRESULT(
+	nativeBCryptHashData!!.returnsNTSTATUS(
 		hashHandle,
 		copy,
 		b.size,
@@ -105,7 +103,7 @@ fun hashAddArray(b: ByteArray, hashHandle: MemorySegment) = Arena.ofConfined().u
 fun hashGetDigestLength(algorithm: MemorySegment, arena: Arena): Int {
 	val length = arena.allocate(DWORD)
 	val lengthSz = arena.allocate(ULONG)
-	nativeBCryptGetProperty!!.returnsNTRESULT(
+	nativeBCryptGetProperty!!.returnsNTSTATUS(
 		algorithm,
 		arena.allocateFrom("HashDigestLength", Charsets.UTF_16LE),
 		length,
@@ -123,7 +121,7 @@ fun hashFlush(
 ): ByteArray = Arena.ofConfined().use { tempArena ->
 	val digestLength = length ?: hashGetDigestLength(algorithm, tempArena)
 	val allocated = tempArena.allocate(digestLength.toLong())
-	nativeBCryptFinishHash!!.returnsNTRESULT(
+	nativeBCryptFinishHash!!.returnsNTSTATUS(
 		hashObject,
 		allocated,
 		digestLength,
@@ -134,7 +132,7 @@ fun hashFlush(
 
 fun dupeHash(hashObject: MemorySegment): MemorySegment = Arena.ofConfined().use { tempArena ->
 	val newHandle = tempArena.allocate(BCRYPT_HASH_HANDLE)
-	nativeBCryptDuplicateHash!!.returnsNTRESULT(
+	nativeBCryptDuplicateHash!!.returnsNTSTATUS(
 		hashObject,
 		newHandle,
 		MemorySegment.NULL,

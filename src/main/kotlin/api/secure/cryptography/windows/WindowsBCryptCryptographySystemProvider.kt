@@ -5,21 +5,25 @@ import org.bread_experts_group.api.secure.cryptography.CryptographySystem
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemProvider
 import org.bread_experts_group.api.secure.cryptography.windows.feature.hash.*
+import org.bread_experts_group.api.secure.cryptography.windows.feature.random.WindowsRandomFeature
 import org.bread_experts_group.ffi.windows.ULONG
 import org.bread_experts_group.ffi.windows.bcrypt.*
-import org.bread_experts_group.ffi.windows.returnsNTRESULT
+import org.bread_experts_group.ffi.windows.returnsNTSTATUS
+import org.bread_experts_group.logging.ColoredHandler
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+import java.util.*
 
 class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	private var providerInterfaceMap: Map<WindowsBCryptInterface, MutableMap<String, MutableSet<String>>> = emptyMap()
+	private val logger = ColoredHandler.newLogger("TMP logger")
 	override fun supported(): Boolean = Arena.ofConfined().use { arena ->
 		val bufferSz = arena.allocate(ULONG)
 		val bufferLoc = arena.allocate(ValueLayout.ADDRESS)
 		val readStrings = buildList {
-			(nativeBCryptEnumRegisteredProviders ?: return false).returnsNTRESULT(
+			(nativeBCryptEnumRegisteredProviders ?: return false).returnsNTSTATUS(
 				bufferSz,
 				bufferLoc
 			)
@@ -39,14 +43,13 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 				offset += ValueLayout.ADDRESS.byteSize()
 			}
 		}
-		// INTERFACE <FUNCTION, <IMPLEMENTING PROVIDERS>>
 		val allocatedStrings = readStrings.associateWith { arena.allocateFrom(it, Charsets.UTF_16LE) }
 		providerInterfaceMap = WindowsBCryptInterface.entries.associateWith { bcInterface ->
 			val functionMap = mutableMapOf<String, MutableSet<String>>()
 			for (providerName in readStrings) {
 				bufferSz.set(ULONG, 0, 0)
 				bufferLoc.set(ValueLayout.ADDRESS, 0, MemorySegment.NULL)
-				(nativeBCryptQueryProviderRegistration ?: return@use false).returnsNTRESULT(
+				(nativeBCryptQueryProviderRegistration ?: return@use false).returnsNTSTATUS(
 					allocatedStrings[providerName]!!,
 					WindowsBCryptProviderMode.CRYPT_ANY.id.toInt(),
 					bcInterface.id.toInt(),
@@ -76,7 +79,12 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 
 	override fun new(): CryptographySystem {
 		val system = WindowsBCryptCryptographySystem()
+		system.exposedFeatures.add(WindowsRandomFeature(CryptographySystemFeatures.RANDOM_SYSTEM_PREFERRED, null))
 		for ((iface, functions) in providerInterfaceMap) when (iface) {
+			WindowsBCryptInterface.BCRYPT_CIPHER_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
 			WindowsBCryptInterface.BCRYPT_HASH_INTERFACE -> for ((function, providers) in functions) when (function) {
 				"MD2" -> {
 					system.exposedFeatures.add(
@@ -349,7 +357,10 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 				}
 
 				"SHAKE128" -> Arena.ofShared().let {
-					val algorithm = createBCryptAlgorithm(function, providers.first(), it)
+					val algorithm = createBCryptAlgorithm(
+						function, providers.first(),
+						it, EnumSet.of(WindowsBCryptAlgorithmFlags.BCRYPT_HASH_REUSABLE_FLAG)
+					)
 					system.exposedFeatures.add(
 						WindowsXOFHashingFeature(
 							CryptographySystemFeatures.HASHING_SHAKE128,
@@ -359,7 +370,10 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 				}
 
 				"SHAKE256" -> Arena.ofShared().let {
-					val algorithm = createBCryptAlgorithm(function, providers.first(), it)
+					val algorithm = createBCryptAlgorithm(
+						function, providers.first(),
+						it, EnumSet.of(WindowsBCryptAlgorithmFlags.BCRYPT_HASH_REUSABLE_FLAG)
+					)
 					system.exposedFeatures.add(
 						WindowsXOFHashingFeature(
 							CryptographySystemFeatures.HASHING_SHAKE256,
@@ -417,10 +431,62 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 					)
 				}
 
-				else -> println(" $iface: Needs implementation: $function")
+				else -> logger.info { "$iface: Needs implementation: $function" }
 			}
 
-			else -> println("Needs implementation $iface")
+			WindowsBCryptInterface.BCRYPT_ASYMMETRIC_ENCRYPTION_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.BCRYPT_SECRET_AGREEMENT_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.BCRYPT_SIGNATURE_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.BCRYPT_RNG_INTERFACE -> for ((function, providers) in functions) when (function) {
+				"RNG" -> system.exposedFeatures.add(
+					WindowsRandomFeature(CryptographySystemFeatures.RANDOM, BCRYPT_RNG_ALG_HANDLE)
+				)
+
+				"FIPS186DSARNG" -> Arena.ofShared().let {
+					val algorithm = createBCryptAlgorithm(
+						function, providers.first(),
+						it, EnumSet.noneOf(WindowsBCryptAlgorithmFlags::class.java)
+					)
+					system.exposedFeatures.add(
+						WindowsRandomFeature(
+							CryptographySystemFeatures.RANDOM_FIPS_186_2_DSA,
+							algorithm
+						)
+					)
+				}
+
+				"DUALECRNG" -> {}
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.BCRYPT_KEY_DERIVATION_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.NCRYPT_KEY_STORAGE_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.NCRYPT_SCHANNEL_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.NCRYPT_SCHANNEL_SIGNATURE_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
+
+			WindowsBCryptInterface.NCRYPT_KEY_PROTECTION_INTERFACE -> for ((function, providers) in functions) when (function) {
+				else -> logger.info { "$iface: Needs implementation: $function" }
+			}
 		}
 		return system
 	}

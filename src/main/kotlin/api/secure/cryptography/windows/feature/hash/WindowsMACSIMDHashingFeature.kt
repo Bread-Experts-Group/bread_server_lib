@@ -4,9 +4,9 @@ import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.feature.hash.HashingMACSIMDFeature
-import org.bread_experts_group.ffi.windows.WindowsNTRESULTException
+import org.bread_experts_group.ffi.windows.WindowsNTSTATUSException
 import org.bread_experts_group.ffi.windows.bcrypt.*
-import org.bread_experts_group.ffi.windows.returnsNTRESULT
+import org.bread_experts_group.ffi.windows.returnsNTSTATUS
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -28,7 +28,7 @@ class WindowsMACSIMDHashingFeature(
 			add(byteArrayOf(4, 5, 6))
 			flush()
 			internalHash = null
-		} catch (_: WindowsNTRESULTException) {
+		} catch (_: WindowsNTSTATUSException) {
 			return false
 		}
 		return true
@@ -72,7 +72,7 @@ class WindowsMACSIMDHashingFeature(
 			BCRYPT_MULTI_HASH_OPERATION_pbBuffer.set(operation, 0, data)
 			BCRYPT_MULTI_HASH_OPERATION_cbBuffer.set(operation, 0, 1)
 		}
-		nativeBCryptProcessMultiOperations!!.returnsNTRESULT(
+		nativeBCryptProcessMultiOperations!!.returnsNTSTATUS(
 			hash,
 			WindowsBCryptMultiOperationType.BCRYPT_OPERATION_TYPE_HASH.id.toInt(),
 			allocated,
@@ -111,7 +111,7 @@ class WindowsMACSIMDHashingFeature(
 			BCRYPT_MULTI_HASH_OPERATION_cbBuffer.set(operation, 0, digestLength)
 			allocated
 		}
-		nativeBCryptProcessMultiOperations!!.returnsNTRESULT(
+		nativeBCryptProcessMultiOperations!!.returnsNTSTATUS(
 			hash,
 			WindowsBCryptMultiOperationType.BCRYPT_OPERATION_TYPE_HASH.id.toInt(),
 			allocated,
