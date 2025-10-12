@@ -1,9 +1,0 @@
-org.bread_experts_group.coder.format.parse.asn1.ASN1Parser
-org.bread_experts_group.coder.format.parse.elf.ELFParser
-org.bread_experts_group.coder.format.parse.flac.FLACParser
-org.bread_experts_group.coder.format.parse.gamemaker_win.GameMakerWINParser
-org.bread_experts_group.coder.format.parse.gif.GIFParser
-org.bread_experts_group.coder.format.parse.id3.ID3Parser
-org.bread_experts_group.coder.format.parse.iso_bmff.ISOBMFFParser
-org.bread_experts_group.coder.format.parse.mp3.MP3Parser
-org.bread_experts_group.coder.format.parse.riff.RIFFParser

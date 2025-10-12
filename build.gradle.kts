@@ -110,7 +110,7 @@ val compileTime: String = ZonedDateTime.now().format(
 	DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss.SSSSSS xxxxx")
 )
 
-val generateBuildInfo: TaskProvider<Task?> by tasks.registering {
+val generateBuildInfo: TaskProvider<Task> by tasks.registering {
 	val outputDir = file(generatedDir)
 	outputs.dir(outputDir)
 	doLast {

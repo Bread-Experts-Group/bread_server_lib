@@ -60,6 +60,8 @@
           <option value="HardCodedStringLiteral" />
           <option value="RedundantSemicolon" />
           <option value="RemoveExplicitTypeArguments" />
+          <option value="PrivatePropertyName" />
+          <option value="PropertyName" />
         </list>
       </option>
     </inspection_tool>
