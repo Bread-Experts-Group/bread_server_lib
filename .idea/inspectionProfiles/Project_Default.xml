@@ -62,6 +62,7 @@
           <option value="RemoveExplicitTypeArguments" />
           <option value="PrivatePropertyName" />
           <option value="PropertyName" />
+          <option value="FunctionName" />
         </list>
       </option>
     </inspection_tool>
