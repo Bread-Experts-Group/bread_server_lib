@@ -1,11 +1,11 @@
 package org.bread_experts_group.ffi.windows.directx
 
+import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.getDowncall
 import org.bread_experts_group.ffi.getLookup
 import org.bread_experts_group.ffi.windows.HRESULT
 import org.bread_experts_group.ffi.windows.REFCLSID
 import org.bread_experts_group.ffi.windows.REFIID
-import org.bread_experts_group.ffi.windows.WindowsGUID
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
 
@@ -14,7 +14,7 @@ private val d3d12Lookup: SymbolLookup? = handleArena.getLookup("D3d12.dll")
 private val linker: Linker = Linker.nativeLinker()
 
 @OptIn(ExperimentalUnsignedTypes::class)
-val nativeCLSID_D3D12Debug = WindowsGUID(
+val nativeCLSID_D3D12Debug = GUID(
 	0xF2352AEBu,
 	0xDD84u,
 	0x49FEu,
@@ -23,7 +23,7 @@ val nativeCLSID_D3D12Debug = WindowsGUID(
 ).allocate(handleArena)
 
 @OptIn(ExperimentalUnsignedTypes::class)
-val nativeID3D12Debug = WindowsGUID(
+val nativeID3D12Debug = GUID(
 	0x344488B7u,
 	0x6846u,
 	0x474Bu,
@@ -32,7 +32,7 @@ val nativeID3D12Debug = WindowsGUID(
 ).allocate(handleArena)
 
 @OptIn(ExperimentalUnsignedTypes::class)
-val nativeID3D12Device = WindowsGUID(
+val nativeID3D12Device = GUID(
 	0x189819F1u,
 	0x1DB6u,
 	0x4B57u,
@@ -41,7 +41,7 @@ val nativeID3D12Device = WindowsGUID(
 ).allocate(handleArena)
 
 @OptIn(ExperimentalUnsignedTypes::class)
-val nativeID3D12CommandQueue = WindowsGUID(
+val nativeID3D12CommandQueue = GUID(
 	0x0EC870A6u,
 	0x5D7Eu,
 	0x4C22u,
@@ -50,7 +50,7 @@ val nativeID3D12CommandQueue = WindowsGUID(
 ).allocate(handleArena)
 
 @OptIn(ExperimentalUnsignedTypes::class)
-val nativeID3D12DescriptorHeap = WindowsGUID(
+val nativeID3D12DescriptorHeap = GUID(
 	0x8EFB471Du,
 	0x616Cu,
 	0x4F49u,

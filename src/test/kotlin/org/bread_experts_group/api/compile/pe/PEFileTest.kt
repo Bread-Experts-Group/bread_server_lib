@@ -1,23 +1,22 @@
 package org.bread_experts_group.org.bread_experts_group.api.compile.pe
 
 import org.bread_experts_group.MappedEnumeration
-import org.bread_experts_group.api.compile.ebc.EBCMoveTypes
 import org.bread_experts_group.api.compile.ebc.EBCProcedure
-import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
-import org.bread_experts_group.api.compile.ebc.EBCRegisters
+import org.bread_experts_group.api.compile.ebc.efi.EFIExample
 import org.bread_experts_group.api.compile.mzdos.MZDOSFile
 import org.bread_experts_group.api.compile.pe.*
 import org.bread_experts_group.org.bread_experts_group.testBase
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.util.*
+import kotlin.io.path.toPath
 import kotlin.test.Test
 
 class PEFileTest {
 	@Test
 	fun test() {
 		Files.newByteChannel(
-			testBase.resolve("test.pe.efi"),
+			testBase.resolve("D:\\test.pe.efi"),
 			StandardOpenOption.CREATE,
 			StandardOpenOption.WRITE,
 			StandardOpenOption.TRUNCATE_EXISTING
@@ -42,6 +41,11 @@ class PEFileTest {
 					entryPoint = 0x1000u
 					codeBase = 0x1000u
 				}
+				val code = EBCProcedure.compile(
+					EFIExample::class,
+					EFIExample::class.java.protectionDomain.codeSource.location.toURI().toPath(),
+					0x00401000u, 0x00402000u, 0x00403000u
+				)
 				sections = listOf(
 					PESection.of {
 						setName(".text")
@@ -52,59 +56,7 @@ class PEFileTest {
 							PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 							PESectionCharacteristics.IMAGE_SCN_MEM_EXECUTE
 						)
-						rawData = EBCProcedure()
-							.MOVn(
-								EBCRegisters.R1, false,
-								EBCRegisters.R0, true,
-								null, naturalIndex16(
-									false,
-									1u,
-									16u
-								) // SYSTEM TABLE
-							)
-							.MOVn(
-								EBCRegisters.R4, false,
-								EBCRegisters.R1, true,
-								null, naturalIndex16(
-									false,
-									4u,
-									32u
-								) // CON OUT
-							)
-							.MOVn(
-								EBCRegisters.R3, false,
-								EBCRegisters.R4, true,
-								null, naturalIndex16(
-									false,
-									1u,
-									0u
-								) // OUTPUT STRING
-							)
-							.MOVI(
-								EBCRegisters.R6, false,
-								null, EBCMoveTypes.QUADWORD_64,
-								0x00402000u
-							)
-							.PUSHn(EBCRegisters.R6, false, null) // String
-							.PUSHn(EBCRegisters.R4, false, null) // This
-							.CALL(
-								EBCRegisters.R3,
-								operand1Indirect = false,
-								relative = false,
-								native = true,
-								immediate = null
-							)
-							.MOVn(
-								EBCRegisters.R0, false,
-								EBCRegisters.R0, false,
-								null, naturalIndex16(
-									false,
-									2u,
-									0u
-								)
-							)
-							.RET()
-							.output
+						rawData = code[0]
 					},
 					PESection.of {
 						setName(".init")
@@ -115,7 +67,18 @@ class PEFileTest {
 							PESectionCharacteristics.IMAGE_SCN_CNT_INITIALIZED_DATA
 						)
 						// █
-						rawData = "rere002\r\n\u0000".toByteArray(Charsets.UTF_16LE)
+						rawData = code[1]
+//						rawData = "rere002\r\n\u0000".toByteArray(Charsets.UTF_16LE)
+					},
+					PESection.of {
+						setName(".uninit")
+						virtualSize = 0x1000u
+						virtualAddress = 0x3000u
+						characteristics = EnumSet.of(
+							PESectionCharacteristics.IMAGE_SCN_MEM_READ,
+							PESectionCharacteristics.IMAGE_SCN_MEM_WRITE,
+							PESectionCharacteristics.IMAGE_SCN_CNT_UNINITIALIZED_DATA
+						)
 					}
 				)
 			}.build(it)

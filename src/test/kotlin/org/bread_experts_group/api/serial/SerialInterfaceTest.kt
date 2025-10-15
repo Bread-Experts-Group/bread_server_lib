@@ -15,7 +15,7 @@ class SerialInterfaceTest {
 	@Test
 	fun read512() = assertDoesNotThrow {
 		val serial = SerialInterface.open(
-			12u,
+			10u,
 			9600u, 8u, 1u, SerialParityScheme.NO_PARITY
 		)
 		val testBuffer = Arena.ofAuto().allocate(512)

@@ -1,11 +1,11 @@
 package org.bread_experts_group.ffi.windows.directx
 
+import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.getDowncall
 import org.bread_experts_group.ffi.getLookup
 import org.bread_experts_group.ffi.windows.HRESULT
 import org.bread_experts_group.ffi.windows.REFIID
 import org.bread_experts_group.ffi.windows.UINT
-import org.bread_experts_group.ffi.windows.WindowsGUID
 import java.lang.foreign.Arena
 import java.lang.foreign.Linker
 import java.lang.foreign.SymbolLookup
@@ -17,7 +17,7 @@ private val dxgiLookup: SymbolLookup? = handleArena.getLookup("Dxgi.dll")
 private val linker: Linker = Linker.nativeLinker()
 
 @OptIn(ExperimentalUnsignedTypes::class)
-val nativeIID_IDXGIFactory3 = WindowsGUID(
+val nativeIID_IDXGIFactory3 = GUID(
 	0x25483823u,
 	0xCD46u,
 	0x4C7du,

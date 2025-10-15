@@ -63,6 +63,7 @@
           <option value="PrivatePropertyName" />
           <option value="PropertyName" />
           <option value="FunctionName" />
+          <option value="KotlinConstantConditions" />
         </list>
       </option>
     </inspection_tool>

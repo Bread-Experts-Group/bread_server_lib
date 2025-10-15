@@ -1,11 +1,12 @@
-package org.bread_experts_group.ffi.windows
+package org.bread_experts_group.ffi
 
+import org.bread_experts_group.ffi.windows.GUID
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
 @OptIn(ExperimentalUnsignedTypes::class)
-data class WindowsGUID(
+data class GUID(
 	val data1: UInt,
 	val data2: UShort,
 	val data3: UShort,
@@ -35,7 +36,7 @@ data class WindowsGUID(
 		if (this === other) return true
 		if (javaClass != other?.javaClass) return false
 
-		other as WindowsGUID
+		other as GUID
 
 		if (data1 != other.data1) return false
 		if (data2 != other.data2) return false
