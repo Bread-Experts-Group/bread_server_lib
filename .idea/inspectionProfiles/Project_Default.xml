@@ -64,6 +64,7 @@
           <option value="PropertyName" />
           <option value="FunctionName" />
           <option value="KotlinConstantConditions" />
+          <option value="NOTHING_TO_INLINE" />
         </list>
       </option>
     </inspection_tool>

@@ -49,7 +49,7 @@ class PEFileTest {
 				sections = listOf(
 					PESection.of {
 						setName(".text")
-						virtualSize = 0x00001000u
+						virtualSize = 0x1000u
 						virtualAddress = 0x1000u
 						characteristics = EnumSet.of(
 							PESectionCharacteristics.IMAGE_SCN_CNT_CODE,
