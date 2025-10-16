@@ -125,7 +125,7 @@ class EBCProcedure {
 			)
 			variables[2] = 1u to 0u
 			var variablesFreeConstant = 0u
-			val variablesFreeNatural = 3u
+			var variablesFreeNatural = 3u
 			// VARIABLE MAP
 			// [0] = Image Handle
 			// [1] = System Table
@@ -140,6 +140,12 @@ class EBCProcedure {
 					when (element.typeKind()) {
 						TypeKind.INT -> procedure.PUSH(
 							false,
+							EBCRegisters.R6, true,
+							naturalIndex16(false, natural, constant)
+						)
+
+						TypeKind.LONG -> procedure.PUSH(
+							true,
 							EBCRegisters.R6, true,
 							naturalIndex16(false, natural, constant)
 						)
@@ -167,6 +173,36 @@ class EBCProcedure {
 							}
 							procedure.POP(EBCRegisters.R5, false, b64 = false, operand1Index = null)
 							procedure.MOVdw(
+								EBCRegisters.R6, true,
+								EBCRegisters.R5, false,
+								naturalIndex16(false, natural, constant),
+								null
+							)
+						}
+
+						TypeKind.LONG -> {
+							val (natural, constant) = variables.getOrPut(element.slot()) {
+								val free = variablesFreeNatural to variablesFreeConstant
+								variablesFreeConstant += 8u
+								free
+							}
+							procedure.POP(EBCRegisters.R5, false, b64 = true, operand1Index = null)
+							procedure.MOVqw(
+								EBCRegisters.R6, true,
+								EBCRegisters.R5, false,
+								naturalIndex16(false, natural, constant),
+								null
+							)
+						}
+
+						TypeKind.REFERENCE -> {
+							val (natural, constant) = variables.getOrPut(element.slot()) {
+								val free = variablesFreeNatural to variablesFreeConstant
+								variablesFreeNatural += 1u
+								free
+							}
+							procedure.POPn(EBCRegisters.R5, false, null)
+							procedure.MOVnw(
 								EBCRegisters.R6, true,
 								EBCRegisters.R5, false,
 								naturalIndex16(false, natural, constant),
@@ -212,6 +248,76 @@ class EBCProcedure {
 					)
 				}
 
+				is OperatorInstruction -> when (element.opcode()) {
+					Opcode.IADD -> {
+						procedure.POP(EBCRegisters.R5, false, b64 = false, operand1Index = null)
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						procedure.ADD(
+							false,
+							EBCRegisters.R6, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.PUSH(false, EBCRegisters.R6, false, null)
+					}
+
+					Opcode.LADD -> {
+						procedure.POP(EBCRegisters.R5, false, b64 = true, operand1Index = null)
+						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null)
+						procedure.ADD(
+							true,
+							EBCRegisters.R6, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.PUSH(true, EBCRegisters.R6, false, null)
+					}
+
+					Opcode.LMUL -> {
+						procedure.POP(EBCRegisters.R5, false, b64 = true, operand1Index = null)
+						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null)
+						procedure.MUL(
+							true,
+							EBCRegisters.R6, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.PUSH(true, EBCRegisters.R6, false, null)
+					}
+
+					Opcode.LAND -> {
+						procedure.POP(EBCRegisters.R5, false, b64 = true, operand1Index = null)
+						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null)
+						procedure.AND(
+							true,
+							EBCRegisters.R6, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.PUSH(true, EBCRegisters.R6, false, null)
+					}
+
+					Opcode.LUSHR -> {
+						procedure.POP(EBCRegisters.R5, false, b64 = false, operand1Index = null)
+						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null)
+						procedure.EXTNDD(
+							true,
+							EBCRegisters.R5, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.SHR(
+							true,
+							EBCRegisters.R6, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.PUSH(true, EBCRegisters.R6, false, null)
+					}
+
+					else -> throw IllegalArgumentException("Unknown operator opcode: ${element.opcode()}")
+				}
+
 				is BranchInstruction -> when (element.opcode()) {
 					Opcode.IF_ICMPGE -> {
 						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
@@ -221,6 +327,66 @@ class EBCProcedure {
 							EBCRegisters.R5,
 							EBCRegisters.R6, false,
 							null
+						)
+						branchLocations[procedure.output.size.toULong()] = element.target()
+						procedure.output += ByteArray(10)
+						procedure.JMP32(
+							conditional = true,
+							conditionSet = true,
+							relative = false,
+							operand1 = EBCRegisters.R6,
+							operand1Indirect = false,
+							operand1Index = null
+						)
+					}
+
+					Opcode.IF_ICMPLE -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						procedure.POP(EBCRegisters.R5, false, b64 = false, operand1Index = null)
+						procedure.CMPlte(
+							false,
+							EBCRegisters.R5,
+							EBCRegisters.R6, false,
+							null
+						)
+						branchLocations[procedure.output.size.toULong()] = element.target()
+						procedure.output += ByteArray(10)
+						procedure.JMP32(
+							conditional = true,
+							conditionSet = true,
+							relative = false,
+							operand1 = EBCRegisters.R6,
+							operand1Indirect = false,
+							operand1Index = null
+						)
+					}
+
+					Opcode.IFGT -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						// TODO : WARNING! THIS DOES X >= 0, NOT X > 0
+						procedure.CMPIgte(
+							false,
+							EBCRegisters.R6, false, null,
+							0u
+						)
+						branchLocations[procedure.output.size.toULong()] = element.target()
+						procedure.output += ByteArray(10)
+						procedure.JMP32(
+							conditional = true,
+							conditionSet = true,
+							relative = false,
+							operand1 = EBCRegisters.R6,
+							operand1Indirect = false,
+							operand1Index = null
+						)
+					}
+
+					Opcode.IFLE -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						procedure.CMPIlte(
+							false,
+							EBCRegisters.R6, false, null,
+							0u
 						)
 						branchLocations[procedure.output.size.toULong()] = element.target()
 						procedure.output += ByteArray(10)
@@ -328,12 +494,24 @@ class EBCProcedure {
 						procedure.PUSH(false, EBCRegisters.R6, false, null)
 					}
 
-					"org/bread_experts_group/api/compile/ebc/efi/EFIMemoryType.EfiConventionalMemory" -> {
+					"org/bread_experts_group/api/compile/ebc/efi/EFIMemoryType.EfiBootServicesData" -> {
 						procedure.MOVIxq(
 							EBCRegisters.R6, false, null,
-							EBCMoveTypes.DOUBLEWORD_32, EFIMemoryType.EfiConventionalMemory.id.toULong()
+							EBCMoveTypes.DOUBLEWORD_32, EFIMemoryType.EfiBootServicesData.id.toULong()
 						)
 						procedure.PUSH(false, EBCRegisters.R6, false, null)
+					}
+
+					"java/lang/foreign/ValueLayout.JAVA_LONG" -> {
+					}
+
+					"java/lang/foreign/ValueLayout.JAVA_INT" -> {
+					}
+
+					"java/lang/foreign/ValueLayout.JAVA_SHORT" -> {
+					}
+
+					"java/lang/foreign/ValueLayout.JAVA_BYTE" -> {
 					}
 
 					else -> throw IllegalArgumentException("No translation for [$desc]")
@@ -348,6 +526,73 @@ class EBCProcedure {
 					}
 
 					"java/lang/foreign/MemorySegment.address()J" -> {
+					}
+
+					$$"java/lang/foreign/MemorySegment.get(Ljava/lang/foreign/ValueLayout$OfLong;J)J" -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null)
+						procedure.POPn(EBCRegisters.R5, false, null)
+						procedure.ADD(
+							true,
+							EBCRegisters.R5, false,
+							EBCRegisters.R6, false,
+							null
+						)
+						procedure.PUSH(
+							true,
+							EBCRegisters.R5, true,
+							null
+						)
+					}
+
+					$$"java/lang/foreign/MemorySegment.set(Ljava/lang/foreign/ValueLayout$OfInt;JI)V" -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						procedure.POP(EBCRegisters.R5, false, b64 = true, operand1Index = null)
+						procedure.POPn(EBCRegisters.R4, false, null)
+						procedure.ADD(
+							true,
+							EBCRegisters.R4, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.MOVdw(
+							EBCRegisters.R4, true,
+							EBCRegisters.R6, false,
+							null, null
+						)
+					}
+
+					$$"java/lang/foreign/MemorySegment.set(Ljava/lang/foreign/ValueLayout$OfShort;JS)V" -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						procedure.POP(EBCRegisters.R5, false, b64 = true, operand1Index = null)
+						procedure.POPn(EBCRegisters.R4, false, null)
+						procedure.ADD(
+							true,
+							EBCRegisters.R4, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.MOVww(
+							EBCRegisters.R4, true,
+							EBCRegisters.R6, false,
+							null, null
+						)
+					}
+
+					$$"java/lang/foreign/MemorySegment.set(Ljava/lang/foreign/ValueLayout$OfByte;JB)V" -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						procedure.POP(EBCRegisters.R5, false, b64 = true, operand1Index = null)
+						procedure.POPn(EBCRegisters.R4, false, null)
+						procedure.ADD(
+							true,
+							EBCRegisters.R4, false,
+							EBCRegisters.R5, false,
+							null
+						)
+						procedure.MOVbw(
+							EBCRegisters.R4, true,
+							EBCRegisters.R6, false,
+							null, null
+						)
 					}
 
 					"org/bread_experts_group/api/compile/ebc/efi/EFISystemTable.getFirmwareVendor()Ljava/lang/foreign/MemorySegment;" -> {
@@ -410,7 +655,8 @@ class EBCProcedure {
 						procedure.PUSH(true, EBCRegisters.R7, false, null)
 					}
 
-					"org/bread_experts_group/api/compile/ebc/efi/EFISimpleTextOutputProtocol.outputString(Ljava/lang/String;)J" -> {
+					"org/bread_experts_group/api/compile/ebc/efi/EFISimpleTextOutputProtocol.outputString(Ljava/lang/String;)J",
+					"org/bread_experts_group/api/compile/ebc/efi/EFISimpleTextOutputProtocol.outputStringAt(Ljava/lang/foreign/MemorySegment;)J" -> {
 						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null)
 						procedure.POPn(EBCRegisters.R5, false, null)
 						procedure.PUSHn(EBCRegisters.R6, false, null)
@@ -441,7 +687,7 @@ class EBCProcedure {
 						)
 					}
 
-					"org/bread_experts_group/api/compile/ebc/efi/EFIBootServicesTable.allocatePool(Lorg/bread_experts_group/api/compile/ebc/efi/EFIMemoryType;J)Lkotlin/Pair;" -> {
+					"org/bread_experts_group/api/compile/ebc/efi/EFIBootServicesTable.allocatePool(Lorg/bread_experts_group/api/compile/ebc/efi/EFIMemoryType;J)Lorg/bread_experts_group/api/compile/ebc/efi/EFIStatusReturned1;" -> {
 						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null) // Size
 						procedure.POP(EBCRegisters.R5, false, b64 = false, operand1Index = null) // PoolType
 						procedure.POPn(EBCRegisters.R4, false, null) // BootServices
@@ -457,9 +703,9 @@ class EBCProcedure {
 								2u, 0u
 							)
 						)
-						procedure.PUSHn(EBCRegisters.R5, false, null)
-						procedure.PUSHn(EBCRegisters.R6, false, null)
 						procedure.PUSHn(EBCRegisters.R3, false, null)
+						procedure.PUSHn(EBCRegisters.R6, false, null)
+						procedure.PUSHn(EBCRegisters.R5, false, null)
 						procedure.CALL32(
 							EBCRegisters.R4,
 							operand1Indirect = true,
@@ -473,11 +719,18 @@ class EBCProcedure {
 						procedure.POPn(EBCRegisters.R6, false, null)
 						procedure.POPn(EBCRegisters.R6, false, null)
 						procedure.POPn(EBCRegisters.R6, false, null)
-						procedure.RET()
+						procedure.PUSH(true, EBCRegisters.R7, false, null)
+						procedure.PUSHn(EBCRegisters.R3, true, null)
 					}
 
-					"kotlin/Pair.getSecond()Ljava/lang/Object;" -> {
-//						TODO("!!!!!!!!!!!!!")
+					"org/bread_experts_group/api/compile/ebc/efi/EFIStatusReturned1.getData()Ljava/lang/foreign/MemorySegment;" -> {
+						procedure.POPn(EBCRegisters.R6, false, null)
+						procedure.POP(EBCRegisters.R5, operand1Indirect = false, b64 = true, operand1Index = null)
+						procedure.PUSHn(EBCRegisters.R6, false, null)
+					}
+
+					"org/bread_experts_group/api/compile/ebc/efi/EFIStatusReturned1.getStatus()J" -> {
+						procedure.POPn(EBCRegisters.R6, false, null)
 					}
 
 					"org/bread_experts_group/api/compile/ebc/efi/EFIBootServicesTable.getHeader()Lorg/bread_experts_group/api/compile/ebc/efi/EFITableHeader;" -> {}
@@ -506,6 +759,23 @@ class EBCProcedure {
 							null
 						)
 						procedure.PUSH(true, EBCRegisters.R6, false, null)
+					}
+
+					Opcode.L2I -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = true, operand1Index = null)
+						procedure.PUSH(false, EBCRegisters.R6, false, null)
+					}
+
+
+					Opcode.I2B -> {
+						procedure.POP(EBCRegisters.R6, false, b64 = false, operand1Index = null)
+						procedure.EXTNDB(
+							false,
+							EBCRegisters.R6, false,
+							EBCRegisters.R6, false,
+							null
+						)
+						procedure.PUSH(false, EBCRegisters.R6, false, null)
 					}
 
 					else -> throw IllegalArgumentException(element.opcode().toString())
@@ -574,6 +844,89 @@ class EBCProcedure {
 		addInstruction()
 	}
 
+	fun MUL(
+		b64: Boolean,
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x0E or (if (b64) 0b1000000 else 0) or (if (operand2Index != null) 0b10000000 else 0)).toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (operand2.ordinal shl 4)
+					or (if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	fun AND(
+		b64: Boolean,
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x14 or (if (b64) 0b1000000 else 0) or (if (operand2Index != null) 0b10000000 else 0)).toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (operand2.ordinal shl 4)
+					or (if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	fun SHR(
+		b64: Boolean,
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x18 or (if (b64) 0b1000000 else 0) or (if (operand2Index != null) 0b10000000 else 0)).toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (operand2.ordinal shl 4)
+					or (if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	fun CMPIlte(
+		b64: Boolean,
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand1Index: UShort?,
+		immediate: UShort
+	): EBCProcedure = this.also {
+		instructionBuffer.put((0x2E or (if (b64) 0b1000000 else 0)).toByte())
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or
+					(if (operand1Index != null) 0b10000 else 0)).toByte()
+		)
+		if (operand1Index != null) instructionBuffer.putShort(operand1Index.toShort())
+		instructionBuffer.putShort(immediate.toShort())
+		addInstruction()
+	}
+
+	fun CMPIgte(
+		b64: Boolean,
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand1Index: UShort?,
+		immediate: UShort
+	): EBCProcedure = this.also {
+		instructionBuffer.put((0x2F or (if (b64) 0b1000000 else 0)).toByte())
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or
+					(if (operand1Index != null) 0b10000 else 0)).toByte()
+		)
+		if (operand1Index != null) instructionBuffer.putShort(operand1Index.toShort())
+		instructionBuffer.putShort(immediate.toShort())
+		addInstruction()
+	}
+
 	fun CMPgte(
 		b64: Boolean,
 		operand1: EBCRegisters,
@@ -585,6 +938,39 @@ class EBCProcedure {
 		)
 		instructionBuffer.put(
 			(operand1.ordinal or (operand2.ordinal shl 4) or (if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	fun CMPlte(
+		b64: Boolean,
+		operand1: EBCRegisters,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x06 or (if (b64) 0b1000000 else 0) or (if (operand2Index != null) 0b10000000 else 0)).toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (operand2.ordinal shl 4) or (if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	fun EXTNDB(
+		b64: Boolean,
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x1A or (if (b64) 0b1000000 else 0) or (if (operand2Index != null) 0b10000000 else 0)).toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (operand2.ordinal shl 4) or
+					(if (operand2Indirect) 0b10000000 else 0)).toByte()
 		)
 		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
 		addInstruction()
@@ -622,6 +1008,42 @@ class EBCProcedure {
 					or (if (conditionSet) 0b1000000 else 0) or (if (conditional) 0b10000000 else 0)).toByte()
 		)
 		if (operand1Index != null) instructionBuffer.putInt(operand1Index.toInt())
+		addInstruction()
+	}
+
+	fun MOVbw(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand1Index: UShort?, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x1D or (if (operand2Index != null) 0b1000000 else 0) or (if (operand1Index != null) 0b10000000 else 0))
+				.toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (operand2.ordinal shl 4) or
+					(if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand1Index != null) instructionBuffer.putShort(operand1Index.toShort())
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	fun MOVww(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand1Index: UShort?, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x1E or (if (operand2Index != null) 0b1000000 else 0) or (if (operand1Index != null) 0b10000000 else 0))
+				.toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (operand2.ordinal shl 4) or
+					(if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand1Index != null) instructionBuffer.putShort(operand1Index.toShort())
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
 		addInstruction()
 	}
 

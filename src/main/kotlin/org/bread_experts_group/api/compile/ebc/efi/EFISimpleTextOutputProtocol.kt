@@ -6,4 +6,5 @@ interface EFISimpleTextOutputProtocol {
 	val segment: MemorySegment
 	fun reset(extendedVerification: Boolean): Long
 	fun outputString(string: String): Long
+	fun outputStringAt(address: MemorySegment): Long
 }
