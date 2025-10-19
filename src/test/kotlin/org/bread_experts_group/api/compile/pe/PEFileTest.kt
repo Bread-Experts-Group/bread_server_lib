@@ -44,12 +44,12 @@ class PEFileTest {
 				val output = EBCJVMCompilation.compileClass(
 					EFIExample::class,
 					EFIExample::class.java.protectionDomain.codeSource.location.toURI().toPath(),
-					0x00401000u, 0x00402000u, 0x00403000u
+					0x00401000u, 0x00408000u, 0x00409000u
 				)
 				sections = listOf(
 					PESection.of {
 						setName(".text")
-						virtualSize = 0x1000u
+						virtualSize = 0x7000u
 						virtualAddress = 0x1000u
 						characteristics = EnumSet.of(
 							PESectionCharacteristics.IMAGE_SCN_CNT_CODE,
@@ -61,7 +61,7 @@ class PEFileTest {
 					PESection.of {
 						setName(".init")
 						virtualSize = 0x1000u
-						virtualAddress = 0x2000u
+						virtualAddress = 0x8000u
 						characteristics = EnumSet.of(
 							PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 							PESectionCharacteristics.IMAGE_SCN_CNT_INITIALIZED_DATA
@@ -71,7 +71,7 @@ class PEFileTest {
 					PESection.of {
 						setName(".uninit")
 						virtualSize = 0x1000u
-						virtualAddress = 0x3000u
+						virtualAddress = 0x9000u
 						characteristics = EnumSet.of(
 							PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 							PESectionCharacteristics.IMAGE_SCN_MEM_WRITE,

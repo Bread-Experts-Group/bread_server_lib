@@ -947,17 +947,18 @@ object EBCJVMCompilation {
 								}
 
 								ConstantDescs.CD_long -> {
-									TODO("Long push")
-//									if (didFirst) offsetConstant += 8u
-//									else didFirst = true
-//									procedure.PUSH64(
-//										EBCRegisters.R5, true,
-//										naturalIndex16(
-//											false,
-//											offsetNatural, offsetConstant
-//										)
-//									)
-//									offsetConstant += 8u
+									procedure.MOVIqw(EBCRegisters.R4, false, null, 0u)
+									procedure.MOVqw(
+										EBCRegisters.R4, false,
+										EBCRegisters.R5, true,
+										null, naturalIndex16(
+											false,
+											offsetNatural, offsetConstant
+										)
+									)
+									offsetConstant += 8u
+									procedure.PUSH64(EBCRegisters.R4, false, null)
+									stack.add(EBCCompilerStackType.BIT_64)
 								}
 
 								else -> {
@@ -994,9 +995,7 @@ object EBCJVMCompilation {
 							)
 						)
 						callTargets[localMethod] = localCompiled
-						println(stack)
-						println(parameters.size)
-						val (naturalR, constantR) = parameters.fold(0u to 0u) { a, c ->
+						val (naturalR, constantR) = parameters.asReversed().fold(0u to 0u) { a, c ->
 							when (c) {
 								ConstantDescs.CD_byte, ConstantDescs.CD_short, ConstantDescs.CD_int -> {
 									expectElement(EBCCompilerStackType.NATURAL)
@@ -1140,6 +1139,22 @@ object EBCJVMCompilation {
 			is ReturnInstruction -> {
 				expectElement(EBCCompilerStackType.BIT_64)
 				procedure.POP64(EBCRegisters.R7, false, null)
+				val (natural, constant) = stack.fold(0u to 0u) { a, t ->
+					when (t) {
+						EBCCompilerStackType.BIT_32 -> a.first to (a.second + 4u)
+						EBCCompilerStackType.BIT_64 -> a.first to (a.second + 8u)
+						EBCCompilerStackType.NATURAL -> (a.first + 1u) to a.second
+					}
+				}
+				stack.clear()
+				if (natural + constant > 0u) procedure.MOVnw(
+					EBCRegisters.R0, false,
+					EBCRegisters.R0, false,
+					null, naturalIndex16(
+						false,
+						natural, constant
+					)
+				)
 				procedure.RET()
 			}
 
@@ -1147,7 +1162,6 @@ object EBCJVMCompilation {
 			is Instruction -> print("* ")
 			else -> print("--- ")
 		}.also { println("$element [${stack.joinToString(", ")}]") }
-		if (stack.isNotEmpty()) throw IllegalStateException("Program compilation error: stack pollution: $stack")
 		branchLocations.forEach { (location, label) ->
 			val target = labelTargets[label]!!
 			val data = EBCProcedure()
