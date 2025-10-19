@@ -65,6 +65,7 @@
           <option value="FunctionName" />
           <option value="KotlinConstantConditions" />
           <option value="NOTHING_TO_INLINE" />
+          <option value="Unused" />
         </list>
       </option>
     </inspection_tool>

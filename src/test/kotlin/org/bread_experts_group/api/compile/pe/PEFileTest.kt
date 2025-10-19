@@ -1,7 +1,7 @@
 package org.bread_experts_group.org.bread_experts_group.api.compile.pe
 
 import org.bread_experts_group.MappedEnumeration
-import org.bread_experts_group.api.compile.ebc.EBCProcedure
+import org.bread_experts_group.api.compile.ebc.EBCJVMCompilation
 import org.bread_experts_group.api.compile.ebc.efi.EFIExample
 import org.bread_experts_group.api.compile.mzdos.MZDOSFile
 import org.bread_experts_group.api.compile.pe.*
@@ -41,7 +41,7 @@ class PEFileTest {
 					entryPoint = 0x1000u
 					codeBase = 0x1000u
 				}
-				val code = EBCProcedure.compile(
+				val output = EBCJVMCompilation.compileClass(
 					EFIExample::class,
 					EFIExample::class.java.protectionDomain.codeSource.location.toURI().toPath(),
 					0x00401000u, 0x00402000u, 0x00403000u
@@ -56,7 +56,7 @@ class PEFileTest {
 							PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 							PESectionCharacteristics.IMAGE_SCN_MEM_EXECUTE
 						)
-						rawData = code[0]
+						rawData = output.code
 					},
 					PESection.of {
 						setName(".init")
@@ -66,9 +66,7 @@ class PEFileTest {
 							PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 							PESectionCharacteristics.IMAGE_SCN_CNT_INITIALIZED_DATA
 						)
-						// █
-						rawData = code[1]
-//						rawData = "rere002\r\n\u0000".toByteArray(Charsets.UTF_16LE)
+						rawData = output.initializedData
 					},
 					PESection.of {
 						setName(".uninit")
