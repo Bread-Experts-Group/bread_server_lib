@@ -106,6 +106,20 @@ class EBCProcedure {
 		arithmeticBase(0x4C, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
 	}
 
+	fun SUB32(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x0D, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun SUB64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x4D, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
 	fun MUL32(
 		operand1: EBCRegisters, operand1Indirect: Boolean,
 		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
@@ -118,6 +132,34 @@ class EBCProcedure {
 		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
 	): EBCProcedure = this.also {
 		arithmeticBase(0x4E, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun DIV32(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x10, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun DIV64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x50, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun MOD32(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x12, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun MOD64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x52, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
 	}
 
 	fun AND32(
