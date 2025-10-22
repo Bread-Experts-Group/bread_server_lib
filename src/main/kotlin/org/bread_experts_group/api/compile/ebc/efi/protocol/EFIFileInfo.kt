@@ -12,20 +12,19 @@ import java.lang.constant.MethodHandleDesc
 import java.lang.constant.MethodTypeDesc
 import java.lang.foreign.MemorySegment
 
-interface EFIFileSystemInfo {
+interface EFIFileInfo {
 	val segment: MemorySegment
 	val structureSize: Long
-	val readOnly: Boolean
-	val volumeSize: Long
-	val freeSpace: Long
-	val blockSize: Int
-	val volumeLabel: MemorySegment
+	val fileSize: Long
+	val physicalSize: Long
+	val creationTime: EFITime
+	val lastAccessTime: EFITime
+	val modificationTime: EFITime
+	val attribute: Long
+	val fileName: MemorySegment
 
 	class IntrinsicProvider : KotlinEBCIntrinsicProvider {
-		private val owner = ClassDesc.ofInternalName(
-			"org/bread_experts_group/api/compile/ebc/efi/protocol/EFIFileSystemInfo"
-		)
-
+		private val owner = ClassDesc.ofInternalName("org/bread_experts_group/api/compile/ebc/efi/protocol/EFIFileInfo")
 		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit> =
 			mapOf(
 				MethodHandleDesc.ofMethod(
@@ -35,25 +34,11 @@ interface EFIFileSystemInfo {
 				) to { _, _, _ -> },
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
-					"getStructureSize",
+					"getFileSize",
 					MethodTypeDesc.ofDescriptor("()J")
 				) to { _, stack, _ ->
 					stack.POPn(EBCRegisters.R6, false, null)
 					stack.PUSH64(
-						EBCRegisters.R6, true,
-						naturalIndex16(
-							false,
-							0u, 0u
-						)
-					)
-				},
-				MethodHandleDesc.ofMethod(
-					DirectMethodHandleDesc.Kind.SPECIAL, owner,
-					"getReadOnly",
-					MethodTypeDesc.ofDescriptor("()Z")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH32(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,
@@ -63,7 +48,7 @@ interface EFIFileSystemInfo {
 				},
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
-					"getVolumeSize",
+					"getPhysicalSize",
 					MethodTypeDesc.ofDescriptor("()J")
 				) to { _, stack, _ ->
 					stack.POPn(EBCRegisters.R6, false, null)
@@ -77,12 +62,12 @@ interface EFIFileSystemInfo {
 				},
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
-					"getFreeSpace",
-					MethodTypeDesc.ofDescriptor("()J")
+					"getCreationTime",
+					MethodTypeDesc.ofDescriptor("()Lorg/bread_experts_group/api/compile/ebc/efi/protocol/EFITime;")
 				) to { _, stack, _ ->
 					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH64(
-						EBCRegisters.R6, true,
+					stack.PUSHn(
+						EBCRegisters.R6, false,
 						naturalIndex16(
 							false,
 							0u, 24u
@@ -91,21 +76,49 @@ interface EFIFileSystemInfo {
 				},
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
-					"getBlockSize",
-					MethodTypeDesc.ofDescriptor("()I")
+					"getLastAccessTime",
+					MethodTypeDesc.ofDescriptor("()Lorg/bread_experts_group/api/compile/ebc/efi/protocol/EFITime;")
 				) to { _, stack, _ ->
 					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH32(
-						EBCRegisters.R6, true,
+					stack.PUSHn(
+						EBCRegisters.R6, false,
 						naturalIndex16(
 							false,
-							0u, 32u
+							0u, 40u
 						)
 					)
 				},
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
-					"getVolumeLabel",
+					"getModificationTime",
+					MethodTypeDesc.ofDescriptor("()Lorg/bread_experts_group/api/compile/ebc/efi/protocol/EFITime;")
+				) to { _, stack, _ ->
+					stack.POPn(EBCRegisters.R6, false, null)
+					stack.PUSHn(
+						EBCRegisters.R6, false,
+						naturalIndex16(
+							false,
+							0u, 56u
+						)
+					)
+				},
+				MethodHandleDesc.ofMethod(
+					DirectMethodHandleDesc.Kind.SPECIAL, owner,
+					"getAttribute",
+					MethodTypeDesc.ofDescriptor("()J")
+				) to { _, stack, _ ->
+					stack.POPn(EBCRegisters.R6, false, null)
+					stack.PUSH64(
+						EBCRegisters.R6, true,
+						naturalIndex16(
+							false,
+							0u, 72u
+						)
+					)
+				},
+				MethodHandleDesc.ofMethod(
+					DirectMethodHandleDesc.Kind.SPECIAL, owner,
+					"getFileName",
 					MethodTypeDesc.ofDescriptor("()Ljava/lang/foreign/MemorySegment;")
 				) to { _, stack, _ ->
 					stack.POPn(EBCRegisters.R6, false, null)
@@ -113,7 +126,7 @@ interface EFIFileSystemInfo {
 						EBCRegisters.R6, false,
 						naturalIndex16(
 							false,
-							0u, 36u
+							0u, 80u
 						)
 					)
 				},

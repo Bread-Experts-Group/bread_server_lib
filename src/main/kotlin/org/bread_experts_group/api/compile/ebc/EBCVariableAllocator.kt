@@ -6,7 +6,7 @@ class EBCVariableAllocator(
 ) {
 	private val variables = mutableMapOf<Int, Pair<UInt, UInt>>()
 
-	operator fun get(slot: Int) = variables[slot]!!
+	operator fun get(slot: Int) = variables[slot] ?: throw ArrayIndexOutOfBoundsException("No slot #$slot")
 
 	fun getOrAllocate32(slot: Int): Pair<UInt, UInt> = variables.getOrPut(slot) {
 		val savedConstant = nextFreeConstant

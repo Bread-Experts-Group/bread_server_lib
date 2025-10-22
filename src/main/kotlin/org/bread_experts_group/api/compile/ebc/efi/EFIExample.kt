@@ -1,51 +1,47 @@
 package org.bread_experts_group.api.compile.ebc.efi
 
-import org.bread_experts_group.api.compile.ebc.efi.protocol.EFIFileProtocol
-import org.bread_experts_group.api.compile.ebc.efi.protocol.EFIFileSystemInfo
-import org.bread_experts_group.api.compile.ebc.efi.protocol.EFISimpleFileSystemProtocol
+import org.bread_experts_group.api.compile.ebc.efi.protocol.*
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
 object EFIExample {
 	@JvmStatic
-	fun printHex(systemTable: EFISystemTable, l: Long): Long {
-		val string = systemTable.bootServices.allocatePool(EFIMemoryType.EfiBootServicesData, 34).data
-		var offset = 30L
+	fun printHex(systemTable: EFISystemTable, l: Long, pad: Int): Long {
+		val string = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 34).data
+		var offset = 32L
 		var remainder = l
 		do {
-			string.set(
-				ValueLayout.JAVA_SHORT, offset,
-				if (remainder > 0) {
-					val nibble = remainder and 0b1111
-					remainder = remainder ushr 4
-					((if (nibble > 9) 0x37 else 0x30) + nibble).toShort()
-				} else 0xA0
-			)
 			offset -= 2
-		} while (offset > 0)
+			val character = if (remainder > 0) {
+				val nibble = remainder and 0b1111
+				remainder = remainder ushr 4
+				((if (nibble > 9) 0x37 else 0x30) + nibble).toShort()
+			} else 0x30
+			string.set(ValueLayout.JAVA_SHORT, offset, character)
+		} while (remainder > 0)
 		string.set(ValueLayout.JAVA_SHORT, 32, 0)
-		systemTable.conOut.outputStringAt(string)
+		systemTable.conOut.outputStringAt(string.asSlice(offset))
 		return 0
 	}
 
 	@JvmStatic
-	fun printDecimal(systemTable: EFISystemTable, l: Long): Long {
-		val string = systemTable.bootServices.allocatePool(EFIMemoryType.EfiBootServicesData, 42).data
-		var offset = 38L
+	fun printDecimal(systemTable: EFISystemTable, l: Long, pad: Int): Long {
+		val string = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 42).data
+		var offset = 40L
 		var remainder = l
+		var alpha = pad
 		do {
-			string.set(
-				ValueLayout.JAVA_SHORT, offset,
-				if (remainder > 0) {
-					val nibble = remainder % 10
-					remainder /= 10
-					(0x30 + nibble).toShort()
-				} else 0xA0
-			)
+			alpha -= 1
 			offset -= 2
-		} while (offset > 0)
+			val character = if (remainder > 0) {
+				val nibble = remainder % 10
+				remainder /= 10
+				(0x30 + nibble).toShort()
+			} else 0x30
+			string.set(ValueLayout.JAVA_SHORT, offset, character)
+		} while (remainder > 0 || alpha > 0)
 		string.set(ValueLayout.JAVA_SHORT, 40, 0)
-		systemTable.conOut.outputStringAt(string)
+		systemTable.conOut.outputStringAt(string.asSlice(offset))
 		return 0
 	}
 
@@ -93,7 +89,7 @@ object EFIExample {
 		b6: UByte,
 		b7: UByte
 	): Long {
-		val guid = systemTable.bootServices.allocatePool(EFIMemoryType.EfiBootServicesData, 16).data
+		val guid = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 16).data
 		populateGUID(
 			guid,
 			i0, s0, s1,
@@ -376,17 +372,6 @@ object EFIExample {
 
 	@Suppress("FunctionName")
 	@JvmStatic
-	fun flash_EFI_FILE_SYSTEM_VOLUME_LABEL_ID(guid: MemorySegment): Long {
-		return populateGUID(
-			guid,
-			0xDB47D7D3u, 0xFE81u, 0x11D3u,
-			0x9Au, 0x35u, 0x00u, 0x90u,
-			0x27u, 0x3Fu, 0xC1u, 0x4Du
-		)
-	}
-
-	@Suppress("FunctionName")
-	@JvmStatic
 	fun flash_EFI_FILE_SYSTEM_INFO(guid: MemorySegment): Long {
 		return populateGUID(
 			guid,
@@ -396,20 +381,15 @@ object EFIExample {
 		)
 	}
 
+	@Suppress("FunctionName")
 	@JvmStatic
-	fun readLabel(
-		systemTable: EFISystemTable, guid: MemorySegment,
-		from: EFIFileProtocol, into: MemorySegment
-	): Long {
-		val bufferSize = systemTable.bootServices.allocatePool(EFIMemoryType.EfiBootServicesData, 8).data
-		flash_EFI_FILE_SYSTEM_VOLUME_LABEL_ID(guid)
-		bufferSize.set(ValueLayout.JAVA_LONG, 0, 0)
-		from.getInfo(guid, bufferSize, MemorySegment.NULL)
-		val requiredSize = bufferSize.get(ValueLayout.JAVA_LONG, 0)
-		val buffer = systemTable.bootServices.allocatePool(EFIMemoryType.EfiBootServicesData, requiredSize).data
-		val status = from.getInfo(guid, bufferSize, buffer)
-		into.set(ValueLayout.ADDRESS, 0, buffer)
-		return status
+	fun flash_EFI_FILE_INFO(guid: MemorySegment): Long {
+		return populateGUID(
+			guid,
+			0x09576E92u, 0x6D3Fu, 0x11D2u,
+			0x8Eu, 0x39u, 0x00u, 0xA0u,
+			0xC9u, 0x69u, 0x72u, 0x3Bu
+		)
 	}
 
 	@JvmStatic
@@ -417,20 +397,71 @@ object EFIExample {
 		systemTable: EFISystemTable, guid: MemorySegment,
 		from: EFIFileProtocol, into: MemorySegment
 	): Long {
-		val bufferSize = systemTable.bootServices.allocatePool(EFIMemoryType.EfiBootServicesData, 8).data
+		val bufferSize = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 8).data
 		flash_EFI_FILE_SYSTEM_INFO(guid)
 		bufferSize.set(ValueLayout.JAVA_LONG, 0, 0)
 		from.getInfo(guid, bufferSize, MemorySegment.NULL)
 		val requiredSize = bufferSize.get(ValueLayout.JAVA_LONG, 0)
-		val buffer = systemTable.bootServices.allocatePool(EFIMemoryType.EfiBootServicesData, requiredSize).data
+		val buffer = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, requiredSize).data
 		val status = from.getInfo(guid, bufferSize, buffer)
 		into.set(ValueLayout.ADDRESS, 0, buffer)
 		return status
 	}
 
 	@JvmStatic
+	fun readFileInfo(
+		systemTable: EFISystemTable, guid: MemorySegment,
+		from: EFIFileProtocol, into: MemorySegment
+	): Long {
+		val bufferSize = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 8).data
+		flash_EFI_FILE_INFO(guid)
+		bufferSize.set(ValueLayout.JAVA_LONG, 0, 0)
+		from.getInfo(guid, bufferSize, MemorySegment.NULL)
+		val requiredSize = bufferSize.get(ValueLayout.JAVA_LONG, 0)
+		val buffer = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, requiredSize).data
+		val status = from.getInfo(guid, bufferSize, buffer)
+		into.set(ValueLayout.ADDRESS, 0, buffer)
+		return status
+	}
+
+	@JvmStatic
+	fun printTime(systemTable: EFISystemTable, time: EFITime): Long {
+		printDecimal(systemTable, time.year.toLong(), 4)
+		systemTable.conOut.outputString("/")
+		printDecimal(systemTable, time.month.toLong(), 2)
+		systemTable.conOut.outputString("/")
+		printDecimal(systemTable, time.day.toLong(), 2)
+		systemTable.conOut.outputString(" ")
+		printDecimal(systemTable, time.hour.toLong(), 2)
+		systemTable.conOut.outputString(":")
+		printDecimal(systemTable, time.minute.toLong(), 2)
+		systemTable.conOut.outputString(":")
+		printDecimal(systemTable, time.second.toLong(), 2)
+		systemTable.conOut.outputString(".")
+		printDecimal(systemTable, time.nanosecond, 9)
+		val timeZone = time.timeZone
+		if (timeZone > 0) systemTable.conOut.outputString("+")
+		printDecimal(systemTable, timeZone.toLong(), 4)
+		return 0
+	}
+
+	@Suppress("FunctionName")
+	@JvmStatic
+	fun flash_EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID(guid: MemorySegment): Long {
+		return populateGUID(
+			guid,
+			0x9042A9DEu, 0x23DCu, 0x4A38u,
+			0x96u, 0xFBu, 0x7Au, 0xDEu,
+			0xD0u, 0x80u, 0x51u, 0x6Au
+		)
+	}
+
+	@JvmStatic
 	@OptIn(ExperimentalUnsignedTypes::class)
 	fun efiMain(imageHandle: MemorySegment, systemTable: EFISystemTable): Long {
+//		val a = "but definitely not"
+//		val b = "...this"
+//		systemTable.conOut.outputString(a + b)
 		systemTable.conOut.reset(false)
 		systemTable.conOut.outputString(
 			"       #++++*       \r\n" +
@@ -449,39 +480,57 @@ object EFIExample {
 		systemTable.conOut.outputString("Firmware Vendor: ")
 		systemTable.conOut.outputStringAt(systemTable.firmwareVendor)
 		systemTable.conOut.outputString("\r\n")
-//		testConsole(systemTable)
-//		testMedia(systemTable)
+
 		val guid = systemTable.bootServices.allocatePool(
-			EFIMemoryType.EfiBootServicesData,
+			EFIMemoryType.EfiLoaderData,
 			16
 		).data
 		val pointer = systemTable.bootServices.allocatePool(
-			EFIMemoryType.EfiBootServicesData,
+			EFIMemoryType.EfiLoaderData,
 			16
 		).data
+//
 		flash_EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID(guid)
 		val simpleFileSystemProtocol = systemTable.bootServices.locateProtocol(
 			guid, MemorySegment.NULL
 		).data as EFISimpleFileSystemProtocol
 		val fileProtocol = simpleFileSystemProtocol.openVolume().data as EFIFileProtocol
-		readLabel(systemTable, guid, fileProtocol, pointer)
 		systemTable.conOut.outputString("Media Source\r\n")
-		systemTable.conOut.outputString(" Label: \"")
-		systemTable.conOut.outputStringAt(pointer.get(ValueLayout.ADDRESS, 0))
-		systemTable.conOut.outputString("\" ")
 		readFileSystemInfo(systemTable, guid, fileProtocol, pointer)
 		val fileSystemInfo = pointer.get(ValueLayout.ADDRESS, 0) as EFIFileSystemInfo
+		systemTable.conOut.outputString(" Label: \"")
+		systemTable.conOut.outputStringAt(fileSystemInfo.volumeLabel)
+		systemTable.conOut.outputString("\" ")
 		if (fileSystemInfo.readOnly) systemTable.conOut.outputString("(read-only)\r\n")
 		else systemTable.conOut.outputString("(writable)\r\n")
 		systemTable.conOut.outputString(" Size: ")
-		printDecimal(systemTable, fileSystemInfo.volumeSize)
+		printDecimal(systemTable, fileSystemInfo.volumeSize, 0)
 		systemTable.conOut.outputString(" b ")
 		systemTable.conOut.outputString("(free: ")
-		printDecimal(systemTable, fileSystemInfo.freeSpace)
+		printDecimal(systemTable, fileSystemInfo.freeSpace, 0)
 		systemTable.conOut.outputString(" b)\r\n")
 		systemTable.conOut.outputString(" Block Size: ")
-		printDecimal(systemTable, fileSystemInfo.blockSize.toLong())
+		printDecimal(systemTable, fileSystemInfo.blockSize.toLong(), 0)
 		systemTable.conOut.outputString(" b\r\n")
+		val file = fileProtocol.open("\\image_bgra.bin", 1, 0).data as EFIFileProtocol
+		readFileInfo(systemTable, guid, file, pointer)
+		val fileInfo = pointer.get(ValueLayout.ADDRESS, 0) as EFIFileInfo
+		val fileData = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, fileInfo.fileSize).data
+		val fileDataSize = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 8).data
+		fileDataSize.set(ValueLayout.JAVA_LONG, 0, fileInfo.fileSize)
+		file.read(fileDataSize, fileData)
+
+		flash_EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID(guid)
+		val graphicsOutputProtocol = systemTable.bootServices.locateProtocol(
+			guid, MemorySegment.NULL
+		).data as EFIGraphicsOutputProtocol
+		graphicsOutputProtocol.blt(
+			fileData, 2,
+			0, 0,
+			0, 0,
+			608, 501, 0
+		)
+
 		return 0
 	}
 }

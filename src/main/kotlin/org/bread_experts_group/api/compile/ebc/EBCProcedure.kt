@@ -35,7 +35,7 @@ class EBCProcedure {
 			}
 			if (constantBits.toUInt() + naturalBits > 12u)
 				throw IllegalArgumentException("Natural / constant indices not encodable")
-			return (encoded or ((naturalBits / 2u) shl 12) or
+			return (encoded or (((naturalBits + 1u) / 2u) shl 12) or
 					(constantUnits shl naturalBits.toInt()) or naturalUnits).toUShort()
 		}
 
@@ -422,11 +422,10 @@ class EBCProcedure {
 		addInstruction()
 	}
 
-	private fun movBase(
+	private fun movWBase(
 		opcode: Int,
-		operand1: EBCRegisters, operand1Indirect: Boolean,
-		operand2: EBCRegisters, operand2Indirect: Boolean,
-		operand1Index: UShort?, operand2Index: UShort?
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
 	) {
 		instructionBuffer.put(
 			(opcode or (if (operand2Index != null) 0b1000000 else 0) or (if (operand1Index != null) 0b10000000 else 0))
@@ -441,43 +440,83 @@ class EBCProcedure {
 		addInstruction()
 	}
 
+	private fun movDBase(
+		opcode: Int,
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UInt?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UInt?
+	) {
+		instructionBuffer.put(
+			(opcode or (if (operand2Index != null) 0b1000000 else 0) or (if (operand1Index != null) 0b10000000 else 0))
+				.toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (operand2.ordinal shl 4) or
+					(if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand1Index != null) instructionBuffer.putInt(operand1Index.toInt())
+		if (operand2Index != null) instructionBuffer.putInt(operand2Index.toInt())
+		addInstruction()
+	}
+
 	fun MOVbw(
-		operand1: EBCRegisters, operand1Indirect: Boolean,
-		operand2: EBCRegisters, operand2Indirect: Boolean,
-		operand1Index: UShort?, operand2Index: UShort?
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
 	): EBCProcedure = this.also {
-		movBase(0x1D, operand1, operand1Indirect, operand2, operand2Indirect, operand1Index, operand2Index)
+		movWBase(0x1D, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
 	}
 
 	fun MOVww(
-		operand1: EBCRegisters, operand1Indirect: Boolean,
-		operand2: EBCRegisters, operand2Indirect: Boolean,
-		operand1Index: UShort?, operand2Index: UShort?
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
 	): EBCProcedure = this.also {
-		movBase(0x1E, operand1, operand1Indirect, operand2, operand2Indirect, operand1Index, operand2Index)
+		movWBase(0x1E, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
 	}
 
 	fun MOVdw(
-		operand1: EBCRegisters, operand1Indirect: Boolean,
-		operand2: EBCRegisters, operand2Indirect: Boolean,
-		operand1Index: UShort?, operand2Index: UShort?
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
 	): EBCProcedure = this.also {
-		movBase(0x1F, operand1, operand1Indirect, operand2, operand2Indirect, operand1Index, operand2Index)
+		movWBase(0x1F, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
 	}
 
 	fun MOVqw(
-		operand1: EBCRegisters, operand1Indirect: Boolean,
-		operand2: EBCRegisters, operand2Indirect: Boolean,
-		operand1Index: UShort?, operand2Index: UShort?
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
 	): EBCProcedure = this.also {
-		movBase(0x20, operand1, operand1Indirect, operand2, operand2Indirect, operand1Index, operand2Index)
+		movWBase(0x20, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun MOVbd(
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UInt?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UInt?
+	): EBCProcedure = this.also {
+		movDBase(0x21, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun MOVwd(
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UInt?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UInt?
+	): EBCProcedure = this.also {
+		movDBase(0x22, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun MOVdd(
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UInt?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UInt?
+	): EBCProcedure = this.also {
+		movDBase(0x23, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun MOVqd(
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UInt?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UInt?
+	): EBCProcedure = this.also {
+		movDBase(0x24, operand1, operand1Indirect, operand1Index, operand2, operand2Indirect, operand2Index)
 	}
 
 	private fun MOVIBase(
-		operand1: EBCRegisters, operand1Indirect: Boolean,
-		operand1Index: UShort?,
-		immediateDataLength: EBCImmediateDataLength,
-		move: EBCMoveTypes
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		immediateDataLength: EBCImmediateDataLength, move: EBCMoveTypes
 	) {
 		instructionBuffer.put((0x37 or ((immediateDataLength.ordinal + 1) shl 6)).toByte())
 		instructionBuffer.put(

@@ -1,0 +1,13 @@
+org.bread_experts_group.api.compile.ebc.intrinsic.KotlinJVMInternalIntrinsicProvider
+org.bread_experts_group.api.compile.ebc.intrinsic.JavaForeignMemorySegmentIntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.EFITableHeader$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.EFISystemTable$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.protocol.EFISimpleTextOutputProtocol$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.EFIBootServicesTable$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.protocol.EFIFileSystemInfo$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.protocol.EFIFileInfo$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.EFIStatusReturned1$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.protocol.EFITime$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.protocol.EFIGraphicsOutputProtocol$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.protocol.EFISimpleFileSystemProtocol$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.protocol.EFIFileProtocol$IntrinsicProvider
