@@ -4,6 +4,7 @@ import org.bread_experts_group.Mappable.Companion.id
 import org.bread_experts_group.MappedEnumeration
 import java.lang.foreign.*
 import java.lang.foreign.MemoryLayout.PathElement.groupElement
+import java.lang.invoke.MethodHandle
 import java.lang.invoke.VarHandle
 
 val GUID: StructLayout = MemoryLayout.structLayout(
@@ -293,3 +294,179 @@ class SerialCommunicationDeviceControl(arena: Arena) {
 			"\n\tEOF char: 0x${eofChar.toHexString(HexFormat.UpperCase)}" +
 			"\n\tEvent char: 0x${eventChar.toHexString(HexFormat.UpperCase)}"
 }
+
+val CPINFOEXW: StructLayout = MemoryLayout.structLayout(
+	UINT.withName("MaxCharSize"),
+	MemoryLayout.sequenceLayout(2, BYTE).withName("DefaultChar"),
+	MemoryLayout.sequenceLayout(12, BYTE).withName("LeadByte"),
+	WCHAR.withName("UnicodeDefaultChar"),
+	UINT.withName("CodePage"),
+	MemoryLayout.sequenceLayout(260, WCHAR).withName("CodePageName")
+)
+val CPINFOEXW_CodePageName: MethodHandle = CPINFOEXW.sliceHandle(groupElement("CodePageName"))
+
+val KEY_EVENT_RECORD: StructLayout = MemoryLayout.structLayout(
+	BOOL.withName("bKeyDown"),
+	WORD.withName("wRepeatCount"),
+	WORD.withName("wVirtualKeyCode"),
+	WORD.withName("wVirtualScanCode"),
+	MemoryLayout.unionLayout(
+		WCHAR.withName("UnicodeChar"),
+		CHAR.withName("AsciiChar")
+	).withName("uChar"),
+	DWORD.withName("dwControlKeyState"),
+)
+val KEY_EVENT_RECORD_bKeyDown: VarHandle = KEY_EVENT_RECORD.varHandle(groupElement("bKeyDown"))
+val KEY_EVENT_RECORD_wRepeatCount: VarHandle = KEY_EVENT_RECORD.varHandle(groupElement("wRepeatCount"))
+val KEY_EVENT_RECORD_wVirtualKeyCode: VarHandle = KEY_EVENT_RECORD.varHandle(groupElement("wVirtualKeyCode"))
+val KEY_EVENT_RECORD_wVirtualScanCode: VarHandle = KEY_EVENT_RECORD.varHandle(groupElement("wVirtualScanCode"))
+val KEY_EVENT_RECORD_uChar_UnicodeChar: VarHandle = KEY_EVENT_RECORD.varHandle(
+	groupElement("uChar"),
+	groupElement("UnicodeChar")
+)
+val KEY_EVENT_RECORD_dwControlKeyState: VarHandle = KEY_EVENT_RECORD.varHandle(groupElement("dwControlKeyState"))
+
+val MOUSE_EVENT_RECORD: StructLayout = MemoryLayout.structLayout()
+
+val COORD: StructLayout = MemoryLayout.structLayout(
+	SHORT.withName("X"),
+	SHORT.withName("Y")
+)
+val COORD_X: VarHandle = COORD.varHandle(groupElement("X"))
+val COORD_Y: VarHandle = COORD.varHandle(groupElement("Y"))
+
+val WINDOW_BUFFER_SIZE_RECORD: StructLayout = MemoryLayout.structLayout(
+	COORD.withName("dwSize")
+)
+val WINDOW_BUFFER_SIZE_RECORD_COORD: MethodHandle = WINDOW_BUFFER_SIZE_RECORD.sliceHandle(
+	groupElement("dwSize")
+)
+
+val MENU_EVENT_RECORD: StructLayout = MemoryLayout.structLayout()
+val FOCUS_EVENT_RECORD: StructLayout = MemoryLayout.structLayout()
+
+val INPUT_RECORD: StructLayout = MemoryLayout.structLayout(
+	WORD.withName("EventType"),
+	MemoryLayout.paddingLayout(2),
+	MemoryLayout.unionLayout(
+		KEY_EVENT_RECORD.withName("KeyEvent"),
+		MOUSE_EVENT_RECORD.withName("MouseEvent"),
+		WINDOW_BUFFER_SIZE_RECORD.withName("WindowBufferSizeEvent"),
+		MENU_EVENT_RECORD.withName("MenuEvent"),
+		FOCUS_EVENT_RECORD.withName("FocusEvent")
+	).withName("Event")
+)
+val INPUT_RECORD_EventType: VarHandle = INPUT_RECORD.varHandle(groupElement("EventType"))
+val INPUT_RECORD_KeyEvent: MethodHandle = INPUT_RECORD.sliceHandle(
+	groupElement("Event"),
+	groupElement("KeyEvent")
+)
+val INPUT_RECORD_WindowBufferSizeEvent: MethodHandle = INPUT_RECORD.sliceHandle(
+	groupElement("Event"),
+	groupElement("WindowBufferSizeEvent")
+)
+
+val SID_AND_ATTRIBUTES: StructLayout = MemoryLayout.structLayout(
+	ValueLayout.ADDRESS.withName("Sid"),
+	DWORD.withName("Attributes"),
+	MemoryLayout.paddingLayout(4)
+)
+val SID_AND_ATTRIBUTES_Sid: VarHandle = SID_AND_ATTRIBUTES.varHandle(groupElement("Sid"))
+
+val TOKEN_USER: StructLayout = MemoryLayout.structLayout(
+	SID_AND_ATTRIBUTES.withName("User")
+)
+val TOKEN_USER_User: MethodHandle = TOKEN_USER.sliceHandle(groupElement("User"))
+
+val LUID: ValueLayout.OfLong = ValueLayout.JAVA_LONG
+val TOKEN_STATISTICS: StructLayout = MemoryLayout.structLayout(
+	LUID.withName("TokenId"),
+	LUID.withName("AuthenticationId"),
+)
+val TOKEN_STATISTICS_AuthenticationId: MethodHandle = TOKEN_STATISTICS.sliceHandle(groupElement("AuthenticationId"))
+
+val LARGE_INTEGER: ValueLayout.OfLong = ValueLayout.JAVA_LONG
+val LSA_UNICODE_STRING: StructLayout = MemoryLayout.structLayout(
+	USHORT.withName("Length"),
+	USHORT.withName("MaximumLength"),
+	MemoryLayout.paddingLayout(4),
+	PWSTR.withName("Buffer")
+)
+
+val SECURITY_LOGON_SESSION_DATA: StructLayout = MemoryLayout.structLayout(
+	ULONG.withName("Size"),
+	MemoryLayout.paddingLayout(4),
+	LUID.withName("LogonId"),
+	LSA_UNICODE_STRING.withName("UserName"),
+	LSA_UNICODE_STRING.withName("LogonDomain"),
+	LSA_UNICODE_STRING.withName("AuthenticationPackage"),
+	ULONG.withName("LogonType"),
+	ULONG.withName("Session"),
+	ValueLayout.ADDRESS.withName("Sid"),
+	LARGE_INTEGER.withName("LogonTime")
+)
+val SECURITY_LOGON_SESSION_DATA_LogonTime: VarHandle = SECURITY_LOGON_SESSION_DATA.varHandle(groupElement("LogonTime"))
+
+val CM_NOTIFY_FILTER_DeviceInterface: StructLayout = MemoryLayout.structLayout(
+	GUID.withName("ClassGuid")
+)
+val CM_NOTIFY_FILTER_DeviceHandle: StructLayout = MemoryLayout.structLayout(
+	HANDLE.withName("hTarget")
+)
+val CM_NOTIFY_FILTER_DeviceInstance: StructLayout = MemoryLayout.structLayout(
+	MemoryLayout.sequenceLayout(200, WCHAR).withName("InstanceId")
+)
+
+val CM_NOTIFY_FILTER: StructLayout = MemoryLayout.structLayout(
+	DWORD.withName("cbSize"),
+	DWORD.withName("Flags"),
+	DWORD.withName("FilterType"),
+	DWORD.withName("Reserved"),
+	MemoryLayout.unionLayout(
+		CM_NOTIFY_FILTER_DeviceInterface.withName("DeviceInterface"),
+		CM_NOTIFY_FILTER_DeviceHandle.withName("DeviceHandle"),
+		CM_NOTIFY_FILTER_DeviceInstance.withName("DeviceInstance")
+	).withName("u")
+)
+val CM_NOTIFY_FILTER_cbSize: VarHandle = CM_NOTIFY_FILTER.varHandle(groupElement("cbSize"))
+val CM_NOTIFY_FILTER_Flags: VarHandle = CM_NOTIFY_FILTER.varHandle(groupElement("Flags"))
+val CM_NOTIFY_FILTER_FilterType: VarHandle = CM_NOTIFY_FILTER.varHandle(groupElement("FilterType"))
+val CM_NOTIFY_FILTER_u_DeviceInterface: MethodHandle = CM_NOTIFY_FILTER.sliceHandle(
+	groupElement("u"),
+	groupElement("DeviceInterface"),
+	groupElement("ClassGuid")
+)
+
+val CM_NOTIFY_EVENT_DATA_DeviceInterface: StructLayout = MemoryLayout.structLayout(
+	GUID.withName("ClassGuid"),
+	MemoryLayout.sequenceLayout(0, WCHAR).withName("SymbolicLink")
+)
+val CM_NOTIFY_EVENT_DATA_DeviceHandle: StructLayout = MemoryLayout.structLayout(
+	GUID.withName("EventGuid"),
+	LONG.withName("NameOffset"),
+	DWORD.withName("DataSize"),
+	MemoryLayout.sequenceLayout(0, BYTE).withName("Data")
+)
+val CM_NOTIFY_EVENT_DATA_DeviceInstance: StructLayout = MemoryLayout.structLayout(
+	MemoryLayout.sequenceLayout(0, WCHAR).withName("InstanceId")
+)
+val CM_NOTIFY_EVENT_DATA: StructLayout = MemoryLayout.structLayout(
+	DWORD.withName("FilterType"),
+	DWORD.withName("Reserved"),
+	MemoryLayout.unionLayout(
+		CM_NOTIFY_EVENT_DATA_DeviceInterface.withName("DeviceInterface"),
+		CM_NOTIFY_EVENT_DATA_DeviceHandle.withName("DeviceHandle"),
+		CM_NOTIFY_EVENT_DATA_DeviceInstance.withName("DeviceInstance")
+	).withName("u")
+)
+val CM_NOTIFY_EVENT_DATA_FilterType: VarHandle = CM_NOTIFY_EVENT_DATA.varHandle(groupElement("FilterType"))
+val CM_NOTIFY_EVENT_DATA_u_DeviceInterface_ClassGuid: MethodHandle = CM_NOTIFY_EVENT_DATA.sliceHandle(
+	groupElement("u"),
+	groupElement("DeviceInterface"),
+	groupElement("ClassGuid")
+)
+val CM_NOTIFY_EVENT_DATA_u_DeviceInterface_SymbolicLink: MethodHandle = CM_NOTIFY_EVENT_DATA.sliceHandle(
+	groupElement("u"),
+	groupElement("DeviceInterface"),
+	groupElement("SymbolicLink")
+)

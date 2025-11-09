@@ -1,6 +1,7 @@
 package org.bread_experts_group.ffi.windows.directx
 
 import org.bread_experts_group.ffi.getDowncall
+import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.windows.HRESULT
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -59,7 +60,7 @@ open class IDXGIFactory2(
 		MemorySegment, MemorySegment, MemorySegment, MemorySegment, MemorySegment, MemorySegment
 	) -> Int = { p, h, pD, pF, pR, pp ->
 		val handle = getVTblAddress(createSwapChainForHwndVTblIndex).getDowncall(
-			linker, HRESULT,
+			nativeLinker, HRESULT,
 			ValueLayout.ADDRESS,
 			ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
 			ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS

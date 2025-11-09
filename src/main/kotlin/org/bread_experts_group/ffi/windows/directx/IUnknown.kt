@@ -1,6 +1,5 @@
 package org.bread_experts_group.ffi.windows.directx
 
-import java.lang.foreign.Linker
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
@@ -12,7 +11,6 @@ open class IUnknown(
 	vTblReinterpretationLength: Int
 ) {
 	private val addressSize = ValueLayout.ADDRESS.byteSize()
-	protected val linker: Linker = Linker.nativeLinker()
 	private val vTbl: MemorySegment = ptr
 		.reinterpret(addressSize)
 		.get(ValueLayout.ADDRESS, 0)

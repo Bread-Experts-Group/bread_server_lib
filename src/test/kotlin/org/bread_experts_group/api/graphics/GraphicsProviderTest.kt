@@ -23,7 +23,7 @@ class GraphicsProviderTest {
 	val logger = ColoredHandler.newLogger("tmp logger")
 
 	fun window(): GraphicsWindow {
-		val windowing = GraphicsProvider.get(GraphicsFeatures.WINDOW, false)
+		val windowing = GraphicsProvider.get(GraphicsFeatures.GUI_WINDOW, false)
 		val template = windowing.createTemplate()
 		val window = windowing.createWindow(template)
 		return window

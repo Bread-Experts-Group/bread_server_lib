@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.compile.ebc.efi
 
-import org.bread_experts_group.api.compile.ebc.efi.protocol.*
+import org.bread_experts_group.api.compile.ebc.efi.protocol.EFIFileProtocol
+import org.bread_experts_group.api.compile.ebc.efi.protocol.EFITime
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
@@ -459,77 +460,77 @@ object EFIExample {
 	@JvmStatic
 	@OptIn(ExperimentalUnsignedTypes::class)
 	fun efiMain(imageHandle: MemorySegment, systemTable: EFISystemTable): Long {
-//		val a = "but definitely not"
-//		val b = "...this"
-//		systemTable.conOut.outputString(a + b)
-		systemTable.conOut.reset(false)
-		systemTable.conOut.outputString(
-			"       #++++*       \r\n" +
-					"    ==+*++==++==    \r\n" +
-					" ++**+===+=====++++ \r\n" +
-					" *##*#**###***#*### \r\n" +
-					" *#++**+*+++####*## \r\n" +
-					" +#*++++**#%*#####% \r\n" +
-					" +*++++++#%##*#*#%# \r\n" +
-					" ##++++*#####*##%## \r\n" +
-					" **#**###*#####%### \r\n" +
-					"    %#***+###%##    \r\n" +
-					"       *#*##%       \r\n"
-		)
-		systemTable.conOut.outputString("Bread Experts Group ... UEFI Loader\r\n")
-		systemTable.conOut.outputString("Firmware Vendor: ")
-		systemTable.conOut.outputStringAt(systemTable.firmwareVendor)
-		systemTable.conOut.outputString("\r\n")
-
-		val guid = systemTable.bootServices.allocatePool(
-			EFIMemoryType.EfiLoaderData,
-			16
-		).data
-		val pointer = systemTable.bootServices.allocatePool(
-			EFIMemoryType.EfiLoaderData,
-			16
-		).data
+		val a = "dynvar12345"
+		val b = "dynvarABCD"
+		systemTable.conOut.outputString("prefix-$a$b-suffix")
+//		systemTable.conOut.reset(false)
+//		systemTable.conOut.outputString(
+//			"       #++++*       \r\n" +
+//					"    ==+*++==++==    \r\n" +
+//					" ++**+===+=====++++ \r\n" +
+//					" *##*#**###***#*### \r\n" +
+//					" *#++**+*+++####*## \r\n" +
+//					" +#*++++**#%*#####% \r\n" +
+//					" +*++++++#%##*#*#%# \r\n" +
+//					" ##++++*#####*##%## \r\n" +
+//					" **#**###*#####%### \r\n" +
+//					"    %#***+###%##    \r\n" +
+//					"       *#*##%       \r\n"
+//		)
+//		systemTable.conOut.outputString("Bread Experts Group ... UEFI Loader\r\n")
+//		systemTable.conOut.outputString("Firmware Vendor: ")
+//		systemTable.conOut.outputStringAt(systemTable.firmwareVendor)
+//		systemTable.conOut.outputString("\r\n")
 //
-		flash_EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID(guid)
-		val simpleFileSystemProtocol = systemTable.bootServices.locateProtocol(
-			guid, MemorySegment.NULL
-		).data as EFISimpleFileSystemProtocol
-		val fileProtocol = simpleFileSystemProtocol.openVolume().data as EFIFileProtocol
-		systemTable.conOut.outputString("Media Source\r\n")
-		readFileSystemInfo(systemTable, guid, fileProtocol, pointer)
-		val fileSystemInfo = pointer.get(ValueLayout.ADDRESS, 0) as EFIFileSystemInfo
-		systemTable.conOut.outputString(" Label: \"")
-		systemTable.conOut.outputStringAt(fileSystemInfo.volumeLabel)
-		systemTable.conOut.outputString("\" ")
-		if (fileSystemInfo.readOnly) systemTable.conOut.outputString("(read-only)\r\n")
-		else systemTable.conOut.outputString("(writable)\r\n")
-		systemTable.conOut.outputString(" Size: ")
-		printDecimal(systemTable, fileSystemInfo.volumeSize, 0)
-		systemTable.conOut.outputString(" b ")
-		systemTable.conOut.outputString("(free: ")
-		printDecimal(systemTable, fileSystemInfo.freeSpace, 0)
-		systemTable.conOut.outputString(" b)\r\n")
-		systemTable.conOut.outputString(" Block Size: ")
-		printDecimal(systemTable, fileSystemInfo.blockSize.toLong(), 0)
-		systemTable.conOut.outputString(" b\r\n")
-		val file = fileProtocol.open("\\image_bgra.bin", 1, 0).data as EFIFileProtocol
-		readFileInfo(systemTable, guid, file, pointer)
-		val fileInfo = pointer.get(ValueLayout.ADDRESS, 0) as EFIFileInfo
-		val fileData = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, fileInfo.fileSize).data
-		val fileDataSize = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 8).data
-		fileDataSize.set(ValueLayout.JAVA_LONG, 0, fileInfo.fileSize)
-		file.read(fileDataSize, fileData)
-
-		flash_EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID(guid)
-		val graphicsOutputProtocol = systemTable.bootServices.locateProtocol(
-			guid, MemorySegment.NULL
-		).data as EFIGraphicsOutputProtocol
-		graphicsOutputProtocol.blt(
-			fileData, 2,
-			0, 0,
-			0, 0,
-			608, 501, 0
-		)
+//		val guid = systemTable.bootServices.allocatePool(
+//			EFIMemoryType.EfiLoaderData,
+//			16
+//		).data
+//		val pointer = systemTable.bootServices.allocatePool(
+//			EFIMemoryType.EfiLoaderData,
+//			16
+//		).data
+//
+//		flash_EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID(guid)
+//		val simpleFileSystemProtocol = systemTable.bootServices.locateProtocol(
+//			guid, MemorySegment.NULL
+//		).data as EFISimpleFileSystemProtocol
+//		val fileProtocol = simpleFileSystemProtocol.openVolume().data as EFIFileProtocol
+//		systemTable.conOut.outputString("Media Source\r\n")
+//		readFileSystemInfo(systemTable, guid, fileProtocol, pointer)
+//		val fileSystemInfo = pointer.get(ValueLayout.ADDRESS, 0) as EFIFileSystemInfo
+//		systemTable.conOut.outputString(" Label: \"")
+//		systemTable.conOut.outputStringAt(fileSystemInfo.volumeLabel)
+//		systemTable.conOut.outputString("\" ")
+//		if (fileSystemInfo.readOnly) systemTable.conOut.outputString("(read-only)\r\n")
+//		else systemTable.conOut.outputString("(writable)\r\n")
+//		systemTable.conOut.outputString(" Size: ")
+//		printDecimal(systemTable, fileSystemInfo.volumeSize, 0)
+//		systemTable.conOut.outputString(" b ")
+//		systemTable.conOut.outputString("(free: ")
+//		printDecimal(systemTable, fileSystemInfo.freeSpace, 0)
+//		systemTable.conOut.outputString(" b)\r\n")
+//		systemTable.conOut.outputString(" Block Size: ")
+//		printDecimal(systemTable, fileSystemInfo.blockSize.toLong(), 0)
+//		systemTable.conOut.outputString(" b\r\n")
+//		val file = fileProtocol.open("\\image_bgra.bin", 1, 0).data as EFIFileProtocol
+//		readFileInfo(systemTable, guid, file, pointer)
+//		val fileInfo = pointer.get(ValueLayout.ADDRESS, 0) as EFIFileInfo
+//		val fileData = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, fileInfo.fileSize).data
+//		val fileDataSize = systemTable.bootServices.allocatePool(EFIMemoryType.EfiLoaderData, 8).data
+//		fileDataSize.set(ValueLayout.JAVA_LONG, 0, fileInfo.fileSize)
+//		file.read(fileDataSize, fileData)
+//
+//		flash_EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID(guid)
+//		val graphicsOutputProtocol = systemTable.bootServices.locateProtocol(
+//			guid, MemorySegment.NULL
+//		).data as EFIGraphicsOutputProtocol
+//		graphicsOutputProtocol.blt(
+//			fileData, 2,
+//			0, 0,
+//			0, 0,
+//			608, 501, 0
+//		)
 
 		return 0
 	}

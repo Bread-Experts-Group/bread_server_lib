@@ -21,6 +21,50 @@ interface EFIBootServicesTable {
 	class IntrinsicProvider : KotlinEBCIntrinsicProvider {
 		private val owner = ClassDesc.ofInternalName("org/bread_experts_group/api/compile/ebc/efi/EFIBootServicesTable")
 		private val ret1 = "Lorg/bread_experts_group/api/compile/ebc/efi/EFIStatusReturned1;"
+
+		companion object {
+			val allocatePool = { procedure: EBCProcedure, stack: EBCStackTracker, data: EBCCompilerData ->
+				stack.POP64(EBCRegisters.R6, false, null) // Size
+				stack.POP32(EBCRegisters.R5, false, null) // PoolType
+				stack.POPn(EBCRegisters.R4, false, null) // BootServices
+				procedure.MOVIqq(
+					EBCRegisters.R3, false, null,
+					data.unInitBase
+				)
+				procedure.MOVqw(
+					EBCRegisters.R3, false, null,
+					EBCRegisters.R3, false, naturalIndex16(
+						false,
+						data.allocatorNatural, data.allocatorConstant
+					)
+				)
+				procedure.PUSH64(EBCRegisters.R3, false, null) // **Buffer
+				procedure.PUSHn(EBCRegisters.R6, false, null) // Size
+				procedure.PUSHn(EBCRegisters.R5, false, null) // PoolType
+				procedure.CALL32(
+					EBCRegisters.R4,
+					operand1Indirect = true,
+					relative = false,
+					native = true,
+					immediate = naturalIndex32(
+						false,
+						5u, 24u
+					)
+				)
+				procedure.MOVnw(
+					EBCRegisters.R0, false,
+					EBCRegisters.R0, false,
+					null, naturalIndex16(
+						false,
+						3u, 0u
+					)
+				)
+				// TODO: Class returns
+				stack.PUSH64(EBCRegisters.R7, false, null)
+				stack.PUSHn(EBCRegisters.R3, true, null)
+			}
+		}
+
 		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit> =
 			mapOf(
 				MethodHandleDesc.ofMethod(
@@ -32,46 +76,7 @@ interface EFIBootServicesTable {
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"allocatePool",
 					MethodTypeDesc.ofDescriptor("(Lorg/bread_experts_group/api/compile/ebc/efi/EFIMemoryType;J)$ret1")
-				) to { procedure, stack, data ->
-					stack.POP64(EBCRegisters.R6, false, null) // Size
-					stack.POP32(EBCRegisters.R5, false, null) // PoolType
-					stack.POPn(EBCRegisters.R4, false, null) // BootServices
-					procedure.MOVIqq(
-						EBCRegisters.R3, false, null,
-						data.unInitBase
-					)
-					procedure.MOVqw(
-						EBCRegisters.R3, false, null,
-						EBCRegisters.R3, false, naturalIndex16(
-							false,
-							data.allocatorNatural, data.allocatorConstant
-						)
-					)
-					procedure.PUSH64(EBCRegisters.R3, false, null) // **Buffer
-					procedure.PUSHn(EBCRegisters.R6, false, null) // Size
-					procedure.PUSHn(EBCRegisters.R5, false, null) // PoolType
-					procedure.CALL32(
-						EBCRegisters.R4,
-						operand1Indirect = true,
-						relative = false,
-						native = true,
-						immediate = naturalIndex32(
-							false,
-							5u, 24u
-						)
-					)
-					procedure.MOVnw(
-						EBCRegisters.R0, false,
-						EBCRegisters.R0, false,
-						null, naturalIndex16(
-							false,
-							3u, 0u
-						)
-					)
-					// TODO: Class returns
-					stack.PUSH64(EBCRegisters.R7, false, null)
-					stack.PUSHn(EBCRegisters.R3, true, null)
-				},
+				) to allocatePool,
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"locateProtocol",

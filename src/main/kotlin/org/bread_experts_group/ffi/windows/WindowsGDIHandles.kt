@@ -2,17 +2,19 @@ package org.bread_experts_group.ffi.windows
 
 import org.bread_experts_group.ffi.getDowncall
 import org.bread_experts_group.ffi.getLookup
-import java.lang.foreign.*
+import org.bread_experts_group.ffi.globalArena
+import org.bread_experts_group.ffi.nativeLinker
+import java.lang.foreign.AddressLayout
+import java.lang.foreign.SymbolLookup
+import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
 
 val HDC: AddressLayout = ValueLayout.ADDRESS
 
-private val handleArena = Arena.ofAuto()
-private val gdi32Lookup: SymbolLookup? = handleArena.getLookup("Gdi32.dll")
-private val linker: Linker = Linker.nativeLinker()
+private val gdi32Lookup: SymbolLookup? = globalArena.getLookup("Gdi32.dll")
 
 val nativeSetPixelFormat: MethodHandle? = gdi32Lookup.getDowncall(
-	linker, "SetPixelFormat",
+	nativeLinker, "SetPixelFormat",
 	arrayOf(
 		BOOL,
 		HDC, ValueLayout.JAVA_INT, ValueLayout.ADDRESS
@@ -23,7 +25,7 @@ val nativeSetPixelFormat: MethodHandle? = gdi32Lookup.getDowncall(
 )
 
 val nativeChoosePixelFormat: MethodHandle? = gdi32Lookup.getDowncall(
-	linker, "ChoosePixelFormat",
+	nativeLinker, "ChoosePixelFormat",
 	arrayOf(
 		ValueLayout.JAVA_INT,
 		HDC, ValueLayout.ADDRESS
@@ -34,6 +36,6 @@ val nativeChoosePixelFormat: MethodHandle? = gdi32Lookup.getDowncall(
 )
 
 val nativeSwapBuffers: MethodHandle? = gdi32Lookup.getDowncall(
-	linker, "SwapBuffers", BOOL,
+	nativeLinker, "SwapBuffers", BOOL,
 	HDC
 )

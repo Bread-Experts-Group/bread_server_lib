@@ -5,6 +5,7 @@ import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.ULONG
 import org.bread_experts_group.ffi.windows.bcrypt.*
 import org.bread_experts_group.ffi.windows.returnsNTSTATUS
+import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -101,17 +102,16 @@ fun hashAddArray(b: ByteArray, hashHandle: MemorySegment) = Arena.ofConfined().u
 }
 
 fun hashGetDigestLength(algorithm: MemorySegment, arena: Arena): Int {
-	val length = arena.allocate(DWORD)
 	val lengthSz = arena.allocate(ULONG)
 	nativeBCryptGetProperty!!.returnsNTSTATUS(
 		algorithm,
 		arena.allocateFrom("HashDigestLength", Charsets.UTF_16LE),
-		length,
-		length.byteSize().toInt(),
+		threadLocalDWORD0,
+		threadLocalDWORD0.byteSize().toInt(),
 		lengthSz,
 		0
 	)
-	return length.get(DWORD, 0)
+	return threadLocalDWORD0.get(DWORD, 0)
 }
 
 fun hashFlush(

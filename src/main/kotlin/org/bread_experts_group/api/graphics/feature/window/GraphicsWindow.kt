@@ -9,9 +9,7 @@ import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.logging.Logger
 
-abstract class GraphicsWindow(
-	vararg features: GraphicsWindowFeatureImplementation<*>
-) : FeatureProvider<GraphicsWindowFeatureImplementation<*>>, PreInitializableClosable {
+abstract class GraphicsWindow : FeatureProvider<GraphicsWindowFeatureImplementation<*>>, PreInitializableClosable {
 	override val logger: Logger = ColoredHandler.newLogger("TMP logger")
 	override val features: MutableList<GraphicsWindowFeatureImplementation<*>> = ServiceLoader.load(
 		GraphicsWindowFeatureImplementation::class.java

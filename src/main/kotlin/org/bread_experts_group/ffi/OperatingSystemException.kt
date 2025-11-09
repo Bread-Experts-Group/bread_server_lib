@@ -7,4 +7,4 @@ import java.io.IOException
  * @author Miko Elbrecht
  * @since D0F0N0P0
  */
-abstract class OperatingSystemException(message: String) : IOException(message)
+open class OperatingSystemException(message: String) : IOException(message)

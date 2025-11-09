@@ -1,0 +1,3 @@
+org.bread_experts_group.api.graphics.feature.console.feature.device.windows.WindowsGraphicsConsoleIOFeatureSTDIN
+org.bread_experts_group.api.graphics.feature.console.feature.device.windows.WindowsGraphicsConsoleIOFeatureSTDOUT
+org.bread_experts_group.api.graphics.feature.console.feature.device.windows.WindowsGraphicsConsoleIOFeatureSTDERR

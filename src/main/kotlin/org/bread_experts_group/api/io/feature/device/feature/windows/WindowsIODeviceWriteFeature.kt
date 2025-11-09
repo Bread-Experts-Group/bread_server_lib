@@ -1,0 +1,61 @@
+package org.bread_experts_group.api.io.feature.device.feature.windows
+
+import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.io.feature.device.feature.IODeviceWriteFeature
+import org.bread_experts_group.ffi.capturedStateSegment
+import org.bread_experts_group.ffi.windows.*
+import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
+import java.lang.foreign.ValueLayout
+
+class WindowsIODeviceWriteFeature(
+	private val handle: MemorySegment
+) : IODeviceWriteFeature() {
+	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+	override fun supported(): Boolean {
+		threadLocalDWORD0.set(DWORD, 0, 0)
+		val status = (nativeWriteFile ?: return false).invokeExact(
+			capturedStateSegment,
+			handle,
+			threadLocalDWORD0,
+			0,
+			threadLocalDWORD0,
+			MemorySegment.NULL
+		) as Int
+		return status != 0
+	}
+
+	override fun write(from: MemorySegment, length: Int): Int {
+		val status = nativeWriteFile!!.invokeExact(
+			capturedStateSegment,
+			handle,
+			from,
+			length,
+			threadLocalDWORD0,
+			MemorySegment.NULL
+		) as Int
+		if (status == 0) decodeLastError()
+		return threadLocalDWORD0.get(DWORD, 0)
+	}
+
+	override fun write(from: ByteArray, offset: Int, length: Int): Int = Arena.ofConfined().use {
+		val copied = it.allocate(length.toLong())
+		MemorySegment.copy(
+			from, offset,
+			copied, ValueLayout.JAVA_BYTE, 0,
+			length
+		)
+		write(copied, length)
+	}
+
+	override fun flush() {
+		try {
+			val status = nativeFlushFileBuffers!!.invokeExact(capturedStateSegment, handle) as Int
+			if (status == 0) decodeLastError()
+		} catch (e: WindowsLastErrorException) {
+			// Flushing may not be supported for some data streams, e.g. consoles.
+			if (e.code == 0x6u) return
+			throw e
+		}
+	}
+}

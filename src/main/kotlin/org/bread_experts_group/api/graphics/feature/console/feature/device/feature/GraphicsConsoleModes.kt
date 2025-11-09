@@ -1,0 +1,14 @@
+package org.bread_experts_group.api.graphics.feature.console.feature.device.feature
+
+enum class GraphicsConsoleModes {
+	INPUT_ECHO_INPUT,
+	INPUT_INSERT_MODE,
+	INPUT_LINE_BLOCK,
+	INPUT_MOUSE_EVENTS,
+	INPUT_SYSTEM_PROCESSED,
+	INPUT_WINDOW_EVENTS,
+	INPUT_CONTROL_SEQUENCES,
+	OUTPUT_SYSTEM_PROCESSED,
+	OUTPUT_SCROLL_AT_EDGE,
+	OUTPUT_CONTROL_SEQUENCES
+}

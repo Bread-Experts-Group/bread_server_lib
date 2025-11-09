@@ -1,0 +1,22 @@
+package org.bread_experts_group.api.graphics.feature.console
+
+import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.FeatureProvider
+import org.bread_experts_group.api.graphics.GraphicsFeatureImplementation
+import org.bread_experts_group.api.graphics.GraphicsFeatures
+import org.bread_experts_group.api.graphics.feature.console.feature.device.GraphicsConsoleFeatureImplementation
+import org.bread_experts_group.logging.ColoredHandler
+import java.util.*
+import java.util.logging.Logger
+
+abstract class GraphicsConsoleFeature : GraphicsFeatureImplementation<GraphicsConsoleFeature>(),
+	FeatureProvider<GraphicsConsoleFeatureImplementation<*>> {
+	override val expresses: FeatureExpression<GraphicsConsoleFeature> = GraphicsFeatures.CUI_CONSOLE
+	override val logger: Logger = ColoredHandler.newLogger("TMP logger")
+	override val features: MutableList<GraphicsConsoleFeatureImplementation<*>> = ServiceLoader.load(
+		GraphicsConsoleFeatureImplementation::class.java
+	).toMutableList()
+	override val supportedFeatures: MutableMap<
+			FeatureExpression<out GraphicsConsoleFeatureImplementation<*>>,
+			MutableList<GraphicsConsoleFeatureImplementation<*>>> = mutableMapOf()
+}

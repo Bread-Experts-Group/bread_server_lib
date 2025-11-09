@@ -2,6 +2,7 @@ package org.bread_experts_group.api.compile.ebc
 
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex32
+import org.bread_experts_group.api.compile.ebc.dynamic.KotlinEBCDynamicProvider
 import org.bread_experts_group.api.compile.ebc.efi.EFIMemoryType
 import org.bread_experts_group.api.compile.ebc.efi.EFISystemTable
 import org.bread_experts_group.api.compile.ebc.intrinsic.KotlinEBCIntrinsicProvider
@@ -9,12 +10,12 @@ import org.bread_experts_group.logging.ColoredHandler
 import java.lang.classfile.*
 import java.lang.classfile.ClassFile.ACC_PUBLIC
 import java.lang.classfile.ClassFile.ACC_STATIC
-import java.lang.classfile.constantpool.LongEntry
-import java.lang.classfile.constantpool.StringEntry
 import java.lang.classfile.instruction.*
+import java.lang.constant.ConstantDesc
 import java.lang.constant.ConstantDescs
 import java.lang.constant.DirectMethodHandleDesc
 import java.lang.foreign.MemorySegment
+import java.lang.invoke.MethodHandles
 import java.nio.file.Path
 import java.util.*
 import kotlin.reflect.KClass
@@ -27,6 +28,20 @@ object EBCJVMCompilation {
 				MutableMap<String, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit>>>()
 	) { a, m ->
 		m.intrinsics().forEach {
+			val desc = (it.key as DirectMethodHandleDesc)
+			val className = desc.owner().descriptorString().let { s -> s.substring(1, s.length - 1) }
+			val methods = a.getOrPut(className) { mutableMapOf() }
+			val descriptors = methods.getOrPut(desc.methodName()) { mutableMapOf() }
+			descriptors[desc.lookupDescriptor()] = it.value
+		}
+		a
+	}
+
+	private val dynamics = ServiceLoader.load(KotlinEBCDynamicProvider::class.java).fold(
+		mutableMapOf<String, MutableMap<String,
+				MutableMap<String, (EBCProcedure, EBCStackTracker, EBCCompilerData, List<ConstantDesc>) -> Unit>>>()
+	) { a, m ->
+		m.dynamics().forEach {
 			val desc = (it.key as DirectMethodHandleDesc)
 			val className = desc.owner().descriptorString().let { s -> s.substring(1, s.length - 1) }
 			val methods = a.getOrPut(className) { mutableMapOf() }
@@ -56,41 +71,44 @@ object EBCJVMCompilation {
 					"was found within [$clazz]."
 		)
 		val code = efiMethod.code().orElseThrow { IllegalArgumentException("$efiMethod must contain code.") }
-		return compileMethod(code, codeBase, initBase, unInitBase, instructionSpaceBase)
+		return compileMethod(
+			code,
+			EBCCompilerData(
+				codeBase, unInitBase, initBase, instructionSpaceBase,
+				allocator = EBCVariableAllocator(initBase)
+			)
+		)
 	}
 
 	fun compileMethod(
 		code: CodeModel,
-		codeBase: ULong, initBase: ULong, unInitBase: ULong, instructionSpaceBase: ULong,
-		stringTable: MutableMap<String, ULong> = mutableMapOf(),
-		variableAllocator: EBCVariableAllocator = EBCVariableAllocator()
+		data: EBCCompilerData
 	): EBCCompilationOutput {
 		val methodParent = code.parent().get()
 		val classParent = methodParent.parent().get()
 		val procedure = EBCProcedure()
-		var data = byteArrayOf()
 		val labelTargets = mutableMapOf<Label, ULong>()
 		val branchLocations = mutableMapOf<ULong, Label>()
 		val callTargets = mutableMapOf<String, MethodModel>()
 		val callLocations = mutableMapOf<ULong, MethodModel>()
 		procedure.MOVIqq(
 			EBCRegisters.R6, false, null,
-			unInitBase
+			data.unInitBase
 		)
 		for (localVariable in code.mapNotNull { it as? LocalVariable }) when (localVariable.typeSymbol()) {
-			ConstantDescs.CD_byte, ConstantDescs.CD_short, ConstantDescs.CD_int -> variableAllocator.getOrAllocate32(
+			ConstantDescs.CD_byte, ConstantDescs.CD_short, ConstantDescs.CD_int -> data.allocator.getOrAllocate32(
 				localVariable.slot()
 			)
 
-			ConstantDescs.CD_long -> variableAllocator.getOrAllocate64((localVariable.slot()))
-			else -> variableAllocator.getOrAllocateNatural(localVariable.slot())
+			ConstantDescs.CD_long -> data.allocator.getOrAllocate64((localVariable.slot()))
+			else -> data.allocator.getOrAllocateNatural(localVariable.slot())
 		}
 		var variableOffset = 0
 		var stackNatural = 0u
 		var stackConstant = 16u
 		methodParent.methodTypeSymbol().parameterList().forEachIndexed { i, p ->
 			// TODO: Instead of using try-catch, in the future, detect encodability
-			val (natural, constant) = variableAllocator[i + variableOffset]
+			val (natural, constant) = data.allocator[i + variableOffset]
 			when (p) {
 				ConstantDescs.CD_byte, ConstantDescs.CD_short, ConstantDescs.CD_int -> {
 					try {
@@ -151,6 +169,10 @@ object EBCJVMCompilation {
 								stackNatural, stackConstant
 							)
 						)
+						if (p.resolveConstantDesc(MethodHandles.lookup()) == EFISystemTable::class.java) {
+							data.systemTableNatural = natural
+							data.systemTableConstant = constant
+						}
 					} catch (_: IllegalArgumentException) {
 						TODO("ALPHA.")
 					}
@@ -158,18 +180,21 @@ object EBCJVMCompilation {
 				}
 			}
 		}
-		val (allocatorNatural, allocatorConstant) = variableAllocator.bumpNatural()
+		data.allocator.bumpNatural().let {
+			data.allocatorNatural = it.first
+			data.allocatorConstant = it.second
+		}
 		val stack = EBCStackTracker(procedure)
 		for (element in code) when (element) {
 			is LoadInstruction -> {
 				procedure.MOVIqq(
 					EBCRegisters.R6, false, null,
-					unInitBase
+					data.unInitBase
 				)
 				when (element.typeKind()) {
 					// TODO: Instead of using try-catch, in the future, detect encodability
 					TypeKind.INT -> {
-						val (natural, constant) = variableAllocator.getOrAllocate32(element.slot())
+						val (natural, constant) = data.allocator.getOrAllocate32(element.slot())
 						try {
 							stack.PUSH32(
 								EBCRegisters.R6, true,
@@ -188,7 +213,7 @@ object EBCJVMCompilation {
 					}
 
 					TypeKind.LONG -> {
-						val (natural, constant) = variableAllocator.getOrAllocate64(element.slot())
+						val (natural, constant) = data.allocator.getOrAllocate64(element.slot())
 						try {
 							stack.PUSH64(
 								EBCRegisters.R6, true,
@@ -200,7 +225,7 @@ object EBCJVMCompilation {
 					}
 
 					TypeKind.REFERENCE -> {
-						val (natural, constant) = variableAllocator.getOrAllocateNatural(element.slot())
+						val (natural, constant) = data.allocator.getOrAllocateNatural(element.slot())
 						try {
 							stack.PUSHn(
 								EBCRegisters.R6, true,
@@ -218,11 +243,11 @@ object EBCJVMCompilation {
 			is StoreInstruction -> {
 				procedure.MOVIqq(
 					EBCRegisters.R6, false, null,
-					unInitBase
+					data.unInitBase
 				)
 				when (element.typeKind()) {
 					TypeKind.INT -> {
-						val (natural, constant) = variableAllocator.getOrAllocate32(element.slot())
+						val (natural, constant) = data.allocator.getOrAllocate32(element.slot())
 						stack.POP32(EBCRegisters.R5, false, null)
 						procedure.MOVdw(
 							EBCRegisters.R6, true, naturalIndex16(false, natural, constant),
@@ -231,7 +256,7 @@ object EBCJVMCompilation {
 					}
 
 					TypeKind.LONG -> {
-						val (natural, constant) = variableAllocator.getOrAllocate64(element.slot())
+						val (natural, constant) = data.allocator.getOrAllocate64(element.slot())
 						stack.POP64(EBCRegisters.R5, false, operand1Index = null)
 						procedure.MOVqw(
 							EBCRegisters.R6, true, naturalIndex16(false, natural, constant),
@@ -240,7 +265,7 @@ object EBCJVMCompilation {
 					}
 
 					TypeKind.REFERENCE -> {
-						val (natural, constant) = variableAllocator.getOrAllocateNatural(element.slot())
+						val (natural, constant) = data.allocator.getOrAllocateNatural(element.slot())
 						stack.POPn(EBCRegisters.R5, false, null)
 						procedure.MOVnw(
 							EBCRegisters.R6, true,
@@ -255,14 +280,14 @@ object EBCJVMCompilation {
 			}
 
 			is IncrementInstruction -> {
-				val (natural, constant) = variableAllocator[element.slot()]
+				val (natural, constant) = data.allocator[element.slot()]
 				procedure.MOVIdd(
 					EBCRegisters.R6, false, null,
 					element.constant().toUInt()
 				)
 				procedure.MOVIqq(
 					EBCRegisters.R4, false, null,
-					unInitBase
+					data.unInitBase
 				)
 				procedure.MOVdw(
 					EBCRegisters.R5, false, null,
@@ -388,9 +413,6 @@ object EBCJVMCompilation {
 						EBCRegisters.R6,
 						EBCRegisters.R5, false, null
 					)
-					// MOVIdd = 6 bytes
-					// JMP32 = 6 bytes
-					// CMP64 = 2 bytes
 					procedure.JMP32( // >= ?
 						true,
 						conditionSet = true,
@@ -625,58 +647,39 @@ object EBCJVMCompilation {
 				else -> throw IllegalArgumentException("Unknown branch opcode: ${element.opcode()}")
 			}
 
-			is ConstantInstruction.ArgumentConstantInstruction -> {
-				procedure.MOVIdd(
-					EBCRegisters.R6, false, null,
-					element.constantValue().toInt().toUInt()
-				)
-				stack.PUSH32(EBCRegisters.R6, false, null)
-			}
-
-			is ConstantInstruction.LoadConstantInstruction if element.typeKind() == TypeKind.INT -> {
-				procedure.MOVIdd(
-					EBCRegisters.R6, false, null,
-					(element.constantValue() as Integer).toInt().toUInt()
-				)
-				stack.PUSH32(EBCRegisters.R6, false, null)
-			}
-
-			is ConstantInstruction.IntrinsicConstantInstruction if element.typeKind() == TypeKind.INT -> {
-				procedure.MOVIdd(
-					EBCRegisters.R6, false, null,
-					(element.constantValue() as Integer).toInt().toUInt()
-				)
-				stack.PUSH32(EBCRegisters.R6, false, null)
-			}
-
-			is ConstantInstruction.IntrinsicConstantInstruction if element.typeKind() == TypeKind.LONG -> {
-				procedure.MOVIqq(
-					EBCRegisters.R6, false, null,
-					(element.constantValue() as java.lang.Long).toLong().toULong()
-				)
-				stack.PUSH64(EBCRegisters.R6, false, null)
-			}
-
-			is ConstantInstruction.LoadConstantInstruction if element.typeKind() == TypeKind.LONG -> {
-				procedure.MOVIqq(
-					EBCRegisters.R6, false, null,
-					(element.constantEntry() as LongEntry).longValue().toULong()
-				)
-				stack.PUSH64(EBCRegisters.R6, false, null)
-			}
-
-			is ConstantInstruction.LoadConstantInstruction if element.constantEntry() is StringEntry -> {
-				val dataPosition = stringTable.getOrPut((element.constantEntry() as StringEntry).stringValue()) {
-					val saved = initBase + data.size.toULong()
-					data += ((element.constantEntry() as StringEntry).stringValue() + "\u0000")
-						.toByteArray(Charsets.UTF_16LE)
-					saved
+			is ConstantInstruction -> when (element.typeKind()) {
+				TypeKind.INT -> {
+					@Suppress("KotlinConstantConditions")
+					procedure.MOVIdd(
+						EBCRegisters.R6, false, null,
+						(element.constantValue() as Integer).toInt().toUInt()
+					)
+					stack.PUSH32(EBCRegisters.R6, false, null)
 				}
-				procedure.MOVIqq(
-					EBCRegisters.R6, false, null,
-					dataPosition
-				)
-				stack.PUSHn(EBCRegisters.R6, false, null)
+
+				TypeKind.LONG -> {
+					@Suppress("KotlinConstantConditions")
+					procedure.MOVIqq(
+						EBCRegisters.R6, false, null,
+						(element.constantValue() as java.lang.Long).toLong().toULong()
+					)
+					stack.PUSH64(EBCRegisters.R6, false, null)
+				}
+
+				TypeKind.REFERENCE -> @Suppress("USELESS_IS_CHECK") when (val desc = element.constantValue()) {
+					is String -> {
+						val dataPosition = data.allocator.getOrAllocateString(desc)
+						procedure.MOVIqq(
+							EBCRegisters.R6, false, null,
+							dataPosition
+						)
+						stack.PUSHn(EBCRegisters.R6, false, null)
+					}
+
+					else -> throw IllegalArgumentException("Unknown CD: ${desc::class.java.name}")
+				}
+
+				else -> throw IllegalArgumentException("Unknown LDC opcode: ${element.opcode()}, ${element.typeKind()}")
 			}
 
 			is FieldInstruction -> when (
@@ -732,13 +735,7 @@ object EBCJVMCompilation {
 					val descriptors = methods[element.name().stringValue()]
 					if (descriptors != null) descriptors[element.type().stringValue()] else null
 				} else null
-				if (method != null) method(
-					procedure, stack,
-					EBCCompilerData(
-						codeBase, unInitBase, initBase, instructionSpaceBase,
-						allocatorNatural, allocatorConstant
-					)
-				) else {
+				if (method != null) method(procedure, stack, data.copy()) else {
 					val localMethod = classParent.methods().firstOrNull {
 						element.owner().name().contentEquals(classParent.thisClass().name()) &&
 								element.name().contentEquals(it.methodName()) &&
@@ -859,6 +856,18 @@ object EBCJVMCompilation {
 				}
 			}
 
+			is InvokeDynamicInstruction -> {
+				val dynamicMethods = element.bootstrapMethod().owner().descriptorString().let { s ->
+					dynamics[s.substring(1, s.length - 1)]
+				}
+				val dynamicMethod = if (dynamicMethods != null) {
+					val descriptors = dynamicMethods[element.name().stringValue()]
+					if (descriptors != null) descriptors[element.type().stringValue()] else null
+				} else null
+				if (dynamicMethod != null) dynamicMethod.invoke(procedure, stack, data.copy(), element.bootstrapArgs())
+				else throw IllegalArgumentException("No dynamic implementor for $element.")
+			}
+
 			is ConvertInstruction -> when (element.opcode()) {
 				Opcode.I2L -> {
 					stack.POP32(EBCRegisters.R6, false, null)
@@ -957,7 +966,7 @@ object EBCJVMCompilation {
 			val data = EBCProcedure()
 				.MOVIqq(
 					EBCRegisters.R6, false, null,
-					target + codeBase
+					target + data.codeBase
 				)
 				.output
 			System.arraycopy(
@@ -973,26 +982,24 @@ object EBCJVMCompilation {
 			}
 			val output = compileMethod(
 				model.code().get(),
-				codeBase + procedure.output.size.toUInt(),
-				initBase + data.size.toUInt(),
-				unInitBase,
-				instructionSpaceBase,
-				stringTable,
-				EBCVariableAllocator(
-					variableAllocator.nextFreeNatural,
-					variableAllocator.nextFreeConstant
+				EBCCompilerData(
+					data.codeBase + procedure.output.size.toUInt(),
+					data.initBase + data.allocator.strings.size.toUInt(),
+					data.unInitBase,
+					data.instructionSpaceBase,
+					allocator = data.allocator.copy()
 				)
 			)
 			methodLocations[model] = procedure.output.size.toULong()
 			procedure.output += output.code
-			data += output.initializedData
+			data.allocator.strings += output.initializedData
 		}
 		callLocations.forEach { (location, method) ->
 			val locatedAt = methodLocations[method]!!
 			val data = EBCProcedure()
 				.MOVIqq(
 					EBCRegisters.R6, false, null,
-					locatedAt + codeBase
+					locatedAt + data.codeBase
 				)
 				.output
 			System.arraycopy(
@@ -1001,6 +1008,6 @@ object EBCJVMCompilation {
 				10
 			)
 		}
-		return EBCCompilationOutput(procedure.output, data)
+		return EBCCompilationOutput(procedure.output, data.allocator.strings)
 	}
 }

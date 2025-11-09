@@ -46,7 +46,7 @@ fun SymbolLookup.getAddress(name: String): MemorySegment? {
 }
 
 fun MemorySegment.getDowncall(linker: Linker, vararg layouts: ValueLayout): MethodHandle {
-	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1..<layouts.size))
+	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1 until layouts.size))
 	return linker.downcallHandle(this, descriptor)
 }
 
@@ -60,7 +60,7 @@ fun SymbolLookup?.getDowncall(
 	layouts: Array<out ValueLayout>,
 	options: List<Linker.Option>
 ): MethodHandle? {
-	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1..<layouts.size))
+	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1 until layouts.size))
 	return linker.downcallHandle(
 		this?.getAddress(name) ?: return null,
 		descriptor, *options.toTypedArray()
@@ -79,11 +79,14 @@ fun SymbolLookup?.getDowncallVoid(linker: Linker, name: String, vararg layouts: 
 	)
 }
 
-private val gcArena = Arena.ofAuto()
+val globalArena: Arena
+	get() = Arena.global()
+val nativeLinker: Linker
+	get() = Linker.nativeLinker()
 val capturedStateLayout: StructLayout = Linker.Option.captureStateLayout()
 
 private val tlsCSS = ThreadLocal.withInitial {
-	gcArena.allocate(capturedStateLayout)
+	globalArena.allocate(capturedStateLayout)
 }
 val capturedStateSegment: MemorySegment
 	get() = tlsCSS.get()

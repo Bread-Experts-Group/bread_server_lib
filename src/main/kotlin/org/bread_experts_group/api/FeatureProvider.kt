@@ -21,7 +21,7 @@ interface FeatureProvider<X : FeatureImplementation<out X>> {
 	val supportedFeatures: MutableMap<FeatureExpression<out X>, MutableList<X>>
 	val logger: Logger
 
-	fun <I : X, E : FeatureExpression<I>> get(feature: E, allowEmulated: Boolean = false): I {
+	fun <I : X, E : FeatureExpression<I>> getOrNull(feature: E, allowEmulated: Boolean = false): I? {
 		val supported = supportedFeatures[feature]
 		if (supported != null) {
 			@Suppress("UNCHECKED_CAST")
@@ -40,9 +40,13 @@ interface FeatureProvider<X : FeatureImplementation<out X>> {
 		val found = features.firstOrNull {
 			it.expresses == feature &&
 					(if (allowEmulated) true else it.source != ImplementationSource.JVM_EMULATED)
-		} ?: throw NoFeatureAvailableException(feature.name)
+		} ?: return null
 		supportedFeatures.getOrPut(feature) { mutableListOf() }.add(found)
 		@Suppress("UNCHECKED_CAST")
 		return found as I
+	}
+
+	fun <I : X, E : FeatureExpression<I>> get(feature: E, allowEmulated: Boolean = false): I {
+		return getOrNull(feature, allowEmulated) ?: throw NoFeatureAvailableException(feature.name)
 	}
 }

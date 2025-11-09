@@ -2,17 +2,19 @@ package org.bread_experts_group.ffi.windows
 
 import org.bread_experts_group.ffi.getDowncall
 import org.bread_experts_group.ffi.getLookup
-import java.lang.foreign.*
+import org.bread_experts_group.ffi.globalArena
+import org.bread_experts_group.ffi.nativeLinker
+import java.lang.foreign.AddressLayout
+import java.lang.foreign.SymbolLookup
+import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
 
 val HGLRC: AddressLayout = ValueLayout.ADDRESS
 
-private val handleArena = Arena.ofAuto()
-private val opengl32Lookup: SymbolLookup? = handleArena.getLookup("OpenGL32.dll")
-private val linker: Linker = Linker.nativeLinker()
+private val opengl32Lookup: SymbolLookup? = globalArena.getLookup("OpenGL32.dll")
 
 val nativeWGLCreateContext: MethodHandle? = opengl32Lookup.getDowncall(
-	linker, "wglCreateContext",
+	nativeLinker, "wglCreateContext",
 	arrayOf(
 		HGLRC,
 		HDC
@@ -23,12 +25,12 @@ val nativeWGLCreateContext: MethodHandle? = opengl32Lookup.getDowncall(
 )
 
 val nativeWGLDeleteContext: MethodHandle? = opengl32Lookup.getDowncall(
-	linker, "wglDeleteContext", BOOL,
+	nativeLinker, "wglDeleteContext", BOOL,
 	HGLRC
 )
 
 val nativeWGLMakeCurrent: MethodHandle? = opengl32Lookup.getDowncall(
-	linker, "wglMakeCurrent",
+	nativeLinker, "wglMakeCurrent",
 	arrayOf(
 		BOOL,
 		HDC, HGLRC
@@ -39,7 +41,7 @@ val nativeWGLMakeCurrent: MethodHandle? = opengl32Lookup.getDowncall(
 )
 
 val nativeWGLGetProcAddress: MethodHandle? = opengl32Lookup.getDowncall(
-	linker, "wglGetProcAddress",
+	nativeLinker, "wglGetProcAddress",
 	arrayOf(
 		PROC,
 		LPCSTR

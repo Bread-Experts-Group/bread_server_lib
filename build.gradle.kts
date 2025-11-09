@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 plugins {
-	kotlin("jvm") version "2.2.0"
+	kotlin("jvm") version "2.2.20"
 	id("org.jetbrains.dokka") version "2.0.0"
 	id("org.jetbrains.dokka-javadoc") version "2.0.0"
 	`maven-publish`
@@ -131,7 +131,7 @@ object BuildInfo {
 sourceSets {
 	main {
 		kotlin.srcDirs("src/main/kotlin", generatedDir)
-		// DO NOT redefine java.srcDirs unless you have a special case
+		java.destinationDirectory.set(layout.buildDirectory.dir("classes/kotlin/main").get().asFile)
 	}
 }
 
@@ -141,6 +141,5 @@ tasks.kotlinSourcesJar {
 
 }
 tasks.compileKotlin {
-	dependsOn(generateBuildInfo)
-
+//	dependsOn(generateBuildInfo)
 }

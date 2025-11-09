@@ -28,6 +28,20 @@ interface EFISystemTable {
 
 	class IntrinsicProvider : KotlinEBCIntrinsicProvider {
 		private val owner = ClassDesc.ofInternalName("org/bread_experts_group/api/compile/ebc/efi/EFISystemTable")
+
+		companion object {
+			val getBootServices = { _: EBCProcedure, stack: EBCStackTracker, _: EBCCompilerData ->
+				stack.POPn(EBCRegisters.R6, false, null)
+				stack.PUSHn(
+					EBCRegisters.R6, true,
+					naturalIndex16(
+						false,
+						8u, 32u
+					)
+				)
+			}
+		}
+
 		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit> =
 			mapOf(
 				MethodHandleDesc.ofMethod(
@@ -85,16 +99,7 @@ interface EFISystemTable {
 					MethodTypeDesc.ofDescriptor(
 						"()Lorg/bread_experts_group/api/compile/ebc/efi/EFIBootServicesTable;"
 					)
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSHn(
-						EBCRegisters.R6, true,
-						naturalIndex16(
-							false,
-							8u, 32u
-						)
-					)
-				}
+				) to getBootServices
 			)
 	}
 }

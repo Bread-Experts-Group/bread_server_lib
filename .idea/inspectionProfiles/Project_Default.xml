@@ -66,6 +66,9 @@
           <option value="KotlinConstantConditions" />
           <option value="NOTHING_TO_INLINE" />
           <option value="Unused" />
+          <option value="USELESS_IS_CHECK" />
+          <option value="CAST_NEVER_SUCCEEDS" />
+          <option value="AssignedValueIsNeverRead" />
         </list>
       </option>
     </inspection_tool>

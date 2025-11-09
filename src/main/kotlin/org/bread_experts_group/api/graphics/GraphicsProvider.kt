@@ -2,7 +2,6 @@ package org.bread_experts_group.api.graphics
 
 import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.FeatureProvider
-import org.bread_experts_group.api.graphics.feature.GraphicsFeatureImplementation
 import org.bread_experts_group.logging.ColoredHandler
 import java.util.*
 import java.util.logging.Logger

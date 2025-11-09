@@ -13,6 +13,7 @@ interface Flaggable {
 		fun <E> EnumEntries<E>.from(n: Int) where E : Enum<E>, E : Flaggable = this.from(n.toLong())
 		fun <E> EnumEntries<E>.from(n: Long): EnumSet<E> where E : Enum<E>, E : Flaggable {
 			val filtered = this.filter { it.position and n == n }
+			@Suppress("UNCHECKED_CAST")
 			return if (filtered.isEmpty()) EnumSet.noneOf(this.first()::class.java as Class<E>)
 			else EnumSet.copyOf(filtered)
 		}

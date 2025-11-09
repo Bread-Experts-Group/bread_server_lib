@@ -1,13 +1,14 @@
 package org.bread_experts_group.ffi.windows.bcrypt
 
-import org.bread_experts_group.ffi.getDowncall
-import org.bread_experts_group.ffi.getDowncallVoid
-import org.bread_experts_group.ffi.getLookup
+import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.LPCWSTR
 import org.bread_experts_group.ffi.windows.NTSTATUS
 import org.bread_experts_group.ffi.windows.PVOID
 import org.bread_experts_group.ffi.windows.ULONG
-import java.lang.foreign.*
+import java.lang.foreign.AddressLayout
+import java.lang.foreign.MemorySegment
+import java.lang.foreign.SymbolLookup
+import java.lang.foreign.ValueLayout
 
 val BCRYPT_MD2_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000001)
 val BCRYPT_MD4_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000011)
@@ -36,84 +37,82 @@ val BCRYPT_CSHAKE256_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000
 val BCRYPT_KMAC128_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000431)
 val BCRYPT_KMAC256_ALG_HANDLE: MemorySegment = MemorySegment.ofAddress(0x00000441)
 
-private val handleArena = Arena.ofAuto()
-private val bcrypt32Lookup: SymbolLookup? = handleArena.getLookup("Bcrypt.dll")
-private val linker: Linker = Linker.nativeLinker()
+private val bcrypt32Lookup: SymbolLookup? = globalArena.getLookup("Bcrypt.dll")
 
 val BCRYPT_HANDLE: AddressLayout = ValueLayout.ADDRESS
 val BCRYPT_ALG_HANDLE = BCRYPT_HANDLE
 val BCRYPT_HASH_HANDLE = BCRYPT_HANDLE
 
 val nativeBCryptEnumRegisteredProviders = bcrypt32Lookup.getDowncall(
-	linker, "BCryptEnumRegisteredProviders", NTSTATUS,
+	nativeLinker, "BCryptEnumRegisteredProviders", NTSTATUS,
 	ValueLayout.ADDRESS /* of ULONG */, ValueLayout.ADDRESS // of PCRYPT_PROVIDERS
 )
 
 val nativeBCryptQueryProviderRegistration = bcrypt32Lookup.getDowncall(
-	linker, "BCryptQueryProviderRegistration", NTSTATUS,
+	nativeLinker, "BCryptQueryProviderRegistration", NTSTATUS,
 	LPCWSTR, ULONG, ULONG, ValueLayout.ADDRESS /* of ULONG */, ValueLayout.ADDRESS // of PCRYPT_PROVIDER_REG
 )
 
 val nativeBCryptOpenAlgorithmProvider = bcrypt32Lookup.getDowncall(
-	linker, "BCryptOpenAlgorithmProvider", NTSTATUS,
+	nativeLinker, "BCryptOpenAlgorithmProvider", NTSTATUS,
 	ValueLayout.ADDRESS /* of BCRYPT_ALG_HANDLE  */, LPCWSTR, LPCWSTR, ULONG
 )
 
 val nativeBCryptCloseAlgorithmProvider = bcrypt32Lookup.getDowncall(
-	linker, "BCryptCloseAlgorithmProvider", NTSTATUS,
+	nativeLinker, "BCryptCloseAlgorithmProvider", NTSTATUS,
 	BCRYPT_ALG_HANDLE, ULONG
 )
 
 val nativeBCryptGetProperty = bcrypt32Lookup.getDowncall(
-	linker, "BCryptGetProperty", NTSTATUS,
+	nativeLinker, "BCryptGetProperty", NTSTATUS,
 	BCRYPT_HANDLE, LPCWSTR, ValueLayout.ADDRESS, ULONG, ValueLayout.ADDRESS /* of ULONG */, ULONG
 )
 
 val nativeBCryptSetProperty = bcrypt32Lookup.getDowncall(
-	linker, "BCryptSetProperty", NTSTATUS,
+	nativeLinker, "BCryptSetProperty", NTSTATUS,
 	BCRYPT_HANDLE, LPCWSTR, ValueLayout.ADDRESS, ULONG, ULONG
 )
 
 val nativeBCryptCreateMultiHash = bcrypt32Lookup.getDowncall(
-	linker, "BCryptCreateMultiHash", NTSTATUS,
+	nativeLinker, "BCryptCreateMultiHash", NTSTATUS,
 	BCRYPT_ALG_HANDLE, BCRYPT_HASH_HANDLE, ULONG, ValueLayout.ADDRESS, ULONG, ValueLayout.ADDRESS, ULONG, ULONG
 )
 
 val nativeBCryptProcessMultiOperations = bcrypt32Lookup.getDowncall(
-	linker, "BCryptProcessMultiOperations", NTSTATUS,
+	nativeLinker, "BCryptProcessMultiOperations", NTSTATUS,
 	BCRYPT_HANDLE, BCRYPT_MULTI_OPERATION_TYPE, ValueLayout.ADDRESS, ULONG, ULONG
 )
 
 val nativeBCryptCreateHash = bcrypt32Lookup.getDowncall(
-	linker, "BCryptCreateHash", NTSTATUS,
+	nativeLinker, "BCryptCreateHash", NTSTATUS,
 	BCRYPT_ALG_HANDLE, BCRYPT_HASH_HANDLE, ValueLayout.ADDRESS, ULONG, ValueLayout.ADDRESS, ULONG, ULONG
 )
 
 val nativeBCryptHashData = bcrypt32Lookup.getDowncall(
-	linker, "BCryptHashData", NTSTATUS,
+	nativeLinker, "BCryptHashData", NTSTATUS,
 	BCRYPT_HASH_HANDLE, ValueLayout.ADDRESS, ULONG, ULONG
 )
 
 val nativeBCryptFinishHash = bcrypt32Lookup.getDowncall(
-	linker, "BCryptFinishHash", NTSTATUS,
+	nativeLinker, "BCryptFinishHash", NTSTATUS,
 	BCRYPT_HASH_HANDLE, ValueLayout.ADDRESS, ULONG, ULONG
 )
 
 val nativeBCryptDestroyHash = bcrypt32Lookup.getDowncall(
-	linker, "BCryptDestroyHash", NTSTATUS,
+	nativeLinker, "BCryptDestroyHash", NTSTATUS,
 	BCRYPT_HASH_HANDLE
 )
 
 val nativeBCryptDuplicateHash = bcrypt32Lookup.getDowncall(
-	linker, "BCryptDuplicateHash", NTSTATUS,
+	nativeLinker, "BCryptDuplicateHash", NTSTATUS,
 	BCRYPT_HASH_HANDLE, BCRYPT_HASH_HANDLE, ValueLayout.ADDRESS, ULONG, ULONG
 )
 
 val nativeBCryptFreeBuffer = bcrypt32Lookup.getDowncallVoid(
-	linker, "BCryptFreeBuffer", PVOID
+	nativeLinker, "BCryptFreeBuffer", PVOID
 )
 
 val nativeBCryptGenRandom = bcrypt32Lookup.getDowncall(
-	linker, "BCryptGenRandom", NTSTATUS,
+	nativeLinker, "BCryptGenRandom", NTSTATUS,
 	BCRYPT_ALG_HANDLE, ValueLayout.ADDRESS, ULONG, ULONG
 )

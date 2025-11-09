@@ -422,6 +422,18 @@ class EBCProcedure {
 		addInstruction()
 	}
 
+	fun JMP8(
+		conditional: Boolean,
+		conditionSet: Boolean,
+		wordOffset: Byte
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x02 or (if (conditional) 0b10000000 else 0) or (if (conditionSet) 0b1000000 else 0)).toByte()
+		)
+		instructionBuffer.put(wordOffset)
+		addInstruction()
+	}
+
 	private fun movWBase(
 		opcode: Int,
 		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,

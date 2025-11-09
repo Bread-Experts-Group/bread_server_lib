@@ -2,6 +2,7 @@ package org.bread_experts_group.ffi.windows.directx
 
 import org.bread_experts_group.Flaggable.Companion.raw
 import org.bread_experts_group.ffi.getDowncall
+import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.windows.HRESULT
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -42,7 +43,7 @@ open class IDXGISwapChain(
 ) {
 	var present: (Int, EnumSet<DXGIPresent>) -> Int = { s, f ->
 		val handle = getVTblAddress(presentVTblIndex).getDowncall(
-			linker, HRESULT,
+			nativeLinker, HRESULT,
 			ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT
 		)
 		this.present = { s, f -> handle.invokeExact(ptr, s, f.raw().toInt()) as Int }

@@ -1,6 +1,7 @@
 package org.bread_experts_group.ffi.windows.directx
 
 import org.bread_experts_group.ffi.getDowncallVoid
+import org.bread_experts_group.ffi.nativeLinker
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
@@ -33,7 +34,7 @@ class ID3D12Debug(
 
 	var enableDebugLayer: () -> Unit = {
 		val handle = getVTblAddress(enableDebugLayerVTblIndex).getDowncallVoid(
-			linker, ValueLayout.ADDRESS
+			nativeLinker, ValueLayout.ADDRESS
 		)
 		this.enableDebugLayer = { handle.invokeExact(ptr) }
 		handle.invokeExact(ptr)
