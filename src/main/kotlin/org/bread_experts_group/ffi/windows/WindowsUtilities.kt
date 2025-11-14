@@ -3,6 +3,7 @@ package org.bread_experts_group.ffi.windows
 import org.bread_experts_group.Mappable.Companion.id
 import org.bread_experts_group.ffi.OperatingSystemException
 import org.bread_experts_group.ffi.capturedStateSegment
+import org.bread_experts_group.ffi.exception.IOAbortedException
 import org.bread_experts_group.ffi.globalArena
 import java.lang.foreign.AddressLayout
 import java.lang.foreign.MemorySegment
@@ -81,34 +82,38 @@ val threadLocalDWORD2: MemorySegment
 val threadLocalPTR: MemorySegment
 	get() = tlsPTR.get()
 
-fun decodeCOMError(err: Int) {
-	if (err != 0) {
-		val count = nativeFormatMessageW!!.invokeExact(
-			0x00001100, // FORMAT_MESSAGE_ALLOCATE_BUFFER, FORMAT_MESSAGE_FROM_SYSTEM
-			MemorySegment.NULL,
-			err,
-			0,
-			threadLocalPTR,
-			0,
-			MemorySegment.NULL
-		) as Int
-		if (count == 0) TODO("Formatting error on error code: $err")
-		val asString = threadLocalPTR
-			.get(ValueLayout.ADDRESS, 0)
-			.reinterpret(count.toLong() * 2)
-			.toArray(ValueLayout.JAVA_BYTE)
-			.toString(Charsets.UTF_16LE)
-			.trim()
-		val deallocated = nativeLocalFree!!.invokeExact(
-			threadLocalPTR.get(ValueLayout.ADDRESS, 0)
-		) as MemorySegment
-		if (deallocated != MemorySegment.NULL) TODO("LOCAL FREE GET LAST ERROR")
-		throw WindowsLastErrorException(err.toUInt(), asString)
+fun decodeWin32Error(err: Int) {
+	when (err) {
+		995 -> throw IOAbortedException()
+		0 -> {}
+		else -> {
+			val count = nativeFormatMessageW!!.invokeExact(
+				0x00001100, // FORMAT_MESSAGE_ALLOCATE_BUFFER, FORMAT_MESSAGE_FROM_SYSTEM
+				MemorySegment.NULL,
+				err,
+				0,
+				threadLocalPTR,
+				0,
+				MemorySegment.NULL
+			) as Int
+			if (count == 0) TODO("Formatting error on error code: $err")
+			val asString = threadLocalPTR
+				.get(ValueLayout.ADDRESS, 0)
+				.reinterpret(count.toLong() * 2)
+				.toArray(ValueLayout.JAVA_BYTE)
+				.toString(Charsets.UTF_16LE)
+				.trim()
+			val deallocated = nativeLocalFree!!.invokeExact(
+				threadLocalPTR.get(ValueLayout.ADDRESS, 0)
+			) as MemorySegment
+			if (deallocated != MemorySegment.NULL) TODO("LOCAL FREE GET LAST ERROR")
+			throw WindowsLastErrorException(err.toUInt(), asString)
+		}
 	}
 }
 
 fun decodeLastError(): Nothing {
-	decodeCOMError(nativeGetLastError.get(capturedStateSegment, 0L) as Int)
+	decodeWin32Error(nativeGetLastError.get(capturedStateSegment, 0L) as Int)
 	throw OperatingSystemException("General exception (GetLastError did not produce error code).")
 }
 

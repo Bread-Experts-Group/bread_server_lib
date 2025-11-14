@@ -58,6 +58,9 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 	).also {
 		deviceCache[instanceIDString] = it
 		it.features.add(
+			WindowsSystemDeviceIODeviceFeature(link)
+		)
+		it.features.add(
 			SystemDeviceSystemTypeGUIDFeature(guid, ImplementationSource.SYSTEM_NATIVE)
 		)
 		val identityBytes = ByteArray(link.byteSize().toInt())

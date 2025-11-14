@@ -5,7 +5,7 @@ import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.GraphicsConsoleIOFeature
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleModes
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.windows.*
-import org.bread_experts_group.api.io.feature.device.windows.WindowsIODevice
+import org.bread_experts_group.api.system.device.io.windows.WindowsIODevice
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.INVALID_HANDLE_VALUE
 import org.bread_experts_group.ffi.windows.decodeLastError

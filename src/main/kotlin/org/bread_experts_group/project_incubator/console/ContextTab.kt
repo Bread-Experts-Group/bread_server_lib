@@ -1,7 +1,7 @@
 package org.bread_experts_group.project_incubator.console
 
 open class ContextTab(
-	val name: String,
+	name: String,
 	val selectChar: Char?,
 	val populate: (MutableList<ContextTab>) -> Unit = {}
 ) {
@@ -10,6 +10,7 @@ open class ContextTab(
 		{ it.addAll(tabs) }
 	)
 
+	open var name: String = name
 	var renderCallback: () -> Unit = {}
 	val tabs: MutableList<ContextTab> = mutableListOf()
 
@@ -18,6 +19,6 @@ open class ContextTab(
 	var w: Int = 0
 	var h: Int = 0
 
-	open fun opened() {}
+	open fun opened(): Boolean = false
 	open fun closed() {}
 }

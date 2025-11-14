@@ -2,7 +2,7 @@ package org.bread_experts_group.api.graphics.feature.console.feature.device.feat
 
 import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleIODeviceGetFeature
-import org.bread_experts_group.api.io.feature.device.IODevice
+import org.bread_experts_group.api.system.device.io.IODevice
 
 class WindowsGraphicsConsoleIODeviceGetFeature(override val device: IODevice) : GraphicsConsoleIODeviceGetFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE

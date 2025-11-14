@@ -4,7 +4,7 @@ import org.bread_experts_group.MappedEnumeration
 import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.system.EventListener
 import org.bread_experts_group.api.system.device.SystemDevice
-import org.bread_experts_group.api.system.device.SystemDeviceAddedEventFeature
+import org.bread_experts_group.api.system.device.feature.SystemDeviceAddedEventFeature
 import org.bread_experts_group.ffi.windows.cfgmgr.WindowsCMNotifyAction
 import org.bread_experts_group.ffi.windows.cfgmgr.WindowsCMNotifyEventData
 import java.lang.foreign.Arena

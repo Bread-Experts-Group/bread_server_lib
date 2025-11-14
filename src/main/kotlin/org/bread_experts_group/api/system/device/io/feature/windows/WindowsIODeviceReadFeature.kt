@@ -1,7 +1,7 @@
-package org.bread_experts_group.api.io.feature.device.feature.windows
+package org.bread_experts_group.api.system.device.io.feature.windows
 
 import org.bread_experts_group.api.ImplementationSource
-import org.bread_experts_group.api.io.feature.device.feature.IODeviceReadFeature
+import org.bread_experts_group.api.system.device.io.feature.IODeviceReadFeature
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.decodeLastError
@@ -33,7 +33,7 @@ class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceRe
 	override fun read(into: ByteArray, offset: Int, length: Int): Int = Arena.ofConfined().use {
 		val allocated = it.allocate(length.toLong())
 		val read = read(allocated, length)
-		MemorySegment.copy(allocated, ValueLayout.JAVA_BYTE, 0, into, 0, length)
+		MemorySegment.copy(allocated, ValueLayout.JAVA_BYTE, 0, into, 0, read)
 		read
 	}
 }

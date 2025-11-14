@@ -1,8 +1,9 @@
-package org.bread_experts_group.api.system.device
+package org.bread_experts_group.api.system.device.feature
 
 import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.system.EventListener
 import org.bread_experts_group.api.system.SystemFeatures
+import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.feature.SystemFeatureImplementation
 
 abstract class SystemDeviceRemovedEventFeature : SystemFeatureImplementation<SystemDeviceRemovedEventFeature>() {

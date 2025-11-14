@@ -1,8 +1,8 @@
-package org.bread_experts_group.api.io.feature.device
+package org.bread_experts_group.api.system.device.io
 
 import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.io.feature.device.feature.IODeviceReadFeature
-import org.bread_experts_group.api.io.feature.device.feature.IODeviceWriteFeature
+import org.bread_experts_group.api.system.device.io.feature.IODeviceReadFeature
+import org.bread_experts_group.api.system.device.io.feature.IODeviceWriteFeature
 
 object IODeviceFeatures {
 	val READ = object : FeatureExpression<IODeviceReadFeature> {

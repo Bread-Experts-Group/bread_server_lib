@@ -58,7 +58,7 @@ fun MemorySegment.getDowncallVoid(linker: Linker, vararg layouts: ValueLayout): 
 fun SymbolLookup?.getDowncall(
 	linker: Linker, name: String,
 	layouts: Array<out ValueLayout>,
-	options: List<Linker.Option>
+	options: List<Linker.Option?>
 ): MethodHandle? {
 	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1 until layouts.size))
 	return linker.downcallHandle(

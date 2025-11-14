@@ -1,9 +1,9 @@
 package org.bread_experts_group.api.system
 
 import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.system.device.SystemDeviceAddedEventFeature
-import org.bread_experts_group.api.system.device.SystemDeviceEnumerationFeature
-import org.bread_experts_group.api.system.device.SystemDeviceRemovedEventFeature
+import org.bread_experts_group.api.system.device.feature.SystemDeviceAddedEventFeature
+import org.bread_experts_group.api.system.device.feature.SystemDeviceEnumerationFeature
+import org.bread_experts_group.api.system.device.feature.SystemDeviceRemovedEventFeature
 import org.bread_experts_group.api.system.feature.SystemThreadLocalUserFeature
 import org.bread_experts_group.api.system.feature.SystemUptimeFeature
 

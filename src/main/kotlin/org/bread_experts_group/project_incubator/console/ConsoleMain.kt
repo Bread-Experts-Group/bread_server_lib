@@ -8,17 +8,15 @@ import org.bread_experts_group.api.graphics.feature.console.feature.device.Graph
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleIOEvent
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleIOFeatures
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleModes
-import org.bread_experts_group.api.io.feature.device.IODeviceFeatures
 import org.bread_experts_group.api.system.EventListener
 import org.bread_experts_group.api.system.SystemFeatures
 import org.bread_experts_group.api.system.SystemProvider
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.SystemDeviceType
+import org.bread_experts_group.api.system.device.io.IODeviceFeatures
 import org.bread_experts_group.api.system.user.SystemUserFeatures
 import org.bread_experts_group.protocol.vt100d.*
-import java.io.BufferedReader
-import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -27,10 +25,11 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
-import kotlin.io.path.Path
 import kotlin.math.max
+import kotlin.reflect.KMutableProperty
 
 class Console {
+	val messageQueue = LinkedBlockingQueue<ConsoleMessage>()
 	val clockFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ssZ")
 	fun Duration.format(): String {
 		val seconds = this.seconds
@@ -44,6 +43,11 @@ class Console {
 	val userName = user.get(SystemUserFeatures.NAME_GET).name
 	val logonTime = user.get(SystemUserFeatures.LOGON_TIME_GET).logonTime
 
+	var controlStatus = false
+	var controlSpaceStatus = false
+	var controlTabStatus = false
+	var controlCrStatus = false
+	var controlLfStatus = false
 	val controlSpace = "${SET_ATTRIBUTE(VT100DGraphicsAttributes.FG_MAGENTA)}␠" +
 			SET_ATTRIBUTE(VT100DGraphicsAttributes.FG_DEFAULT)
 	val controlTab = "${SET_ATTRIBUTE(VT100DGraphicsAttributes.FG_MAGENTA)}␉␣␣␣" +
@@ -62,27 +66,7 @@ class Console {
 	val cIn = cui.get(GraphicsConsoleFeatures.STANDARD_INPUT)
 	val cInEvents = cIn.get(GraphicsConsoleIOFeatures.EVENT_GET)
 
-	val lines = mutableListOf<String>()
-	var storage = ""
-
-	var panelLineStart = 0
-
 	init {
-		val reader: BufferedReader =
-			Files.newBufferedReader(Path("C:\\Users\\Adenosine3Phosphate\\Desktop\\Projects\\bread_server_lib\\src\\main\\kotlin\\org\\bread_experts_group\\api\\io\\IOFeatureImplementation.kt"))
-		while (true) {
-			val raw = reader.read()
-			if (raw == -1) {
-				if (storage.isNotEmpty()) lines.add(storage)
-				break
-			}
-			storage += Char(raw)
-			if (raw == '\n'.code) {
-				lines.add(storage)
-				storage = ""
-			}
-		}
-
 		cOut.get(GraphicsConsoleIOFeatures.CODING_SET).setCoding(
 			CodingFormatsProvider.get(CodingFormats.UTF_8).coding
 		)
@@ -105,33 +89,37 @@ class Console {
 		cOutWrite.write(OPEN_ALT_BUFFER, Charsets.UTF_8)
 	}
 
-	context(window: ConsoleMessage.WindowSize)
-	fun renderPanel(): String {
-		var rendered = ""
-		var i = panelLineStart
-		while ((i + 3) <= window.y) {
-			if (i >= lines.size) {
-				rendered += controlEtx
-				break
-			}
-			var line = lines[i++]
-			line = if (line.length > window.x) "${line.take(window.x - 1)}${
-				SET_ATTRIBUTE(
-					VT100DGraphicsAttributes.FG_YELLOW
-				)
-			}>${SET_ATTRIBUTE(VT100DGraphicsAttributes.FG_DEFAULT)}"
-			else line.take(window.x)
-			rendered += line
-				.replace(" ", controlSpace)
-				.replace("\t", controlTab)
-				.replace("\r", controlCr)
-				.replace("\n", controlLf) + '\n'
+	var bank = ConsoleBank(messageQueue)
+
+	class ToggleTab(
+		val propertyName: String,
+		val toggles: KMutableProperty<Boolean>
+	) : ContextTab(propertyName, null) {
+		override var name: String
+			get() = "[${if (toggles.getter.call()) "✗" else " "}] $propertyName"
+			set(_) {}
+
+		override fun opened(): Boolean {
+			toggles.setter.call(!toggles.getter.call())
+			return true
 		}
-		return rendered
 	}
 
 	val tabs = listOf(
-		ContextTab("SHELL", 'S'),
+		ContextTab(
+			"SHELL", 'S',
+			ContextTab(
+				"CONTROL SEQ", 'Q',
+				ContextTab(
+					"VISIBILITY", 'R',
+					ToggleTab("Enable", ::controlStatus),
+					ToggleTab("Space", ::controlSpaceStatus),
+					ToggleTab("Tab", ::controlTabStatus),
+					ToggleTab("Carriage Return", ::controlCrStatus),
+					ToggleTab("Line Feed", ::controlLfStatus),
+				),
+			)
+		),
 		ContextTab("EXECUTE", 'E'),
 		ContextTab(
 			"DEVICE", 'D',
@@ -141,15 +129,36 @@ class Console {
 				var addEvent: EventListener? = null
 				var removeEvent: EventListener? = null
 				val mappings = IdentityHashMap<SystemDevice, ContextTab>()
-				override fun opened() {
+				override fun opened(): Boolean {
 					fun addDevice(device: SystemDevice) {
 						if (mappings.contains(device)) return
 						val friendlyName = device.get(SystemDeviceFeatures.FRIENDLY_NAME).name
 						val serialPortName = device.getOrNull(SystemDeviceFeatures.SERIAL_PORT_NAME)?.name
-						val newTab = ContextTab(
-							"$friendlyName [${serialPortName ?: "x"}]",
+						val newTab = object : ContextTab(
+							friendlyName,
 							null
-						)
+						) {
+							private val localBank = ConsoleBank(messageQueue)
+							override var name: String
+								get() = "[${if (bank === localBank) "✗" else " "}] $friendlyName" +
+										" [${serialPortName ?: "x"}]"
+								set(_) {}
+
+							override fun opened(): Boolean {
+								bank = localBank
+								val device = device.get(SystemDeviceFeatures.IO_DEVICE).device
+								val deviceRead = device.get(IODeviceFeatures.READ)
+								Thread.ofPlatform().start {
+									val buffer = ByteArray(512)
+									while (true) {
+										val read = deviceRead.read(buffer)
+										if (read == 0) continue
+										localBank.write(buffer.decodeToString(0, read))
+									}
+								}
+								return false
+							}
+						}
 						mappings[device] = newTab
 						tabs.add(newTab)
 					}
@@ -166,15 +175,26 @@ class Console {
 						renderCallback()
 					}
 
-					SystemProvider.get(SystemFeatures.ENUMERATE_DEVICES).enumerate(SystemDeviceType.SERIAL).forEach {
-						addDevice(it)
+					val presentDevices = SystemProvider
+						.get(SystemFeatures.ENUMERATE_DEVICES)
+						.enumerate(SystemDeviceType.SERIAL)
+						.toMutableList()
+					val dropDevices = mutableListOf<SystemDevice>()
+					mappings.forEach { (device, tab) ->
+						if (presentDevices.contains(device)) {
+							presentDevices.remove(device)
+							tabs.add(tab)
+						} else dropDevices.add(device)
 					}
+					dropDevices.forEach { mappings.remove(it) }
+					presentDevices.forEach { addDevice(it) }
+
+					return false
 				}
 
 				override fun closed() {
 					addEvent?.teardown()
 					removeEvent?.teardown()
-					mappings.clear()
 				}
 			}
 		)
@@ -186,15 +206,16 @@ class Console {
 	fun processTab(tab: ContextTab, depth: Int) {
 		if (
 			!mouse.captured && !mouse.down &&
-			mouse.button == 0 && mouse.x in tab.x until (tab.x + (tab.w - 1)) && mouse.y == tab.y
+			mouse.button == 0 && mouse.x in tab.x until (tab.x + tab.w) && mouse.y == tab.y
 		) {
 			openTabs = if (openTabs.getOrNull(depth) != tab) {
-				val newOpenTabs = openTabs.copyOf(depth + 1)
-				newOpenTabs[depth] = tab
-				tab.opened()
-				tab.populate(tab.tabs)
-				@Suppress("UNCHECKED_CAST")
-				newOpenTabs as Array<ContextTab>
+				if (!tab.opened()) {
+					val newOpenTabs = openTabs.copyOf(depth + 1)
+					newOpenTabs[depth] = tab
+					tab.populate(tab.tabs)
+					@Suppress("UNCHECKED_CAST")
+					newOpenTabs as Array<ContextTab>
+				} else openTabs
 			} else {
 				for (i in depth until openTabs.size) {
 					val tab = openTabs[i]
@@ -269,7 +290,7 @@ class Console {
 		if (!mouse.wheel) processTopLevel(2, 1)
 		else if (!mouse.captured) {
 			mouse.captured = true
-			panelLineStart = max(if (mouse.button == 0) panelLineStart - 1 else panelLineStart + 1, 0)
+			bank.line = max(if (mouse.button == 0) bank.line - 1 else bank.line + 1, 0)
 		}
 		val timeNow = OffsetDateTime.now()
 		val uptime = Duration.of(
@@ -284,7 +305,7 @@ class Console {
 				ERASE_SCREEN(VT100DEraseTypes.ALL) +
 				// Pseudo-console
 				CURSOR_XY_POS(1u, 2u) +
-				renderPanel() +
+				bank.render() +
 				// Status
 				SET_ATTRIBUTE(VT100DGraphicsAttributes.BG_WHITE) +
 				SET_ATTRIBUTE(VT100DGraphicsAttributes.FG_BLACK) +
@@ -319,7 +340,6 @@ class Console {
 @OptIn(ExperimentalStdlibApi::class)
 fun main() {
 	val console = Console()
-	val messageQueue = LinkedBlockingQueue<ConsoleMessage>()
 	var commandBuffer = ""
 
 	@Suppress("AssignedValueIsNeverRead")
@@ -333,7 +353,7 @@ fun main() {
 				'<' -> if (commandBuffer.last().lowercaseChar() == 'm') {
 					val parameters = commandBuffer.substring(3, commandBuffer.length - 1).split(';')
 					val cb = parameters.getOrNull(0)?.toIntOrNull() ?: 0
-					messageQueue.put(
+					console.messageQueue.put(
 						ConsoleMessage.MouseInput(
 							cb and 0b11,
 							parameters.getOrNull(1)?.toIntOrNull() ?: 0,
@@ -356,7 +376,10 @@ fun main() {
 	Thread.ofPlatform().name("Input").start {
 		while (true) when (val event = console.cInEvents.pollEvent()) {
 			is GraphicsConsoleIOEvent.Key -> if (event.down) keyPress(event.char)
-			is GraphicsConsoleIOEvent.WindowSize -> messageQueue.put(ConsoleMessage.WindowSize(event.x, event.y))
+			is GraphicsConsoleIOEvent.WindowSize -> console.messageQueue.put(
+				ConsoleMessage.WindowSize(event.x, event.y)
+			)
+
 			else -> {}
 		}
 	}
@@ -365,10 +388,10 @@ fun main() {
 		var windowSize = ConsoleMessage.WindowSize(80, 25)
 		var mouseInput = ConsoleMessage.MouseInput(0, 0, 0, wheel = false, down = false, captured = true)
 		while (true) {
-			when (val message = messageQueue.poll(250, TimeUnit.MILLISECONDS)) {
+			when (val message = console.messageQueue.poll(250, TimeUnit.MILLISECONDS)) {
 				is ConsoleMessage.WindowSize -> windowSize = message
 				is ConsoleMessage.MouseInput -> mouseInput = message
-				null -> {}
+				null, is ConsoleMessage.Refresh -> {}
 			}
 			context(windowSize, mouseInput) { console.render() }
 		}

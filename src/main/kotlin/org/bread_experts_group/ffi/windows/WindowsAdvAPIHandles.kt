@@ -31,7 +31,7 @@ val nativeOpenThreadToken: MethodHandle? = advapi32Lookup.getDowncall(
 	)
 )
 
-private val nativeGetTokenInformation: MethodHandle? = advapi32Lookup.getDowncall(
+val nativeGetTokenInformation: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "GetTokenInformation",
 	arrayOf(
 		BOOL,

@@ -1,8 +1,8 @@
-package org.bread_experts_group.api.io.feature.device.feature
+package org.bread_experts_group.api.system.device.io.feature
 
 import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.io.feature.device.IODeviceFeatureImplementation
-import org.bread_experts_group.api.io.feature.device.IODeviceFeatures
+import org.bread_experts_group.api.system.device.io.IODeviceFeatureImplementation
+import org.bread_experts_group.api.system.device.io.IODeviceFeatures
 import java.lang.foreign.MemorySegment
 import java.nio.charset.Charset
 

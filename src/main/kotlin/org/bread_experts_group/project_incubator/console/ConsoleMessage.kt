@@ -9,4 +9,6 @@ sealed class ConsoleMessage {
 		val down: Boolean,
 		var captured: Boolean
 	) : ConsoleMessage()
+
+	class Refresh : ConsoleMessage()
 }

@@ -8,8 +8,7 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 class SystemDeviceFriendlyNameFeature(
 	val name: String,
 	override val source: ImplementationSource
-) :
-	SystemDeviceFeatureImplementation<SystemDeviceFriendlyNameFeature>() {
+) : SystemDeviceFeatureImplementation<SystemDeviceFriendlyNameFeature>() {
 	override val expresses: FeatureExpression<SystemDeviceFriendlyNameFeature> =
 		SystemDeviceFeatures.FRIENDLY_NAME
 

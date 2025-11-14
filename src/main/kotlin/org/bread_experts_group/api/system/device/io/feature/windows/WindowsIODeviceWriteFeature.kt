@@ -1,7 +1,7 @@
-package org.bread_experts_group.api.io.feature.device.feature.windows
+package org.bread_experts_group.api.system.device.io.feature.windows
 
 import org.bread_experts_group.api.ImplementationSource
-import org.bread_experts_group.api.io.feature.device.feature.IODeviceWriteFeature
+import org.bread_experts_group.api.system.device.io.feature.IODeviceWriteFeature
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
