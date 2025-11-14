@@ -3,3 +3,4 @@ org.bread_experts_group.api.system.feature.windows.WindowsSystemThreadLocalUserF
 org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceAddedEventFeature
 org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceRemovedEventFeature
 org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceEnumerationFeature
+org.bread_experts_group.api.system.feature.macos.MacOSSystemThreadLocalUserFeature
