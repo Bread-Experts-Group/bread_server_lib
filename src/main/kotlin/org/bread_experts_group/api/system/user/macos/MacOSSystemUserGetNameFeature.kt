@@ -7,7 +7,7 @@ import java.lang.foreign.MemorySegment
 
 class MacOSSystemUserGetNameFeature(private val user: MacOSSystemUser) : SystemUserGetNameFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = true
+	override fun supported(): Boolean = nativeGetlogin != null
 
 	override val name: String
 		get() {
