@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.secure.cryptography
 
-import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.FeatureProvider
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.secure.cryptography.feature.CryptographySystemFeatureImplementation
 import org.bread_experts_group.logging.ColoredHandler
 import java.lang.ref.Cleaner

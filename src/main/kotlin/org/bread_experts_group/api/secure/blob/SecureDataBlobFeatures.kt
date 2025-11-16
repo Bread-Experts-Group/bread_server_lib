@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.secure.blob
 
-import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.secure.blob.feature.CrossProcessEncryptedSecureDataBlobFeature
 import org.bread_experts_group.api.secure.blob.feature.LocalProcessEncryptedSecureDataBlobFeature
 import org.bread_experts_group.api.secure.blob.feature.LocalUserEncryptedSecureDataBlobFeature

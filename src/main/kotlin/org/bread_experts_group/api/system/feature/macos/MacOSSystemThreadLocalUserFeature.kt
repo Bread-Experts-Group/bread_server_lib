@@ -1,11 +1,11 @@
 package org.bread_experts_group.api.system.feature.macos
 
-import org.bread_experts_group.api.ImplementationSource
-import org.bread_experts_group.api.system.feature.SystemThreadLocalUserFeature
+import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.feature.SystemGetThreadLocalUserFeature
 import org.bread_experts_group.api.system.user.SystemUser
 import org.bread_experts_group.api.system.user.macos.MacOSSystemUser
 
-class MacOSSystemThreadLocalUserFeature : SystemThreadLocalUserFeature() {
+class MacOSSystemThreadLocalUserFeature : SystemGetThreadLocalUserFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = true
 

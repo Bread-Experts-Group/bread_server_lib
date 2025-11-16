@@ -1,8 +1,8 @@
 package org.bread_experts_group.api.graphics.feature.window
 
-import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.FeatureProvider
 import org.bread_experts_group.api.PreInitializableClosable
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowFeatureImplementation
 import org.bread_experts_group.logging.ColoredHandler
 import java.util.*

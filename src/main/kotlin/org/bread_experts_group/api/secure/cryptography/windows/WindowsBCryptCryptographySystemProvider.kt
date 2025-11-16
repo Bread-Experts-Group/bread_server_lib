@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.secure.cryptography.windows
 
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.CryptographySystem
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemProvider
@@ -81,9 +81,8 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 		val system = WindowsBCryptCryptographySystem()
 		system.exposedFeatures.add(WindowsRandomFeature(CryptographySystemFeatures.RANDOM_SYSTEM_PREFERRED, null))
 		for ((iface, functions) in providerInterfaceMap) when (iface) {
-			WindowsBCryptInterface.BCRYPT_CIPHER_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.BCRYPT_CIPHER_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
 			WindowsBCryptInterface.BCRYPT_HASH_INTERFACE -> for ((function, providers) in functions) when (function) {
 				"MD2" -> {
@@ -434,19 +433,16 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 				else -> logger.info { "$iface: Needs implementation: $function" }
 			}
 
-			WindowsBCryptInterface.BCRYPT_ASYMMETRIC_ENCRYPTION_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.BCRYPT_ASYMMETRIC_ENCRYPTION_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
-			WindowsBCryptInterface.BCRYPT_SECRET_AGREEMENT_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.BCRYPT_SECRET_AGREEMENT_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
-			WindowsBCryptInterface.BCRYPT_SIGNATURE_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.BCRYPT_SIGNATURE_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
-			WindowsBCryptInterface.BCRYPT_RNG_INTERFACE -> for ((function, providers) in functions) when (function) {
+			WindowsBCryptInterface.BCRYPT_RNG_INTERFACE -> for ((function, _) in functions) when (function) {
 				"RNG" -> system.exposedFeatures.add(
 					WindowsRandomFeature(CryptographySystemFeatures.RANDOM, BCRYPT_RNG_ALG_HANDLE)
 				)
@@ -455,25 +451,20 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 				else -> logger.info { "$iface: Needs implementation: $function" }
 			}
 
-			WindowsBCryptInterface.BCRYPT_KEY_DERIVATION_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.BCRYPT_KEY_DERIVATION_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
-			WindowsBCryptInterface.NCRYPT_KEY_STORAGE_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.NCRYPT_KEY_STORAGE_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
-			WindowsBCryptInterface.NCRYPT_SCHANNEL_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.NCRYPT_SCHANNEL_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
-			WindowsBCryptInterface.NCRYPT_SCHANNEL_SIGNATURE_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.NCRYPT_SCHANNEL_SIGNATURE_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 
-			WindowsBCryptInterface.NCRYPT_KEY_PROTECTION_INTERFACE -> for ((function, providers) in functions) when (function) {
-				else -> logger.info { "$iface: Needs implementation: $function" }
-			}
+			WindowsBCryptInterface.NCRYPT_KEY_PROTECTION_INTERFACE -> for ((function, _) in functions)
+				logger.info { "$iface: Needs implementation: $function" }
 		}
 		return system
 	}

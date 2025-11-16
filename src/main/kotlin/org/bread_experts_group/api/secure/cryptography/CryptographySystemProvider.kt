@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.secure.cryptography
 
-import org.bread_experts_group.api.CheckedImplementation
-import org.bread_experts_group.api.NoFeatureAvailableException
+import org.bread_experts_group.api.feature.CheckedImplementation
+import org.bread_experts_group.api.feature.NoFeatureAvailableException
 import java.util.*
 
 abstract class CryptographySystemProvider : CheckedImplementation {

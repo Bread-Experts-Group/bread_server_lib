@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.graphics
 
-import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.graphics.feature.console.GraphicsConsoleFeature
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowFeature
 

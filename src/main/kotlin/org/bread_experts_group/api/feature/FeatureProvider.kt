@@ -1,4 +1,4 @@
-package org.bread_experts_group.api
+package org.bread_experts_group.api.feature
 
 import java.util.logging.Level
 import java.util.logging.Logger

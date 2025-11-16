@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.graphics.feature.console.feature.device.feature
 
-import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureExpression
 import java.util.*
 
 abstract class GraphicsConsoleIOModeSetFeature :

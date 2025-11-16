@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.secure.cryptography.windows.feature.hash
 
-import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.feature.hash.HashingMACSIMDFeature
 import org.bread_experts_group.ffi.windows.WindowsNTSTATUSException

@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.system.user.macos
 
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.user.feature.SystemUserGetNameFeature
 import org.bread_experts_group.ffi.macos.nativeGetlogin
 import java.lang.foreign.MemorySegment

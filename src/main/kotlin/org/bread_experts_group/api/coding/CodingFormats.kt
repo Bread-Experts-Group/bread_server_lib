@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.coding
 
-import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureExpression
 
 object CodingFormats {
 	val UTF_8 = object : FeatureExpression<CodingFormatImplementation> {

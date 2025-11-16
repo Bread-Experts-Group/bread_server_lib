@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.secure.cryptography.windows.feature.hash
 
-import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.feature.hash.SIMDHashingFeature
 import org.bread_experts_group.ffi.windows.WindowsNTSTATUSException
 import org.bread_experts_group.ffi.windows.bcrypt.*

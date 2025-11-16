@@ -1,8 +1,8 @@
 package org.bread_experts_group.api.graphics.feature.window.feature
 
 import org.bread_experts_group.MappedEnumeration
-import org.bread_experts_group.api.FeatureExpression
 import org.bread_experts_group.api.PreInitializableClosable
+import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
 import org.bread_experts_group.numeric.geometry.Matrix4F
 import java.lang.foreign.MemorySegment

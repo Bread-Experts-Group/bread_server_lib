@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.system.user.windows
 
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.user.feature.SystemUserGetNameFeature
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*

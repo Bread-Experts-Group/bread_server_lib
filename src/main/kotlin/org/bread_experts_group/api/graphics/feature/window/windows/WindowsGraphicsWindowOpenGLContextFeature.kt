@@ -3,7 +3,7 @@ package org.bread_experts_group.api.graphics.feature.window.windows
 import org.bread_experts_group.Flaggable.Companion.raw
 import org.bread_experts_group.Mappable.Companion.id
 import org.bread_experts_group.MappedEnumeration
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowOpenGLContextFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
 import org.bread_experts_group.ffi.capturedStateSegment

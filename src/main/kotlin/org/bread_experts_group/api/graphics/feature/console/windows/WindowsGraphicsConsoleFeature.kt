@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.graphics.feature.console.windows
 
-import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.GraphicsFeatures
 import org.bread_experts_group.api.graphics.feature.console.GraphicsConsoleFeature
 import org.bread_experts_group.ffi.capturedStateSegment

@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.secure.blob.windows
 
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.secure.blob.SecureDataBlob
 import org.bread_experts_group.api.secure.blob.SecureDataBlobProvider
 import org.bread_experts_group.ffi.windows.nativeCryptProtectMemory

@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.system.device.windows
 
 import org.bread_experts_group.MappedEnumeration
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.EventListener
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.feature.SystemDeviceAddedEventFeature

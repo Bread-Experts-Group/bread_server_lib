@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.graphics.feature.console.feature.device
 
-import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureExpression
 
 object GraphicsConsoleFeatures {
 	val STANDARD_INPUT = object : FeatureExpression<GraphicsConsoleIOFeature> {

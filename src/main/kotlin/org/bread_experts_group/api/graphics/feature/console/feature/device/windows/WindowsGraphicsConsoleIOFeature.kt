@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.graphics.feature.console.feature.device.windows
 
-import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.GraphicsConsoleIOFeature
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleModes
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.windows.*

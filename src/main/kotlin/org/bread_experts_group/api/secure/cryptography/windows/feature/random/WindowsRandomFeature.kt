@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.secure.cryptography.windows.feature.random
 
-import org.bread_experts_group.api.FeatureExpression
-import org.bread_experts_group.api.ImplementationSource
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.feature.random.RandomFeature
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment

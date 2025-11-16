@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.secure.cryptography
 
-import org.bread_experts_group.api.FeatureExpression
+import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.secure.cryptography.feature.hash.*
 import org.bread_experts_group.api.secure.cryptography.feature.random.RandomFeature
 import org.bread_experts_group.api.secure.cryptography.feature.symencrypt.AESKey

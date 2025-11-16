@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.graphics.feature.window.windows
 
-import org.bread_experts_group.api.ImplementationSource
 import org.bread_experts_group.api.PreInitializableClosable
+import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowNameFeature
 import org.bread_experts_group.ffi.windows.WindowsMessageTypes
 import java.lang.foreign.Arena
