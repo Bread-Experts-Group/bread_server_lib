@@ -289,3 +289,14 @@ val nativeCloseHandle: MethodHandle? = kernel32Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeGetCurrentDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GetCurrentDirectoryW",
+	arrayOf(
+		DWORD,
+		DWORD, LPWSTR,
+	),
+	listOf(
+		gleCapture
+	)
+)

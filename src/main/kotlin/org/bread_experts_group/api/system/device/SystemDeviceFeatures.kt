@@ -23,4 +23,12 @@ object SystemDeviceFeatures {
 	val IO_DEVICE = object : FeatureExpression<SystemDeviceIODeviceFeature> {
 		override val name: String = "I/O Device"
 	}
+
+	val PARENT = object : FeatureExpression<SystemDeviceParentFeature> {
+		override val name: String = "Parent Device"
+	}
+
+	val CHILDREN = object : FeatureExpression<SystemDeviceChildrenFeature> {
+		override val name: String = "Children Devices"
+	}
 }

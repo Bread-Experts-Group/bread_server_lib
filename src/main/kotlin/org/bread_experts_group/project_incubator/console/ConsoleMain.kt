@@ -39,7 +39,7 @@ class Console {
 		return String.format("%02d:%02d:%02d:%02d", days, hours % 24, minutes % 60, seconds % 60)
 	}
 
-	val user = SystemProvider.get(SystemFeatures.THREAD_LOCAL_USER).user
+	val user = SystemProvider.get(SystemFeatures.GET_THREAD_LOCAL_USER).user
 	val userName = user.get(SystemUserFeatures.NAME_GET).name
 	val logonTime = user.get(SystemUserFeatures.LOGON_TIME_GET).logonTime
 
@@ -146,7 +146,7 @@ class Console {
 
 							override fun opened(): Boolean {
 								bank = localBank
-								val device = device.get(SystemDeviceFeatures.IO_DEVICE).device
+								val (device) = device.get(SystemDeviceFeatures.IO_DEVICE).open()
 								val deviceRead = device.get(IODeviceFeatures.READ)
 								Thread.ofPlatform().start {
 									val buffer = ByteArray(512)
@@ -294,7 +294,7 @@ class Console {
 		}
 		val timeNow = OffsetDateTime.now()
 		val uptime = Duration.of(
-			SystemProvider.get(SystemFeatures.UPTIME_MS).uptime.toLong(),
+			SystemProvider.get(SystemFeatures.GET_UPTIME_MS).uptime.toLong(),
 			ChronoUnit.MILLIS
 		)
 		val timeStats = "${clockFormat.format(timeNow)} ${uptime.format()}"

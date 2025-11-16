@@ -11,5 +11,6 @@ enum class SystemDeviceType {
 	MOUSE,
 	BLUETOOTH_RADIO,
 	NETWORKED,
+	FILE_SYSTEM_ENTRY,
 	OTHER
 }
