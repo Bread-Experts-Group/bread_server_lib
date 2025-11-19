@@ -5,8 +5,8 @@ import org.bread_experts_group.api.coding.CodingFormatDescriptors
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.CPINFOEXW
 import org.bread_experts_group.ffi.windows.CPINFOEXW_CodePageName
-import org.bread_experts_group.ffi.windows.decodeLastError
 import org.bread_experts_group.ffi.windows.nativeGetCPInfoExW
+import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
@@ -27,7 +27,7 @@ class WindowsCodingFormat(val pageNr: UInt) : CodingFormat() {
 				0,
 				cpInfoEx
 			) as Int
-			if (status == 0) decodeLastError()
+			if (status == 0) throwLastError()
 			systemName = (CPINFOEXW_CodePageName.invokeExact(cpInfoEx, 0L) as MemorySegment)
 				.getString(0, Charsets.UTF_16LE)
 		}

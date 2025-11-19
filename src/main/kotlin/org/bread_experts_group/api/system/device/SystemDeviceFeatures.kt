@@ -31,4 +31,8 @@ object SystemDeviceFeatures {
 	val CHILDREN = object : FeatureExpression<SystemDeviceChildrenFeature> {
 		override val name: String = "Children Devices"
 	}
+
+	val APPEND = object : FeatureExpression<SystemDevicePathAppendFeature> {
+		override val name: String = "Path Appending"
+	}
 }

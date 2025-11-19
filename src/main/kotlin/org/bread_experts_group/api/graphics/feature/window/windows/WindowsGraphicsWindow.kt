@@ -61,7 +61,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 				capturedStateSegment,
 				0x00000300,
 				MemorySegment.ofAddress(template.classAtom.toLong() and 0xFFFF),
-				arena.allocateFrom(this.get(GraphicsWindowFeatures.WINDOW_NAME)!!.name, Charsets.UTF_16LE),
+				arena.allocateFrom(this.get(GraphicsWindowFeatures.WINDOW_NAME).name, Charsets.UTF_16LE),
 				0x10CC0000,
 				0, 0,
 				300, 400,
@@ -70,7 +70,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 				localHandle,
 				MemorySegment.NULL
 			) as MemorySegment
-			if (hWnd == MemorySegment.NULL) decodeLastError()
+			if (hWnd == MemorySegment.NULL) throwLastError()
 			Thread.currentThread().name = "$hWnd Message Management"
 			template.windows[hWnd] = this::wndProc
 			hdc = nativeGetDCEx!!.invokeExact(
@@ -104,14 +104,14 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 				hdc,
 				pixelFormatDescriptor
 			) as Int
-			if (pixelFormat == 0) decodeLastError()
+			if (pixelFormat == 0) throwLastError()
 			val formatSet = nativeSetPixelFormat!!.invokeExact(
 				capturedStateSegment,
 				hdc,
 				pixelFormat,
 				pixelFormatDescriptor
 			) as Int
-			if (formatSet == 0) decodeLastError()
+			if (formatSet == 0) throwLastError()
 			for (feature in this.features) if (feature is PreInitializableClosable) feature.open()
 			initLatch.countDown()
 			val message = arena.allocate(MSG)
@@ -121,7 +121,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 					message, MemorySegment.NULL, 0, 0
 				) as Int
 				when (status) {
-					-1 -> decodeLastError()
+					-1 -> throwLastError()
 					0 -> break
 					else -> {
 						nativeTranslateMessage!!.invokeExact(message) as Int

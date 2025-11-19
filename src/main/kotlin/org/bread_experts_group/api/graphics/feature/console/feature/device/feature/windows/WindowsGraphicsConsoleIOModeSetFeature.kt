@@ -4,8 +4,8 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleIOModeSetFeature
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleModes
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.decodeLastError
 import org.bread_experts_group.ffi.windows.nativeSetConsoleMode
+import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
 import java.util.*
 
@@ -25,6 +25,6 @@ class WindowsGraphicsConsoleIOModeSetFeature(
 			handle,
 			set.fold(if (input) 0x80 else 0) { a, r -> a or (mapping[r]!!.toInt()) }
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 	}
 }

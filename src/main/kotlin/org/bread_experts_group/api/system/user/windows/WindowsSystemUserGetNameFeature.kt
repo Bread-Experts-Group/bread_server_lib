@@ -40,7 +40,7 @@ class WindowsSystemUserGetNameFeature(private val user: WindowsSystemUser) : Sys
 				threadLocalDWORD1,
 				threadLocalDWORD2
 			) as Int
-			if (status == 0) decodeLastError()
+			if (status == 0) throwLastError()
 			return referencedDomainName.getString(0, Charsets.UTF_16LE) + '\\' +
 					accountName.getString(0, Charsets.UTF_16LE)
 		}

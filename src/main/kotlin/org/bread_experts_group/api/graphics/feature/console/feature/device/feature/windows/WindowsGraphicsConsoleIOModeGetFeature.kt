@@ -5,9 +5,9 @@ import org.bread_experts_group.api.graphics.feature.console.feature.device.featu
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleModes
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
-import org.bread_experts_group.ffi.windows.decodeLastError
 import org.bread_experts_group.ffi.windows.nativeGetConsoleMode
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
+import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
 import java.util.*
 
@@ -35,7 +35,7 @@ class WindowsGraphicsConsoleIOModeGetFeature(
 	override val mode: EnumSet<GraphicsConsoleModes>
 		get() {
 			val (status, mode) = getMode()
-			if (status == 0) decodeLastError()
+			if (status == 0) throwLastError()
 			val modes = EnumSet.noneOf(GraphicsConsoleModes::class.java)
 			mapping.forEach { (k, v) -> if ((mode and k) > 0u) modes.add(v) }
 			return modes

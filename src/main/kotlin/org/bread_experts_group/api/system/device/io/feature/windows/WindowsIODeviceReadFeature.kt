@@ -4,9 +4,9 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.io.feature.IODeviceReadFeature
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
-import org.bread_experts_group.ffi.windows.decodeLastError
 import org.bread_experts_group.ffi.windows.nativeReadFile
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
+import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -26,7 +26,7 @@ class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceRe
 			threadLocalDWORD0,
 			MemorySegment.NULL
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		return threadLocalDWORD0.get(DWORD, 0)
 	}
 

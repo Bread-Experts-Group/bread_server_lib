@@ -69,31 +69,44 @@ val nativeAllocConsoleWithOptions: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeFreeConsole: MethodHandle? = kernel32Lookup.getDowncall(
-	nativeLinker, "FreeConsole",
-	arrayOf(
-		BOOL
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeAllocConsole: MethodHandle? = kernel32Lookup.getDowncall(
-	nativeLinker, "AllocConsole",
-	arrayOf(
-		BOOL
-	),
-	listOf(
-		gleCapture
-	)
-)
-
 val nativeCreateFile3: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "CreateFile3",
 	arrayOf(
 		HANDLE,
 		LPCWSTR, DWORD, DWORD, DWORD, ValueLayout.ADDRESS // LPCREATEFILE3_EXTENDED_PARAMETERS
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeCreateDirectory2W: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "CreateDirectory2W",
+	arrayOf(
+		HANDLE,
+		LPCWSTR, DWORD, DWORD, DWORD, ValueLayout.ADDRESS // LPSECURITY_ATTRIBUTES
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeFindFirstFileExW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "FindFirstFileExW",
+	arrayOf(
+		HANDLE,
+		LPCWSTR, DWORD, LPVOID, DWORD, LPVOID, DWORD
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeFindNextFileW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "FindNextFileW",
+	arrayOf(
+		BOOL,
+		HANDLE, ValueLayout.ADDRESS /* of WIN32_FIND_DATAW */
 	),
 	listOf(
 		gleCapture
@@ -267,14 +280,6 @@ val nativeGetTickCount64: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetTickCount64",
 	arrayOf(
 		ULONGLONG
-	),
-	listOf()
-)
-
-val nativeGetCurrentThread: MethodHandle? = kernel32Lookup.getDowncall(
-	nativeLinker, "GetCurrentThread",
-	arrayOf(
-		HANDLE
 	),
 	listOf()
 )

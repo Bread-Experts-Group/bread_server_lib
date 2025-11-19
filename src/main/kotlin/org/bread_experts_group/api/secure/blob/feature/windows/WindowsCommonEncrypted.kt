@@ -15,14 +15,14 @@ fun initializeOff(parent: WindowsSecureDataBlob, size: Long, flags: WindowsCrypt
 			parent.managedSegment, padded.toInt(),
 			flags.id.toInt()
 		) as Int
-		if (r == 0) decodeLastError()
+		if (r == 0) throwLastError()
 	}
 	parent.decrypt = {
 		val r = nativeCryptUnprotectMemory!!.invokeExact(
 			parent.managedSegment, padded.toInt(),
 			flags.id.toInt()
 		) as Int
-		if (r == 0) decodeLastError()
+		if (r == 0) throwLastError()
 	}
 	parent.managedSegmentRealSize = padded
 	parent.managedSegment = parent.arena.allocate(padded).reinterpret(size)

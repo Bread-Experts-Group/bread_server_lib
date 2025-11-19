@@ -34,7 +34,7 @@ class WindowsIODeviceWriteFeature(
 			threadLocalDWORD0,
 			MemorySegment.NULL
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		return threadLocalDWORD0.get(DWORD, 0)
 	}
 
@@ -51,10 +51,10 @@ class WindowsIODeviceWriteFeature(
 	override fun flush() {
 		try {
 			val status = nativeFlushFileBuffers!!.invokeExact(capturedStateSegment, handle) as Int
-			if (status == 0) decodeLastError()
+			if (status == 0) throwLastError()
 		} catch (e: WindowsLastErrorException) {
 			// Flushing may not be supported for some data streams, e.g. consoles.
-			if (e.code == 0x6u) return
+			if (e.error.enum == WindowsLastError.ERROR_INVALID_HANDLE) return
 			throw e
 		}
 	}

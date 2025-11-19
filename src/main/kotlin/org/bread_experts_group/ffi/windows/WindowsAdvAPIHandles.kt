@@ -9,28 +9,6 @@ import java.lang.invoke.MethodHandle
 
 private val advapi32Lookup: SymbolLookup? = globalArena.getLookup("Advapi32.dll")
 
-val nativeGetUserNameW: MethodHandle? = advapi32Lookup.getDowncall(
-	nativeLinker, "GetUserNameW",
-	arrayOf(
-		BOOL,
-		LPWSTR, LPDWORD
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeOpenThreadToken: MethodHandle? = advapi32Lookup.getDowncall(
-	nativeLinker, "OpenThreadToken",
-	arrayOf(
-		BOOL,
-		HANDLE, DWORD, BOOL, PHANDLE
-	),
-	listOf(
-		gleCapture
-	)
-)
-
 val nativeGetTokenInformation: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "GetTokenInformation",
 	arrayOf(
@@ -60,7 +38,7 @@ fun getTokenInformation(arena: Arena, token: MemorySegment, infoClass: WindowsTo
 		data.byteSize().toInt(),
 		threadLocalDWORD0
 	) as Int
-	if (status == 0) decodeLastError()
+	if (status == 0) throwLastError()
 	return data
 }
 

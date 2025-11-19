@@ -8,8 +8,8 @@ import org.bread_experts_group.api.graphics.feature.console.feature.device.featu
 import org.bread_experts_group.api.system.device.io.windows.WindowsIODevice
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.INVALID_HANDLE_VALUE
-import org.bread_experts_group.ffi.windows.decodeLastError
 import org.bread_experts_group.ffi.windows.nativeGetStdHandle
+import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
 
 abstract class WindowsGraphicsConsoleIOFeature(
@@ -24,7 +24,7 @@ abstract class WindowsGraphicsConsoleIOFeature(
 			capturedStateSegment,
 			stdHandle.toInt()
 		) as MemorySegment
-		if (stdHandle == INVALID_HANDLE_VALUE) decodeLastError()
+		if (stdHandle == INVALID_HANDLE_VALUE) throwLastError()
 		features.add(WindowsGraphicsConsoleIODeviceGetFeature(WindowsIODevice(stdHandle)))
 		val mapping = if (input) mapOf(
 			0x0001u to GraphicsConsoleModes.INPUT_SYSTEM_PROCESSED,

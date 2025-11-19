@@ -79,7 +79,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 			threadLocalDWORD0,
 			0x0002.toShort()
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		return if (threadLocalDWORD0.get(DWORD, 0) > 0) decodeRecord(record)
 		else null
 	}
@@ -93,7 +93,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 			threadLocalDWORD0,
 			0.toShort()
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		return decodeRecord(record)
 	}
 
@@ -106,7 +106,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 			threadLocalDWORD0,
 			0x0003.toShort()
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		return if (threadLocalDWORD0.get(DWORD, 0) > 0) decodeRecord(record)
 		else null
 	}
@@ -120,7 +120,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 			threadLocalDWORD0,
 			0x0001.toShort()
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		return decodeRecord(record)
 	}
 
@@ -136,7 +136,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 			threadLocalDWORD0,
 			(if (returnIfNone) 0x0002 else 0).toShort() // TODO: document flags
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		val count = threadLocalDWORD0.get(DWORD, 0)
 		List(count) {
 			decodeRecord(events.asSlice(INPUT_RECORD.byteSize() * it))
@@ -155,7 +155,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 			threadLocalDWORD0,
 			(if (returnIfNone) 0x0003 else 0x0001).toShort()
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		var i = 0
 		val count = threadLocalDWORD0.get(DWORD, 0)
 		buildList {
@@ -169,7 +169,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 			handle,
 			threadLocalDWORD0
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		return threadLocalDWORD0.get(DWORD, 0).toUInt()
 	}
 }

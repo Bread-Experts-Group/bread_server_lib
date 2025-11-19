@@ -5,9 +5,9 @@ import org.bread_experts_group.api.coding.windows.WindowsCodingFormat
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleIOCodingSetFeature
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.decodeLastError
 import org.bread_experts_group.ffi.windows.nativeSetConsoleCP
 import org.bread_experts_group.ffi.windows.nativeSetConsoleOutputCP
+import org.bread_experts_group.ffi.windows.throwLastError
 
 class WindowsGraphicsConsoleIOCodingSetFeature(
 	private val input: Boolean
@@ -27,6 +27,6 @@ class WindowsGraphicsConsoleIOCodingSetFeature(
 			capturedStateSegment,
 			coding.pageNr.toInt()
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 	}
 }

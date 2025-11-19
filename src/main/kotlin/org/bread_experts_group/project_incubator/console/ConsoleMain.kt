@@ -146,7 +146,7 @@ class Console {
 
 							override fun opened(): Boolean {
 								bank = localBank
-								val (device) = device.get(SystemDeviceFeatures.IO_DEVICE).open()
+								val (device) = device.get(SystemDeviceFeatures.IO_DEVICE).open()!!
 								val deviceRead = device.get(IODeviceFeatures.READ)
 								Thread.ofPlatform().start {
 									val buffer = ByteArray(512)

@@ -470,3 +470,21 @@ val CM_NOTIFY_EVENT_DATA_u_DeviceInterface_SymbolicLink: MethodHandle = CM_NOTIF
 	groupElement("DeviceInterface"),
 	groupElement("SymbolicLink")
 )
+
+val FILETIME: ValueLayout.OfLong = ValueLayout.JAVA_LONG_UNALIGNED
+val WIN32_FIND_DATAW: StructLayout = MemoryLayout.structLayout(
+	DWORD.withName("dwFileAttributes"),
+	FILETIME.withName("ftCreationTime"),
+	FILETIME.withName("ftLastAccessTime"),
+	FILETIME.withName("ftLastWriteTime"),
+	DWORD.withName("nFileSizeHigh"),
+	DWORD.withName("nFileSizeLow"),
+	DWORD.withName("dwReserved0"),
+	DWORD.withName("dwReserved1"),
+	MemoryLayout.sequenceLayout(260, WCHAR).withName("cFileName"),
+	MemoryLayout.sequenceLayout(14, WCHAR).withName("cAlternateFileName"),
+	DWORD.withName("dwFileType"),
+	DWORD.withName("dwCreatorType"),
+	WORD.withName("wFinderFlags")
+)
+val WIN32_FIND_DATAW_cFileName: MethodHandle = WIN32_FIND_DATAW.sliceHandle(groupElement("cFileName"))

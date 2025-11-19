@@ -83,7 +83,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			MemorySegment.NULL,
 			0x00000010 // TODO DIGCF_DEVICEINTERFACE
 		) as MemorySegment
-		if (deviceInfoList == INVALID_HANDLE_VALUE) decodeLastError()
+		if (deviceInfoList == INVALID_HANDLE_VALUE) throwLastError()
 		val devInfoData = arena.allocate(SP_DEVINFO_DATA)
 		SP_DEVINFO_DATA_cbSize.set(devInfoData, 0, devInfoData.byteSize().toInt())
 		status = nativeSetupDiOpenDeviceInfoW!!.invokeExact(
@@ -94,7 +94,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			0,
 			devInfoData
 		) as Int
-		if (status == 0) decodeLastError()
+		if (status == 0) throwLastError()
 		try {
 			nativeSetupDiGetDevicePropertyW!!.invokeExact(
 				capturedStateSegment,
@@ -119,7 +119,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 				MemorySegment.NULL,
 				0
 			) as Int
-			if (status == 0) decodeLastError()
+			if (status == 0) throwLastError()
 			val friendlyNameBytes = ByteArray(friendlyNameArea.byteSize().toInt())
 			MemorySegment.copy(
 				friendlyNameArea, ValueLayout.JAVA_BYTE, 0,
@@ -132,7 +132,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 				)
 			)
 		} catch (e: WindowsLastErrorException) {
-			if (e.code != 1168u) throw e // TODO LastError codes
+			if (e.error.enum != WindowsLastError.ERROR_NOT_FOUND) throw e
 		}
 		threadLocalDWORD1.set(DWORD, 0, 0)
 		status = nativeCM_Get_Device_Interface_PropertyW.invokeExact(
@@ -162,7 +162,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 				)
 			)
 		} catch (e: WindowsLastErrorException) {
-			if (e.code != 1168u) throw e // TODO LastError codes
+			if (e.error.enum != WindowsLastError.ERROR_NOT_FOUND) throw e
 		}
 	}
 }
@@ -170,4 +170,20 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 fun decodeDevice(eventData: WindowsCMNotifyEventData, arena: Arena) = when (eventData) {
 	is WindowsCMNotifyEventData.DeviceInterface -> decodeDevice(eventData.guid, eventData.symbolicLink, arena)
 	else -> TODO("Filter ... ${eventData.filterType}")
+}
+
+fun createPathDevice(pathSegment: MemorySegment): SystemDevice = SystemDevice(SystemDeviceType.FILE_SYSTEM_ENTRY).also {
+	val path = pathSegment.getString(0, Charsets.UTF_16LE)
+	it.features.add(
+		SystemDeviceSystemIdentityFeature(path, ImplementationSource.SYSTEM_NATIVE)
+	)
+	val fileNameSegment = nativePathFindFileNameW!!.invokeExact(pathSegment) as MemorySegment
+	val fileName = fileNameSegment.reinterpret(Long.MAX_VALUE).getString(0, Charsets.UTF_16LE)
+	if (fileNameSegment != pathSegment) it.features.add(
+		SystemDeviceFriendlyNameFeature(fileName, ImplementationSource.SYSTEM_NATIVE)
+	)
+	it.features.add(WindowsSystemDeviceIODeviceFeature(pathSegment))
+	it.features.add(WindowsSystemDevicePathAppendFeature(pathSegment))
+	it.features.add(WindowsSystemDeviceParentFeature(pathSegment))
+	it.features.add(WindowsSystemDeviceChildrenFeature(pathSegment))
 }

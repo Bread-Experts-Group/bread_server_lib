@@ -5,9 +5,9 @@ import org.bread_experts_group.api.coding.windows.WindowsCodingFormat
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleIOCodingGetFeature
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.decodeLastError
 import org.bread_experts_group.ffi.windows.nativeGetConsoleCP
 import org.bread_experts_group.ffi.windows.nativeGetConsoleOutputCP
+import org.bread_experts_group.ffi.windows.throwLastError
 
 class WindowsGraphicsConsoleIOCodingGetFeature(
 	private val input: Boolean
@@ -16,7 +16,7 @@ class WindowsGraphicsConsoleIOCodingGetFeature(
 	private fun getCodePage(): UInt {
 		val page = if (input) nativeGetConsoleCP!!.invokeExact(capturedStateSegment) as Int
 		else nativeGetConsoleOutputCP!!.invokeExact(capturedStateSegment) as Int
-		if (page == 0) decodeLastError()
+		if (page == 0) throwLastError()
 		return page.toUInt()
 	}
 

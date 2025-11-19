@@ -53,7 +53,7 @@ class WindowsGraphicsWindowTemplate : GraphicsWindowTemplate() {
 		WNDCLASSEXA_lpszClassName.set(classExA, 0, arena.allocateFrom("bsl${counter++}", Charsets.UTF_16LE))
 		// TODO: Needs extensibility for hIcon/hCursor/hbrBackground/menuName/hIconSm/style
 		val classAtom = nativeRegisterClassExW!!.invokeExact(capturedStateSegment, classExA) as Short
-		if (classAtom == 0.toShort()) decodeLastError()
+		if (classAtom == 0.toShort()) throwLastError()
 		this.classAtom = classAtom
 	}
 }

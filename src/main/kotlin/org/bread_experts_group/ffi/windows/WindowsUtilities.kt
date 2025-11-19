@@ -112,8 +112,11 @@ fun decodeWin32Error(err: Int) {
 	}
 }
 
-fun decodeLastError(): Nothing {
-	decodeWin32Error(nativeGetLastError.get(capturedStateSegment, 0L) as Int)
+val win32LastError: Int
+	get() = nativeGetLastError.get(capturedStateSegment, 0L) as Int
+
+fun throwLastError(): Nothing {
+	decodeWin32Error(win32LastError)
 	throw OperatingSystemException("General exception (GetLastError did not produce error code).")
 }
 

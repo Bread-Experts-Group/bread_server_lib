@@ -31,16 +31,16 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 		MemorySegment.NULL,
 		0
 	) as MemorySegment).also {
-		if (it == MemorySegment.NULL) decodeLastError()
+		if (it == MemorySegment.NULL) throwLastError()
 	}
 
 	fun procedureAddress(name: String): MemorySegment {
 		val namePCSTR = arena.allocateFrom(name, Charsets.US_ASCII)
 		val address = nativeWGLGetProcAddress!!.invokeExact(capturedStateSegment, namePCSTR) as MemorySegment
 		if (address == MemorySegment.NULL) {
-			if (nativeGetLastError.get(capturedStateSegment, 0L) as Int != 0x7F) decodeLastError()
+			if (nativeGetLastError.get(capturedStateSegment, 0L) as Int != 0x7F) throwLastError()
 			val oglAddress = nativeGetProcAddress!!.invokeExact(capturedStateSegment, oglM, namePCSTR) as MemorySegment
-			if (oglAddress == MemorySegment.NULL) decodeLastError()
+			if (oglAddress == MemorySegment.NULL) throwLastError()
 			return oglAddress
 		}
 		return address
@@ -341,7 +341,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 			capturedStateSegment,
 			MemorySegment.NULL, MemorySegment.NULL
 		) as Int
-		if (makeStatus == 0) decodeLastError()
+		if (makeStatus == 0) throwLastError()
 	}
 
 	override fun acquireContext() {
@@ -349,7 +349,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 			capturedStateSegment,
 			window.hdc, hglrc
 		) as Int
-		if (makeStatus == 0) decodeLastError()
+		if (makeStatus == 0) throwLastError()
 	}
 
 	override fun swapBuffers() {
@@ -362,7 +362,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 			capturedStateSegment,
 			window.hdc
 		) as MemorySegment
-		if (hglrc == MemorySegment.NULL) decodeLastError()
+		if (hglrc == MemorySegment.NULL) throwLastError()
 	}
 
 	override fun close() {
