@@ -9,7 +9,7 @@ import java.nio.charset.Charset
 abstract class IODeviceWriteFeature : IODeviceFeatureImplementation<IODeviceWriteFeature>() {
 	override val expresses: FeatureExpression<IODeviceWriteFeature> = IODeviceFeatures.WRITE
 
-	abstract fun write(from: MemorySegment, length: Int): Int
+	abstract fun write(from: MemorySegment): Int
 	abstract fun write(from: ByteArray, offset: Int = 0, length: Int = from.size): Int
 	abstract fun flush()
 

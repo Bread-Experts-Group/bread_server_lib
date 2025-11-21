@@ -25,12 +25,12 @@ class WindowsIODeviceWriteFeature(
 		return status != 0
 	}
 
-	override fun write(from: MemorySegment, length: Int): Int {
+	override fun write(from: MemorySegment): Int {
 		val status = nativeWriteFile!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			from,
-			length,
+			from.byteSize().toInt(),
 			threadLocalDWORD0,
 			MemorySegment.NULL
 		) as Int
@@ -45,7 +45,7 @@ class WindowsIODeviceWriteFeature(
 			copied, ValueLayout.JAVA_BYTE, 0,
 			length
 		)
-		write(copied, length)
+		write(copied)
 	}
 
 	override fun flush() {

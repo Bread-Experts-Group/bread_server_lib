@@ -8,16 +8,16 @@ import org.bread_experts_group.ffi.windows.nativePathCchAppendEx
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
-class WindowsSystemDevicePathAppendFeature(pathSegment: MemorySegment) : SystemDevicePathAppendFeature() {
+class WindowsSystemDevicePathAppendFeature(private val pathSegment: MemorySegment) : SystemDevicePathAppendFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativePathCchAppendEx != null
 
-	private val localArena = Arena.ofConfined()
-	private val pathSegment = localArena.allocate(pathSegment.byteSize()).copyFrom(pathSegment)
-	override fun append(element: String): SystemDevice = Arena.ofConfined().use { tempArena ->
-		val append = tempArena.allocateFrom(element, Charsets.UTF_16LE)
-		val buffer = tempArena.allocate((pathSegment.byteSize() + (element.length * 2)) + 4)
-		buffer.copyFrom(pathSegment)
+	override fun append(element: String): SystemDevice {
+		val appendArena = Arena.ofShared()
+		val append = appendArena.allocateFrom(element, Charsets.UTF_16LE)
+		val buffer = appendArena
+			.allocate((pathSegment.byteSize() + (element.length * 2)) + 4)
+			.copyFrom(pathSegment)
 		decodeWin32Error(
 			nativePathCchAppendEx!!.invokeExact(
 				buffer,
@@ -26,6 +26,6 @@ class WindowsSystemDevicePathAppendFeature(pathSegment: MemorySegment) : SystemD
 				0x00000003 // TODO PathCchAppendEx flags
 			) as Int
 		)
-		return createPathDevice(buffer)
+		return createPathDevice(appendArena, buffer)
 	}
 }

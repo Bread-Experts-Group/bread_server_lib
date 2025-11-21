@@ -113,6 +113,17 @@ val nativeFindNextFileW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
+val nativeFindClose: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "FindClose",
+	arrayOf(
+		BOOL,
+		HANDLE
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeReadFile: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "ReadFile",
 	arrayOf(
@@ -300,6 +311,92 @@ val nativeGetCurrentDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
 	arrayOf(
 		DWORD,
 		DWORD, LPWSTR,
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeCopyFile2: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "CopyFile2",
+	arrayOf(
+		HRESULT,
+		LPCWSTR, LPCWSTR, ValueLayout.ADDRESS /* of COPYFILE2_EXTENDED_PARAMETERS */
+	),
+	listOf()
+)
+
+val nativeDeleteFile2W: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "DeleteFile2W",
+	arrayOf(
+		BOOL,
+		LPCWSTR, DWORD
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeRemoveDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "RemoveDirectoryW",
+	arrayOf(
+		BOOL,
+		LPCWSTR
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeMoveFileWithProgressW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "MoveFileWithProgressW",
+	arrayOf(
+		BOOL,
+		LPCWSTR, LPCWSTR, ValueLayout.ADDRESS /* of PROGRESS_ROUTINE */, LPVOID, DWORD
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeReplaceFileW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "ReplaceFileW",
+	arrayOf(
+		BOOL,
+		LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPVOID, LPVOID
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeCreateSymbolicLinkW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "CreateSymbolicLinkW",
+	arrayOf(
+		BOOL,
+		LPCWSTR, LPCWSTR, DWORD
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeCreateHardLinkW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "CreateHardLinkW",
+	arrayOf(
+		BOOL,
+		LPCWSTR, LPCWSTR, ValueLayout.ADDRESS /* of SECURITY_ATTRIBUTES */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeReOpenFile: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "ReOpenFile",
+	arrayOf(
+		HANDLE,
+		HANDLE, DWORD, DWORD, DWORD
 	),
 	listOf(
 		gleCapture

@@ -172,18 +172,34 @@ fun decodeDevice(eventData: WindowsCMNotifyEventData, arena: Arena) = when (even
 	else -> TODO("Filter ... ${eventData.filterType}")
 }
 
-fun createPathDevice(pathSegment: MemorySegment): SystemDevice = SystemDevice(SystemDeviceType.FILE_SYSTEM_ENTRY).also {
-	val path = pathSegment.getString(0, Charsets.UTF_16LE)
+fun createPathDevice(
+	arena: Arena,
+	pathSegment: MemorySegment
+): SystemDevice = SystemDevice(SystemDeviceType.FILE_SYSTEM_ENTRY).also {
+	val safeSegment = pathSegment.asReadOnly()
+	val status = nativePathCchRemoveBackslash!!.invokeExact(
+		safeSegment,
+		safeSegment.byteSize() / 2
+	) as Int
+	if (status != 1) throwLastError()
+	it.registerCleaningAction { arena.close() }
+	val path = safeSegment.getString(0, Charsets.UTF_16LE)
 	it.features.add(
 		SystemDeviceSystemIdentityFeature(path, ImplementationSource.SYSTEM_NATIVE)
 	)
-	val fileNameSegment = nativePathFindFileNameW!!.invokeExact(pathSegment) as MemorySegment
+	val fileNameSegment = nativePathFindFileNameW!!.invokeExact(safeSegment) as MemorySegment
 	val fileName = fileNameSegment.reinterpret(Long.MAX_VALUE).getString(0, Charsets.UTF_16LE)
-	if (fileNameSegment != pathSegment) it.features.add(
+	if (fileNameSegment != safeSegment) it.features.add(
 		SystemDeviceFriendlyNameFeature(fileName, ImplementationSource.SYSTEM_NATIVE)
 	)
-	it.features.add(WindowsSystemDeviceIODeviceFeature(pathSegment))
-	it.features.add(WindowsSystemDevicePathAppendFeature(pathSegment))
-	it.features.add(WindowsSystemDeviceParentFeature(pathSegment))
-	it.features.add(WindowsSystemDeviceChildrenFeature(pathSegment))
+	it.features.add(WindowsSystemDeviceIODeviceFeature(safeSegment))
+	it.features.add(WindowsSystemDevicePathAppendFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceParentFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceChildrenFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceCopyFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceDeleteFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceMoveFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceReplaceFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceSoftLinkFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceHardLinkFeature(safeSegment))
 }

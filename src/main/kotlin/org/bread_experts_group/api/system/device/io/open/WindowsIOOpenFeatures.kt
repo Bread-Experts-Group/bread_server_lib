@@ -1,14 +1,8 @@
-package org.bread_experts_group.api.system.device.io
+package org.bread_experts_group.api.system.device.io.open
 
 enum class WindowsIOOpenFeatures : OpenIODeviceFeatureIdentifier {
-	ARCHIVE,
-	ENCRYPT,
-	HIDDEN,
-	REFS_INTEGRITY,
-	READ_ONLY,
-	SYSTEM,
-	OPTIMIZE_TEMPORARY,
-	DELETE_ON_CLOSE,
+	DELETE_ON_RELEASE,
+	DELETE_ON_RESTART,
 	DISABLE_SYSTEM_BUFFERING,
 	DISABLE_REMOTE_RECALL,
 	DISABLE_REDIRECTION,

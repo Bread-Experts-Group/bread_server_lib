@@ -4,7 +4,7 @@ import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.system.device.SystemDeviceFeatureImplementation
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.io.IODevice
-import org.bread_experts_group.api.system.device.io.OpenIODeviceFeatureIdentifier
+import org.bread_experts_group.api.system.device.io.open.OpenIODeviceFeatureIdentifier
 
 abstract class SystemDeviceIODeviceFeature : SystemDeviceFeatureImplementation<SystemDeviceIODeviceFeature>() {
 	override val expresses: FeatureExpression<SystemDeviceIODeviceFeature> = SystemDeviceFeatures.IO_DEVICE

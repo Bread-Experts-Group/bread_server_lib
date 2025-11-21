@@ -9,23 +9,18 @@ import org.bread_experts_group.ffi.windows.nativePathCchRemoveFileSpec
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
-class WindowsSystemDeviceParentFeature(pathSegment: MemorySegment) : SystemDeviceParentFeature() {
+class WindowsSystemDeviceParentFeature(private val pathSegment: MemorySegment) : SystemDeviceParentFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativePathCchRemoveBackslash != null && nativePathCchRemoveFileSpec != null
 
-	private val localArena = Arena.ofConfined()
-	private val pathSegment = localArena.allocate(pathSegment.byteSize()).copyFrom(pathSegment)
 	override val parent: SystemDevice by lazy {
-		var status = nativePathCchRemoveBackslash!!.invokeExact(
-			this.pathSegment,
-			this.pathSegment.byteSize() / 2
+		val copyArena = Arena.ofShared()
+		val copied = copyArena.allocate(pathSegment.byteSize()).copyFrom(pathSegment)
+		val status = nativePathCchRemoveFileSpec!!.invokeExact(
+			copied,
+			copied.byteSize() / 2
 		) as Int
 		if (status != 1) decodeWin32Error(status)
-		status = nativePathCchRemoveFileSpec!!.invokeExact(
-			this.pathSegment,
-			this.pathSegment.byteSize() / 2
-		) as Int
-		if (status != 1) decodeWin32Error(status)
-		createPathDevice(this.pathSegment)
+		createPathDevice(copyArena, copied)
 	}
 }

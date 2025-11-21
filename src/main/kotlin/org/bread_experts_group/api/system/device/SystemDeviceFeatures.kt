@@ -24,6 +24,9 @@ object SystemDeviceFeatures {
 		override val name: String = "I/O Device"
 	}
 
+	// The following features are primarily specific to "Path Devices,"
+	// such as entries on a file system; e.g. "C:\Windows\a.txt"
+
 	val PARENT = object : FeatureExpression<SystemDeviceParentFeature> {
 		override val name: String = "Parent Device"
 	}
@@ -34,5 +37,29 @@ object SystemDeviceFeatures {
 
 	val APPEND = object : FeatureExpression<SystemDevicePathAppendFeature> {
 		override val name: String = "Path Appending"
+	}
+
+	val COPY = object : FeatureExpression<SystemDeviceCopyFeature> {
+		override val name: String = "Copy Device"
+	}
+
+	val DELETE = object : FeatureExpression<SystemDeviceDeleteFeature> {
+		override val name: String = "Delete Device"
+	}
+
+	val MOVE = object : FeatureExpression<SystemDeviceMoveFeature> {
+		override val name: String = "Move Device"
+	}
+
+	val REPLACE = object : FeatureExpression<SystemDeviceReplaceFeature> {
+		override val name: String = "Replace Device"
+	}
+
+	val SOFT_LINK = object : FeatureExpression<SystemDeviceSoftLinkFeature> {
+		override val name: String = "Soft-Link To Device"
+	}
+
+	val HARD_LINK = object : FeatureExpression<SystemDeviceHardLinkFeature> {
+		override val name: String = "Hard-Link To Device"
 	}
 }

@@ -488,3 +488,17 @@ val WIN32_FIND_DATAW: StructLayout = MemoryLayout.structLayout(
 	WORD.withName("wFinderFlags")
 )
 val WIN32_FIND_DATAW_cFileName: MethodHandle = WIN32_FIND_DATAW.sliceHandle(groupElement("cFileName"))
+
+val COPYFILE2_EXTENDED_PARAMETERS: StructLayout = MemoryLayout.structLayout(
+	DWORD.withName("dwSize"),
+	DWORD.withName("dwCopyFlags"),
+	ValueLayout.ADDRESS.withName("pfCancel"), /* of type BOOL */
+	ValueLayout.ADDRESS.withName("pProgressRoutine"), /* of type COPYFILE2_PROGRESS_ROUTINE */
+	PVOID.withName("pvCallbakcContext")
+)
+val COPYFILE2_EXTENDED_PARAMETERS_dwSize: VarHandle = COPYFILE2_EXTENDED_PARAMETERS.varHandle(
+	groupElement("dwSize")
+)
+val COPYFILE2_EXTENDED_PARAMETERS_dwCopyFlags: VarHandle = COPYFILE2_EXTENDED_PARAMETERS.varHandle(
+	groupElement("dwCopyFlags")
+)

@@ -13,12 +13,13 @@ class WindowsSystemGetCurrentWorkingDeviceFeature : SystemGetCurrentWorkingDevic
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeGetCurrentDirectoryW != null
 	override val device: SystemDevice
-		get() = Arena.ofConfined().use { tempArena ->
+		get() {
 			var size = nativeGetCurrentDirectoryW!!.invokeExact(capturedStateSegment, 0, MemorySegment.NULL) as Int
 			if (size == 0) throwLastError()
-			val filePathSegment = tempArena.allocate(size * 2L)
+			val filePathArena = Arena.ofShared()
+			val filePathSegment = filePathArena.allocate(size * 2L)
 			size = nativeGetCurrentDirectoryW.invokeExact(capturedStateSegment, size, filePathSegment) as Int
 			if (size == 0) throwLastError()
-			createPathDevice(filePathSegment)
+			return createPathDevice(filePathArena, filePathSegment)
 		}
 }
