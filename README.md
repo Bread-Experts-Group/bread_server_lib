@@ -21,8 +21,37 @@ as well as other advanced features, such as:
 Project Status
 -
 Bread Server Library is primarily tailored to the Windows operating system (Windows 11 24H2+), as that is what I
-personally use. If you find the way a certain feature is implemetned
+personally use. If you find the way a certain feature is implemented
 to be too tailored to Windows, let me know what you suggest would be more
 common between it and your target system, or support a Pull
 Request. If you would like a faster-paced mode of communication, join
 the [Discord server](https://discord.gg/zgCbxuEvJv).
+
+Project Contributions
+-
+You are free to contribute to Bread Server Library as you wish, but we will turn down PRs that make use of
+"external libraries." These are:
+
+- Libraries pulled in through Gradle, not limited to:
+    - `implementation`
+    - `compileOnly`
+    - `runtimeOnly`
+    - Plugins
+    - ...except for Kotlin/Dokka and built-in Gradle plugins like `signing`
+- Compiled native libraries
+    - Must never be packaged along with Bread Server Library
+    - Reasonably expected to be present on some user's system, either apart of the kernel or some very widely used
+      project
+    - JNI is never allowed
+- Packaged JARs
+    - Never allowed
+- Externally written code
+    - You may not copy code from others verbatim, especially if you do not understand what it does internally.
+      In the case you're about to add code you didn't write, or lightly derived, make sure you cite a source of where it
+      came from.
+
+Additionally, if you are to write a feature that is to be integrated into Bread Server Library's main
+repository, use the latest APIs for the system/library it is for. "Compatibility" features must be separate,
+unless Miko changes their mind.
+
+Finally, press [here](https://bayachao.com/devil-connection/) for a game you should play.
