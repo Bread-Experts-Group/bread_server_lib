@@ -196,6 +196,7 @@ fun createPathDevice(
 	it.features.add(WindowsSystemDevicePathAppendFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceParentFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceChildrenFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceChildrenStreamsFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceCopyFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceDeleteFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceMoveFeature(safeSegment))

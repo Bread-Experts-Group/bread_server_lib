@@ -35,6 +35,10 @@ object SystemDeviceFeatures {
 		override val name: String = "Children Devices"
 	}
 
+	val CHILDREN_STREAMS = object : FeatureExpression<SystemDeviceChildrenStreamsFeature> {
+		override val name: String = "Children Stream Devices"
+	}
+
 	val APPEND = object : FeatureExpression<SystemDevicePathAppendFeature> {
 		override val name: String = "Path Appending"
 	}
@@ -73,5 +77,9 @@ object SystemDeviceFeatures {
 
 	val QUERY_TRANSPARENT_ENCRYPT = object : FeatureExpression<SystemDeviceQueryTransparentEncryptionFeature> {
 		override val name: String = "Query Device Transparent Encryption"
+	}
+
+	val TRANSPARENT_ENCRYPT_RAW_IO_DEVICE = object : FeatureExpression<SystemDeviceQueryTransparentEncryptionFeature> {
+		override val name: String = "Raw I/O Device thru Transparent Encryption"
 	}
 }

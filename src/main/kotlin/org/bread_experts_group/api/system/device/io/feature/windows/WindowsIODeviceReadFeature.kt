@@ -17,12 +17,12 @@ class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceRe
 	// TODO: Figure out a better way to ascertain read.
 	override fun supported(): Boolean = true
 
-	override fun read(into: MemorySegment, length: Int): Int {
+	override fun read(into: MemorySegment): Int {
 		val status = nativeReadFile!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			into,
-			length,
+			into.byteSize().coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
 			threadLocalDWORD0,
 			MemorySegment.NULL
 		) as Int
@@ -32,7 +32,7 @@ class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceRe
 
 	override fun read(into: ByteArray, offset: Int, length: Int): Int = Arena.ofConfined().use {
 		val allocated = it.allocate(length.toLong())
-		val read = read(allocated, length)
+		val read = read(allocated)
 		MemorySegment.copy(allocated, ValueLayout.JAVA_BYTE, 0, into, 0, read)
 		read
 	}

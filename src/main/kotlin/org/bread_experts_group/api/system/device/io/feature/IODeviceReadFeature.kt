@@ -8,6 +8,6 @@ import java.lang.foreign.MemorySegment
 abstract class IODeviceReadFeature : IODeviceFeatureImplementation<IODeviceReadFeature>() {
 	override val expresses: FeatureExpression<IODeviceReadFeature> = IODeviceFeatures.READ
 
-	abstract fun read(into: MemorySegment, length: Int): Int
+	abstract fun read(into: MemorySegment): Int
 	abstract fun read(into: ByteArray, offset: Int = 0, length: Int = into.size): Int
 }

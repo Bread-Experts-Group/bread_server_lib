@@ -113,6 +113,28 @@ val nativeFindNextFileW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
+val nativeFindFirstStreamW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "FindFirstStreamW",
+	arrayOf(
+		HANDLE,
+		LPCWSTR, DWORD, LPVOID, DWORD
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeFindNextStreamW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "FindNextStreamW",
+	arrayOf(
+		BOOL,
+		HANDLE, ValueLayout.ADDRESS /* of WIN32_FIND_STREAM_DATA */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeFindClose: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "FindClose",
 	arrayOf(

@@ -2,16 +2,12 @@ package org.bread_experts_group.ffi
 
 import org.bread_experts_group.hex
 import org.bread_experts_group.logging.ColoredHandler
-import java.io.IOException
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
 import java.util.logging.Logger
 import kotlin.jvm.optionals.getOrNull
 
 private val nativeLogger: Logger = ColoredHandler.newLoggerResourced("ffi")
-
-abstract class NativeObjectNotFoundException(name: String) : IOException(name)
-class NativeLibraryNotFoundException(library: String) : NativeObjectNotFoundException(library)
 
 fun Arena.getLookup(library: String): SymbolLookup? = try {
 	nativeLogger.finer { "Getting the library lookup for \"$library\"" }
@@ -90,3 +86,12 @@ private val tlsCSS = ThreadLocal.withInitial {
 }
 val capturedStateSegment: MemorySegment
 	get() = tlsCSS.get()
+
+fun MemorySegment.getFirstNull2Offset(): Long {
+	var offset = 0L
+	while (offset < this.byteSize()) {
+		if (this.get(ValueLayout.JAVA_SHORT, offset) == 0.toShort()) return offset
+		offset += 2
+	}
+	return -1
+}

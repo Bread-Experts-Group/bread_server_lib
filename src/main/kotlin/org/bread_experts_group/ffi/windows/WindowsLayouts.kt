@@ -489,6 +489,12 @@ val WIN32_FIND_DATAW: StructLayout = MemoryLayout.structLayout(
 )
 val WIN32_FIND_DATAW_cFileName: MethodHandle = WIN32_FIND_DATAW.sliceHandle(groupElement("cFileName"))
 
+val WIN32_FIND_STREAM_DATA: StructLayout = MemoryLayout.structLayout(
+	LARGE_INTEGER.withName("StreamSize"),
+	MemoryLayout.sequenceLayout(260 + 36, WCHAR).withName("cStreamName"),
+)
+val WIN32_FIND_STREAM_DATA_cStreamName: MethodHandle = WIN32_FIND_STREAM_DATA.sliceHandle(groupElement("cStreamName"))
+
 val COPYFILE2_EXTENDED_PARAMETERS_V2: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("dwSize"),
 	DWORD.withName("dwCopyFlags"),
