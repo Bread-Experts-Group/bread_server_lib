@@ -489,21 +489,31 @@ val WIN32_FIND_DATAW: StructLayout = MemoryLayout.structLayout(
 )
 val WIN32_FIND_DATAW_cFileName: MethodHandle = WIN32_FIND_DATAW.sliceHandle(groupElement("cFileName"))
 
-val COPYFILE2_EXTENDED_PARAMETERS: StructLayout = MemoryLayout.structLayout(
+val COPYFILE2_EXTENDED_PARAMETERS_V2: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("dwSize"),
 	DWORD.withName("dwCopyFlags"),
 	ValueLayout.ADDRESS.withName("pfCancel"), /* of type BOOL */
 	ValueLayout.ADDRESS.withName("pProgressRoutine"), /* of type COPYFILE2_PROGRESS_ROUTINE */
-	PVOID.withName("pvCallbackContext")
+	PVOID.withName("pvCallbackContext"),
+	DWORD.withName("dwCopyFlagsV2"),
+	ULONG.withName("ioDesiredSize"),
+	ULONG.withName("ioDesiredRate"),
+	MemoryLayout.paddingLayout(4),
+	ValueLayout.ADDRESS.withName("pProgressRoutineOld"), /* of type PROGRESS_ROUTINE */
+	ValueLayout.ADDRESS.withName("SourceOplockKeys"), /* of type COPYFILE2_CREATE_OPLOCK_KEYS */
+	MemoryLayout.sequenceLayout(6, PVOID), // Pertains to NTDDI_WIN10_GE
 )
-val COPYFILE2_EXTENDED_PARAMETERS_dwSize: VarHandle = COPYFILE2_EXTENDED_PARAMETERS.varHandle(
+val COPYFILE2_EXTENDED_PARAMETERS_V2_dwSize: VarHandle = COPYFILE2_EXTENDED_PARAMETERS_V2.varHandle(
 	groupElement("dwSize")
 )
-val COPYFILE2_EXTENDED_PARAMETERS_dwCopyFlags: VarHandle = COPYFILE2_EXTENDED_PARAMETERS.varHandle(
+val COPYFILE2_EXTENDED_PARAMETERS_V2_dwCopyFlags: VarHandle = COPYFILE2_EXTENDED_PARAMETERS_V2.varHandle(
 	groupElement("dwCopyFlags")
 )
-val COPYFILE2_EXTENDED_PARAMETERS_pProgressRoutine: VarHandle = COPYFILE2_EXTENDED_PARAMETERS.varHandle(
+val COPYFILE2_EXTENDED_PARAMETERS_V2_pProgressRoutine: VarHandle = COPYFILE2_EXTENDED_PARAMETERS_V2.varHandle(
 	groupElement("pProgressRoutine")
+)
+val COPYFILE2_EXTENDED_PARAMETERS_V2_dwCopyFlagsV2: VarHandle = COPYFILE2_EXTENDED_PARAMETERS_V2.varHandle(
+	groupElement("dwCopyFlagsV2")
 )
 
 val COPYFILE2_MESSAGE_ChunkStarted: StructLayout = MemoryLayout.structLayout(
@@ -515,6 +525,21 @@ val COPYFILE2_MESSAGE_ChunkStarted: StructLayout = MemoryLayout.structLayout(
 	ValueLayout.JAVA_LONG.withName("uliChunkSize"),
 	ValueLayout.JAVA_LONG.withName("uliStreamSize"),
 	ValueLayout.JAVA_LONG.withName("uliTotalFileSize")
+)
+val COPYFILE2_MESSAGE_ChunkStarted_dwStreamNumber: VarHandle = COPYFILE2_MESSAGE_ChunkStarted.varHandle(
+	groupElement("dwStreamNumber")
+)
+val COPYFILE2_MESSAGE_ChunkStarted_uliChunkNumber: VarHandle = COPYFILE2_MESSAGE_ChunkStarted.varHandle(
+	groupElement("uliChunkNumber")
+)
+val COPYFILE2_MESSAGE_ChunkStarted_uliChunkSize: VarHandle = COPYFILE2_MESSAGE_ChunkStarted.varHandle(
+	groupElement("uliChunkSize")
+)
+val COPYFILE2_MESSAGE_ChunkStarted_uliStreamSize: VarHandle = COPYFILE2_MESSAGE_ChunkStarted.varHandle(
+	groupElement("uliStreamSize")
+)
+val COPYFILE2_MESSAGE_ChunkStarted_uliTotalFileSize: VarHandle = COPYFILE2_MESSAGE_ChunkStarted.varHandle(
+	groupElement("uliTotalFileSize")
 )
 val COPYFILE2_MESSAGE_ChunkFinished: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("dwStreamNumber"),
@@ -576,6 +601,21 @@ val COPYFILE2_MESSAGE_StreamFinished: StructLayout = MemoryLayout.structLayout(
 	ValueLayout.JAVA_LONG.withName("uliTotalFileSize"),
 	ValueLayout.JAVA_LONG.withName("uliTotalBytesTransferred")
 )
+val COPYFILE2_MESSAGE_StreamFinished_dwStreamNumber: VarHandle = COPYFILE2_MESSAGE_StreamFinished.varHandle(
+	groupElement("dwStreamNumber")
+)
+val COPYFILE2_MESSAGE_StreamFinished_uliStreamSize: VarHandle = COPYFILE2_MESSAGE_StreamFinished.varHandle(
+	groupElement("uliStreamSize")
+)
+val COPYFILE2_MESSAGE_StreamFinished_uliStreamBytesTransferred: VarHandle = COPYFILE2_MESSAGE_StreamFinished.varHandle(
+	groupElement("uliStreamBytesTransferred")
+)
+val COPYFILE2_MESSAGE_StreamFinished_uliTotalFileSize: VarHandle = COPYFILE2_MESSAGE_StreamFinished.varHandle(
+	groupElement("uliTotalFileSize")
+)
+val COPYFILE2_MESSAGE_StreamFinished_uliTotalBytesTransferred: VarHandle = COPYFILE2_MESSAGE_StreamFinished.varHandle(
+	groupElement("uliTotalBytesTransferred")
+)
 val COPYFILE2_MESSAGE_PollContinue: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("dwReserved")
 )
@@ -589,6 +629,30 @@ val COPYFILE2_MESSAGE_Error: StructLayout = MemoryLayout.structLayout(
 	ValueLayout.JAVA_LONG.withName("uliStreamBytesTransferred"),
 	ValueLayout.JAVA_LONG.withName("uliTotalFileSize"),
 	ValueLayout.JAVA_LONG.withName("uliTotalBytesTransferred")
+)
+val COPYFILE2_MESSAGE_Error_CopyPhase: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("CopyPhase")
+)
+val COPYFILE2_MESSAGE_Error_dwStreamNumber: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("dwStreamNumber")
+)
+val COPYFILE2_MESSAGE_Error_hrFailure: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("hrFailure")
+)
+val COPYFILE2_MESSAGE_Error_uliChunkNumber: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("uliChunkNumber")
+)
+val COPYFILE2_MESSAGE_Error_uliStreamSize: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("uliStreamSize")
+)
+val COPYFILE2_MESSAGE_Error_uliStreamBytesTransferred: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("uliStreamBytesTransferred")
+)
+val COPYFILE2_MESSAGE_Error_uliTotalFileSize: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("uliTotalFileSize")
+)
+val COPYFILE2_MESSAGE_Error_uliTotalBytesTransferred: VarHandle = COPYFILE2_MESSAGE_Error.varHandle(
+	groupElement("uliTotalBytesTransferred")
 )
 val COPYFILE2_MESSAGE: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("Type"),

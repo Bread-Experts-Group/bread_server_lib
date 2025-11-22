@@ -34,8 +34,12 @@ object CopyProgressRoutineFeatures {
 	val FILE_STREAM_SYSTEM_IDENTIFIER = object : FeatureExpression<CopyProgressRoutineSystemIdentifierFeature> {
 		override val name: String = "File Stream System Identifier"
 	}
-//
-//	val ROUTINE_CALL_REASON = object : FeatureExpression<X> {
-//		override val name: String = "Routine Call Reason"
-//	}
+
+	val ERROR_SYSTEM_IDENTIFIER = object : FeatureExpression<CopyProgressRoutineSystemIdentifierFeature> {
+		override val name: String = "Error System Identifier"
+	}
+
+	val COPY_PHASE_SYSTEM_IDENTIFIER = object : FeatureExpression<CopyProgressRoutineSystemIdentifierFeature> {
+		override val name: String = "Copy Phase System Identifier"
+	}
 }

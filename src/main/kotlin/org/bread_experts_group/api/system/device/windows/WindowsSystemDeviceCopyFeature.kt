@@ -47,8 +47,46 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 			if (routine != null) {
 				val features = mutableListOf<CopyProgressRoutineFeatureImplementation<*>>()
 				val copyMessageSegment = copyMessage.reinterpret(COPYFILE2_MESSAGE.byteSize())
-				// TODO 1, 4, 5, 6
 				when (COPYFILE2_MESSAGE_Type.get(copyMessageSegment, 0L)) {
+					1 -> {
+						val info = COPYFILE2_MESSAGE_Info.invokeExact(copyMessageSegment, 0L) as MemorySegment
+						features.add(
+							CopyProgressRoutineSystemIdentifierFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_SYSTEM_IDENTIFIER,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_ChunkStarted_dwStreamNumber.get(info, 0L) as Int
+							)
+						)
+						features.add(
+							CopyProgressRoutineSystemIdentifierFeature(
+								CopyProgressRoutineFeatures.CHUNK_SYSTEM_IDENTIFIER,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_ChunkStarted_uliChunkNumber.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.CHUNK_TOTAL_SIZE_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_ChunkStarted_uliChunkSize.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_TOTAL_SIZE_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_ChunkStarted_uliStreamSize.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.TOTAL_SIZE_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_ChunkStarted_uliTotalFileSize.get(info, 0L) as Long
+							)
+						)
+					}
+
 					2 -> {
 						val info = COPYFILE2_MESSAGE_Info.invokeExact(copyMessageSegment, 0L) as MemorySegment
 						features.add(
@@ -58,7 +96,6 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 								COPYFILE2_MESSAGE_ChunkFinished_dwStreamNumber.get(info, 0L) as Int
 							)
 						)
-						// TODO flags
 						features.add(
 							CopyProgressRoutineSystemIdentifierFeature(
 								CopyProgressRoutineFeatures.CHUNK_SYSTEM_IDENTIFIER,
@@ -128,6 +165,105 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 						)
 					}
 
+					4 -> {
+						val info = COPYFILE2_MESSAGE_Info.invokeExact(copyMessageSegment, 0L) as MemorySegment
+						features.add(
+							CopyProgressRoutineSystemIdentifierFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_SYSTEM_IDENTIFIER,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_StreamFinished_dwStreamNumber.get(info, 0L) as Int
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_TOTAL_SIZE_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_StreamFinished_uliStreamSize.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_TOTAL_TRANSFERRED_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_StreamFinished_uliStreamBytesTransferred.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.TOTAL_SIZE_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_StreamFinished_uliTotalFileSize.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.TOTAL_TRANSFERRED_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_StreamFinished_uliTotalBytesTransferred.get(info, 0L) as Long
+							)
+						)
+					}
+
+					6 -> {
+						val info = COPYFILE2_MESSAGE_Info.invokeExact(copyMessageSegment, 0L) as MemorySegment
+						features.add(
+							CopyProgressRoutineSystemIdentifierFeature(
+								CopyProgressRoutineFeatures.COPY_PHASE_SYSTEM_IDENTIFIER,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_CopyPhase.get(info, 0L) as Int
+							)
+						)
+						features.add(
+							CopyProgressRoutineSystemIdentifierFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_SYSTEM_IDENTIFIER,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_dwStreamNumber.get(info, 0L) as Int
+							)
+						)
+						features.add(
+							CopyProgressRoutineSystemIdentifierFeature(
+								CopyProgressRoutineFeatures.ERROR_SYSTEM_IDENTIFIER,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_hrFailure.get(info, 0L) as Int
+							)
+						)
+						features.add(
+							CopyProgressRoutineSystemIdentifierFeature(
+								CopyProgressRoutineFeatures.CHUNK_SYSTEM_IDENTIFIER,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_uliChunkNumber.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_TOTAL_SIZE_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_uliStreamSize.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.FILE_STREAM_TOTAL_TRANSFERRED_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_uliStreamBytesTransferred.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.TOTAL_SIZE_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_uliTotalFileSize.get(info, 0L) as Long
+							)
+						)
+						features.add(
+							CopyProgressRoutineNumericBytesFeature(
+								CopyProgressRoutineFeatures.TOTAL_TRANSFERRED_BYTES,
+								ImplementationSource.SYSTEM_NATIVE,
+								COPYFILE2_MESSAGE_Error_uliTotalBytesTransferred.get(info, 0L) as Long
+							)
+						)
+					}
+
 					else -> {}
 				}
 				val actions = routine.invoke(
@@ -159,8 +295,8 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 				Charsets.UTF_16LE
 			)
 			val extraParameters = if (features.isNotEmpty()) {
-				val p = arena.allocate(COPYFILE2_EXTENDED_PARAMETERS)
-				COPYFILE2_EXTENDED_PARAMETERS_dwSize.set(p, 0L, p.byteSize().toInt())
+				val p = arena.allocate(COPYFILE2_EXTENDED_PARAMETERS_V2)
+				COPYFILE2_EXTENDED_PARAMETERS_V2_dwSize.set(p, 0L, p.byteSize().toInt())
 				var flags = 0
 				if (features.contains(WindowsCopySystemDeviceFeatures.FAIL_IF_DESTINATION_EXISTS)) {
 					flags = flags or 0x00000001
@@ -234,8 +370,14 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 					flags = flags or 0x20000000
 					supportedFeatures.add(WindowsCopySystemDeviceFeatures.SPARSENESS)
 				}
-				COPYFILE2_EXTENDED_PARAMETERS_dwCopyFlags.set(p, 0L, flags)
-				COPYFILE2_EXTENDED_PARAMETERS_pProgressRoutine.set(
+				COPYFILE2_EXTENDED_PARAMETERS_V2_dwCopyFlags.set(p, 0L, flags)
+				flags = 0
+				if (features.contains(WindowsCopySystemDeviceFeatures.DISABLE_COPY_JUNCTIONS)) {
+					flags = flags or 0x00000001
+					supportedFeatures.add(WindowsCopySystemDeviceFeatures.DISABLE_COPY_JUNCTIONS)
+				}
+				COPYFILE2_EXTENDED_PARAMETERS_V2_dwCopyFlagsV2.set(p, 0L, flags)
+				COPYFILE2_EXTENDED_PARAMETERS_V2_pProgressRoutine.set(
 					p, 0L,
 					nativeLinker.upcallStub(
 						MethodHandles.lookup().findSpecial(

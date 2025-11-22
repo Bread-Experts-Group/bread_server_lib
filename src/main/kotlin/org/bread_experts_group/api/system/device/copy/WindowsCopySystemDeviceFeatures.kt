@@ -18,5 +18,6 @@ enum class WindowsCopySystemDeviceFeatures : CopySystemDeviceFeatureIdentifier {
 	DISABLE_PRE_ALLOCATION,
 	LOW_SPACE_FREE_MODE,
 	COMPRESS_OVER_LINK,
-	SPARSENESS
+	SPARSENESS,
+	DISABLE_COPY_JUNCTIONS
 }
