@@ -7,6 +7,7 @@ enum class WindowsLastError(override val id: UInt) : Mappable<WindowsLastError, 
 	ERROR_INVALID_HANDLE(6u),
 	ERROR_NO_MORE_FILES(18u),
 	ERROR_ALREADY_EXISTS(183u),
+	ERROR_DIRECTORY(267u),
 	ERROR_NOT_FOUND(1168u);
 
 	override val tag: String = name

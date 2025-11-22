@@ -21,29 +21,29 @@ class WindowsSystemDeviceIODeviceFeature(
 	companion object {
 		internal fun getDesiredAccess(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
+			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
 		): Int {
-			val rC = features.contains(FileIOOpenFeatures.READ)
-			val wC = features.contains(FileIOOpenFeatures.WRITE)
-			val eC = features.contains(FileIOOpenFeatures.EXECUTE)
+			val rC = features.contains(FileIOReOpenFeatures.READ)
+			val wC = features.contains(FileIOReOpenFeatures.WRITE)
+			val eC = features.contains(FileIOReOpenFeatures.EXECUTE)
 			return if (rC && wC && eC) {
-				supportedFeatures.add(FileIOOpenFeatures.READ)
-				supportedFeatures.add(FileIOOpenFeatures.WRITE)
-				supportedFeatures.add(FileIOOpenFeatures.EXECUTE)
+				supportedFeatures.add(FileIOReOpenFeatures.READ)
+				supportedFeatures.add(FileIOReOpenFeatures.WRITE)
+				supportedFeatures.add(FileIOReOpenFeatures.EXECUTE)
 				WindowsGenericAccessRights.GENERIC_ALL.position.toInt()
 			} else {
 				var localAR = 0
 				if (rC) {
 					localAR = WindowsGenericAccessRights.GENERIC_READ.position.toInt()
-					supportedFeatures.add(FileIOOpenFeatures.READ)
+					supportedFeatures.add(FileIOReOpenFeatures.READ)
 				}
 				if (wC) {
 					localAR = localAR or WindowsGenericAccessRights.GENERIC_WRITE.position.toInt()
-					supportedFeatures.add(FileIOOpenFeatures.WRITE)
+					supportedFeatures.add(FileIOReOpenFeatures.WRITE)
 				}
 				if (eC) {
 					localAR = localAR or WindowsGenericAccessRights.GENERIC_EXECUTE.position.toInt()
-					supportedFeatures.add(FileIOOpenFeatures.EXECUTE)
+					supportedFeatures.add(FileIOReOpenFeatures.EXECUTE)
 				}
 				localAR
 			}
@@ -51,54 +51,54 @@ class WindowsSystemDeviceIODeviceFeature(
 
 		internal fun getShareMode(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
+			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
 		): Int {
-			var shareMode = if (features.contains(FileIOOpenFeatures.SHARE_READ)) {
-				supportedFeatures.add(FileIOOpenFeatures.SHARE_READ)
+			var shareMode = if (features.contains(FileIOReOpenFeatures.SHARE_READ)) {
+				supportedFeatures.add(FileIOReOpenFeatures.SHARE_READ)
 				WindowsFileSharingTypes.FILE_SHARE_READ.position.toInt()
 			} else 0
-			if (features.contains(FileIOOpenFeatures.SHARE_WRITE)) {
+			if (features.contains(FileIOReOpenFeatures.SHARE_WRITE)) {
 				shareMode = shareMode or WindowsFileSharingTypes.FILE_SHARE_WRITE.position.toInt()
-				supportedFeatures.add(FileIOOpenFeatures.SHARE_WRITE)
+				supportedFeatures.add(FileIOReOpenFeatures.SHARE_WRITE)
 			}
 			return shareMode
 		}
 
 		internal fun getFlags(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
+			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
 		): Int {
 			var flags = 0
 			if (features.contains(StandardIOOpenFeatures.DIRECTORY)) {
-				flags = flags or 0x02000000
+				flags = 0x02000000
 			} else {
-				if (features.contains(WindowsIOOpenFeatures.DISABLE_REMOTE_RECALL)) {
-					flags = flags or 0x00100000
-					supportedFeatures.add(WindowsIOOpenFeatures.DISABLE_REMOTE_RECALL)
+				if (features.contains(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)) {
+					flags = 0x00100000
+					supportedFeatures.add(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)
 				}
-				if (features.contains(WindowsIOOpenFeatures.OPEN_REPARSE_POINT)) {
+				if (features.contains(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)) {
 					flags = flags or 0x00200000
-					supportedFeatures.add(WindowsIOOpenFeatures.OPEN_REPARSE_POINT)
+					supportedFeatures.add(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)
 				}
-				if (features.contains(WindowsIOOpenFeatures.DELETE_ON_RELEASE)) {
+				if (features.contains(WindowsIOReOpenFeatures.DELETE_ON_RELEASE)) {
 					flags = flags or 0x04000000
-					supportedFeatures.add(WindowsIOOpenFeatures.DELETE_ON_RELEASE)
+					supportedFeatures.add(WindowsIOReOpenFeatures.DELETE_ON_RELEASE)
 				}
-				if (features.contains(WindowsIOOpenFeatures.OPTIMIZE_SEQUENTIAL_ACCESS)) {
+				if (features.contains(WindowsIOReOpenFeatures.OPTIMIZE_SEQUENTIAL_ACCESS)) {
 					flags = flags or 0x08000000
-					supportedFeatures.add(WindowsIOOpenFeatures.OPTIMIZE_SEQUENTIAL_ACCESS)
+					supportedFeatures.add(WindowsIOReOpenFeatures.OPTIMIZE_SEQUENTIAL_ACCESS)
 				}
-				if (features.contains(WindowsIOOpenFeatures.OPTIMIZE_RANDOM_ACCESS)) {
+				if (features.contains(WindowsIOReOpenFeatures.OPTIMIZE_RANDOM_ACCESS)) {
 					flags = flags or 0x10000000
-					supportedFeatures.add(WindowsIOOpenFeatures.OPTIMIZE_RANDOM_ACCESS)
+					supportedFeatures.add(WindowsIOReOpenFeatures.OPTIMIZE_RANDOM_ACCESS)
 				}
-				if (features.contains(WindowsIOOpenFeatures.DISABLE_SYSTEM_BUFFERING)) {
+				if (features.contains(WindowsIOReOpenFeatures.DISABLE_SYSTEM_BUFFERING)) {
 					flags = flags or 0x20000000
-					supportedFeatures.add(WindowsIOOpenFeatures.DISABLE_SYSTEM_BUFFERING)
+					supportedFeatures.add(WindowsIOReOpenFeatures.DISABLE_SYSTEM_BUFFERING)
 				}
-				if (features.contains(WindowsIOOpenFeatures.WRITE_THROUGH)) {
+				if (features.contains(WindowsIOReOpenFeatures.WRITE_THROUGH)) {
 					flags = flags or 0x80000000.toInt()
-					supportedFeatures.add(WindowsIOOpenFeatures.WRITE_THROUGH)
+					supportedFeatures.add(WindowsIOReOpenFeatures.WRITE_THROUGH)
 				}
 			}
 			return flags or 0x01000000 // FILE_FLAG_POSIX_SEMANTICS
@@ -109,8 +109,14 @@ class WindowsSystemDeviceIODeviceFeature(
 		vararg features: OpenIODeviceFeatureIdentifier
 	): Pair<IODevice, List<OpenIODeviceFeatureIdentifier>>? {
 		val supportedFeatures = mutableListOf<OpenIODeviceFeatureIdentifier>()
-		val desiredAccess = getDesiredAccess(features, supportedFeatures)
+
+		@Suppress("UNCHECKED_CAST")
+		val desiredAccess = getDesiredAccess(
+			features,
+			supportedFeatures as MutableList<ReOpenIODeviceFeatureIdentifier>
+		)
 		val shareMode = getShareMode(features, supportedFeatures)
+
 		if (features.contains(StandardIOOpenFeatures.DIRECTORY)) {
 			val ePA = Arena.ofConfined()
 			val parameters = ePA.allocate(CREATEFILE3_EXTENDED_PARAMETERS)
@@ -173,7 +179,7 @@ class WindowsSystemDeviceIODeviceFeature(
 				if (features.contains(FileIOOpenFeatures.TRUNCATE)) WindowsCreationDisposition.TRUNCATE_EXISTING
 				else WindowsCreationDisposition.OPEN_EXISTING
 			}
-			val ePA = if (features.any { it is WindowsIOOpenFeatures }) Arena.ofConfined() else null
+			val ePA = if (features.any { it is WindowsIOReOpenFeatures }) Arena.ofConfined() else null
 			val extendedParameters = if (ePA != null) {
 				val parameters = ePA.allocate(CREATEFILE3_EXTENDED_PARAMETERS)
 				CREATEFILE3_EXTENDED_PARAMETERS_dwSize.set(parameters, 0L, parameters.byteSize().toInt())
@@ -245,7 +251,7 @@ class WindowsSystemDeviceIODeviceFeature(
 					else -> if (handle == INVALID_HANDLE_VALUE) throw e
 				}
 			}
-			if (features.contains(WindowsIOOpenFeatures.DELETE_ON_RESTART) && nativeMoveFileWithProgressW != null) {
+			if (features.contains(WindowsIOReOpenFeatures.DELETE_ON_RESTART) && nativeMoveFileWithProgressW != null) {
 				val status = nativeMoveFileWithProgressW.invokeExact(
 					capturedStateSegment,
 					pathSegment,
@@ -255,7 +261,7 @@ class WindowsSystemDeviceIODeviceFeature(
 					0x4
 				) as Int
 				if (status == 0) throwLastError()
-				supportedFeatures.add(WindowsIOOpenFeatures.DELETE_ON_RESTART)
+				supportedFeatures.add(WindowsIOReOpenFeatures.DELETE_ON_RESTART)
 			}
 			val newDevice = WindowsIODevice(handle)
 			newDevice.features.add(

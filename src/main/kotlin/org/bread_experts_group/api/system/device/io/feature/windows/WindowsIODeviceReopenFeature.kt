@@ -3,7 +3,7 @@ package org.bread_experts_group.api.system.device.io.feature.windows
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.io.IODevice
 import org.bread_experts_group.api.system.device.io.feature.IODeviceReopenFeature
-import org.bread_experts_group.api.system.device.io.open.OpenIODeviceFeatureIdentifier
+import org.bread_experts_group.api.system.device.io.open.ReOpenIODeviceFeatureIdentifier
 import org.bread_experts_group.api.system.device.io.windows.WindowsIODevice
 import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getDesiredAccess
 import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getFlags
@@ -20,9 +20,9 @@ class WindowsIODeviceReopenFeature(private val handle: MemorySegment) : IODevice
 	override fun supported(): Boolean = nativeReOpenFile != null
 
 	override fun reopen(
-		vararg features: OpenIODeviceFeatureIdentifier
-	): Pair<IODevice, List<OpenIODeviceFeatureIdentifier>> {
-		val supportedFeatures = mutableListOf<OpenIODeviceFeatureIdentifier>()
+		vararg features: ReOpenIODeviceFeatureIdentifier
+	): Pair<IODevice, List<ReOpenIODeviceFeatureIdentifier>> {
+		val supportedFeatures = mutableListOf<ReOpenIODeviceFeatureIdentifier>()
 		val handle = nativeReOpenFile!!.invokeExact(
 			capturedStateSegment,
 			handle,

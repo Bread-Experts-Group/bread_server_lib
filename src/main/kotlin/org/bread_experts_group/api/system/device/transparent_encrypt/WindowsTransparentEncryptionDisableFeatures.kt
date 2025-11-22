@@ -1,0 +1,5 @@
+package org.bread_experts_group.api.system.device.transparent_encrypt
+
+enum class WindowsTransparentEncryptionDisableFeatures : DisableTransparentEncryptionSystemDeviceFeatureIdentifier {
+	DIRECTORY
+}

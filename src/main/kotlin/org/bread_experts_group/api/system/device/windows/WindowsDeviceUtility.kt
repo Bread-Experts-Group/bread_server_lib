@@ -202,4 +202,7 @@ fun createPathDevice(
 	it.features.add(WindowsSystemDeviceReplaceFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceSoftLinkFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceHardLinkFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceQueryTransparentEncryptionFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionEnableFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionDisableFeature(safeSegment))
 }

@@ -53,3 +53,47 @@ val nativeLookupAccountSidW: MethodHandle? = advapi32Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeFileEncryptionStatusW: MethodHandle? = advapi32Lookup.getDowncall(
+	nativeLinker, "FileEncryptionStatusW",
+	arrayOf(
+		BOOL,
+		LPCWSTR, LPDWORD
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeEncryptFileW: MethodHandle? = advapi32Lookup.getDowncall(
+	nativeLinker, "EncryptFileW",
+	arrayOf(
+		BOOL,
+		LPCWSTR
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeDecryptFileW: MethodHandle? = advapi32Lookup.getDowncall(
+	nativeLinker, "DecryptFileW",
+	arrayOf(
+		BOOL,
+		LPCWSTR, DWORD
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeEncryptionDisable: MethodHandle? = advapi32Lookup.getDowncall(
+	nativeLinker, "EncryptionDisable",
+	arrayOf(
+		BOOL,
+		LPCWSTR, BOOL
+	),
+	listOf(
+		gleCapture
+	)
+)

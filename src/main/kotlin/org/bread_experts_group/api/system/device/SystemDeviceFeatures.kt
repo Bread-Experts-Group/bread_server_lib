@@ -62,4 +62,16 @@ object SystemDeviceFeatures {
 	val HARD_LINK = object : FeatureExpression<SystemDeviceHardLinkFeature> {
 		override val name: String = "Hard-Link To Device"
 	}
+
+	val ENABLE_TRANSPARENT_ENCRYPT = object : FeatureExpression<SystemDeviceTransparentEncryptionEnableFeature> {
+		override val name: String = "Device Transparent Encryption Enable"
+	}
+
+	val DISABLE_TRANSPARENT_ENCRYPT = object : FeatureExpression<SystemDeviceTransparentEncryptionDisableFeature> {
+		override val name: String = "Device Transparent Encryption Disable"
+	}
+
+	val QUERY_TRANSPARENT_ENCRYPT = object : FeatureExpression<SystemDeviceQueryTransparentEncryptionFeature> {
+		override val name: String = "Query Device Transparent Encryption"
+	}
 }

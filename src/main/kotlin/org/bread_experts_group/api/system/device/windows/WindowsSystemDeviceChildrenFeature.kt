@@ -15,7 +15,6 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 	override fun supported(): Boolean = nativeFindFirstFileExW != null && nativePathCchRemoveBackslash != null &&
 			nativePathCchAppendEx != null && nativeFindNextFileW != null && nativeFindClose != null
 
-
 	private val cleaner: Cleaner = Cleaner.create()
 	override fun iterator(): Iterator<SystemDevice> = object : Iterator<SystemDevice> {
 		private val searchHandle: MemorySegment
@@ -24,31 +23,43 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 		private var nextPrepared = false
 
 		init {
-			searchData = searchArena.allocate(WIN32_FIND_DATAW)
-			nextPrepared = true
-			Arena.ofConfined().use { tempArena ->
-				val wildcard = tempArena.allocate(pathSegment.byteSize() + 4).copyFrom(pathSegment)
-				val append = tempArena.allocateFrom("\\*", Charsets.UTF_16LE)
-				decodeWin32Error(
-					nativePathCchAppendEx!!.invokeExact(
+			var sH: MemorySegment
+			var sD: MemorySegment
+			try {
+				sD = searchArena.allocate(WIN32_FIND_DATAW)
+				Arena.ofConfined().use { tempArena ->
+					val wildcard = tempArena.allocate(pathSegment.byteSize() + 4).copyFrom(pathSegment)
+					val append = tempArena.allocateFrom("\\*", Charsets.UTF_16LE)
+					decodeWin32Error(
+						nativePathCchAppendEx!!.invokeExact(
+							wildcard,
+							wildcard.byteSize() / 2,
+							append,
+							0x00000003 // TODO PathCchAppendEx flags
+						) as Int
+					)
+					sH = nativeFindFirstFileExW!!.invokeExact(
+						capturedStateSegment,
 						wildcard,
-						wildcard.byteSize() / 2,
-						append,
-						0x00000003 // TODO PathCchAppendEx flags
-					) as Int
-				)
-				searchHandle = nativeFindFirstFileExW!!.invokeExact(
-					capturedStateSegment,
-					wildcard,
-					0, // TODO INFO LEVEL
-					searchData,
-					0, // TODO SEARCH OP
-					MemorySegment.NULL,
-					0 // TODO SEARCH FLAGS
-				) as MemorySegment
-				if (searchHandle == INVALID_HANDLE_VALUE) throwLastError()
+						0, // TODO INFO LEVEL
+						sD,
+						0, // TODO SEARCH OP
+						MemorySegment.NULL,
+						0 // TODO SEARCH FLAGS
+					) as MemorySegment
+					if (sH == INVALID_HANDLE_VALUE) throwLastError()
+				}
+				cleaner.register(this) { cleanup() }
+				nextPrepared = true
+			} catch (e: WindowsLastErrorException) {
+				nextPrepared = false
+				searchArena.close()
+				sH = MemorySegment.NULL
+				sD = MemorySegment.NULL
+				if (e.error.enum != WindowsLastError.ERROR_DIRECTORY) throw e
 			}
-			cleaner.register(this) { cleanup() }
+			searchHandle = sH
+			searchData = sD
 		}
 
 		private fun cleanup() {
