@@ -457,3 +457,25 @@ val nativeSetFilePointerEx: MethodHandle? = kernel32Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeLockFileEx: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "LockFileEx",
+	arrayOf(
+		BOOL,
+		HANDLE, DWORD, DWORD, DWORD, DWORD, ValueLayout.ADDRESS /* of OVERLAPPED */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeUnlockFileEx: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "UnlockFileEx",
+	arrayOf(
+		BOOL,
+		HANDLE, DWORD, DWORD, DWORD, ValueLayout.ADDRESS /* of OVERLAPPED */
+	),
+	listOf(
+		gleCapture
+	)
+)

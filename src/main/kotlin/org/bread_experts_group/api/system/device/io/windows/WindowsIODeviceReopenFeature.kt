@@ -1,11 +1,10 @@
-package org.bread_experts_group.api.system.device.io.feature.windows
+package org.bread_experts_group.api.system.device.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.io.IODevice
 import org.bread_experts_group.api.system.device.io.feature.IODeviceReopenFeature
 import org.bread_experts_group.api.system.device.io.open.OpenIODeviceFeatureIdentifier
 import org.bread_experts_group.api.system.device.io.open.ReOpenIODeviceFeatureIdentifier
-import org.bread_experts_group.api.system.device.io.windows.WindowsIODevice
 import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getDesiredAccessO
 import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getFlags
 import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getShareModeO

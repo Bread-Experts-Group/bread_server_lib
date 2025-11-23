@@ -138,7 +138,6 @@ sourceSets {
 tasks.dokkaGeneratePublicationJavadoc { dependsOn(generateBuildInfo) }
 tasks.kotlinSourcesJar {
 	dependsOn(generateBuildInfo)
-
 }
 tasks.compileKotlin {
 //	dependsOn(generateBuildInfo)

@@ -1,4 +1,4 @@
-package org.bread_experts_group.api.system.device.io.feature.windows
+package org.bread_experts_group.api.system.device.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.io.feature.IODeviceReleaseFeature

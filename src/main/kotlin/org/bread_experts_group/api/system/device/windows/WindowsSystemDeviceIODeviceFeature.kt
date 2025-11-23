@@ -3,9 +3,9 @@ package org.bread_experts_group.api.system.device.windows
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceIODeviceFeature
 import org.bread_experts_group.api.system.device.io.IODevice
-import org.bread_experts_group.api.system.device.io.feature.windows.WindowsIODeviceReleaseFeature
 import org.bread_experts_group.api.system.device.io.open.*
 import org.bread_experts_group.api.system.device.io.windows.WindowsIODevice
+import org.bread_experts_group.api.system.device.io.windows.WindowsIODeviceReleaseFeature
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena

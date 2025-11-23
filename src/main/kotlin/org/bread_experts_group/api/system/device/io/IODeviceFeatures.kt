@@ -31,4 +31,8 @@ object IODeviceFeatures {
 	val REOPEN = object : FeatureExpression<IODeviceReopenFeature> {
 		override val name: String = "Reopen Device"
 	}
+
+	val DATA_RANGE_LOCK = object : FeatureExpression<IODeviceDataRangeLockFeature> {
+		override val name: String = "Device Data Range Lock"
+	}
 }
