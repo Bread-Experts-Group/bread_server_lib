@@ -190,7 +190,7 @@ fun createPathDevice(
 		safeSegment,
 		safeSegment.byteSize() / 2
 	) as Int
-	if (status != 1) throwLastError()
+	if (status !in 0..1) throwLastError()
 	it.registerCleaningAction { arena.close() }
 	val path = safeSegment.getString(0, Charsets.UTF_16LE)
 	it.features.add(

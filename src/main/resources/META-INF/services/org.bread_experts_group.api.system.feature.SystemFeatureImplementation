@@ -5,4 +5,5 @@ org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceRemovedEven
 org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceEnumerationFeature
 org.bread_experts_group.api.system.device.windows.WindowsSystemProjectedFileHierarchyFeature
 org.bread_experts_group.api.system.device.windows.WindowsSystemGetCurrentWorkingDeviceFeature
+org.bread_experts_group.api.system.device.windows.WindowsSystemGetTemporaryStorageDeviceFeature
 org.bread_experts_group.api.system.feature.macos.MacOSSystemThreadLocalUserFeature

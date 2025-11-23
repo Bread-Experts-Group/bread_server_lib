@@ -7,12 +7,14 @@ import org.bread_experts_group.api.system.device.io.open.StandardIOOpenFeatures
 
 fun main() {
 	val testFile = SystemProvider
-		.get(SystemFeatures.GET_CURRENT_WORKING_DEVICE).device
+		.get(SystemFeatures.GET_TEMPORARY_STORAGE_PATH_DEVICE).device
 	testFile.get(SystemDeviceFeatures.IO_DEVICE).open(
 		StandardIOOpenFeatures.CREATE,
 		StandardIOOpenFeatures.DIRECTORY
 	)
-//	println(testFile.get(SystemDeviceFeatures.PATH_GET_CREATION_TIME).getTime(StandardIOOpenFeatures.DIRECTORY))
+	testFile.get(SystemDeviceFeatures.PATH_CHILDREN).forEach {
+		println(it.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity)
+	}
 //	println(testFile.get(SystemDeviceFeatures.PATH_GET_LAST_WRITE_TIME).getTime(StandardIOOpenFeatures.DIRECTORY))
 //	println(testFile.get(SystemDeviceFeatures.PATH_GET_LAST_ACCESS_TIME).getTime(StandardIOOpenFeatures.DIRECTORY))
 //	println(

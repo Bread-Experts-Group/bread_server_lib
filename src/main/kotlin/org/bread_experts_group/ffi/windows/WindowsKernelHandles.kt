@@ -350,6 +350,17 @@ val nativeGetCurrentDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
+val nativeGetTempPath2W: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GetTempPath2W",
+	arrayOf(
+		DWORD,
+		DWORD, LPWSTR,
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeCopyFile2: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "CopyFile2",
 	arrayOf(

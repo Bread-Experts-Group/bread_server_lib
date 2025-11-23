@@ -4,7 +4,7 @@ import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.system.device.feature.SystemDeviceAddedEventFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceEnumerationFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceRemovedEventFeature
-import org.bread_experts_group.api.system.feature.SystemGetCurrentWorkingDeviceFeature
+import org.bread_experts_group.api.system.feature.SystemGetPathDeviceFeature
 import org.bread_experts_group.api.system.feature.SystemGetThreadLocalUserFeature
 import org.bread_experts_group.api.system.feature.SystemGetUptimeFeature
 import org.bread_experts_group.api.system.feature.SystemProjectedFileHierarchyFeature
@@ -34,7 +34,11 @@ object SystemFeatures {
 		override val name: String = "Projected File Hierarchy"
 	}
 
-	val GET_CURRENT_WORKING_DEVICE = object : FeatureExpression<SystemGetCurrentWorkingDeviceFeature> {
-		override val name: String = "Get Current Working Device"
+	val GET_CURRENT_WORKING_PATH_DEVICE = object : FeatureExpression<SystemGetPathDeviceFeature> {
+		override val name: String = "Get Current Working Path Device"
+	}
+
+	val GET_TEMPORARY_STORAGE_PATH_DEVICE = object : FeatureExpression<SystemGetPathDeviceFeature> {
+		override val name: String = "Get Temporary Storage Path Device"
 	}
 }
