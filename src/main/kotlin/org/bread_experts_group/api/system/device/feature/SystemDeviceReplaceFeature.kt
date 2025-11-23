@@ -7,7 +7,7 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.replace.SystemDeviceReplaceFeatureIdentifier
 
 abstract class SystemDeviceReplaceFeature : SystemDeviceFeatureImplementation<SystemDeviceReplaceFeature>() {
-	override val expresses: FeatureExpression<SystemDeviceReplaceFeature> = SystemDeviceFeatures.REPLACE
+	override val expresses: FeatureExpression<SystemDeviceReplaceFeature> = SystemDeviceFeatures.PATH_REPLACE
 	abstract fun replace(
 		with: SystemDevice,
 		backup: SystemDevice?,

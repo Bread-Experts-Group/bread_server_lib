@@ -7,7 +7,7 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.feature.move.SystemDeviceMoveHandle
 
 abstract class SystemDeviceMoveFeature : SystemDeviceFeatureImplementation<SystemDeviceMoveFeature>() {
-	override val expresses: FeatureExpression<SystemDeviceMoveFeature> = SystemDeviceFeatures.MOVE
+	override val expresses: FeatureExpression<SystemDeviceMoveFeature> = SystemDeviceFeatures.PATH_MOVE
 	abstract fun move(
 		destination: SystemDevice
 	): SystemDeviceMoveHandle

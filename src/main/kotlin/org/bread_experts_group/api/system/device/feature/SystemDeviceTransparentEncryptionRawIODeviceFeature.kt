@@ -1,3 +1,5 @@
+@file:Suppress("LongLine")
+
 package org.bread_experts_group.api.system.device.feature
 
 import org.bread_experts_group.api.feature.FeatureExpression
@@ -9,7 +11,7 @@ import org.bread_experts_group.api.system.device.io.transparent_encrpytion.OpenT
 abstract class SystemDeviceTransparentEncryptionRawIODeviceFeature :
 	SystemDeviceFeatureImplementation<SystemDeviceTransparentEncryptionRawIODeviceFeature>() {
 	override val expresses: FeatureExpression<SystemDeviceTransparentEncryptionRawIODeviceFeature> =
-		SystemDeviceFeatures.TRANSPARENT_ENCRYPT_RAW_IO_DEVICE
+		SystemDeviceFeatures.PATH_TRANSPARENT_ENCRYPT_RAW_IO_DEVICE
 
 	abstract fun open(
 		vararg features: OpenTransparentEncryptionRawIODeviceFeatureIdentifier

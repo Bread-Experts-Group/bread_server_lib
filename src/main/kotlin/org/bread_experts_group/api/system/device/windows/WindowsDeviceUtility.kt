@@ -1,12 +1,15 @@
 package org.bread_experts_group.api.system.device.windows
 
+import org.bread_experts_group.Flaggable.Companion.raw
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
+import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.SystemDeviceType
+import org.bread_experts_group.api.system.device.feature.SystemDeviceBasicIdentifierFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceFriendlyNameFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceSerialPortNameFeature
-import org.bread_experts_group.api.system.device.feature.SystemDeviceSystemIdentityFeature
-import org.bread_experts_group.api.system.device.feature.SystemDeviceSystemTypeGUIDFeature
+import org.bread_experts_group.api.system.device.io.open.OpenIODeviceFeatureIdentifier
+import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getFlags
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
@@ -17,6 +20,7 @@ import org.bread_experts_group.ffi.windows.setup.nativeSetupDiOpenDeviceInfoW
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+import java.util.*
 
 val deviceCache = mutableMapOf<String, SystemDevice>()
 fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
@@ -61,7 +65,11 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			WindowsSystemDeviceIODeviceFeature(link)
 		)
 		it.features.add(
-			SystemDeviceSystemTypeGUIDFeature(guid, ImplementationSource.SYSTEM_NATIVE)
+			SystemDeviceBasicIdentifierFeature(
+				ImplementationSource.SYSTEM_NATIVE,
+				SystemDeviceFeatures.SYSTEM_TYPE_IDENTIFIER,
+				guid
+			)
 		)
 		val identityBytes = ByteArray(link.byteSize().toInt())
 		MemorySegment.copy(
@@ -70,9 +78,10 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 		)
 		val symLinkString = String(identityBytes, Charsets.UTF_16LE)
 		it.features.add(
-			SystemDeviceSystemIdentityFeature(
-				symLinkString,
-				ImplementationSource.SYSTEM_NATIVE
+			SystemDeviceBasicIdentifierFeature(
+				ImplementationSource.SYSTEM_NATIVE,
+				SystemDeviceFeatures.SYSTEM_IDENTIFIER,
+				symLinkString
 			)
 		)
 		val classGuid = guid.allocate(arena)
@@ -185,7 +194,11 @@ fun createPathDevice(
 	it.registerCleaningAction { arena.close() }
 	val path = safeSegment.getString(0, Charsets.UTF_16LE)
 	it.features.add(
-		SystemDeviceSystemIdentityFeature(path, ImplementationSource.SYSTEM_NATIVE)
+		SystemDeviceBasicIdentifierFeature(
+			ImplementationSource.SYSTEM_NATIVE,
+			SystemDeviceFeatures.SYSTEM_IDENTIFIER,
+			path
+		)
 	)
 	val fileNameSegment = nativePathFindFileNameW!!.invokeExact(safeSegment) as MemorySegment
 	val fileName = fileNameSegment.reinterpret(Long.MAX_VALUE).getString(0, Charsets.UTF_16LE)
@@ -207,4 +220,53 @@ fun createPathDevice(
 	it.features.add(WindowsSystemDeviceTransparentEncryptionEnableFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceTransparentEncryptionDisableFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceGetCreationTime(safeSegment))
+	it.features.add(WindowsSystemDeviceGetLastAccessTime(safeSegment))
+	it.features.add(WindowsSystemDeviceGetLastWriteTime(safeSegment))
+	it.features.add(WindowsSystemDeviceGetLastMetadataWriteTime(safeSegment))
+}
+
+fun <T> readFileInfo(
+	pathSegment: MemorySegment,
+	features: Array<out OpenIODeviceFeatureIdentifier>,
+	supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>,
+	transformer: (MemorySegment) -> T
+): T {
+	var arena = Arena.ofConfined()
+	val ext3 = arena.allocate(CREATEFILE3_EXTENDED_PARAMETERS)
+	CREATEFILE3_EXTENDED_PARAMETERS_dwSize.set(ext3, 0L, ext3.byteSize().toInt())
+	CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(ext3, 0L, getFlags(features, supportedFeatures))
+	val handle = nativeCreateFile3!!.invokeExact(
+		capturedStateSegment,
+		pathSegment,
+		0,
+		EnumSet.of(
+			WindowsFileSharingTypes.FILE_SHARE_READ,
+			WindowsFileSharingTypes.FILE_SHARE_WRITE
+		).raw().toInt(),
+		WindowsCreationDisposition.OPEN_EXISTING.id.toInt(),
+		ext3
+	) as MemorySegment
+	arena.close()
+	if (handle == INVALID_HANDLE_VALUE) throwLastError()
+	arena = Arena.ofConfined()
+	val transformed = try {
+		val basicInfo = arena.allocate(FILE_BASIC_INFO)
+		if (
+			nativeGetFileInformationByHandleEx!!.invokeExact(
+				capturedStateSegment,
+				handle,
+				WindowsFileInfoByHandleClasses.FileBasicInfo.id.toInt(),
+				basicInfo,
+				basicInfo.byteSize().toInt()
+			) as Int == 0
+		) throwLastError()
+		transformer(basicInfo)
+	} catch (e: Throwable) {
+		throw e
+	} finally {
+		arena.close()
+	}
+	if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0) throwLastError()
+	return transformed
 }

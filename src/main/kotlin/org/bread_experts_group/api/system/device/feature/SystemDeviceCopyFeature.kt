@@ -7,7 +7,7 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.feature.copy.SystemDeviceCopyHandle
 
 abstract class SystemDeviceCopyFeature : SystemDeviceFeatureImplementation<SystemDeviceCopyFeature>() {
-	override val expresses: FeatureExpression<SystemDeviceCopyFeature> = SystemDeviceFeatures.COPY
+	override val expresses: FeatureExpression<SystemDeviceCopyFeature> = SystemDeviceFeatures.PATH_COPY
 	abstract fun copy(
 		destination: SystemDevice
 	): SystemDeviceCopyHandle

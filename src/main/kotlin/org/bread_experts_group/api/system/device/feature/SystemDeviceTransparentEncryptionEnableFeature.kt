@@ -10,7 +10,7 @@ import org.bread_experts_group.api.system.device.transparent_encrypt.EnableTrans
 abstract class SystemDeviceTransparentEncryptionEnableFeature :
 	SystemDeviceFeatureImplementation<SystemDeviceTransparentEncryptionEnableFeature>() {
 	override val expresses: FeatureExpression<SystemDeviceTransparentEncryptionEnableFeature> =
-		SystemDeviceFeatures.ENABLE_TRANSPARENT_ENCRYPT
+		SystemDeviceFeatures.PATH_ENABLE_TRANSPARENT_ENCRYPT
 
 	abstract fun enable(
 		vararg features: EnableTransparentEncryptionSystemDeviceFeatureIdentifier

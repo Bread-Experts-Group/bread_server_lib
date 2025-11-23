@@ -23,7 +23,7 @@ class WindowsSystemDeviceSoftLinkFeature(private val pathSegment: MemorySegment)
 		val supportedFeatures = mutableListOf<SoftLinkSystemDeviceFeatureIdentifier>()
 		val arena = Arena.ofConfined()
 		val destinationSegment = arena.allocateFrom(
-			towards.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity,
+			towards.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
 			Charsets.UTF_16LE
 		)
 		var flags = 0

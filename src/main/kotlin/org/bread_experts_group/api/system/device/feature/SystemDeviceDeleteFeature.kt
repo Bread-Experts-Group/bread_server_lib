@@ -6,7 +6,7 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.delete.DeleteSystemDeviceFeatureIdentifier
 
 abstract class SystemDeviceDeleteFeature : SystemDeviceFeatureImplementation<SystemDeviceDeleteFeature>() {
-	override val expresses: FeatureExpression<SystemDeviceDeleteFeature> = SystemDeviceFeatures.DELETE
+	override val expresses: FeatureExpression<SystemDeviceDeleteFeature> = SystemDeviceFeatures.PATH_DELETE
 	abstract fun delete(
 		vararg features: DeleteSystemDeviceFeatureIdentifier
 	): List<DeleteSystemDeviceFeatureIdentifier>

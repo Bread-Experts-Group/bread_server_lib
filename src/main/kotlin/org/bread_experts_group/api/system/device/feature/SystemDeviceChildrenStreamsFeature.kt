@@ -8,5 +8,5 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 abstract class SystemDeviceChildrenStreamsFeature :
 	SystemDeviceFeatureImplementation<SystemDeviceChildrenStreamsFeature>(), Iterable<SystemDevice> {
 	override val expresses: FeatureExpression<SystemDeviceChildrenStreamsFeature> =
-		SystemDeviceFeatures.CHILDREN_STREAMS
+		SystemDeviceFeatures.PATH_CHILDREN_STREAMS
 }

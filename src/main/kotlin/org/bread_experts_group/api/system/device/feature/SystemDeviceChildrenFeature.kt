@@ -7,5 +7,5 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 
 abstract class SystemDeviceChildrenFeature :
 	SystemDeviceFeatureImplementation<SystemDeviceChildrenFeature>(), Iterable<SystemDevice> {
-	override val expresses: FeatureExpression<SystemDeviceChildrenFeature> = SystemDeviceFeatures.CHILDREN
+	override val expresses: FeatureExpression<SystemDeviceChildrenFeature> = SystemDeviceFeatures.PATH_CHILDREN
 }

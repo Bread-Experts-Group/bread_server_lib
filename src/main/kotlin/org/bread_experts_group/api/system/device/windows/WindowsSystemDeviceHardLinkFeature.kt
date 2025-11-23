@@ -21,7 +21,7 @@ class WindowsSystemDeviceHardLinkFeature(private val pathSegment: MemorySegment)
 	): List<HardLinkSystemDeviceFeatureIdentifier> {
 		val arena = Arena.ofConfined()
 		val destinationSegment = arena.allocateFrom(
-			towards.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity,
+			towards.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
 			Charsets.UTF_16LE
 		)
 		val status = nativeCreateHardLinkW!!.invokeExact(

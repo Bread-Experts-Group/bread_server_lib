@@ -179,27 +179,27 @@ val nativeFlushFileBuffers: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeGetCommState: MethodHandle? = kernel32Lookup.getDowncall(
-	nativeLinker, "GetCommState",
-	arrayOf(
-		BOOL,
-		HANDLE, LPDCB
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeSetCommState: MethodHandle? = kernel32Lookup.getDowncall(
-	nativeLinker, "SetCommState",
-	arrayOf(
-		BOOL,
-		HANDLE, LPDCB
-	),
-	listOf(
-		gleCapture
-	)
-)
+//val nativeGetCommState: MethodHandle? = kernel32Lookup.getDowncall(
+//	nativeLinker, "GetCommState",
+//	arrayOf(
+//		BOOL,
+//		HANDLE, LPDCB
+//	),
+//	listOf(
+//		gleCapture
+//	)
+//)
+//
+//val nativeSetCommState: MethodHandle? = kernel32Lookup.getDowncall(
+//	nativeLinker, "SetCommState",
+//	arrayOf(
+//		BOOL,
+//		HANDLE, LPDCB
+//	),
+//	listOf(
+//		gleCapture
+//	)
+//)
 
 val nativeGetStdHandle: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetStdHandle",
@@ -322,6 +322,17 @@ val nativeCloseHandle: MethodHandle? = kernel32Lookup.getDowncall(
 	arrayOf(
 		BOOL,
 		HANDLE
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeGetFileInformationByHandleEx: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GetFileInformationByHandleEx",
+	arrayOf(
+		BOOL,
+		HANDLE, FILE_INFO_BY_HANDLE_CLASS, LPVOID, DWORD
 	),
 	listOf(
 		gleCapture

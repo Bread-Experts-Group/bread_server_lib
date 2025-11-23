@@ -19,6 +19,13 @@ class WindowsSystemDeviceIODeviceFeature(
 			nativeCreateDirectory2W != null
 
 	companion object {
+		// internally consistent
+		@Suppress("UNCHECKED_CAST")
+		internal fun getDesiredAccessO(
+			features: Array<out OpenIODeviceFeatureIdentifier>,
+			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
+		): Int = getDesiredAccess(features, supportedFeatures as MutableList<ReOpenIODeviceFeatureIdentifier>)
+
 		internal fun getDesiredAccess(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
 			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
@@ -49,6 +56,13 @@ class WindowsSystemDeviceIODeviceFeature(
 			}
 		}
 
+		// internally consistent
+		@Suppress("UNCHECKED_CAST")
+		internal fun getShareModeO(
+			features: Array<out OpenIODeviceFeatureIdentifier>,
+			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
+		): Int = getShareMode(features, supportedFeatures as MutableList<ReOpenIODeviceFeatureIdentifier>)
+
 		internal fun getShareMode(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
 			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
@@ -66,20 +80,25 @@ class WindowsSystemDeviceIODeviceFeature(
 
 		internal fun getFlags(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
+			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
 		): Int {
 			var flags = 0
+			if (features.contains(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)) {
+				flags = 0x00100000
+				supportedFeatures.add(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)
+			}
+			if (features.contains(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)) {
+				flags = flags or 0x00200000
+				supportedFeatures.add(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)
+			}
+			if (features.contains(WindowsIOOpenFeatures.DISABLE_REDIRECTION)) {
+				flags = flags or 0x00010000
+				supportedFeatures.add(WindowsIOOpenFeatures.DISABLE_REDIRECTION)
+			}
 			if (features.contains(StandardIOOpenFeatures.DIRECTORY)) {
 				flags = 0x02000000
+				supportedFeatures.add(StandardIOOpenFeatures.DIRECTORY)
 			} else {
-				if (features.contains(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)) {
-					flags = 0x00100000
-					supportedFeatures.add(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)
-				}
-				if (features.contains(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)) {
-					flags = flags or 0x00200000
-					supportedFeatures.add(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)
-				}
 				if (features.contains(WindowsIOReOpenFeatures.DELETE_ON_RELEASE)) {
 					flags = flags or 0x04000000
 					supportedFeatures.add(WindowsIOReOpenFeatures.DELETE_ON_RELEASE)
@@ -109,19 +128,14 @@ class WindowsSystemDeviceIODeviceFeature(
 		vararg features: OpenIODeviceFeatureIdentifier
 	): Pair<IODevice, List<OpenIODeviceFeatureIdentifier>>? {
 		val supportedFeatures = mutableListOf<OpenIODeviceFeatureIdentifier>()
-
-		@Suppress("UNCHECKED_CAST")
-		val desiredAccess = getDesiredAccess(
-			features,
-			supportedFeatures as MutableList<ReOpenIODeviceFeatureIdentifier>
-		)
-		val shareMode = getShareMode(features, supportedFeatures)
+		val desiredAccess = getDesiredAccessO(features, supportedFeatures)
+		val shareMode = getShareModeO(features, supportedFeatures)
 
 		if (features.contains(StandardIOOpenFeatures.DIRECTORY)) {
 			val ePA = Arena.ofConfined()
 			val parameters = ePA.allocate(CREATEFILE3_EXTENDED_PARAMETERS)
 			CREATEFILE3_EXTENDED_PARAMETERS_dwSize.set(parameters, 0L, parameters.byteSize().toInt())
-			CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, 0x02000000)
+			CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, getFlags(features, supportedFeatures))
 			var handle = nativeCreateFile3!!.invokeExact(
 				capturedStateSegment,
 				pathSegment,
@@ -213,12 +227,7 @@ class WindowsSystemDeviceIODeviceFeature(
 					supportedFeatures.add(WindowsIOOpenAttributeFeatures.REFS_INTEGRITY)
 				}
 				CREATEFILE3_EXTENDED_PARAMETERS_dwFileAttributes.set(parameters, 0L, attributes)
-				var flags = getFlags(features, supportedFeatures)
-				if (features.contains(WindowsIOOpenFeatures.DISABLE_REDIRECTION)) {
-					flags = flags or 0x00010000
-					supportedFeatures.add(WindowsIOOpenFeatures.DISABLE_REDIRECTION)
-				}
-				CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, flags)
+				CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, getFlags(features, supportedFeatures))
 				parameters
 			} else MemorySegment.NULL
 			val handle = nativeCreateFile3!!.invokeExact(

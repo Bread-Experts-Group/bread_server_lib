@@ -10,7 +10,7 @@ import org.bread_experts_group.api.system.device.transparent_encrypt.Transparent
 abstract class SystemDeviceQueryTransparentEncryptionFeature :
 	SystemDeviceFeatureImplementation<SystemDeviceQueryTransparentEncryptionFeature>() {
 	override val expresses: FeatureExpression<SystemDeviceQueryTransparentEncryptionFeature> =
-		SystemDeviceFeatures.QUERY_TRANSPARENT_ENCRYPT
+		SystemDeviceFeatures.PATH_QUERY_TRANSPARENT_ENCRYPT
 
 	abstract fun query(): List<TransparentEncryptionSystemDeviceStatusIdentifier>
 }

@@ -6,6 +6,6 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatureImplementati
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 
 abstract class SystemDeviceParentFeature : SystemDeviceFeatureImplementation<SystemDeviceParentFeature>() {
-	override val expresses: FeatureExpression<SystemDeviceParentFeature> = SystemDeviceFeatures.PARENT
+	override val expresses: FeatureExpression<SystemDeviceParentFeature> = SystemDeviceFeatures.PATH_PARENT
 	abstract val parent: SystemDevice
 }
