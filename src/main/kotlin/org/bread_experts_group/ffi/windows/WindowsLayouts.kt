@@ -386,6 +386,7 @@ val TOKEN_STATISTICS: StructLayout = MemoryLayout.structLayout(
 val TOKEN_STATISTICS_AuthenticationId: MethodHandle = TOKEN_STATISTICS.sliceHandle(groupElement("AuthenticationId"))
 
 val LARGE_INTEGER: ValueLayout.OfLong = ValueLayout.JAVA_LONG
+val PLARGE_INTEGER: AddressLayout = ValueLayout.ADDRESS
 val LSA_UNICODE_STRING: StructLayout = MemoryLayout.structLayout(
 	USHORT.withName("Length"),
 	USHORT.withName("MaximumLength"),

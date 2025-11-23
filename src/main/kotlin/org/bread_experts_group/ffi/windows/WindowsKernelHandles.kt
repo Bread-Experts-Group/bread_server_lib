@@ -424,3 +424,14 @@ val nativeReOpenFile: MethodHandle? = kernel32Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeSetFilePointerEx: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "SetFilePointerEx",
+	arrayOf(
+		BOOL,
+		HANDLE, LARGE_INTEGER, PLARGE_INTEGER, DWORD
+	),
+	listOf(
+		gleCapture
+	)
+)

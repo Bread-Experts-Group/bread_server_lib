@@ -206,4 +206,5 @@ fun createPathDevice(
 	it.features.add(WindowsSystemDeviceQueryTransparentEncryptionFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceTransparentEncryptionEnableFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceTransparentEncryptionDisableFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(safeSegment))
 }

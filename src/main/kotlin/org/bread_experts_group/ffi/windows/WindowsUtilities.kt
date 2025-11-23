@@ -70,6 +70,9 @@ private val tlsDWORD1 = ThreadLocal.withInitial {
 private val tlsDWORD2 = ThreadLocal.withInitial {
 	globalArena.allocate(DWORD)
 }
+private val tlsLARGE_INTEGER0 = ThreadLocal.withInitial {
+	globalArena.allocate(LARGE_INTEGER)
+}
 private val tlsPTR = ThreadLocal.withInitial {
 	globalArena.allocate(ValueLayout.ADDRESS)
 }
@@ -79,6 +82,8 @@ val threadLocalDWORD1: MemorySegment
 	get() = tlsDWORD1.get()
 val threadLocalDWORD2: MemorySegment
 	get() = tlsDWORD2.get()
+val threadLocalLARGE_INTEGER0: MemorySegment
+	get() = tlsLARGE_INTEGER0.get()
 val threadLocalPTR: MemorySegment
 	get() = tlsPTR.get()
 

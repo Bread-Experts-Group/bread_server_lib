@@ -7,9 +7,7 @@ import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.nativeReadFile
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import org.bread_experts_group.ffi.windows.throwLastError
-import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout
 
 class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceReadFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -28,12 +26,5 @@ class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceRe
 		) as Int
 		if (status == 0) throwLastError()
 		return threadLocalDWORD0.get(DWORD, 0)
-	}
-
-	override fun read(into: ByteArray, offset: Int, length: Int): Int = Arena.ofConfined().use {
-		val allocated = it.allocate(length.toLong())
-		val read = read(allocated)
-		MemorySegment.copy(allocated, ValueLayout.JAVA_BYTE, 0, into, 0, read)
-		read
 	}
 }

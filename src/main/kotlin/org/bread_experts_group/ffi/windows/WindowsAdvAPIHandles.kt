@@ -65,6 +65,24 @@ val nativeFileEncryptionStatusW: MethodHandle? = advapi32Lookup.getDowncall(
 	)
 )
 
+val nativeOpenEncryptedFileRawW: MethodHandle? = advapi32Lookup.getDowncall(
+	nativeLinker, "OpenEncryptedFileRawW",
+	arrayOf(
+		DWORD,
+		LPCWSTR, ULONG, PVOID
+	),
+	listOf()
+)
+
+val nativeReadEncryptedFileRaw: MethodHandle? = advapi32Lookup.getDowncall(
+	nativeLinker, "ReadEncryptedFileRaw",
+	arrayOf(
+		DWORD,
+		ValueLayout.ADDRESS, PVOID, PVOID
+	),
+	listOf()
+)
+
 val nativeEncryptFileW: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "EncryptFileW",
 	arrayOf(
@@ -96,4 +114,9 @@ val nativeEncryptionDisable: MethodHandle? = advapi32Lookup.getDowncall(
 	listOf(
 		gleCapture
 	)
+)
+
+val nativeCloseEncryptedFileRaw: MethodHandle? = advapi32Lookup.getDowncallVoid(
+	nativeLinker, "CloseEncryptedFileRaw",
+	PVOID
 )

@@ -79,7 +79,8 @@ object SystemDeviceFeatures {
 		override val name: String = "Query Device Transparent Encryption"
 	}
 
-	val TRANSPARENT_ENCRYPT_RAW_IO_DEVICE = object : FeatureExpression<SystemDeviceQueryTransparentEncryptionFeature> {
-		override val name: String = "Raw I/O Device thru Transparent Encryption"
-	}
+	val TRANSPARENT_ENCRYPT_RAW_IO_DEVICE =
+		object : FeatureExpression<SystemDeviceTransparentEncryptionRawIODeviceFeature> {
+			override val name: String = "Raw I/O Device thru Transparent Encryption"
+		}
 }
