@@ -1,9 +1,6 @@
 package org.bread_experts_group.ffi.windows.wsa
 
-import org.bread_experts_group.ffi.getDowncall
-import org.bread_experts_group.ffi.getLookup
-import org.bread_experts_group.ffi.globalArena
-import org.bread_experts_group.ffi.nativeLinker
+import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.SymbolLookup
 import java.lang.foreign.ValueLayout
@@ -48,4 +45,9 @@ val nativeGetAddrInfoExW: MethodHandle? = ws232Lookup.getDowncall(
 		ValueLayout.ADDRESS /* of HANDLE */
 	),
 	listOf()
+)
+
+val nativeFreeAddrInfoExW: MethodHandle? = ws232Lookup.getDowncallVoid(
+	nativeLinker, "FreeAddrInfoExW",
+	ValueLayout.ADDRESS /* of ADDRINFOEXW */
 )

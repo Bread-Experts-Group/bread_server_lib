@@ -21,7 +21,7 @@ import java.lang.foreign.ValueLayout
 
 class WindowsIPV4TCPResolutionFeature : IPV4TCPResolutionFeature(), CheckedImplementation {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeGetAddrInfoExW != null
+	override fun supported(): Boolean = nativeGetAddrInfoExW != null && nativeFreeAddrInfoExW != null
 
 	companion object {
 		const val NS_ALL = 0
@@ -133,25 +133,29 @@ class WindowsIPV4TCPResolutionFeature : IPV4TCPResolutionFeature(), CheckedImple
 				MemorySegment.NULL
 			) as Int
 			if (status != 0) TODO("WS2 ERRORS $status")
+			var rsvData = threadLocalPTR.get(ValueLayout.ADDRESS, 0)
+			var iter = 0
 			if (fqdn && cn) {
-				var rsvData = threadLocalPTR.get(ValueLayout.ADDRESS, 0)
 				while (rsvData != MemorySegment.NULL) {
 					rsvData = rsvData.reinterpret(ADDRINFOEX2W.byteSize())
+					// TODO BUG HERE SECOND ITER
 					val dataPart = mutableListOf<ResolutionDataIdentifier>()
-					dataPart.add(
-						CanonicalNameData(
-							(ADDRINFOEX2W_ai_canonname.get(rsvData, 0L) as MemorySegment)
-								.reinterpret(Long.MAX_VALUE)
-								.getString(0, Charsets.UTF_16LE)
+					if (iter++ == 0) {
+						dataPart.add(
+							CanonicalNameData(
+								(ADDRINFOEX2W_ai_canonname.get(rsvData, 0L) as MemorySegment)
+									.reinterpret(Long.MAX_VALUE)
+									.getString(0, Charsets.UTF_16LE)
+							)
 						)
-					)
-					dataPart.add(
-						FullyQualifiedDomainNameData(
-							(ADDRINFOEX2W_ai_fqdn.get(rsvData, 0L) as MemorySegment)
-								.reinterpret(Long.MAX_VALUE)
-								.getString(0, Charsets.UTF_16LE)
+						dataPart.add(
+							FullyQualifiedDomainNameData(
+								(ADDRINFOEX2W_ai_fqdn.get(rsvData, 0L) as MemorySegment)
+									.reinterpret(Long.MAX_VALUE)
+									.getString(0, Charsets.UTF_16LE)
+							)
 						)
-					)
+					}
 					val addrData = (ADDRINFOEX2W_ai_addr.get(rsvData, 0L) as MemorySegment)
 						.reinterpret(ADDRINFOEX2W_ai_addrlen.get(rsvData, 0L) as Long)
 					dataPart.add(
@@ -164,16 +168,17 @@ class WindowsIPV4TCPResolutionFeature : IPV4TCPResolutionFeature(), CheckedImple
 					rsvData = ADDRINFOEX2W_ai_next.get(rsvData, 0L) as MemorySegment
 				}
 			} else {
-				var rsvData = threadLocalPTR.get(ValueLayout.ADDRESS, 0)
 				while (rsvData != MemorySegment.NULL) {
 					rsvData = rsvData.reinterpret(ADDRINFOEXW.byteSize())
 					val dataPart = mutableListOf<ResolutionDataIdentifier>()
-					if (fqdn || cn) {
-						val label = (ADDRINFOEXW_ai_canonname.get(rsvData, 0L) as MemorySegment)
-							.reinterpret(Long.MAX_VALUE)
-							.getString(0, Charsets.UTF_16LE)
-						if (fqdn) dataPart.add(FullyQualifiedDomainNameData(label))
-						else dataPart.add(CanonicalNameData(label))
+					if (iter++ == 0) {
+						if (fqdn || cn) {
+							val label = (ADDRINFOEXW_ai_canonname.get(rsvData, 0L) as MemorySegment)
+								.reinterpret(Long.MAX_VALUE)
+								.getString(0, Charsets.UTF_16LE)
+							if (fqdn) dataPart.add(FullyQualifiedDomainNameData(label))
+							else dataPart.add(CanonicalNameData(label))
+						}
 					}
 					val addrData = (ADDRINFOEXW_ai_addr.get(rsvData, 0L) as MemorySegment)
 						.reinterpret(ADDRINFOEXW_ai_addrlen.get(rsvData, 0L) as Long)
@@ -187,6 +192,7 @@ class WindowsIPV4TCPResolutionFeature : IPV4TCPResolutionFeature(), CheckedImple
 					rsvData = ADDRINFOEXW_ai_next.get(rsvData, 0L) as MemorySegment
 				}
 			}
+			nativeFreeAddrInfoExW!!.invoke(threadLocalPTR.get(ValueLayout.ADDRESS, 0))
 		}
 		return data
 	}
