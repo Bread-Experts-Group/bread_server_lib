@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.system.socket.resolution
 
-interface ResolutionProvidingFeature<T> {
+interface ResolutionProvidingFeature {
 	fun resolve(
 		hostName: String,
 		vararg features: ResolutionFeatureIdentifier

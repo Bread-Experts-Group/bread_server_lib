@@ -139,7 +139,7 @@ class WindowsIPV4TCPResolutionFeature : IPV4TCPResolutionFeature(), CheckedImple
 				while (rsvData != MemorySegment.NULL) {
 					rsvData = rsvData.reinterpret(ADDRINFOEX2W.byteSize())
 					// TODO BUG HERE SECOND ITER
-					val dataPart = mutableListOf<ResolutionDataIdentifier>()
+					val dataPart = mutableListOf<ResolutionDataPartIdentifier>()
 					if (iter++ == 0) {
 						dataPart.add(
 							CanonicalNameData(
@@ -170,7 +170,7 @@ class WindowsIPV4TCPResolutionFeature : IPV4TCPResolutionFeature(), CheckedImple
 			} else {
 				while (rsvData != MemorySegment.NULL) {
 					rsvData = rsvData.reinterpret(ADDRINFOEXW.byteSize())
-					val dataPart = mutableListOf<ResolutionDataIdentifier>()
+					val dataPart = mutableListOf<ResolutionDataPartIdentifier>()
 					if (iter++ == 0) {
 						if (fqdn || cn) {
 							val label = (ADDRINFOEXW_ai_canonname.get(rsvData, 0L) as MemorySegment)
