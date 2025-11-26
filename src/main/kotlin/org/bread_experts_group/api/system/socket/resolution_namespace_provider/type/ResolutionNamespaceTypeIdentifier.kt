@@ -1,0 +1,5 @@
+package org.bread_experts_group.api.system.socket.resolution_namespace_provider.type
+
+import org.bread_experts_group.api.system.socket.resolution.ResolutionNamespaceEntity
+
+interface ResolutionNamespaceTypeIdentifier : ResolutionNamespaceEntity

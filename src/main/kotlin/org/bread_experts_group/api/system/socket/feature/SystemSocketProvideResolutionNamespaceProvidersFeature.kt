@@ -1,0 +1,12 @@
+package org.bread_experts_group.api.system.socket.feature
+
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.system.socket.SystemSocketProviderFeatures
+import org.bread_experts_group.api.system.socket.resolution_namespace_provider.ResolutionNamespaceProvider
+
+abstract class SystemSocketProvideResolutionNamespaceProvidersFeature :
+	SystemSocketProviderFeatureImplementation<SystemSocketProvideResolutionNamespaceProvidersFeature>(),
+	Iterable<ResolutionNamespaceProvider> {
+	override val expresses: FeatureExpression<SystemSocketProvideResolutionNamespaceProvidersFeature> =
+		SystemSocketProviderFeatures.RESOLUTION_NAMESPACE_PROVIDERS
+}

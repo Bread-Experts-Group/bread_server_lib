@@ -36,6 +36,7 @@ val WPARAM = UINT_PTR
 val LPARAM = LONG_PTR
 val PWSTR: AddressLayout = ValueLayout.ADDRESS
 val LPDWORD: AddressLayout = ValueLayout.ADDRESS
+val LPINT: AddressLayout = ValueLayout.ADDRESS
 val LPWSTR: AddressLayout = ValueLayout.ADDRESS
 val LPCWSTR: AddressLayout = ValueLayout.ADDRESS
 val LPCSTR: AddressLayout = ValueLayout.ADDRESS
@@ -56,7 +57,6 @@ val HCURSOR = HICON
 val HBRUSH = HANDLE
 val FARPROC: AddressLayout = AddressLayout.ADDRESS
 val PROC: AddressLayout = AddressLayout.ADDRESS
-val PHANDLE: AddressLayout = AddressLayout.ADDRESS
 val ACCESS_MASK = DWORD
 
 val INVALID_HANDLE_VALUE: MemorySegment = MemorySegment.ofAddress(0L - 1)

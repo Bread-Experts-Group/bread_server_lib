@@ -4,10 +4,7 @@ import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.system.device.feature.SystemDeviceAddedEventFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceEnumerationFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceRemovedEventFeature
-import org.bread_experts_group.api.system.feature.SystemGetPathDeviceFeature
-import org.bread_experts_group.api.system.feature.SystemGetThreadLocalUserFeature
-import org.bread_experts_group.api.system.feature.SystemGetUptimeFeature
-import org.bread_experts_group.api.system.feature.SystemProjectedFileHierarchyFeature
+import org.bread_experts_group.api.system.feature.*
 
 object SystemFeatures {
 	val GET_UPTIME_MS = object : FeatureExpression<SystemGetUptimeFeature> {
@@ -32,6 +29,10 @@ object SystemFeatures {
 
 	val PROJECTED_FILE_HIERARCHY = object : FeatureExpression<SystemProjectedFileHierarchyFeature> {
 		override val name: String = "Projected File Hierarchy"
+	}
+
+	val NETWORKING_SOCKETS = object : FeatureExpression<SystemNetworkingSocketsFeature> {
+		override val name: String = "Networking Sockets"
 	}
 
 	val GET_CURRENT_WORKING_PATH_DEVICE = object : FeatureExpression<SystemGetPathDeviceFeature> {

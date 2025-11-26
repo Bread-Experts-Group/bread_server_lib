@@ -1,5 +1,6 @@
 org.bread_experts_group.api.system.feature.windows.WindowsSystemGetUptimeFeature
 org.bread_experts_group.api.system.feature.windows.WindowsSystemGetThreadLocalUserFeature
+org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature
 org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceAddedEventFeature
 org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceRemovedEventFeature
 org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceEnumerationFeature
