@@ -108,3 +108,75 @@ val nativeWSANtohs: MethodHandle? = ws232Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeCloseSocket: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "closesocket",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeShutdown: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "shutdown",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.JAVA_INT.withName("how")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeSetSockOpt: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "setsockopt",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.JAVA_INT.withName("level"),
+		ValueLayout.JAVA_INT.withName("optname"),
+		ValueLayout.ADDRESS.withName("optval"),
+		ValueLayout.JAVA_INT.withName("optlen")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSASend: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSASend",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("lpBuffers"), /* WSABUF */
+		DWORD.withName("dwBufferCount"),
+		LPDWORD.withName("lpNumberOfBytesSent"),
+		DWORD.withName("dwFlags"),
+		ValueLayout.ADDRESS.withName("lpOverlapped"), /* WSAOVERLAPPED */
+		ValueLayout.ADDRESS.withName("lpCompletionRoutine") /* WSAOVERLAPPED_COMPLETION_ROUTINE */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSARecv: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSARecv",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("lpBuffers"), /* WSABUF */
+		DWORD.withName("dwBufferCount"),
+		LPDWORD.withName("lpNumberOfBytesSent"),
+		LPDWORD.withName("lpFlags"),
+		ValueLayout.ADDRESS.withName("lpOverlapped"), /* WSAOVERLAPPED */
+		ValueLayout.ADDRESS.withName("lpCompletionRoutine") /* WSAOVERLAPPED_COMPLETION_ROUTINE */
+	),
+	listOf(
+		gleCapture
+	)
+)

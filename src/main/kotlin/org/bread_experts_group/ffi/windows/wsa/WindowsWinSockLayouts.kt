@@ -138,3 +138,11 @@ val SOCKET_ADDRESS: StructLayout = MemoryLayout.structLayout(
 )
 val SOCKET_ADDRESS_lpSockaddr: VarHandle = SOCKET_ADDRESS.varHandle(groupElement("lpSockaddr"))
 val SOCKET_ADDRESS_iSockaddrLength: VarHandle = SOCKET_ADDRESS.varHandle(groupElement("iSockaddrLength"))
+
+val WSABUF: StructLayout = MemoryLayout.structLayout(
+	ULONG.withName("len"),
+	MemoryLayout.paddingLayout(4),
+	ValueLayout.ADDRESS.withName("buf")
+)
+val WSABUF_len: VarHandle = WSABUF.varHandle(groupElement("len"))
+val WSABUF_buf: VarHandle = WSABUF.varHandle(groupElement("buf"))

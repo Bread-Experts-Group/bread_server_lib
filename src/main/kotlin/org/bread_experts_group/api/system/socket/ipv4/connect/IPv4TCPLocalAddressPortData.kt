@@ -1,4 +1,4 @@
-package org.bread_experts_group.api.system.socket.connect
+package org.bread_experts_group.api.system.socket.ipv4.connect
 
 import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressPortData
 

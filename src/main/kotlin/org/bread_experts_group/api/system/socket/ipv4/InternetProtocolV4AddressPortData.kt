@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.system.socket.ipv4
 
-import org.bread_experts_group.api.system.socket.connect.IPv4TCPConnectionFeatureIdentifier
+import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4TCPConnectionFeatureIdentifier
 
 open class InternetProtocolV4AddressPortData(
 	data: ByteArray,

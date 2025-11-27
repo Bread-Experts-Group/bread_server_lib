@@ -5,16 +5,20 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.IPPROTO_TCP
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.SOCK_STREAM
-import org.bread_experts_group.api.system.socket.Socket
-import org.bread_experts_group.api.system.socket.SocketFeatures
-import org.bread_experts_group.api.system.socket.connect.IPv4TCPConnectionDataIdentifier
-import org.bread_experts_group.api.system.socket.connect.IPv4TCPConnectionFeatureIdentifier
-import org.bread_experts_group.api.system.socket.connect.IPv4TCPLocalAddressPortData
-import org.bread_experts_group.api.system.socket.connect.IPv4TCPRemoteAddressPortData
 import org.bread_experts_group.api.system.socket.feature.SocketConnectFeature
 import org.bread_experts_group.api.system.socket.feature.SocketFeatureImplementation
+import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
+import org.bread_experts_group.api.system.socket.feature.SocketSendFeature
+import org.bread_experts_group.api.system.socket.feature.close.SocketCloseFeatureIdentifier
+import org.bread_experts_group.api.system.socket.feature.close.StandardCloseFeatures
+import org.bread_experts_group.api.system.socket.ipv4.IPv4Socket
+import org.bread_experts_group.api.system.socket.ipv4.IPv4SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressData
 import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressPortData
+import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4TCPConnectionDataIdentifier
+import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4TCPConnectionFeatureIdentifier
+import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4TCPLocalAddressPortData
+import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4TCPRemoteAddressPortData
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPV4TCPSocketFeature
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
@@ -29,7 +33,14 @@ import java.lang.foreign.ValueLayout
 class WindowsIPV4TCPSocketFeature : IPV4TCPSocketFeature(), CheckedImplementation {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeSocket != null
-	override fun openSocket(): Socket<InternetProtocolV4AddressData> {
+
+	companion object {
+		const val SOL_SOCKET = 0xFFFF
+
+		const val SO_UPDATE_CONNECT_CONTEXT = 0x7010
+	}
+
+	override fun openSocket(): IPv4Socket<InternetProtocolV4AddressData> {
 		val socket = nativeSocket!!.invokeExact(
 			capturedStateSegment,
 			AF_INET,
@@ -37,10 +48,10 @@ class WindowsIPV4TCPSocketFeature : IPV4TCPSocketFeature(), CheckedImplementatio
 			IPPROTO_TCP
 		) as Long
 		if (socket == INVALID_SOCKET) throwLastWSAError()
-		return object : Socket<InternetProtocolV4AddressData>() {
+		return object : IPv4Socket<InternetProtocolV4AddressData>() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
 				object : SocketConnectFeature<IPv4TCPConnectionFeatureIdentifier, IPv4TCPConnectionDataIdentifier>(
-					SocketFeatures.CONNECT_IPV4
+					IPv4SocketFeatures.CONNECT
 				) {
 					override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 					override fun connect(
@@ -80,7 +91,7 @@ class WindowsIPV4TCPSocketFeature : IPV4TCPSocketFeature(), CheckedImplementatio
 						threadLocalDWORD0.set(DWORD, 0, localAddr.byteSize().toInt())
 						val remoteAddr = tempArena.allocate(sockaddr_in)
 						threadLocalDWORD1.set(DWORD, 0, remoteAddr.byteSize().toInt())
-						val status = nativeWSAConnectByList!!.invokeExact(
+						var status = nativeWSAConnectByList!!.invokeExact(
 							capturedStateSegment,
 							socket,
 							list,
@@ -92,7 +103,15 @@ class WindowsIPV4TCPSocketFeature : IPV4TCPSocketFeature(), CheckedImplementatio
 							MemorySegment.NULL
 						) as Int
 						if (status == 0) throwLastWSAError()
-
+						status = nativeSetSockOpt!!.invokeExact(
+							capturedStateSegment,
+							socket,
+							SOL_SOCKET,
+							SO_UPDATE_CONNECT_CONTEXT,
+							MemorySegment.NULL,
+							0
+						) as Int
+						if (status != 0) throwLastWSAError()
 						fun MemorySegment.readPort(): UShort {
 							val port = sockaddr_in_sin_port.get(this, 0L) as Short
 							val status = nativeWSANtohs!!.invokeExact(
@@ -121,8 +140,102 @@ class WindowsIPV4TCPSocketFeature : IPV4TCPSocketFeature(), CheckedImplementatio
 						)
 						data
 					}
-				}
+				},
+				object : SocketSendFeature<IPv4TCPConnectionFeatureIdentifier, IPv4TCPConnectionDataIdentifier>(
+					IPv4SocketFeatures.SEND
+				) {
+					override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+					override fun scatterS(
+						data: Collection<MemorySegment>,
+						vararg features: IPv4TCPConnectionFeatureIdentifier
+					): List<IPv4TCPConnectionDataIdentifier> = Arena.ofConfined().use { tempArena ->
+						val allocated = tempArena.allocate(WSABUF, data.size.toLong())
+						var currentSegment = allocated
+						data.forEach {
+							WSABUF_len.set(currentSegment, 0L, it.byteSize().toInt())
+							WSABUF_buf.set(currentSegment, 0L, it)
+							currentSegment = currentSegment.asSlice(WSABUF.byteSize())
+						}
+						val status = nativeWSASend!!.invokeExact(
+							capturedStateSegment,
+							socket,
+							allocated,
+							data.size,
+							threadLocalDWORD0,
+							0, // TODO FLAGS
+							MemorySegment.NULL,
+							MemorySegment.NULL
+						) as Int
+						if (status != 0) throwLastWSAError()
+						return emptyList()
+					}
+				},
+				object : SocketReceiveFeature<IPv4TCPConnectionFeatureIdentifier, IPv4TCPConnectionDataIdentifier>(
+					IPv4SocketFeatures.RECEIVE
+				) {
+					override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+					override fun gatherS(
+						data: Collection<MemorySegment>,
+						vararg features: IPv4TCPConnectionFeatureIdentifier
+					): List<IPv4TCPConnectionDataIdentifier> = Arena.ofConfined().use { tempArena ->
+						val allocated = tempArena.allocate(WSABUF, data.size.toLong())
+						var currentSegment = allocated
+						data.forEach {
+							WSABUF_len.set(currentSegment, 0L, it.byteSize().toInt())
+							WSABUF_buf.set(currentSegment, 0L, it)
+							currentSegment = currentSegment.asSlice(WSABUF.byteSize())
+						}
+						threadLocalDWORD1.set(DWORD, 0, 0) // TODO FLAGS
+						val status = nativeWSARecv!!.invokeExact(
+							capturedStateSegment,
+							socket,
+							allocated,
+							data.size,
+							threadLocalDWORD0,
+							threadLocalDWORD1,
+							MemorySegment.NULL,
+							MemorySegment.NULL
+						) as Int
+						if (status != 0) throwLastWSAError()
+						return emptyList()
+					}
+				},
 			)
+
+			override fun close(
+				vararg features: SocketCloseFeatureIdentifier
+			): List<SocketCloseFeatureIdentifier> {
+				val supportedFeatures = mutableListOf<SocketCloseFeatureIdentifier>()
+				val stopTx = features.contains(StandardCloseFeatures.STOP_TX)
+				val stopRx = features.contains(StandardCloseFeatures.STOP_RX)
+				if (stopTx || stopRx) {
+					val status = nativeShutdown!!.invokeExact(
+						capturedStateSegment,
+						socket,
+						if (stopTx && stopRx) {
+							supportedFeatures.add(StandardCloseFeatures.STOP_TX)
+							supportedFeatures.add(StandardCloseFeatures.STOP_RX)
+							2
+						} else if (stopTx) {
+							supportedFeatures.add(StandardCloseFeatures.STOP_TX)
+							1
+						} else {
+							supportedFeatures.add(StandardCloseFeatures.STOP_RX)
+							0
+						}
+					) as Int
+					if (status != 0) throwLastWSAError()
+				}
+				if (features.contains(StandardCloseFeatures.RELEASE)) {
+					supportedFeatures.add(StandardCloseFeatures.RELEASE)
+					val status = nativeCloseSocket!!.invokeExact(
+						capturedStateSegment,
+						socket
+					) as Int
+					if (status != 0) throwLastWSAError()
+				}
+				return supportedFeatures
+			}
 		}
 	}
 }
