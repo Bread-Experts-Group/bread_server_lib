@@ -5,6 +5,7 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.IPPROTO_TCP
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.SOCK_STREAM
+import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressData
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPV4TCPResolutionFeature
 import org.bread_experts_group.api.system.socket.resolution.*
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.ResolutionNamespaceProvider

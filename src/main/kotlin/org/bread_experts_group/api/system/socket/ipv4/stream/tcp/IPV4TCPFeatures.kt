@@ -2,6 +2,7 @@ package org.bread_experts_group.api.system.socket.ipv4.stream.tcp
 
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPV4TCPResolutionFeature
+import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPV4TCPSocketFeature
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPV4TCPSystemLabelFeature
 
 object IPV4TCPFeatures {
@@ -11,5 +12,9 @@ object IPV4TCPFeatures {
 
 	val SYSTEM_LABEL = object : FeatureExpression<IPV4TCPSystemLabelFeature> {
 		override val name: String = "TCP/IPv4 Provider System Label"
+	}
+
+	val SOCKET = object : FeatureExpression<IPV4TCPSocketFeature> {
+		override val name: String = "TCP/IPv4 Provider Sockets"
 	}
 }

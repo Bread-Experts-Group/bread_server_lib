@@ -1,10 +1,10 @@
 package org.bread_experts_group.api.system.socket
 
 import org.bread_experts_group.api.feature.FeatureExpression
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProvideResolutionNamespaceProvidersFeature
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProviderInternetProtocolV4Feature
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProviderInternetProtocolV6Feature
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProviderTextualFeature
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProvideResolutionNamespaceProvidersFeature
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderInternetProtocolV4Feature
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderInternetProtocolV6Feature
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderTextualFeature
 
 object SystemSocketProviderFeatures {
 	val INTERNET_PROTOCOL_V4 = object : FeatureExpression<SystemSocketProviderInternetProtocolV4Feature> {

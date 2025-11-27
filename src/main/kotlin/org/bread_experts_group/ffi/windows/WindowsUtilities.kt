@@ -119,10 +119,17 @@ fun decodeWin32Error(err: Int) {
 
 val win32LastError: Int
 	get() = nativeGetLastError.get(capturedStateSegment, 0L) as Int
+val wsaLastError: Int
+	get() = nativeWSAGetLastError.get(capturedStateSegment, 0L) as Int
 
 fun throwLastError(): Nothing {
 	decodeWin32Error(win32LastError)
 	throw OperatingSystemException("General exception (GetLastError did not produce error code).")
+}
+
+fun throwLastWSAError(): Nothing {
+	decodeWin32Error(wsaLastError)
+	throw OperatingSystemException("General exception (WSAGetLastError did not produce error code).")
 }
 
 fun MethodHandle.returnsNTSTATUS(p0: Any) {

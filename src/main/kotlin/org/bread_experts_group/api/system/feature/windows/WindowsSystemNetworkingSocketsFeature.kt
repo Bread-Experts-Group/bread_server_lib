@@ -6,10 +6,6 @@ import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.SystemNetworkingSocketsFeature
 import org.bread_experts_group.api.system.socket.SystemSocketProviderFeatures
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProvideResolutionNamespaceProvidersFeature
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProviderFeatureImplementation
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProviderInternetProtocolV4Feature
-import org.bread_experts_group.api.system.socket.feature.SystemSocketProviderTextualFeature
 import org.bread_experts_group.api.system.socket.ipv4.feature.SystemInternetProtocolV4SocketProviderFeatureImplementation
 import org.bread_experts_group.api.system.socket.ipv4.feature.SystemInternetProtocolV4StreamProtocolsSocketProviderFeature
 import org.bread_experts_group.api.system.socket.ipv4.stream.feature.SystemInternetProtocolV4StreamProtocolFeatureImplementation
@@ -24,6 +20,7 @@ import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPReso
 import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_NTDS
 import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_PNRPCLOUD
 import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_PNRPNAME
+import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPSocketFeature
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.ResolutionNamespaceProvider
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.ResolutionNamespaceProviderFeatures
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.feature.ResolutionNamespaceProviderFeatureImplementation
@@ -32,6 +29,10 @@ import org.bread_experts_group.api.system.socket.resolution_namespace_provider.t
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.ResolutionNamespaceTypeIdentifier
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.StandardResolutionNamespaceTypes
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.WindowsResolutionNamespaceTypes
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProvideResolutionNamespaceProvidersFeature
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderFeatureImplementation
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderInternetProtocolV4Feature
+import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderTextualFeature
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.decodeWin32Error
@@ -219,7 +220,8 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 													ImplementationSource.SYSTEM_NATIVE,
 													label
 												),
-												WindowsIPV4TCPResolutionFeature()
+												WindowsIPV4TCPResolutionFeature(),
+												WindowsIPV4TCPSocketFeature()
 											)
 									}
 								)

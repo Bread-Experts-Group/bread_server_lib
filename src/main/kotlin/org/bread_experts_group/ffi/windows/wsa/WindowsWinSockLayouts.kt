@@ -11,6 +11,9 @@ import java.lang.invoke.VarHandle
 const val WSADESCRIPTION_LEN = 256
 const val WSASYS_STATUS_LEN = 128
 
+val SOCKET = UINT_PTR
+const val INVALID_SOCKET = Long.MIN_VALUE
+
 val WSAData: StructLayout = MemoryLayout.structLayout(
 	WORD.withName("wVersion"),
 	WORD.withName("wHighVersion"),
@@ -124,5 +127,14 @@ val sockaddr_in: StructLayout = MemoryLayout.structLayout(
 	MemoryLayout.sequenceLayout(8, ValueLayout.JAVA_BYTE).withName("sin_zero"),
 )
 
-//val sockaddr_in_sin_port: VarHandle = sockaddr_in.varHandle(groupElement("sin_port"))
+val sockaddr_in_sin_family: VarHandle = sockaddr_in.varHandle(groupElement("sin_family"))
+val sockaddr_in_sin_port: VarHandle = sockaddr_in.varHandle(groupElement("sin_port"))
 val sockaddr_in_sin_addr: MethodHandle = sockaddr_in.sliceHandle(groupElement("sin_addr"))
+
+val SOCKET_ADDRESS: StructLayout = MemoryLayout.structLayout(
+	ValueLayout.ADDRESS.withName("lpSockaddr"), /* of type sockaddr */
+	ValueLayout.JAVA_INT.withName("iSockaddrLength"),
+	MemoryLayout.paddingLayout(4),
+)
+val SOCKET_ADDRESS_lpSockaddr: VarHandle = SOCKET_ADDRESS.varHandle(groupElement("lpSockaddr"))
+val SOCKET_ADDRESS_iSockaddrLength: VarHandle = SOCKET_ADDRESS.varHandle(groupElement("iSockaddrLength"))

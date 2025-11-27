@@ -11,12 +11,15 @@ import java.lang.invoke.VarHandle
 private val kernel32Lookup: SymbolLookup? = globalArena.getLookup("Kernel32.dll")
 
 val gleCapture: Linker.Option? = try {
-	Linker.Option.captureCallState("GetLastError")
+	Linker.Option.captureCallState("GetLastError", "WSAGetLastError")
 } catch (_: IllegalArgumentException) {
 	null
 }
 val nativeGetLastError: VarHandle by lazy {
 	capturedStateLayout.varHandle(groupElement("GetLastError"))
+}
+val nativeWSAGetLastError: VarHandle by lazy {
+	capturedStateLayout.varHandle(groupElement("WSAGetLastError"))
 }
 
 val nativeFormatMessageW: MethodHandle? = kernel32Lookup.getDowncall(

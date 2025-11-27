@@ -51,3 +51,60 @@ val nativeFreeAddrInfoExW: MethodHandle? = ws232Lookup.getDowncallVoid(
 	nativeLinker, "FreeAddrInfoExW",
 	ValueLayout.ADDRESS /* of ADDRINFOEXW */
 )
+
+val nativeSocket: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "socket",
+	arrayOf(
+		SOCKET,
+		ValueLayout.JAVA_INT.withName("af"),
+		ValueLayout.JAVA_INT.withName("type"),
+		ValueLayout.JAVA_INT.withName("protocol")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSAConnectByList: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAConnectByList",
+	arrayOf(
+		BOOL,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("SocketAddress"), /* of type SOCKET_ADDRESS_LIST */
+		LPDWORD.withName("LocalAddressLength"),
+		ValueLayout.ADDRESS.withName("LocalAddress"), /* of type SOCKADDR */
+		LPDWORD.withName("RemoteAddressLength"),
+		ValueLayout.ADDRESS.withName("RemoteAddress"), /* of type SOCKADDR */
+		ValueLayout.ADDRESS.withName("timeout"), /* of type timeval */
+		ValueLayout.ADDRESS.withName("Reserved") /* of type WSAOVERLAPPED */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSAHtons: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAHtons",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.JAVA_SHORT.withName("hostshort"),
+		ValueLayout.ADDRESS.withName("lpnetshort"),
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSANtohs: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSANtohs",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.JAVA_SHORT.withName("netshort"),
+		ValueLayout.ADDRESS.withName("lphostshort"),
+	),
+	listOf(
+		gleCapture
+	)
+)
