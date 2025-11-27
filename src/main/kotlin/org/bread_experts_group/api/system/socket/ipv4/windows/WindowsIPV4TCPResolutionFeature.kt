@@ -139,7 +139,6 @@ class WindowsIPV4TCPResolutionFeature : IPV4TCPResolutionFeature(), CheckedImple
 			if (fqdn && cn) {
 				while (rsvData != MemorySegment.NULL) {
 					rsvData = rsvData.reinterpret(ADDRINFOEX2W.byteSize())
-					// TODO BUG HERE SECOND ITER
 					val dataPart = mutableListOf<ResolutionDataPartIdentifier>()
 					if (iter++ == 0) {
 						dataPart.add(

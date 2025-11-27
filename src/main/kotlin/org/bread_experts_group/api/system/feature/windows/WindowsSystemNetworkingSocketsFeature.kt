@@ -34,10 +34,7 @@ import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProvide
 import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderInternetProtocolV4Feature
 import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderTextualFeature
 import org.bread_experts_group.ffi.GUID
-import org.bread_experts_group.ffi.windows.DWORD
-import org.bread_experts_group.ffi.windows.decodeWin32Error
-import org.bread_experts_group.ffi.windows.threadLocalDWORD0
-import org.bread_experts_group.ffi.windows.threadLocalDWORD1
+import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -112,7 +109,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 						threadLocalDWORD0,
 						providerData
 					) as Int
-					if (providers == SOCKET_ERROR) TODO("WSA GET LAST ERROR")
+					if (providers == SOCKET_ERROR) throwLastWSAError()
 					var providerInfo = providerData
 					val iterable = List(providers) {
 						object : ResolutionNamespaceProvider() {
