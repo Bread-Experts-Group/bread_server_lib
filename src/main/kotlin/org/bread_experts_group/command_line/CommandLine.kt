@@ -1,8 +1,8 @@
 package org.bread_experts_group.command_line
 
-import org.bread_experts_group.buildDate
+import org.bread_experts_group.bslBuildDate
+import org.bread_experts_group.bslVersion
 import org.bread_experts_group.logging.ColoredHandler
-import org.bread_experts_group.version
 import java.util.logging.Level
 import kotlin.system.exitProcess
 
@@ -33,8 +33,8 @@ fun readArgs(
 		val bslLocation = ColoredHandler::class.java.protectionDomain.codeSource.location.path
 		logger.info("Bread Server Library information")
 		logger.info("Location     [$bslLocation]")
-		logger.info("Version      [${version()}]")
-		logger.info("Compiled at  [${buildDate()}]")
+		logger.info("Version      [${bslVersion()}]")
+		logger.info("Compiled at  [${bslBuildDate()}]")
 		logger.info("Project information")
 		logger.info("Project      [$projectName]")
 		logger.info("Usage        [$projectUsage]")

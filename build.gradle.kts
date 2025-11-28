@@ -4,15 +4,13 @@ import java.util.*
 
 plugins {
 	kotlin("jvm") version "2.2.21"
-	id("org.jetbrains.dokka") version "2.0.0"
-	id("org.jetbrains.dokka-javadoc") version "2.0.0"
 	`maven-publish`
 	`java-library`
 	signing
 }
 
 group = "org.bread_experts_group"
-version = "D0F0N0P0"
+version = (findProperty("libVersion") as String)
 // Bread Experts Group Versioning System, revision 1
 //                          Pertains to the ...
 // Dx ... Design x       //  entire architecture of the project, like usage of I/O in features/native
@@ -41,11 +39,6 @@ kotlin {
 		freeCompilerArgs.add("-Xannotations-in-metadata")
 	}
 }
-tasks.register<Jar>("dokkaJavadocJar") {
-	dependsOn(tasks.dokkaGeneratePublicationJavadoc)
-	from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
-	archiveClassifier.set("javadoc")
-}
 val localProperties: Properties = Properties().apply {
 	rootProject.file("local.properties").reader().use(::load)
 }
@@ -55,15 +48,10 @@ publishing {
 			artifactId = "$artifactId-code"
 			from(components["kotlin"])
 			artifact(tasks.kotlinSourcesJar)
-			artifact(tasks["dokkaJavadocJar"])
 			pom {
 				name = "Bread Server Library"
 				description = "Distribution of software for Bread Experts Group operated servers."
 				url = "https://breadexperts.group"
-				signing {
-					sign(publishing.publications["mavenKotlin"])
-					sign(configurations.archives.get())
-				}
 				licenses {
 					license {
 						name = "GNU General Public License v3.0"
@@ -99,29 +87,23 @@ signing {
 	useGpgCmd()
 	sign(publishing.publications["mavenKotlin"])
 }
-tasks.javadoc {
-	if (JavaVersion.current().isJava9Compatible) {
-		(options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
-	}
-}
 
-val generatedDir: String = layout.buildDirectory.get().asFile.resolve("generated").canonicalPath
-val compileTime: String = ZonedDateTime.now().format(
-	DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss.SSSSSS xxxxx")
-)
-
+val projectVersion = providers.provider { project.version.toString() }
 val generateBuildInfo: TaskProvider<Task> by tasks.registering {
-	val outputDir = file(generatedDir)
-	outputs.dir(outputDir)
+	val generatedDir = project.layout.buildDirectory.get().asFile.resolve("generated")
+	outputs.dir(generatedDir)
 	doLast {
-		outputDir.mkdirs()
-		val file = file("$generatedDir/BuildInfo.kt")
+		generatedDir.mkdirs()
+		val file = File("$generatedDir/BuildInfo.kt")
+		val compileTime: String = ZonedDateTime.now().format(
+			DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss.SSSSSS xxxxx")
+		)
 		file.writeText(
 			"""package org.bread_experts_group
 
-object BuildInfo {
+internal object BuildInfo {
 	const val COMPILE_DATE = "$compileTime"
-	const val VERSION = "$version"
+	const val VERSION = "${project.findProperty("libVersion") as String}"
 }
 """
 		)
@@ -130,15 +112,14 @@ object BuildInfo {
 
 sourceSets {
 	main {
-		kotlin.srcDirs("src/main/kotlin", generatedDir)
-		java.destinationDirectory.set(layout.buildDirectory.dir("classes/kotlin/main").get().asFile)
+		kotlin.srcDirs(
+			"src/main/kotlin",
+			project.layout.buildDirectory.get().asFile.resolve("generated").canonicalPath
+		)
 	}
 }
 
-tasks.dokkaGeneratePublicationJavadoc { dependsOn(generateBuildInfo) }
-tasks.kotlinSourcesJar {
-	dependsOn(generateBuildInfo)
-}
-tasks.compileKotlin {
-//	dependsOn(generateBuildInfo)
-}
+tasks.publishToMavenLocal { dependsOn(tasks.jar) }
+tasks.kotlinSourcesJar { dependsOn(tasks.compileJava, generateBuildInfo) }
+tasks.compileKotlin { dependsOn(generateBuildInfo) }
+tasks.jar { dependsOn(generateBuildInfo) }
