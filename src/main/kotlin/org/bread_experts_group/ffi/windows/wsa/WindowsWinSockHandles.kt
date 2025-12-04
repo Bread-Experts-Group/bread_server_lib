@@ -65,6 +65,23 @@ val nativeSocket: MethodHandle? = ws232Lookup.getDowncall(
 	)
 )
 
+val nativeWSAConnect: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAConnect",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("name"), /* of type sockaddr */
+		ValueLayout.JAVA_INT.withName("namelen"),
+		ValueLayout.ADDRESS.withName("lpCallerData"), /* of type WSABUF */
+		ValueLayout.ADDRESS.withName("lpCalleeData"), /* of type WSABUF */
+		ValueLayout.ADDRESS.withName("lpSQOS"), /* of type QOS */
+		ValueLayout.ADDRESS.withName("lpGQOS") /* of type QOS */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeWSAConnectByList: MethodHandle? = ws232Lookup.getDowncall(
 	nativeLinker, "WSAConnectByList",
 	arrayOf(
@@ -164,6 +181,25 @@ val nativeWSASend: MethodHandle? = ws232Lookup.getDowncall(
 	)
 )
 
+val nativeWSASendTo: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSASendTo",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("lpBuffers"), /* WSABUF */
+		DWORD.withName("dwBufferCount"),
+		LPDWORD.withName("lpNumberOfBytesSent"),
+		DWORD.withName("dwFlags"),
+		ValueLayout.ADDRESS.withName("lpTo"), /* sockaddr */
+		ValueLayout.JAVA_INT.withName("iTolen"),
+		ValueLayout.ADDRESS.withName("lpOverlapped"), /* WSAOVERLAPPED */
+		ValueLayout.ADDRESS.withName("lpCompletionRoutine") /* WSAOVERLAPPED_COMPLETION_ROUTINE */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeWSARecv: MethodHandle? = ws232Lookup.getDowncall(
 	nativeLinker, "WSARecv",
 	arrayOf(
@@ -175,6 +211,65 @@ val nativeWSARecv: MethodHandle? = ws232Lookup.getDowncall(
 		LPDWORD.withName("lpFlags"),
 		ValueLayout.ADDRESS.withName("lpOverlapped"), /* WSAOVERLAPPED */
 		ValueLayout.ADDRESS.withName("lpCompletionRoutine") /* WSAOVERLAPPED_COMPLETION_ROUTINE */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSARecvFrom: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSARecvFrom",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("lpBuffers"), /* WSABUF */
+		DWORD.withName("dwBufferCount"),
+		LPDWORD.withName("lpNumberOfBytesRecvd"),
+		LPDWORD.withName("lpFlags"),
+		ValueLayout.ADDRESS.withName("lpFrom"), /* sockaddr */
+		LPINT.withName("lpFromlen"),
+		ValueLayout.ADDRESS.withName("lpOverlapped"), /* WSAOVERLAPPED */
+		ValueLayout.ADDRESS.withName("lpCompletionRoutine") /* WSAOVERLAPPED_COMPLETION_ROUTINE */
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeBind: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "bind",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("addr"), /* sockaddr */
+		ValueLayout.JAVA_INT.withName("namelen")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeListen: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "listen",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		ValueLayout.JAVA_INT.withName("backlog")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSAAccept: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAAccept",
+	arrayOf(
+		SOCKET,
+		SOCKET.withName("s"),
+		ValueLayout.ADDRESS.withName("addr"), /* sockaddr */
+		LPINT.withName("addrlen"),
+		ValueLayout.ADDRESS.withName("lpfnCondition"), /* CONDITIONPROC */
+		DWORD_PTR.withName("dwCallbackData")
 	),
 	listOf(
 		gleCapture

@@ -8,22 +8,22 @@ import java.lang.foreign.ValueLayout
 abstract class SocketReceiveFeature<F : D, D>(
 	override val expresses: FeatureExpression<SocketReceiveFeature<F, D>>
 ) : SocketFeatureImplementation<SocketReceiveFeature<F, D>>() {
-	abstract fun gatherS(
+	abstract fun gatherSegments(
 		data: Collection<MemorySegment>,
 		vararg features: F
 	): List<D>
 
-	fun receiveS(
+	fun receiveSegment(
 		data: MemorySegment,
 		vararg features: F
-	): List<D> = gatherS(listOf(data), *features)
+	): List<D> = gatherSegments(listOf(data), *features)
 
-	fun gather(
+	fun gatherBytes(
 		data: Collection<ByteArray>,
 		vararg features: F
 	): List<D> = Arena.ofConfined().use { tempArena ->
 		val allocated = data.associateWith { tempArena.allocate(it.size.toLong()) }
-		val supported = gatherS(allocated.values, *features)
+		val supported = gatherSegments(allocated.values, *features)
 		allocated.forEach { (array, segment) ->
 			MemorySegment.copy(
 				segment, ValueLayout.JAVA_BYTE, 0,
@@ -33,12 +33,12 @@ abstract class SocketReceiveFeature<F : D, D>(
 		return supported
 	}
 
-	fun receive(
+	fun receiveBytes(
 		data: ByteArray,
 		vararg features: F
 	): List<D> = Arena.ofConfined().use { tempArena ->
 		val allocated = tempArena.allocate(data.size.toLong())
-		val supported = receiveS(allocated, *features)
+		val supported = receiveSegment(allocated, *features)
 		MemorySegment.copy(
 			allocated, ValueLayout.JAVA_BYTE, 0,
 			data, 0, data.size

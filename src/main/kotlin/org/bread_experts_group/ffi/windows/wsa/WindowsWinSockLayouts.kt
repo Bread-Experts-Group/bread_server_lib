@@ -120,16 +120,48 @@ val ADDRINFOEX2W_ai_addrlen: VarHandle = ADDRINFOEX2W.varHandle(groupElement("ai
 val ADDRINFOEX2W_ai_addr: VarHandle = ADDRINFOEX2W.varHandle(groupElement("ai_addr"))
 val ADDRINFOEX2W_ai_next: VarHandle = ADDRINFOEX2W.varHandle(groupElement("ai_next"))
 
+val ADDRESS_FAMILY = USHORT
+val IN_ADDR = MemoryLayout.sequenceLayout(4, ValueLayout.JAVA_BYTE)
+
 val sockaddr_in: StructLayout = MemoryLayout.structLayout(
-	ValueLayout.JAVA_SHORT.withName("sin_family"),
-	ValueLayout.JAVA_SHORT.withName("sin_port"),
-	MemoryLayout.sequenceLayout(4, ValueLayout.JAVA_BYTE).withName("sin_addr"),
-	MemoryLayout.sequenceLayout(8, ValueLayout.JAVA_BYTE).withName("sin_zero"),
+	ADDRESS_FAMILY.withName("sin_family"),
+	USHORT.withName("sin_port"),
+	IN_ADDR.withName("sin_addr"),
+	MemoryLayout.sequenceLayout(8, CHAR).withName("sin_zero"),
 )
 
 val sockaddr_in_sin_family: VarHandle = sockaddr_in.varHandle(groupElement("sin_family"))
 val sockaddr_in_sin_port: VarHandle = sockaddr_in.varHandle(groupElement("sin_port"))
 val sockaddr_in_sin_addr: MethodHandle = sockaddr_in.sliceHandle(groupElement("sin_addr"))
+
+val SCOPE_ID: StructLayout = MemoryLayout.structLayout(
+	LONG.withName("Value")
+)
+
+val IN6_ADDR: StructLayout = MemoryLayout.structLayout(
+	MemoryLayout.unionLayout(
+		MemoryLayout.sequenceLayout(16, UCHAR).withName("Byte"),
+		MemoryLayout.sequenceLayout(8, USHORT).withName("Word")
+	).withName("u")
+)
+
+val sockaddr_in6: StructLayout = MemoryLayout.structLayout(
+	ADDRESS_FAMILY.withName("sin6_family"),
+	USHORT.withName("sin6_port"),
+	ULONG.withName("sin6_flowinfo"),
+	IN6_ADDR.withName("sin6_addr"),
+	MemoryLayout.unionLayout(
+		ULONG.withByteAlignment(1).withName("sin6_scope_id"),
+		SCOPE_ID.withName("sin6_scope_struct")
+	).withName("union0")
+)
+val sockaddr_in6_sin6_family: VarHandle = sockaddr_in6.varHandle(groupElement("sin6_family"))
+val sockaddr_in6_sin6_port: VarHandle = sockaddr_in6.varHandle(groupElement("sin6_port"))
+val sockaddr_in6_sin6_addr_Byte: MethodHandle = sockaddr_in6.sliceHandle(
+	groupElement("sin6_addr"),
+	groupElement("u"),
+	groupElement("Byte")
+)
 
 val SOCKET_ADDRESS: StructLayout = MemoryLayout.structLayout(
 	ValueLayout.ADDRESS.withName("lpSockaddr"), /* of type sockaddr */

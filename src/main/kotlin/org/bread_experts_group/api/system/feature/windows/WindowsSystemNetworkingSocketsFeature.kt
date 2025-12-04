@@ -6,21 +6,37 @@ import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.SystemNetworkingSocketsFeature
 import org.bread_experts_group.api.system.socket.SystemSocketProviderFeatures
+import org.bread_experts_group.api.system.socket.ipv4.datagram.feature.SystemInternetProtocolV4DatagramProtocolFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv4.datagram.feature.SystemInternetProtocolV4UDPFeature
+import org.bread_experts_group.api.system.socket.ipv4.datagram.udp.feature.IPv4UDPFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv4.datagram.udp.feature.IPv4UDPSystemLabelFeature
+import org.bread_experts_group.api.system.socket.ipv4.datagram.udp.feature.windows.WindowsIPv4UDPResolutionFeature
+import org.bread_experts_group.api.system.socket.ipv4.datagram.udp.feature.windows.WindowsIPv4UDPSocketFeature
+import org.bread_experts_group.api.system.socket.ipv4.feature.SystemInternetProtocolV4DatagramProtocolsSocketProviderFeature
 import org.bread_experts_group.api.system.socket.ipv4.feature.SystemInternetProtocolV4SocketProviderFeatureImplementation
 import org.bread_experts_group.api.system.socket.ipv4.feature.SystemInternetProtocolV4StreamProtocolsSocketProviderFeature
 import org.bread_experts_group.api.system.socket.ipv4.stream.feature.SystemInternetProtocolV4StreamProtocolFeatureImplementation
 import org.bread_experts_group.api.system.socket.ipv4.stream.feature.SystemInternetProtocolV4TCPFeature
-import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPV4TCPFeatureImplementation
-import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPV4TCPSystemLabelFeature
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_BTH
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_DNS
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_EMAIL
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_NLA
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_NTDS
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_PNRPCLOUD
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPResolutionFeature.Companion.NS_PNRPNAME
-import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPV4TCPSocketFeature
+import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCPFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCPSystemLabelFeature
+import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.windows.WindowsIPv4TCPResolutionFeature
+import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.windows.WindowsIPv4TCPSocketFeature
+import org.bread_experts_group.api.system.socket.ipv4.windows.*
+import org.bread_experts_group.api.system.socket.ipv6.datagram.feature.SystemInternetProtocolV6DatagramProtocolFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv6.datagram.feature.SystemInternetProtocolV6UDPFeature
+import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.feature.IPv6UDPFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.feature.IPv6UDPSystemLabelFeature
+import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.feature.windows.WindowsIPv6UDPResolutionFeature
+import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.feature.windows.WindowsIPv6UDPSocketFeature
+import org.bread_experts_group.api.system.socket.ipv6.feature.SystemInternetProtocolV6DatagramProtocolsSocketProviderFeature
+import org.bread_experts_group.api.system.socket.ipv6.feature.SystemInternetProtocolV6SocketProviderFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv6.feature.SystemInternetProtocolV6StreamProtocolsSocketProviderFeature
+import org.bread_experts_group.api.system.socket.ipv6.stream.feature.SystemInternetProtocolV6StreamProtocolFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv6.stream.feature.SystemInternetProtocolV6TCPFeature
+import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.IPv6TCPFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.IPv6TCPSystemLabelFeature
+import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.windows.WindowsIPv6TCPResolutionFeature
+import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.windows.WindowsIPv6TCPSocketFeature
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.ResolutionNamespaceProvider
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.ResolutionNamespaceProviderFeatures
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.feature.ResolutionNamespaceProviderFeatureImplementation
@@ -29,10 +45,7 @@ import org.bread_experts_group.api.system.socket.resolution_namespace_provider.t
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.ResolutionNamespaceTypeIdentifier
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.StandardResolutionNamespaceTypes
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.WindowsResolutionNamespaceTypes
-import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProvideResolutionNamespaceProvidersFeature
-import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderFeatureImplementation
-import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderInternetProtocolV4Feature
-import org.bread_experts_group.api.system.socket.sys_feature.SystemSocketProviderTextualFeature
+import org.bread_experts_group.api.system.socket.sys_feature.*
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*
@@ -181,6 +194,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 			if (protocols == SOCKET_ERROR) decodeWin32Error(threadLocalDWORD1.get(DWORD, 0))
 			var protocolInfo = protocolData
 			val ipv4 = mutableMapOf<Int, SystemInternetProtocolV4SocketProviderFeatureImplementation<*>>()
+			val ipv6 = mutableMapOf<Int, SystemInternetProtocolV6SocketProviderFeatureImplementation<*>>()
 			repeat(protocols) {
 				val socketType = WSAPROTOCOL_INFOW_iSocketType.get(protocolInfo, 0L) as Int
 				val protocol = WSAPROTOCOL_INFOW_iProtocol.get(protocolInfo, 0L) as Int
@@ -211,14 +225,14 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 								IPPROTO_TCP -> streamProtocols.features.add(
 									object : SystemInternetProtocolV4TCPFeature() {
 										override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-										override val features: MutableList<IPV4TCPFeatureImplementation<*>> =
+										override val features: MutableList<IPv4TCPFeatureImplementation<*>> =
 											mutableListOf(
-												IPV4TCPSystemLabelFeature(
+												IPv4TCPSystemLabelFeature(
 													ImplementationSource.SYSTEM_NATIVE,
 													label
 												),
-												WindowsIPV4TCPResolutionFeature(),
-												WindowsIPV4TCPSocketFeature()
+												WindowsIPv4TCPResolutionFeature(),
+												WindowsIPv4TCPSocketFeature()
 											)
 									}
 								)
@@ -227,9 +241,34 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 							}
 						}
 
-						SOCK_DGRAM -> when (protocol) {
-							IPPROTO_UDP -> logger.severe("UDP/IPv4")
-							else -> logger.warning("Unknown WSA/IPv4/Datagram iProtocol [$protocol]")
+						SOCK_DGRAM -> {
+							@Suppress("UNCHECKED_CAST")
+							val datagramProtocols = ipv4.getOrPut(SOCK_DGRAM) {
+								object : SystemInternetProtocolV4DatagramProtocolsSocketProviderFeature() {
+									override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+									override val features: MutableList<
+											SystemInternetProtocolV4DatagramProtocolFeatureImplementation<*>> =
+										mutableListOf()
+								}
+							} as FeatureProvider<SystemInternetProtocolV4DatagramProtocolFeatureImplementation<*>>
+							when (protocol) {
+								IPPROTO_UDP -> datagramProtocols.features.add(
+									object : SystemInternetProtocolV4UDPFeature() {
+										override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+										override val features: MutableList<IPv4UDPFeatureImplementation<*>> =
+											mutableListOf(
+												IPv4UDPSystemLabelFeature(
+													ImplementationSource.SYSTEM_NATIVE,
+													label
+												),
+												WindowsIPv4UDPResolutionFeature(),
+												WindowsIPv4UDPSocketFeature()
+											)
+									}
+								)
+
+								else -> logger.warning("Unknown WSA/IPv4/Datagram iProtocol [$protocol]")
+							}
 						}
 
 						SOCK_RAW -> when (protocol) {
@@ -241,14 +280,64 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 					}
 
 					AF_INET6 -> when (socketType) {
-						SOCK_STREAM -> when (protocol) {
-							IPPROTO_TCP -> logger.severe("TCP/IPv6")
-							else -> logger.warning("Unknown WSA/IPv6/Stream iProtocol [$protocol]")
+						SOCK_STREAM -> {
+							@Suppress("UNCHECKED_CAST")
+							val streamProtocols = ipv6.getOrPut(SOCK_STREAM) {
+								object : SystemInternetProtocolV6StreamProtocolsSocketProviderFeature() {
+									override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+									override val features: MutableList<
+											SystemInternetProtocolV6StreamProtocolFeatureImplementation<*>> =
+										mutableListOf()
+								}
+							} as FeatureProvider<SystemInternetProtocolV6StreamProtocolFeatureImplementation<*>>
+							when (protocol) {
+								IPPROTO_TCP -> streamProtocols.features.add(
+									object : SystemInternetProtocolV6TCPFeature() {
+										override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+										override val features: MutableList<IPv6TCPFeatureImplementation<*>> =
+											mutableListOf(
+												IPv6TCPSystemLabelFeature(
+													ImplementationSource.SYSTEM_NATIVE,
+													label
+												),
+												WindowsIPv6TCPResolutionFeature(),
+												WindowsIPv6TCPSocketFeature()
+											)
+									}
+								)
+
+								else -> logger.warning("Unknown WSA/IPv6/Stream iProtocol [$protocol]")
+							}
 						}
 
-						SOCK_DGRAM -> when (protocol) {
-							IPPROTO_UDP -> logger.severe("UDP/IPv6")
-							else -> logger.warning("Unknown WSA/IPv6/Datagram iProtocol [$protocol]")
+						SOCK_DGRAM -> {
+							@Suppress("UNCHECKED_CAST")
+							val datagramProtocols = ipv6.getOrPut(SOCK_DGRAM) {
+								object : SystemInternetProtocolV6DatagramProtocolsSocketProviderFeature() {
+									override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+									override val features: MutableList<
+											SystemInternetProtocolV6DatagramProtocolFeatureImplementation<*>> =
+										mutableListOf()
+								}
+							} as FeatureProvider<SystemInternetProtocolV6DatagramProtocolFeatureImplementation<*>>
+							when (protocol) {
+								IPPROTO_UDP -> datagramProtocols.features.add(
+									object : SystemInternetProtocolV6UDPFeature() {
+										override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+										override val features: MutableList<IPv6UDPFeatureImplementation<*>> =
+											mutableListOf(
+												IPv6UDPSystemLabelFeature(
+													ImplementationSource.SYSTEM_NATIVE,
+													label
+												),
+												WindowsIPv6UDPResolutionFeature(),
+												WindowsIPv6UDPSocketFeature()
+											)
+									}
+								)
+
+								else -> logger.warning("Unknown WSA/IPv6/Datagram iProtocol [$protocol]")
+							}
 						}
 
 						SOCK_RAW -> when (protocol) {
@@ -301,6 +390,11 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 				override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 				override val features: MutableList<SystemInternetProtocolV4SocketProviderFeatureImplementation<*>> =
 					ipv4.values.toMutableList()
+			})
+			if (ipv6.isNotEmpty()) implementations.add(object : SystemSocketProviderInternetProtocolV6Feature() {
+				override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+				override val features: MutableList<SystemInternetProtocolV6SocketProviderFeatureImplementation<*>> =
+					ipv6.values.toMutableList()
 			})
 		}
 		implementations

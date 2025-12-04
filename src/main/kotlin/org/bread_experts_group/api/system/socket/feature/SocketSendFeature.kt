@@ -9,21 +9,21 @@ import java.nio.charset.Charset
 abstract class SocketSendFeature<F : D, D>(
 	override val expresses: FeatureExpression<SocketSendFeature<F, D>>
 ) : SocketFeatureImplementation<SocketSendFeature<F, D>>() {
-	abstract fun scatterS(
+	abstract fun scatterSegments(
 		data: Collection<MemorySegment>,
 		vararg features: F
 	): List<D>
 
-	fun sendS(
+	fun sendSegment(
 		data: MemorySegment,
 		vararg features: F
-	): List<D> = scatterS(listOf(data), *features)
+	): List<D> = scatterSegments(listOf(data), *features)
 
-	fun scatter(
+	fun scatterBytes(
 		data: Collection<ByteArray>,
 		vararg features: F
 	): List<D> = Arena.ofConfined().use { tempArena ->
-		return scatterS(
+		return scatterSegments(
 			data.map {
 				val segment = tempArena.allocate(it.size.toLong())
 				MemorySegment.copy(
@@ -37,7 +37,7 @@ abstract class SocketSendFeature<F : D, D>(
 		)
 	}
 
-	fun send(
+	fun sendBytes(
 		data: ByteArray,
 		vararg features: F
 	): List<D> = Arena.ofConfined().use { tempArena ->
@@ -47,18 +47,18 @@ abstract class SocketSendFeature<F : D, D>(
 			segment, ValueLayout.JAVA_BYTE, 0,
 			data.size
 		)
-		return sendS(segment, *features)
+		return sendSegment(segment, *features)
 	}
 
-	fun scatter(
+	fun scatterStrings(
 		data: Collection<String>,
 		charset: Charset,
 		vararg features: F
-	): List<D> = scatter(data.map { it.toByteArray(charset) }, *features)
+	): List<D> = scatterBytes(data.map { it.toByteArray(charset) }, *features)
 
-	fun send(
+	fun sendString(
 		data: String,
 		charset: Charset,
 		vararg features: F
-	): List<D> = send(data.toByteArray(charset), *features)
+	): List<D> = sendBytes(data.toByteArray(charset), *features)
 }

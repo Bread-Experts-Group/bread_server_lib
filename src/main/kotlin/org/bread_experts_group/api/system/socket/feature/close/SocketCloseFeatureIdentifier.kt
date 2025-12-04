@@ -1,3 +1,0 @@
-package org.bread_experts_group.api.system.socket.feature.close
-
-interface SocketCloseFeatureIdentifier

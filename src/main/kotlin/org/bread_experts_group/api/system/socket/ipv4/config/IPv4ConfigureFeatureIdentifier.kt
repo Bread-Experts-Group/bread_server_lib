@@ -1,0 +1,3 @@
+package org.bread_experts_group.api.system.socket.ipv4.config
+
+interface IPv4ConfigureFeatureIdentifier : IPv4ConfigureDataIdentifier

@@ -22,6 +22,16 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 		private val searchArena = Arena.ofConfined()
 		private var nextPrepared = false
 
+		private fun advancePastDots() {
+			val fileName = WIN32_FIND_DATAW_cFileName.invokeExact(searchData, 0L) as MemorySegment
+			if (fileName.getAtIndex(ValueLayout.JAVA_SHORT, 0) == '.'.code.toShort()) {
+				val s = fileName.getAtIndex(ValueLayout.JAVA_SHORT, 1)
+				if (s == '.'.code.toShort()) {
+					if (fileName.getAtIndex(ValueLayout.JAVA_SHORT, 2) == 0.toShort()) advance()
+				} else if (s == 0.toShort()) advance()
+			}
+		}
+
 		init {
 			var sH: MemorySegment
 			var sD: MemorySegment
@@ -60,6 +70,7 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 			}
 			searchHandle = sH
 			searchData = sD
+			if (nextPrepared) advancePastDots()
 		}
 
 		private fun cleanup() {
@@ -78,27 +89,16 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 				searchHandle, searchData
 			) as Int
 			if (status == 0) {
-				if (win32LastError == WindowsLastError.ERROR_NO_MORE_FILES.id.toInt()) cleanup()
+				if (win32LastError == WindowsLastError.ERROR_NO_MORE_FILES.id.toInt()) return cleanup()
 				else throwLastError()
 			}
+			advancePastDots()
 		}
 
 		override fun hasNext(): Boolean = nextPrepared
 		override fun next(): SystemDevice {
 			if (!nextPrepared) throw IllegalStateException()
 			val fileName = WIN32_FIND_DATAW_cFileName.invokeExact(searchData, 0L) as MemorySegment
-			if (fileName.getAtIndex(ValueLayout.JAVA_SHORT, 0) == '.'.code.toShort()) {
-				val s = fileName.getAtIndex(ValueLayout.JAVA_SHORT, 1)
-				if (s == '.'.code.toShort()) {
-					if (fileName.getAtIndex(ValueLayout.JAVA_SHORT, 2) == 0.toShort()) {
-						advance()
-						return next()
-					}
-				} else if (s == 0.toShort()) {
-					advance()
-					return next()
-				}
-			}
 			val pathArena = Arena.ofShared()
 			val fullPath = pathArena.allocate((pathSegment.byteSize() + fileName.byteSize()) + 4)
 			fullPath.copyFrom(pathSegment)
