@@ -3,6 +3,7 @@ package org.bread_experts_group.ffi.windows.wsa
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.MemoryLayout
 import java.lang.foreign.MemoryLayout.PathElement.groupElement
+import java.lang.foreign.MemorySegment
 import java.lang.foreign.StructLayout
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
@@ -12,7 +13,7 @@ const val WSADESCRIPTION_LEN = 256
 const val WSASYS_STATUS_LEN = 128
 
 val SOCKET = UINT_PTR
-const val INVALID_SOCKET = Long.MIN_VALUE
+const val INVALID_SOCKET = 0L.inv()
 
 val WSAData: StructLayout = MemoryLayout.structLayout(
 	WORD.withName("wVersion"),
@@ -178,3 +179,21 @@ val WSABUF: StructLayout = MemoryLayout.structLayout(
 )
 val WSABUF_len: VarHandle = WSABUF.varHandle(groupElement("len"))
 val WSABUF_buf: VarHandle = WSABUF.varHandle(groupElement("buf"))
+
+val WSAEVENT = HANDLE
+val WSA_INVALID_EVENT: MemorySegment = MemorySegment.NULL
+
+const val WSA_INFINITE = INFINITE
+const val WSA_WAIT_FAILED = WAIT_FAILED
+
+const val WSA_WAIT_EVENT_0 = WAIT_OBJECT_0
+
+const val FD_MAX_EVENTS = 10
+val WSANETWORKEVENTS: StructLayout = MemoryLayout.structLayout(
+	ValueLayout.JAVA_INT.withName("lNetworkEvents"),
+	MemoryLayout.sequenceLayout(
+		FD_MAX_EVENTS.toLong(),
+		ValueLayout.JAVA_INT
+	).withName("iErrorCode")
+)
+val WSANETWORKEVENTS_lNetworkEvents: VarHandle = WSANETWORKEVENTS.varHandle(groupElement("lNetworkEvents"))

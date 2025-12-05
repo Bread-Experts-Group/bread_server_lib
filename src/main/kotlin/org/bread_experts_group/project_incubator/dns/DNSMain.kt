@@ -46,6 +46,7 @@ fun main() {
 	val udpV6Sockets = udpV6.get(IPv6UDPFeatures.SOCKET)
 
 	fun writeMessage(buffer: ByteBuffer, message: DNSMessage) {
+		val startPosition = buffer.position()
 		buffer.putShort(message.identifier)
 		buffer.putShort(message.flagBits)
 		buffer.putShort(message.questions.size.toShort())
@@ -62,11 +63,11 @@ fun main() {
 			}
 			val domain = if (domain.endsWith('.')) domain else "$domain."
 			val backReference = backReferences[domain]
-			var backRefLocation = buffer.position()
+			var backRefLocation = buffer.position() - startPosition
 			if (backReference != null) {
 				buffer.putShort(backReference.toShort() or 0b11000000_00000000.toShort())
 				return
-			} else if (buffer.position() <= 0b00111111_11111111)
+			} else if (backRefLocation <= 0b00111111_11111111)
 				backReferences[domain] = backRefLocation
 			for (index in domain.indices) {
 				val char = domain[index]
@@ -74,14 +75,14 @@ fun main() {
 					buffer.put(length.toByte())
 					buffer.put(label, 0, length)
 					length = 0
-					backRefLocation = buffer.position()
+					backRefLocation = buffer.position() - startPosition
 					if (index == domain.lastIndex) buffer.put(0)
 					else {
 						val backReference = backReferences[domain.substring(index + 1)]
 						if (backReference != null) {
 							buffer.putShort(backReference.toShort() or 0b11000000_00000000.toShort())
 							break
-						} else if (buffer.position() <= 0b00111111_11111111)
+						} else if (backRefLocation <= 0b00111111_11111111)
 							backReferences[domain.substring(index + 1)] = backRefLocation
 					}
 				} else {
@@ -123,6 +124,7 @@ fun main() {
 					writeDomain(rr.exchange)
 				}
 
+				is DNSResourceRecord.TextualData -> buffer.put(rr.text)
 				is DNSResourceRecord.IPv6Address -> buffer.put(rr.address)
 				is DNSResourceRecord.EDNSOpt -> {
 					if (rr.options.isNotEmpty()) TODO("EDNS Options")
@@ -139,16 +141,16 @@ fun main() {
 		message.additionalRecords.forEach(::writeRR)
 	}
 
-	fun readDomain(buffer: ByteBuffer): String {
+	fun readDomain(startPosition: Int, buffer: ByteBuffer): String {
 		var label = ""
 		while (true) {
 			val length = buffer.get().toInt() and 0xFF
 			when (val prefix = length ushr 6) {
 				0b11 -> {
-					val offset = ((length and 0b111111) shl 8) or (buffer.get().toInt() and 0xFF)
+					val offset = (((length and 0b111111) shl 8) or (buffer.get().toInt() and 0xFF)) + startPosition
 					val returnPosition = buffer.position()
 					buffer.position(offset)
-					label += readDomain(buffer)
+					label += readDomain(startPosition, buffer)
 					buffer.position(returnPosition)
 					return label
 				}
@@ -166,6 +168,7 @@ fun main() {
 	}
 
 	fun readMessage(buffer: ByteBuffer): DNSMessage {
+		val startPosition = buffer.position()
 		val identifier = buffer.getShort()
 		val flagBits = buffer.getShort().toUInt()
 		val questions = buffer.getShort()
@@ -176,7 +179,7 @@ fun main() {
 		val responseCode = DNSResponseCode.entries.id(flagBits and 0b1111u)
 
 		fun readResourceRecord(): DNSResourceRecord {
-			val domain = readDomain(buffer)
+			val domain = readDomain(startPosition, buffer)
 			val rType = DNSType.entries.id(buffer.getShort().toUShort())
 			val rClass = DNSClass.entries.id(buffer.getShort().toUShort())
 			val ttl = (buffer.getInt().toLong() and 0xFFFFFFFF).toDuration(DurationUnit.SECONDS)
@@ -194,17 +197,17 @@ fun main() {
 
 				DNSType.NS -> DNSResourceRecord.AuthoritativeNameServer(
 					domain, rClass, ttl,
-					readDomain(buffer)
+					readDomain(startPosition, buffer)
 				)
 
 				DNSType.CNAME -> DNSResourceRecord.CanonicalName(
 					domain, rClass, ttl,
-					readDomain(buffer)
+					readDomain(startPosition, buffer)
 				)
 
 				DNSType.SOA -> {
-					val nsName = readDomain(buffer)
-					val rmName = readDomain(buffer)
+					val nsName = readDomain(startPosition, buffer)
+					val rmName = readDomain(startPosition, buffer)
 					val serial = buffer.getInt().toUInt()
 					val refresh = (buffer.getInt().toLong() and 0xFFFFFFFF).toDuration(DurationUnit.SECONDS)
 					val retry = (buffer.getInt().toLong() and 0xFFFFFFFF).toDuration(DurationUnit.SECONDS)
@@ -221,7 +224,16 @@ fun main() {
 					val pref = buffer.getShort()
 					DNSResourceRecord.MailExchange(
 						domain, rClass, ttl,
-						pref.toUShort(), readDomain(buffer)
+						pref.toUShort(), readDomain(startPosition, buffer)
+					)
+				}
+
+				DNSType.TXT -> {
+					val text = ByteArray(dataLength)
+					buffer.get(text)
+					DNSResourceRecord.TextualData(
+						domain, rClass, ttl,
+						text
 					)
 				}
 
@@ -246,9 +258,7 @@ fun main() {
 						val data = ByteArray(oLength)
 						buffer.get(data)
 						options.add(
-							when (oCode.enum) {
-								else -> EDNS0Option.Generic(oCode, data)
-							}
+							EDNS0Option.Generic(oCode, data)
 						)
 					}
 					DNSResourceRecord.EDNSOpt(
@@ -277,7 +287,7 @@ fun main() {
 
 		val q = MutableList(questions.toInt()) {
 			DNSQuestion(
-				readDomain(buffer),
+				readDomain(startPosition, buffer),
 				DNSType.entries.id(buffer.getShort().toUShort()),
 				DNSClass.entries.id(buffer.getShort().toUShort())
 			)
@@ -312,7 +322,7 @@ fun main() {
 		resolveData: MemorySegment,
 		resolveDataBuffer: ByteBuffer,
 		address: ResolutionDataPartIdentifier
-	): Pair<DNSMessage.Response, Short> {
+	): DNSMessage.Response {
 		val socket = udpV6Sockets.openSocket()
 		socket.get(IPv6SocketFeatures.CONFIGURE)
 			.configure(WindowsIPv6SocketConfigurationFeatures.ALLOW_IPV6_AND_IPV4)
@@ -322,9 +332,13 @@ fun main() {
 				is InternetProtocolV6AddressPortData -> address
 				else -> throw UnsupportedOperationException()
 			}
-		)
+		).block()
 		resolveDataBuffer.clear()
 		val sentIdentifier = Random.nextInt().toShort()
+		var domainRandom = ""
+		for (char in domain) domainRandom += if (char != '.' && Random.nextBoolean()) {
+			if (char.isUpperCase()) char.lowercase() else char.uppercase()
+		} else char
 		writeMessage(
 			resolveDataBuffer, DNSMessage.Request(
 				sentIdentifier,
@@ -333,7 +347,7 @@ fun main() {
 				recursionDesired = false,
 				mutableListOf(
 					DNSQuestion(
-						domain,
+						domainRandom,
 						dnsType,
 						dnsClass
 					)
@@ -349,18 +363,22 @@ fun main() {
 			)
 		)
 		resolveDataBuffer.flip()
+		// TODO: Ghost send bug
 		socket.get(IPv6SocketFeatures.SEND).sendSegment(
 			resolveData.reinterpret(resolveDataBuffer.limit().toLong())
-		)
+		).block()
 		resolveDataBuffer.clear()
-		val receiveData = socket.get(IPv6SocketFeatures.RECEIVE).receiveSegment(resolveData)
+		val receiveData = socket.get(IPv6SocketFeatures.RECEIVE).receiveSegment(resolveData).block()
 		resolveDataBuffer.limit(receiveData.firstNotNullOf { it as? ReceiveSizeData }.bytes.toInt())
 		socket.close(
 			StandardCloseFeatures.STOP_TX,
 			StandardCloseFeatures.STOP_RX,
 			StandardCloseFeatures.RELEASE
 		)
-		return readMessage(resolveDataBuffer) as DNSMessage.Response to sentIdentifier
+		val response = readMessage(resolveDataBuffer) as DNSMessage.Response
+		if (response.identifier != sentIdentifier) TODO("WRONG IDENTIFIER")
+		if (response.questions.first().domain != domainRandom) TODO("WRONG DOMAIN")
+		return response
 	}
 
 	fun requestTCP(
@@ -371,7 +389,7 @@ fun main() {
 		resolveData: MemorySegment,
 		resolveDataBuffer: ByteBuffer,
 		address: ResolutionDataPartIdentifier
-	): Pair<DNSMessage.Response, Short> {
+	): DNSMessage.Response {
 		val socket = tcpV6Sockets.openSocket()
 		socket.get(IPv6SocketFeatures.CONFIGURE)
 			.configure(WindowsIPv6SocketConfigurationFeatures.ALLOW_IPV6_AND_IPV4)
@@ -381,39 +399,46 @@ fun main() {
 				is InternetProtocolV6AddressPortData -> address
 				else -> throw UnsupportedOperationException()
 			}
-		)
+		).block()
 		resolveDataBuffer.clear()
-		val resolveMessage = resolveDataBuffer.slice(2, resolveDataBuffer.limit() - 2)
 		val sentIdentifier = Random.nextInt().toShort()
+		var domainRandom = ""
+		for (char in domain) domainRandom += if (char != '.' && Random.nextBoolean()) {
+			if (char.isUpperCase()) char.lowercase() else char.uppercase()
+		} else char
+		resolveDataBuffer.putShort(0)
 		writeMessage(
-			resolveMessage, DNSMessage.Request(
+			resolveDataBuffer, DNSMessage.Request(
 				sentIdentifier,
 				opcode,
 				truncated = false,
 				recursionDesired = false,
 				mutableListOf(
 					DNSQuestion(
-						domain,
+						domainRandom,
 						dnsType,
 						dnsClass
 					)
 				)
 			)
 		)
-		resolveMessage.flip()
-		resolveDataBuffer.putShort(0, resolveMessage.limit().toShort())
+		resolveDataBuffer.flip()
+		resolveDataBuffer.putShort(0, (resolveDataBuffer.limit() - 2).toShort())
 		socket.get(IPv6SocketFeatures.SEND).sendSegment(
-			resolveData.reinterpret(resolveMessage.limit().toLong() + 2)
-		)
+			resolveData.reinterpret(resolveDataBuffer.limit().toLong())
+		).block()
 		resolveDataBuffer.clear()
-		socket.get(IPv6SocketFeatures.RECEIVE).receiveSegment(resolveData)
-		resolveMessage.limit(resolveDataBuffer.getShort(0).toInt() and 0xFFFF)
+		socket.get(IPv6SocketFeatures.RECEIVE).receiveSegment(resolveData).block()
+		resolveDataBuffer.limit((resolveDataBuffer.getShort().toInt() and 0xFFFF) + 2)
 		socket.close(
 			StandardCloseFeatures.STOP_TX,
 			StandardCloseFeatures.STOP_RX,
 			StandardCloseFeatures.RELEASE
 		)
-		return readMessage(resolveMessage) as DNSMessage.Response to sentIdentifier
+		val response = readMessage(resolveDataBuffer) as DNSMessage.Response
+		if (response.identifier != sentIdentifier) TODO("WRONG IDENTIFIER")
+		if (response.questions.first().domain != domainRandom) TODO("WRONG DOMAIN")
+		return response
 	}
 
 	fun request(
@@ -430,21 +455,37 @@ fun main() {
 			opcode, domain, dnsClass, dnsType, resolveData, resolveDataBuffer,
 			addresses.random()
 		)
-		if (udp.first.identifier != udp.second) TODO("Bad identifier!")
-		if (!udp.first.truncated) return udp.first
+		if (!udp.truncated) return udp
 		// TCP
 		val tcp = requestTCP(
 			opcode, domain, dnsClass, dnsType, resolveData, resolveDataBuffer,
 			addresses.random()
 		)
-		if (tcp.first.identifier != tcp.second) TODO("Bad identifier!")
-		return tcp.first
+		return tcp
 	}
 
-	class ServerCacheLeaf(
+	data class ServerCacheLeaf(
 		var addresses: Array<out ResolutionDataPartIdentifier>,
 		val labels: MutableMap<String, ServerCacheLeaf>
-	)
+	) {
+		override fun equals(other: Any?): Boolean {
+			if (this === other) return true
+			if (javaClass != other?.javaClass) return false
+
+			other as ServerCacheLeaf
+
+			if (!addresses.contentEquals(other.addresses)) return false
+			if (labels != other.labels) return false
+
+			return true
+		}
+
+		override fun hashCode(): Int {
+			var result = addresses.contentHashCode()
+			result = 31 * result + labels.hashCode()
+			return result
+		}
+	}
 
 	val serverCache = ServerCacheLeaf(
 		arrayOf(
@@ -457,6 +498,7 @@ fun main() {
 					0x20, 0x01,
 					0x05, 0x03,
 					0xBA.toByte(), 0x3E,
+					0x00, 0x00,
 					0x00, 0x00,
 					0x00, 0x00,
 					0x00, 0x02,
@@ -473,7 +515,7 @@ fun main() {
 	): Array<out ResolutionDataPartIdentifier> {
 		var leaf = serverCache.labels
 		var lastSpecific = serverCache.addresses
-		for (label in domain.removeSuffix(".").split('.').asReversed()) {
+		for (label in domain.removeSuffix(".").split('.').asReversed()) synchronized(leaf) {
 			val cacheLeaf = leaf[label] ?: break
 			lastSpecific = cacheLeaf.addresses
 			leaf = cacheLeaf.labels
@@ -481,24 +523,28 @@ fun main() {
 		return lastSpecific
 	}
 
+	fun getServFail(opcode: MappedEnumeration<UInt, DNSOpcode>) = DNSMessage.Response(
+		0x0,
+		opcode,
+		authoritative = false,
+		truncated = false,
+		true,
+		recursionAvailable = true,
+		MappedEnumeration(DNSResponseCode.ServFail)
+	)
+
 	fun resolve(
 		opcode: MappedEnumeration<UInt, DNSOpcode>,
 		domain: String,
 		dnsClass: MappedEnumeration<UShort, DNSClass>,
 		dnsType: MappedEnumeration<UShort, DNSType>,
+		depth: Int = 0
 	): DNSMessage.Response {
 		lateinit var response: DNSMessage.Response
 		var nextServers = findMostSpecificAddresses(domain)
 		while (true) {
-			if (nextServers.isEmpty()) return DNSMessage.Response(
-				0x0,
-				opcode,
-				authoritative = false,
-				truncated = false,
-				true,
-				recursionAvailable = true,
-				MappedEnumeration(DNSResponseCode.ServFail)
-			)
+			if (depth > 30 || nextServers.isEmpty()) return getServFail(opcode)
+			nextServers.shuffle()
 			for (server in nextServers) {
 				response = request(
 					opcode,
@@ -515,7 +561,8 @@ fun main() {
 				if (cn != null && dnsType.enum != DNSType.CNAME) {
 					val cnr = resolve(
 						opcode,
-						cn.canonicalName, dnsClass, dnsType
+						cn.canonicalName, dnsClass, dnsType,
+						depth + 1
 					)
 					for (i in cnr.answerRecords.indices) {
 						val answer = cnr.answerRecords[i]
@@ -526,34 +573,46 @@ fun main() {
 				} else break
 			}
 			val responsible = mutableMapOf<String, MutableList<ResolutionDataPartIdentifier>>()
-			response.authorityRecords.forEach auth@{ authority ->
-				if (authority !is DNSResourceRecord.AuthoritativeNameServer) return@auth
-				response.additionalRecords.forEach add@{ additional ->
-					if (authority.nameServerDomainName == additional.domain) when (additional) {
-						is DNSResourceRecord.IPv4Address -> responsible.getOrPut(authority.domain) {
-							mutableListOf()
-						}.add(InternetProtocolV4AddressPortData(additional.address, 53u))
+			fun addResponsibleRR(ns: DNSResourceRecord.AuthoritativeNameServer, addr: DNSResourceRecord) {
+				val addrDomainN = addr.domain.lowercase()
+				if (ns.nameServerDomainName.lowercase() == addrDomainN) {
+					val addressPort = when (addr) {
+						is DNSResourceRecord.IPv4Address -> InternetProtocolV4AddressPortData(
+							addr.address,
+							53u
+						)
 
-						is DNSResourceRecord.IPv6Address -> responsible.getOrPut(authority.domain) {
-							mutableListOf()
-						}.add(InternetProtocolV6AddressPortData(additional.address, 53u))
-					}
-				}
-				if (responsible.isEmpty()) resolve(
-					opcode,
-					authority.nameServerDomainName, dnsClass, MappedEnumeration(DNSType.A)
-				).answerRecords.forEach ansAuth@{ authorityAnswer ->
-					when (authorityAnswer) {
-						is DNSResourceRecord.IPv4Address -> responsible.getOrPut(authority.domain) {
-							mutableListOf()
-						}.add(InternetProtocolV4AddressPortData(authorityAnswer.address, 53u))
+						is DNSResourceRecord.IPv6Address -> InternetProtocolV6AddressPortData(
+							addr.address,
+							53u
+						)
 
-						is DNSResourceRecord.IPv6Address -> responsible.getOrPut(authority.domain) {
-							mutableListOf()
-						}.add(InternetProtocolV6AddressPortData(authorityAnswer.address, 53u))
+						else -> return
 					}
+					val nsDomainN = ns.domain.lowercase()
+					var addresses = responsible[nsDomainN]
+					if (addresses == null) {
+						addresses = mutableListOf()
+						responsible[nsDomainN] = addresses
+					}
+					addresses.add(addressPort)
 				}
 			}
+			response.authorityRecords.forEach auth@{ authority ->
+				if (authority !is DNSResourceRecord.AuthoritativeNameServer) return@auth
+				response.additionalRecords.forEach { additional -> addResponsibleRR(authority, additional) }
+				if (responsible.isEmpty()) resolve(
+					opcode,
+					authority.nameServerDomainName, dnsClass, MappedEnumeration(DNSType.A),
+					depth + 1
+				).answerRecords.forEach { answer -> addResponsibleRR(authority, answer) }
+				if (responsible.isEmpty()) resolve(
+					opcode,
+					authority.nameServerDomainName, dnsClass, MappedEnumeration(DNSType.AAAA),
+					depth + 1
+				).answerRecords.forEach { answer -> addResponsibleRR(authority, answer) }
+			}
+			if (responsible.isEmpty()) return getServFail(opcode)
 			responsible.forEach {
 				var leaf = serverCache
 				val labels = it.key.removeSuffix(".").split('.').asReversed()
@@ -572,6 +631,39 @@ fun main() {
 		return response
 	}
 
+	fun processMessage(message: DNSMessage.Request) = if (message.questions.size != 1)
+		DNSMessage.Response(
+			message.identifier,
+			message.opcode,
+			authoritative = false,
+			truncated = false,
+			message.recursionDesired,
+			recursionAvailable = true,
+			MappedEnumeration(DNSResponseCode.FormErr)
+		)
+	else {
+		val question = message.questions.first()
+		val data = if (message.recursionDesired) resolve(
+			message.opcode,
+			question.domain, question.questionClass, question.questionType
+		) else request(
+			message.opcode,
+			question.domain, question.questionClass, question.questionType,
+			*serverCache.addresses
+		)
+		data.additionalRecords.removeIf { it is DNSResourceRecord.EDNSOpt }
+		DNSMessage.Response(
+			message,
+			data.authoritative,
+			truncated = false,
+			recursionAvailable = true,
+			data.responseCode,
+			data.answerRecords,
+			data.authorityRecords,
+			data.additionalRecords
+		)
+	}
+
 	fun <T : ResolutionDataPartIdentifier> processTCP(
 		socketBind: () -> BSLSocket<T>
 	) {
@@ -580,67 +672,40 @@ fun main() {
 		while (true) {
 			val acceptData = serverSocket.get(IPv6SocketFeatures.ACCEPT)
 				.accept()
+				.block()
 			val acceptedTx = acceptData.firstNotNullOf { it as? InternetProtocolV6AddressPortData }
 			val acceptedSocket = acceptData.firstNotNullOf { it as? BSLSocket<*> }
 			Thread.ofPlatform().start {
 				logger.info("TCP ... $acceptedTx")
 				val requestData = Arena.ofAuto().allocate(UShort.MAX_VALUE.toLong() + 2)
 				val requestDataBuffer = requestData.asByteBuffer()
-				val messageBuffer = requestDataBuffer.slice(2, requestDataBuffer.limit() - 2)
 				while (true) {
 					requestDataBuffer.clear()
-					val receiveData = acceptedSocket.get(IPv6SocketFeatures.RECEIVE).receiveSegment(requestData)
+					val receiveData = acceptedSocket.get(IPv6SocketFeatures.RECEIVE)
+						.receiveSegment(requestData)
+						.block()
 					val receiveSize = receiveData.firstNotNullOf { it as? ReceiveSizeData }.bytes
 					if (receiveSize == 0L) break
-					messageBuffer.limit(requestDataBuffer.getShort().toInt() and 0xFFFF)
-					val message = readMessage(messageBuffer)
+					requestDataBuffer.limit((requestDataBuffer.getShort().toInt() and 0xFFFF) + 2)
+					val message = readMessage(requestDataBuffer)
 					if (message !is DNSMessage.Request) break
-					messageBuffer.clear()
-					val sendMessage: DNSMessage = if (message.questions.size != 1)
-						DNSMessage.Response(
-							message.identifier,
-							message.opcode,
-							authoritative = false,
-							truncated = false,
-							message.recursionDesired,
-							recursionAvailable = true,
-							MappedEnumeration(DNSResponseCode.FormErr)
+					requestDataBuffer.clear()
+					requestDataBuffer.putShort(0)
+					val sendMessage: DNSMessage = processMessage(message)
+					writeMessage(requestDataBuffer, sendMessage)
+					requestDataBuffer.flip()
+					val msgSize = requestDataBuffer.limit() - 2
+					if (msgSize > UShort.MAX_VALUE.toInt()) {
+						requestDataBuffer.putShort(
+							4,
+							requestDataBuffer.getShort(4) or (1 shl 9).toShort() // truncated
 						)
-					else {
-						val question = message.questions.first()
-						val data = if (message.recursionDesired) resolve(
-							message.opcode,
-							question.domain, question.questionClass, question.questionType
-						) else request(
-							message.opcode,
-							question.domain, question.questionClass, question.questionType,
-							*serverCache.addresses
-						)
-						data.additionalRecords.removeIf { it is DNSResourceRecord.EDNSOpt }
-						DNSMessage.Response(
-							message,
-							data.authoritative,
-							truncated = false,
-							recursionAvailable = true,
-							data.responseCode,
-							data.answerRecords,
-							data.authorityRecords,
-							data.additionalRecords
-						)
+						requestDataBuffer.limit(UShort.MAX_VALUE.toInt())
 					}
-					writeMessage(messageBuffer, sendMessage)
-					messageBuffer.flip()
-					if (messageBuffer.limit() > UShort.MAX_VALUE.toInt()) {
-						messageBuffer.putShort(
-							2,
-							messageBuffer.getShort(2) or (1 shl 9).toShort() // truncated
-						)
-						messageBuffer.limit(UShort.MAX_VALUE.toInt())
-					}
-					requestDataBuffer.putShort(0, messageBuffer.limit().toShort())
+					requestDataBuffer.putShort(0, msgSize.toShort())
 					acceptedSocket.get(IPv6SocketFeatures.SEND).sendSegment(
-						requestData.reinterpret(messageBuffer.limit().toLong() + 2)
-					)
+						requestData.reinterpret(requestDataBuffer.limit().toLong())
+					).block()
 				}
 				acceptedSocket.close(
 					StandardCloseFeatures.STOP_TX, StandardCloseFeatures.STOP_RX,
@@ -665,7 +730,7 @@ fun main() {
 				serverSocket.close(StandardCloseFeatures.RELEASE)
 				serverSocket = socketBind()
 				serverSocket.get(IPv6SocketFeatures.RECEIVE).receiveSegment(requestData)
-			}
+			}.block()
 			requestDataBuffer.limit(receiveData.firstNotNullOf { it as? ReceiveSizeData }.bytes.toInt())
 			val receiveSrc = receiveData.firstNotNullOf { it as? InternetProtocolV6AddressPortData }
 			logger.info("UDP ... $receiveSrc")
@@ -673,38 +738,7 @@ fun main() {
 			if (message !is DNSMessage.Request) continue
 			val eDNS = message.additionalRecords.firstNotNullOfOrNull { it as? DNSResourceRecord.EDNSOpt }
 			requestDataBuffer.clear()
-			val sendMessage: DNSMessage = if (message.questions.size != 1)
-				DNSMessage.Response(
-					message.identifier,
-					message.opcode,
-					authoritative = false,
-					truncated = false,
-					message.recursionDesired,
-					recursionAvailable = true,
-					MappedEnumeration(DNSResponseCode.FormErr)
-				)
-			else {
-				val question = message.questions.first()
-				val data = if (message.recursionDesired) resolve(
-					message.opcode,
-					question.domain, question.questionClass, question.questionType
-				) else request(
-					message.opcode,
-					question.domain, question.questionClass, question.questionType,
-					*serverCache.addresses
-				)
-				data.additionalRecords.removeIf { it is DNSResourceRecord.EDNSOpt }
-				DNSMessage.Response(
-					message,
-					data.authoritative,
-					truncated = false,
-					recursionAvailable = true,
-					data.responseCode,
-					data.answerRecords,
-					data.authorityRecords,
-					data.additionalRecords
-				)
-			}
+			val sendMessage: DNSMessage = processMessage(message)
 			val sizeLimit = if (eDNS == null) 512
 			else {
 				sendMessage.additionalRecords.add(
@@ -729,7 +763,7 @@ fun main() {
 			serverSocket.get(IPv6SocketFeatures.SEND).sendSegment(
 				requestData.reinterpret(requestDataBuffer.limit().toLong()),
 				receiveSrc
-			)
+			).block()
 		}
 	}
 

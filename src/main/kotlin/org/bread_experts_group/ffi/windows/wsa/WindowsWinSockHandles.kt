@@ -275,3 +275,87 @@ val nativeWSAAccept: MethodHandle? = ws232Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeWSACreateEvent: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSACreateEvent",
+	arrayOf(
+		WSAEVENT
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSACloseEvent: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSACloseEvent",
+	arrayOf(
+		BOOL,
+		WSAEVENT.withName("hEvent")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSASetEvent: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSASetEvent",
+	arrayOf(
+		BOOL,
+		WSAEVENT.withName("hEvent")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSAResetEvent: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAResetEvent",
+	arrayOf(
+		BOOL,
+		WSAEVENT.withName("hEvent")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSAEventSelect: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAEventSelect",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		WSAEVENT.withName("hEventObject"),
+		ValueLayout.JAVA_INT.withName("lNetworkEvents")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSAWaitForMultipleEvents: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAWaitForMultipleEvents",
+	arrayOf(
+		DWORD,
+		DWORD.withName("cEvents"),
+		ValueLayout.ADDRESS.withName("lphEvents"), /* WSAEVENT */
+		BOOL.withName("fWaitAll"),
+		DWORD.withName("dwTimeout"),
+		BOOL.withName("fAlertable")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeWSAEnumNetworkEvents: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAEnumNetworkEvents",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		SOCKET.withName("s"),
+		WSAEVENT.withName("hEventObject"),
+		ValueLayout.ADDRESS.withName("lpNetworkEvents") /* WSANETWORKEVENTS */
+	),
+	listOf(
+		gleCapture
+	)
+)

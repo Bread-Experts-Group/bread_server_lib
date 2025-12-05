@@ -24,7 +24,7 @@ open class InternetProtocolV6AddressData(
 		var string = ""
 		var i = 0
 		while (i < data.size) {
-			val short = (data[i++].toInt() shl 8) or data[i++].toInt()
+			val short = ((data[i++].toInt() and 0xFF) shl 8) or (data[i++].toInt() and 0xFF)
 			string += short.toUShort().toHexString()
 			if (i != data.size) string += ':'
 		}

@@ -12,6 +12,7 @@ import org.bread_experts_group.api.system.socket.ipv6.IPv6Socket
 import org.bread_experts_group.api.system.socket.ipv6.IPv6SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.IPv6TCPSocketFeature
 import org.bread_experts_group.api.system.socket.ipv6.windows.*
+import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET
@@ -27,20 +28,21 @@ class WindowsIPv6TCPSocketFeature : IPv6TCPSocketFeature(), CheckedImplementatio
 			AF_INET6, SOCK_STREAM, IPPROTO_TCP
 		) as Long
 		if (socket == INVALID_SOCKET) throwLastWSAError()
+		val monitor = WindowsSocketEventManager.addSocket(socket)
 		return object : IPv6Socket() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
-				WindowsIPv6TCPConnectFeature(socket, IPv6SocketFeatures.CONNECT),
-				WindowsIPv6SocketSendFeature(socket, IPv6SocketFeatures.SEND),
-				WindowsIPv6SocketReceiveFeature(socket, IPv6SocketFeatures.RECEIVE),
+				WindowsIPv6TCPConnectFeature(socket, monitor, IPv6SocketFeatures.CONNECT),
+				WindowsIPv6SocketSendFeature(socket, monitor, IPv6SocketFeatures.SEND),
+				WindowsIPv6SocketReceiveFeature(socket, monitor, IPv6SocketFeatures.RECEIVE),
 				WindowsIPv6SocketBindFeature(socket, IPv6SocketFeatures.BIND),
 				WindowsIPv6SocketListenFeature(socket, IPv6SocketFeatures.LISTEN),
-				WindowsIPv6SocketAcceptFeature(socket, IPv6SocketFeatures.ACCEPT),
+				WindowsIPv6SocketAcceptFeature(socket, monitor, IPv6SocketFeatures.ACCEPT),
 				WindowsIPv6SocketConfigureFeature(socket, IPv6SocketFeatures.CONFIGURE)
 			)
 
 			override fun close(
 				vararg features: SocketCloseFeatureIdentifier
-			): List<SocketCloseFeatureIdentifier> = winClose(socket, *features)
+			) = winClose(socket, *features)
 		}
 	}
 }

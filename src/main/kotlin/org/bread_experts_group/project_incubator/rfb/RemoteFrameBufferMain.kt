@@ -38,6 +38,7 @@ fun main() {
 	// PROTOTYPE LOGIC
 	val acceptData = tcpV4Socket.get(IPv4SocketFeatures.ACCEPT)
 		.accept()
+		.block()
 	val acceptedAddress = acceptData.firstNotNullOf { it as? InternetProtocolV4AddressPortData }
 	println("Connection @ $acceptedAddress")
 	@Suppress("UNCHECKED_CAST")

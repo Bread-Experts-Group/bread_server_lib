@@ -1,3 +1,3 @@
 package org.bread_experts_group.api.system.socket.close
 
-interface SocketCloseFeatureIdentifier
+interface SocketCloseFeatureIdentifier : SocketCloseDataIdentifier

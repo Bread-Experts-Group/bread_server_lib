@@ -11,6 +11,7 @@ import org.bread_experts_group.api.system.socket.ipv4.IPv4Socket
 import org.bread_experts_group.api.system.socket.ipv4.IPv4SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCPSocketFeature
 import org.bread_experts_group.api.system.socket.ipv4.windows.*
+import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET
@@ -25,20 +26,21 @@ class WindowsIPv4TCPSocketFeature : IPv4TCPSocketFeature(), CheckedImplementatio
 			capturedStateSegment,
 			AF_INET, SOCK_STREAM, IPPROTO_TCP
 		) as Long
+		val monitor = WindowsSocketEventManager.addSocket(socket)
 		if (socket == INVALID_SOCKET) throwLastWSAError()
 		return object : IPv4Socket() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
-				WindowsIPv4TCPConnectFeature(socket, IPv4SocketFeatures.CONNECT),
-				WindowsIPv4SocketSendFeature(socket, IPv4SocketFeatures.SEND),
-				WindowsIPv4SocketReceiveFeature(socket, IPv4SocketFeatures.RECEIVE),
+				WindowsIPv4TCPConnectFeature(socket, monitor, IPv4SocketFeatures.CONNECT),
+				WindowsIPv4SocketSendFeature(socket, monitor, IPv4SocketFeatures.SEND),
+				WindowsIPv4SocketReceiveFeature(socket, monitor, IPv4SocketFeatures.RECEIVE),
 				WindowsIPv4SocketBindFeature(socket, IPv4SocketFeatures.BIND),
 				WindowsIPv4SocketListenFeature(socket, IPv4SocketFeatures.LISTEN),
-				WindowsIPv4SocketAcceptFeature(socket, IPv4SocketFeatures.ACCEPT)
+				WindowsIPv4SocketAcceptFeature(socket, monitor, IPv4SocketFeatures.ACCEPT)
 			)
 
 			override fun close(
 				vararg features: SocketCloseFeatureIdentifier
-			): List<SocketCloseFeatureIdentifier> = winClose(socket, *features)
+			) = winClose(socket, *features)
 		}
 	}
 }

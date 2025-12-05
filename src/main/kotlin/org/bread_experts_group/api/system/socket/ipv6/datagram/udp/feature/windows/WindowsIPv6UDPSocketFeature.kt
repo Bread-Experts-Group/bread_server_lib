@@ -15,6 +15,7 @@ import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketB
 import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketConfigureFeature
 import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketReceiveFromFeature
 import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketSendToFeature
+import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET
@@ -30,18 +31,19 @@ class WindowsIPv6UDPSocketFeature : IPv6UDPSocketFeature(), CheckedImplementatio
 			AF_INET6, SOCK_DGRAM, IPPROTO_UDP
 		) as Long
 		if (socket == INVALID_SOCKET) throwLastWSAError()
+		val monitor = WindowsSocketEventManager.addSocket(socket)
 		return object : IPv6Socket() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
-				WindowsIPv6UDPConnectFeature(socket, IPv6SocketFeatures.CONNECT),
-				WindowsIPv6SocketSendToFeature(socket, IPv6SocketFeatures.SEND),
-				WindowsIPv6SocketReceiveFromFeature(socket, IPv6SocketFeatures.RECEIVE),
+				WindowsIPv6UDPConnectFeature(socket, monitor, IPv6SocketFeatures.CONNECT),
+				WindowsIPv6SocketSendToFeature(socket, monitor, IPv6SocketFeatures.SEND),
+				WindowsIPv6SocketReceiveFromFeature(socket, monitor, IPv6SocketFeatures.RECEIVE),
 				WindowsIPv6SocketBindFeature(socket, IPv6SocketFeatures.BIND),
 				WindowsIPv6SocketConfigureFeature(socket, IPv6SocketFeatures.CONFIGURE)
 			)
 
 			override fun close(
 				vararg features: SocketCloseFeatureIdentifier
-			): List<SocketCloseFeatureIdentifier> = winClose(socket, *features)
+			) = winClose(socket, *features)
 		}
 	}
 }

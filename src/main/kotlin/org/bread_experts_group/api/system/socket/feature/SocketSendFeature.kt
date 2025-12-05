@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.socket.feature
 
 import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.system.socket.DeferredSocketOperation
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -12,17 +13,17 @@ abstract class SocketSendFeature<F : D, D>(
 	abstract fun scatterSegments(
 		data: Collection<MemorySegment>,
 		vararg features: F
-	): List<D>
+	): DeferredSocketOperation<D>
 
 	fun sendSegment(
 		data: MemorySegment,
 		vararg features: F
-	): List<D> = scatterSegments(listOf(data), *features)
+	): DeferredSocketOperation<D> = scatterSegments(listOf(data), *features)
 
 	fun scatterBytes(
 		data: Collection<ByteArray>,
 		vararg features: F
-	): List<D> = Arena.ofConfined().use { tempArena ->
+	): DeferredSocketOperation<D> = Arena.ofConfined().use { tempArena ->
 		return scatterSegments(
 			data.map {
 				val segment = tempArena.allocate(it.size.toLong())
@@ -40,7 +41,7 @@ abstract class SocketSendFeature<F : D, D>(
 	fun sendBytes(
 		data: ByteArray,
 		vararg features: F
-	): List<D> = Arena.ofConfined().use { tempArena ->
+	): DeferredSocketOperation<D> = Arena.ofConfined().use { tempArena ->
 		val segment = tempArena.allocate(data.size.toLong())
 		MemorySegment.copy(
 			data, 0,
@@ -54,11 +55,11 @@ abstract class SocketSendFeature<F : D, D>(
 		data: Collection<String>,
 		charset: Charset,
 		vararg features: F
-	): List<D> = scatterBytes(data.map { it.toByteArray(charset) }, *features)
+	): DeferredSocketOperation<D> = scatterBytes(data.map { it.toByteArray(charset) }, *features)
 
 	fun sendString(
 		data: String,
 		charset: Charset,
 		vararg features: F
-	): List<D> = sendBytes(data.toByteArray(charset), *features)
+	): DeferredSocketOperation<D> = sendBytes(data.toByteArray(charset), *features)
 }

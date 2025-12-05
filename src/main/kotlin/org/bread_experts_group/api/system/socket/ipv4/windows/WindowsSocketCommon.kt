@@ -2,6 +2,7 @@ package org.bread_experts_group.api.system.socket.ipv4.windows
 
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.close.StandardCloseFeatures
+import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.nativeCloseSocket
@@ -17,6 +18,7 @@ fun winClose(
 	socket: Long,
 	vararg features: SocketCloseFeatureIdentifier
 ): List<SocketCloseFeatureIdentifier> {
+	WindowsSocketEventManager.dropSocket(socket)
 	val supportedFeatures = mutableListOf<SocketCloseFeatureIdentifier>()
 	val stopTx = features.contains(StandardCloseFeatures.STOP_TX)
 	val stopRx = features.contains(StandardCloseFeatures.STOP_RX)

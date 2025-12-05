@@ -689,3 +689,9 @@ val OVERLAPPED: StructLayout = MemoryLayout.structLayout(
 	).withName("DUMMYUNIONNAME"),
 	HANDLE.withName("hEvent")
 )
+
+const val INFINITE = 0xFFFFFFFF.toInt()
+const val WAIT_FAILED = 0xFFFFFFFF.toInt()
+
+const val STATUS_WAIT_0 = 0x00000000
+const val WAIT_OBJECT_0 = STATUS_WAIT_0 + 0

@@ -76,6 +76,15 @@ abstract class DNSResourceRecord(
 		override fun toString(): String = super.toString() + "\nExchange Name: \"$exchange\" (${preference} pref.)"
 	}
 
+	class TextualData(
+		domain: String,
+		recordClass: MappedEnumeration<UShort, DNSClass>,
+		timeToLive: Duration,
+		val text: ByteArray
+	) : DNSResourceRecord(domain, MappedEnumeration(DNSType.TXT), recordClass, timeToLive) {
+		override fun toString(): String = super.toString() + "\nText: [${text.size} bytes]"
+	}
+
 	class IPv6Address(
 		domain: String,
 		recordClass: MappedEnumeration<UShort, DNSClass>,

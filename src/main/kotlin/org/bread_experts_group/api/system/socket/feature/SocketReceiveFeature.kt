@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.socket.feature
 
 import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.system.socket.DeferredSocketOperation
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -11,17 +12,17 @@ abstract class SocketReceiveFeature<F : D, D>(
 	abstract fun gatherSegments(
 		data: Collection<MemorySegment>,
 		vararg features: F
-	): List<D>
+	): DeferredSocketOperation<D>
 
 	fun receiveSegment(
 		data: MemorySegment,
 		vararg features: F
-	): List<D> = gatherSegments(listOf(data), *features)
+	): DeferredSocketOperation<D> = gatherSegments(listOf(data), *features)
 
 	fun gatherBytes(
 		data: Collection<ByteArray>,
 		vararg features: F
-	): List<D> = Arena.ofConfined().use { tempArena ->
+	): DeferredSocketOperation<D> = Arena.ofConfined().use { tempArena ->
 		val allocated = data.associateWith { tempArena.allocate(it.size.toLong()) }
 		val supported = gatherSegments(allocated.values, *features)
 		allocated.forEach { (array, segment) ->
@@ -36,7 +37,7 @@ abstract class SocketReceiveFeature<F : D, D>(
 	fun receiveBytes(
 		data: ByteArray,
 		vararg features: F
-	): List<D> = Arena.ofConfined().use { tempArena ->
+	): DeferredSocketOperation<D> = Arena.ofConfined().use { tempArena ->
 		val allocated = tempArena.allocate(data.size.toLong())
 		val supported = receiveSegment(allocated, *features)
 		MemorySegment.copy(

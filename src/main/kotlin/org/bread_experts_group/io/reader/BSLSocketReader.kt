@@ -29,7 +29,7 @@ class BSLSocketReader<F : D, D>(
 			val rxData = reading.receiveSegment(
 				rxBuffer.asSlice(dataPointer + remainingData),
 				*features
-			)
+			).block()
 			remainingData += rxData.firstNotNullOf { it as? ReceiveSizeData }.bytes
 		}
 	}
