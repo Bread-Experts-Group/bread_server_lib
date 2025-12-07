@@ -1,6 +1,7 @@
 package org.bread_experts_group.io.reader
 
 import org.bread_experts_group.api.system.socket.feature.SocketSendFeature
+import org.bread_experts_group.api.system.socket.send.SendSizeData
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -24,8 +25,10 @@ class BSLSocketWriter<F : D, D>(
 	var order: ByteOrder = ByteOrder.nativeOrder()
 
 	fun flush() {
-		reading.sendSegment(txBuffer.reinterpret(usefulData), *features)
-		usefulData = 0
+		while (usefulData > 0) {
+			val sendData = reading.sendSegment(txBuffer.reinterpret(usefulData), *features).block()
+			usefulData -= sendData.firstNotNullOf { it as? SendSizeData }.bytes
+		}
 	}
 
 	fun write8(u: UByte) = write8(u.toByte())

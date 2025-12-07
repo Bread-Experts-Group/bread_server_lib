@@ -2,123 +2,47 @@ package org.bread_experts_group.project_incubator.rfb
 
 import org.bread_experts_group.api.system.SystemFeatures
 import org.bread_experts_group.api.system.SystemProvider
+import org.bread_experts_group.api.system.socket.BSLSocketConnectionEnded
 import org.bread_experts_group.api.system.socket.SystemSocketProviderFeatures
 import org.bread_experts_group.api.system.socket.close.StandardCloseFeatures
-import org.bread_experts_group.api.system.socket.ipv4.*
-import org.bread_experts_group.api.system.socket.ipv4.stream.SystemInternetProtocolV4StreamProtocolFeatures
-import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.IPv4TCPFeatures
+import org.bread_experts_group.api.system.socket.ipv6.*
+import org.bread_experts_group.api.system.socket.ipv6.config.WindowsIPv6SocketConfigurationFeatures
+import org.bread_experts_group.api.system.socket.ipv6.stream.SystemInternetProtocolV6StreamProtocolFeatures
+import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.IPv6TCPFeatures
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPart
-import org.bread_experts_group.api.system.socket.resolution.WindowsResolutionFeatures
+import org.bread_experts_group.api.system.socket.resolution.StandardResolutionFeatures
 import org.bread_experts_group.io.reader.BSLSocketReader
 import org.bread_experts_group.io.reader.BSLSocketWriter
-import java.io.File
+import org.bread_experts_group.project_incubator.rfb.PixelFormatDataStructure.Companion.nextPixelFormatStructure
+import org.bread_experts_group.project_incubator.rfb.PixelFormatDataStructure.Companion.writePixelFormatStructure
 import java.nio.ByteOrder
 import java.util.*
-import javax.imageio.ImageIO
-import kotlin.system.exitProcess
+import kotlin.random.Random
 
-fun main() {
-	val tcpV4 = SystemProvider.get(SystemFeatures.NETWORKING_SOCKETS)
-		.get(SystemSocketProviderFeatures.INTERNET_PROTOCOL_V4)
-		.get(SystemInternetProtocolV4SocketProviderFeatures.STREAM_PROTOCOLS)
-		.get(SystemInternetProtocolV4StreamProtocolFeatures.TRANSMISSION_CONTROL_PROTOCOL)
-	val tcpV4Resolution = tcpV4.get(IPv4TCPFeatures.NAME_RESOLUTION)
-	val tcpV4RecvAny = tcpV4Resolution.resolve(
-		"", 5900u,
-		WindowsResolutionFeatures.PASSIVE
-	).firstNotNullOf {
-		it as? ResolutionDataPart
-	}.data.firstNotNullOf { it as? InternetProtocolV4AddressData }
-	val tcpV4Socket = tcpV4.get(IPv4TCPFeatures.SOCKET)
-		.openSocket()
-	tcpV4Socket.get(IPv4SocketFeatures.BIND)
-		.bind(InternetProtocolV4AddressPortData(tcpV4RecvAny.data, 5900u))
-	tcpV4Socket.get(IPv4SocketFeatures.LISTEN)
-		.listen()
-	// PROTOTYPE LOGIC
-	val acceptData = tcpV4Socket.get(IPv4SocketFeatures.ACCEPT)
-		.accept()
-		.block()
-	val acceptedAddress = acceptData.firstNotNullOf { it as? InternetProtocolV4AddressPortData }
-	println("Connection @ $acceptedAddress")
-	@Suppress("UNCHECKED_CAST")
-	val acceptedSocket = acceptData.firstNotNullOf { it as? IPv4Socket }
-
-	data class PixelFormatDataStructure(
-		val bitsPerPixel: Int,
-		val depth: Int,
-		val bigEndian: Boolean,
-		val trueColor: Boolean,
-		val redMax: Int,
-		val greenMax: Int,
-		val blueMax: Int,
-		val redShift: Int,
-		val greenShift: Int,
-		val blueShift: Int
-	)
-
-	val write = BSLSocketWriter(acceptedSocket.get(IPv4SocketFeatures.SEND))
-	val read = BSLSocketReader(acceptedSocket.get(IPv4SocketFeatures.RECEIVE))
-	write.order = ByteOrder.BIG_ENDIAN
-	read.order = ByteOrder.BIG_ENDIAN
-
-	fun writePixelFormatStructure(n: PixelFormatDataStructure) {
-		write.write8i(n.bitsPerPixel)
-		write.write8i(n.depth)
-		write.write8i(if (n.bigEndian) 1 else 0)
-		write.write8i(if (n.trueColor) 1 else 0)
-		write.write16i(n.redMax)
-		write.write16i(n.greenMax)
-		write.write16i(n.blueMax)
-		write.write8i(n.redShift)
-		write.write8i(n.greenShift)
-		write.write8i(n.blueShift)
-		write.fill(3)
-	}
-
-	fun nextPixelFormatStructure(): PixelFormatDataStructure {
-		val structure = PixelFormatDataStructure(
-			read.readU8i(),
-			read.readU8i(),
-			read.readU8i() != 0,
-			read.readU8i() != 0,
-			read.readU16i(),
-			read.readU16i(),
-			read.readU16i(),
-			read.readU8i(),
-			read.readU8i(),
-			read.readU8i()
-		)
-		read.skip(3)
-		return structure
-	}
-
+fun client(
+	read: BSLSocketReader<*, *>, write: BSLSocketWriter<*, *>
+) {
 	fun shutdown(reason: String) {
 		println("Shutting down: $reason")
-		acceptedSocket.close(
-			StandardCloseFeatures.STOP_RX, StandardCloseFeatures.STOP_TX,
-			StandardCloseFeatures.RELEASE
-		)
-		exitProcess(0)
 	}
 
 	// 7.1.1 ProtocolVersion Handshake
 	write.write("RFB 003.008\n".toByteArray(Charsets.US_ASCII))
 	write.flush()
 	val clientPV = read.readN(12).toString(Charsets.US_ASCII).let {
-		if (it.last() != '\n') shutdown("Protocol version did not end with line feed \"$it\"")
+		if (it.last() != '\n') return shutdown("Protocol version did not end with line feed \"$it\"")
 		it.take(it.length - 1)
 	}
 	val delimiter = clientPV.indexOf(' ')
 	if (
 		delimiter == -1 ||
 		clientPV.take(delimiter) != "RFB"
-	) shutdown("Bad header presented in protocol version \"$clientPV\"")
+	) return shutdown("Bad header presented in protocol version \"$clientPV\"")
 	val clientVersion = clientPV.substring(delimiter + 1)
 		.split('.', limit = 2)
 		.mapNotNull { it.toIntOrNull() }
-	if (clientVersion.size != 2) shutdown("Bad protocol version format \"$clientPV\"")
-	if (clientVersion[0] != 3) shutdown("Protocol version too high \"$clientPV\"")
+	if (clientVersion.size != 2) return shutdown("Bad protocol version format \"$clientPV\"")
+	if (clientVersion[0] != 3) return shutdown("Protocol version too high \"$clientPV\"")
 	val minorVersionInUse = when (val minor = clientVersion[1]) {
 		3, 7, 8 -> minor
 		else -> 3
@@ -129,7 +53,7 @@ fun main() {
 	write.write8i(1)
 	write.write8i(1)
 	write.flush()
-	if (read.readU8i() != 1) shutdown("Client did not agree to the provided security methods")
+	if (read.readU8i() != 1) return shutdown("Client did not agree to the provided security methods")
 
 	// 7.1.3 SecurityResult Handshake
 	write.write32(0)
@@ -140,9 +64,8 @@ fun main() {
 	else println("Client is OK with desktop shared access")
 
 	// 7.3.2 ServerInit (7.4 Pixel Format Data Structure)
-	val alpha = ImageIO.read(File("C:/Users/Adenosine3Phosphate/Downloads/image.png"))
-	write.write16i(alpha.width) // W
-	write.write16i(alpha.height) // H
+	write.write16i(256) // W
+	write.write16i(64) // H
 	var currentFormat = PixelFormatDataStructure(
 		32, 24,
 		bigEndian = true,
@@ -150,7 +73,7 @@ fun main() {
 		255, 255, 255,
 		24, 16, 8
 	)
-	writePixelFormatStructure(currentFormat)
+	writePixelFormatStructure(write, currentFormat)
 	write.write32(16)
 	write.write("TestString16....".toByteArray(Charsets.US_ASCII))
 	write.flush()
@@ -162,7 +85,7 @@ fun main() {
 			// 7.5.1 SetPixelFormat
 			0 -> {
 				read.skip(3)
-				currentFormat = nextPixelFormatStructure()
+				currentFormat = nextPixelFormatStructure(read)
 			}
 
 			// SetEncodings
@@ -185,7 +108,7 @@ fun main() {
 
 			// 7.5.3 / 7.6.1 FramebufferUpdateRequest / FramebufferUpdate
 			3 -> {
-				println("Incremental ${read.readU8i()}")
+				val incremental = read.readU8i()
 				val x = read.readU16i()
 				val y = read.readU16i()
 				val w = read.readU16i()
@@ -201,7 +124,7 @@ fun main() {
 				write.write32(0) // RAW encoding
 				for (y in y until (y + h)) {
 					for (x in x until (x + w)) {
-						val rgb = alpha.getRGB(x, y)
+						val rgb = Random.nextInt()
 						val r = (rgb shr 16) and 0xFF
 						val g = (rgb shr 8) and 0xFF
 						val b = rgb and 0xFF
@@ -213,7 +136,7 @@ fun main() {
 							8 -> write.write8i(p)
 							16 -> write.write16i(p)
 							32 -> write.write32l(p.toLong())
-							else -> TODO(currentFormat.toString())
+							else -> return shutdown("Client was corrupted $currentFormat")
 						}
 					}
 				}
@@ -236,7 +159,59 @@ fun main() {
 				println("Y ${read.readU16i()}")
 			}
 
-			else -> shutdown("??? $type")
+			6 -> {
+				println("Client cut text")
+				read.skip(3)
+				println(read.readN(read.readS32()).toString(Charsets.ISO_8859_1))
+			}
+
+			else -> return shutdown("Client sent unknown message type ... $type")
+		}
+	}
+}
+
+fun main() {
+	val tcpV6 = SystemProvider.get(SystemFeatures.NETWORKING_SOCKETS)
+		.get(SystemSocketProviderFeatures.INTERNET_PROTOCOL_V6)
+		.get(SystemInternetProtocolV6SocketProviderFeatures.STREAM_PROTOCOLS)
+		.get(SystemInternetProtocolV6StreamProtocolFeatures.TRANSMISSION_CONTROL_PROTOCOL)
+	val tcpV6Resolution = tcpV6.get(IPv6TCPFeatures.NAME_RESOLUTION)
+	val tcpV6RecvAny = tcpV6Resolution.resolve(
+		"", 5900u,
+		StandardResolutionFeatures.PASSIVE
+	).firstNotNullOf {
+		it as? ResolutionDataPart
+	}.data.firstNotNullOf { it as? InternetProtocolV6AddressData }
+	val tcpV6Socket = tcpV6.get(IPv6TCPFeatures.SOCKET)
+		.openSocket()
+	tcpV6Socket.get(IPv6SocketFeatures.CONFIGURE)
+		.configure(WindowsIPv6SocketConfigurationFeatures.ALLOW_IPV6_AND_IPV4)
+	tcpV6Socket.get(IPv6SocketFeatures.BIND)
+		.bind(InternetProtocolV6AddressPortData(tcpV6RecvAny.data, 5900u))
+	tcpV6Socket.get(IPv6SocketFeatures.LISTEN)
+		.listen()
+	// PROTOTYPE LOGIC
+	while (true) {
+		val acceptData = tcpV6Socket.get(IPv6SocketFeatures.ACCEPT)
+			.accept()
+			.block()
+		val acceptedAddress = acceptData.firstNotNullOf { it as? InternetProtocolV6AddressPortData }
+		val acceptedSocket = acceptData.firstNotNullOf { it as? IPv6Socket }
+
+		Thread.ofVirtual().name("VNC Session $acceptedAddress").start {
+			val read = BSLSocketReader(acceptedSocket.get(IPv6SocketFeatures.RECEIVE))
+			val write = BSLSocketWriter(acceptedSocket.get(IPv6SocketFeatures.SEND))
+			read.order = ByteOrder.BIG_ENDIAN
+			write.order = ByteOrder.BIG_ENDIAN
+			try {
+				client(read, write)
+			} catch (_: BSLSocketConnectionEnded) {
+			}
+			acceptedSocket.close(
+				StandardCloseFeatures.STOP_RX, StandardCloseFeatures.STOP_TX,
+				StandardCloseFeatures.RELEASE
+			)
+			println("Ending thread ${Thread.currentThread()}!")
 		}
 	}
 }

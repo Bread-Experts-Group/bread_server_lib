@@ -7,10 +7,10 @@ import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveFeatureIdentifier
-import org.bread_experts_group.api.system.socket.listen.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.listen.WindowsReceiveFeatures
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketReceive
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
+import org.bread_experts_group.api.system.socket.system.DeferredSocketReceive
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*
@@ -20,7 +20,7 @@ import java.lang.foreign.ValueLayout
 
 class WindowsIPv6SocketReceiveFromFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketReceiveFeature<IPv6ReceiveFeatureIdentifier, IPv6ReceiveDataIdentifier>>
 ) : SocketReceiveFeature<IPv6ReceiveFeatureIdentifier, IPv6ReceiveDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -58,7 +58,8 @@ class WindowsIPv6SocketReceiveFromFeature(
 					MemorySegment.NULL,
 					MemorySegment.NULL
 				) as Int
-				if (status != 0) throwLastWSAError()
+
+				if (status != 0 && wsaLastError != 10035) throwLastWSAError()
 				supportedFeatures.add(ReceiveSizeData(threadLocalDWORD0.get(DWORD, 0).toLong()))
 				val addrSeg = sockaddr_in6_sin6_addr_Byte.invokeExact(sender, 0L) as MemorySegment
 				val addrBytes = ByteArray(addrSeg.byteSize().toInt())

@@ -6,15 +6,15 @@ import org.bread_experts_group.api.system.socket.DeferredSocketOperation
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.feature.SocketAcceptFeature
 import org.bread_experts_group.api.system.socket.feature.SocketFeatureImplementation
-import org.bread_experts_group.api.system.socket.ipv4.windows.winClose
 import org.bread_experts_group.api.system.socket.ipv6.IPv6Socket
 import org.bread_experts_group.api.system.socket.ipv6.IPv6SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.accept.IPv6AcceptDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.accept.IPv6AcceptFeatureIdentifier
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketAccept
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.system.DeferredSocketAccept
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.winClose
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
@@ -26,7 +26,7 @@ import java.lang.foreign.ValueLayout
 
 class WindowsIPv6SocketAcceptFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketAcceptFeature<IPv6AcceptFeatureIdentifier, IPv6AcceptDataIdentifier>>
 ) : SocketAcceptFeature<IPv6AcceptFeatureIdentifier, IPv6AcceptDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -60,8 +60,14 @@ class WindowsIPv6SocketAcceptFeature(
 					),
 					object : IPv6Socket() {
 						override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
-							WindowsIPv6SocketSendFeature(acceptedSocket, acceptedMonitor, IPv6SocketFeatures.SEND),
-							WindowsIPv6SocketReceiveFeature(acceptedSocket, acceptedMonitor, IPv6SocketFeatures.RECEIVE)
+							WindowsIPv6SocketSendToFeature(
+								acceptedSocket, acceptedMonitor, false,
+								IPv6SocketFeatures.SEND
+							),
+							WindowsIPv6SocketReceiveFeature(
+								acceptedSocket, acceptedMonitor,
+								IPv6SocketFeatures.RECEIVE
+							)
 						)
 
 						override fun close(

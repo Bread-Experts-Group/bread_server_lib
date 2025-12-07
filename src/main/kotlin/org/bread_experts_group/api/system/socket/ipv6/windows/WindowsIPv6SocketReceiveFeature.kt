@@ -3,18 +3,16 @@ package org.bread_experts_group.api.system.socket.ipv6.windows
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveFeatureIdentifier
-import org.bread_experts_group.api.system.socket.listen.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.listen.WindowsReceiveFeatures
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketReceive
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
+import org.bread_experts_group.api.system.socket.system.DeferredSocketReceive
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.DWORD
-import org.bread_experts_group.ffi.windows.threadLocalDWORD0
-import org.bread_experts_group.ffi.windows.threadLocalDWORD1
-import org.bread_experts_group.ffi.windows.throwLastWSAError
+import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.WSABUF
 import org.bread_experts_group.ffi.windows.wsa.WSABUF_buf
 import org.bread_experts_group.ffi.windows.wsa.WSABUF_len
@@ -24,7 +22,7 @@ import java.lang.foreign.MemorySegment
 
 class WindowsIPv6SocketReceiveFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketReceiveFeature<IPv6ReceiveFeatureIdentifier, IPv6ReceiveDataIdentifier>>
 ) : SocketReceiveFeature<IPv6ReceiveFeatureIdentifier, IPv6ReceiveDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -74,8 +72,14 @@ class WindowsIPv6SocketReceiveFeature(
 					MemorySegment.NULL,
 					MemorySegment.NULL
 				) as Int
-				if (status != 0) throwLastWSAError()
-				supportedFeatures.add(ReceiveSizeData(threadLocalDWORD0.get(DWORD, 0).toLong()))
+				if (status != 0) {
+					when (wsaLastError) {
+						10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+						10035 -> {}
+						else -> throwLastWSAError()
+					}
+				}
+				supportedFeatures.add(ReceiveSizeData(threadLocalDWORD0.get(DWORD, 0)))
 				return supportedFeatures
 			}
 		}

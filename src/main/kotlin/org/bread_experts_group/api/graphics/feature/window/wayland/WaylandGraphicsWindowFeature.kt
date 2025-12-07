@@ -6,8 +6,8 @@ import org.bread_experts_group.api.graphics.GraphicsFeatures
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowFeature
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowTemplate
-import org.bread_experts_group.ffi.wayland.nativeWLDisplayConnect
-import org.bread_experts_group.ffi.wayland.nativeWLDisplayDisconnect
+import org.bread_experts_group.ffi.linux.wayland.nativeWLDisplayConnect
+import org.bread_experts_group.ffi.linux.wayland.nativeWLDisplayDisconnect
 import java.lang.foreign.MemorySegment
 
 class WaylandGraphicsWindowFeature : GraphicsWindowFeature() {

@@ -4,6 +4,7 @@ import org.bread_experts_group.Mappable.Companion.id
 import org.bread_experts_group.MappedEnumeration
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.nativeLinker
+import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.cfgmgr.WindowsCMNotifyAction
 import org.bread_experts_group.ffi.windows.cfgmgr.WindowsCMNotifyEventData

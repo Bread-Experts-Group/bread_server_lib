@@ -8,8 +8,8 @@ import org.bread_experts_group.api.system.socket.feature.SocketConnectFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionFeatureIdentifier
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketConnect
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.system.DeferredSocketConnect
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import org.bread_experts_group.ffi.windows.throwLastWSAError
@@ -20,7 +20,7 @@ import java.lang.foreign.ValueLayout
 
 class WindowsIPv6UDPConnectFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketConnectFeature<IPv6ConnectionFeatureIdentifier, IPv6ConnectionDataIdentifier>>
 ) : SocketConnectFeature<IPv6ConnectionFeatureIdentifier, IPv6ConnectionDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE

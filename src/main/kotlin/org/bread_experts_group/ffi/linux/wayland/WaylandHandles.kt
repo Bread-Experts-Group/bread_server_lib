@@ -1,4 +1,4 @@
-package org.bread_experts_group.ffi.wayland
+package org.bread_experts_group.ffi.linux.wayland
 
 import org.bread_experts_group.ffi.*
 import java.lang.foreign.SymbolLookup

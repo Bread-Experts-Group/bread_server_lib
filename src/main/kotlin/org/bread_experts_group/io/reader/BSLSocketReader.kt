@@ -1,7 +1,9 @@
 package org.bread_experts_group.io.reader
 
+import org.bread_experts_group.api.system.socket.BSLSocketConnectionEnded
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
-import org.bread_experts_group.api.system.socket.listen.ReceiveSizeData
+import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
 import org.bread_experts_group.io.reader.BSLSocketWriter.Companion.reverse
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -30,6 +32,7 @@ class BSLSocketReader<F : D, D>(
 				rxBuffer.asSlice(dataPointer + remainingData),
 				*features
 			).block()
+			if (rxData.any { it === StandardSocketStatus.CONNECTION_CLOSED }) throw BSLSocketConnectionEnded()
 			remainingData += rxData.firstNotNullOf { it as? ReceiveSizeData }.bytes
 		}
 	}

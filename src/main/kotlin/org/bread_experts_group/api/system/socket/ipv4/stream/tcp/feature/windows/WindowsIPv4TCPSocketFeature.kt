@@ -11,7 +11,8 @@ import org.bread_experts_group.api.system.socket.ipv4.IPv4Socket
 import org.bread_experts_group.api.system.socket.ipv4.IPv4SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCPSocketFeature
 import org.bread_experts_group.api.system.socket.ipv4.windows.*
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.winClose
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET
@@ -31,7 +32,7 @@ class WindowsIPv4TCPSocketFeature : IPv4TCPSocketFeature(), CheckedImplementatio
 		return object : IPv4Socket() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
 				WindowsIPv4TCPConnectFeature(socket, monitor, IPv4SocketFeatures.CONNECT),
-				WindowsIPv4SocketSendFeature(socket, monitor, IPv4SocketFeatures.SEND),
+				WindowsIPv4SocketSendToFeature(socket, monitor, false, IPv4SocketFeatures.SEND),
 				WindowsIPv4SocketReceiveFeature(socket, monitor, IPv4SocketFeatures.RECEIVE),
 				WindowsIPv4SocketBindFeature(socket, IPv4SocketFeatures.BIND),
 				WindowsIPv4SocketListenFeature(socket, IPv4SocketFeatures.LISTEN),

@@ -21,7 +21,6 @@ import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCP
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCPSystemLabelFeature
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.windows.WindowsIPv4TCPResolutionFeature
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.windows.WindowsIPv4TCPSocketFeature
-import org.bread_experts_group.api.system.socket.ipv4.windows.*
 import org.bread_experts_group.api.system.socket.ipv6.datagram.feature.SystemInternetProtocolV6DatagramProtocolFeatureImplementation
 import org.bread_experts_group.api.system.socket.ipv6.datagram.feature.SystemInternetProtocolV6UDPFeature
 import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.feature.IPv6UDPFeatureImplementation
@@ -46,6 +45,7 @@ import org.bread_experts_group.api.system.socket.resolution_namespace_provider.t
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.StandardResolutionNamespaceTypes
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.WindowsResolutionNamespaceTypes
 import org.bread_experts_group.api.system.socket.sys_feature.*
+import org.bread_experts_group.api.system.socket.system.windows.*
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*

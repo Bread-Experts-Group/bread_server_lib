@@ -1,4 +1,4 @@
-package org.bread_experts_group.api.system.socket.ipv4.windows
+package org.bread_experts_group.api.system.socket.system.windows
 
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET6
@@ -11,8 +11,8 @@ import org.bread_experts_group.api.system.socket.resolution_namespace_provider.t
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.StandardResolutionNamespaceTypes
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.WindowsResolutionNamespaceTypes
 import org.bread_experts_group.ffi.GUID
+import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.decodeWin32Error
-import org.bread_experts_group.ffi.windows.threadLocalPTR
 import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -41,10 +41,10 @@ fun winResolve(
 		var flags = 0
 		var fqdn = false
 		var cn = false
-		if (features.contains(WindowsResolutionFeatures.CANONICAL_NAME)) {
+		if (features.contains(StandardResolutionFeatures.CANONICAL_NAME)) {
 			cn = true
 			flags = flags or 0x02
-			data.add(WindowsResolutionFeatures.CANONICAL_NAME)
+			data.add(StandardResolutionFeatures.CANONICAL_NAME)
 		}
 		if (features.contains(WindowsResolutionFeatures.NUMERIC_HOST)) {
 			flags = flags or 0x04
@@ -108,9 +108,9 @@ fun winResolve(
 			data.add(nsp)
 			nspGUID.allocate(tempArena)
 		} else MemorySegment.NULL
-		val hostName = if (features.contains(WindowsResolutionFeatures.PASSIVE)) {
+		val hostName = if (features.contains(StandardResolutionFeatures.PASSIVE)) {
 			flags = flags or 0x01
-			data.add(WindowsResolutionFeatures.PASSIVE)
+			data.add(StandardResolutionFeatures.PASSIVE)
 			MemorySegment.NULL
 		} else tempArena.allocateFrom(hostName, Charsets.UTF_16LE)
 		ADDRINFOEXW_ai_flags.set(hints, 0L, flags)

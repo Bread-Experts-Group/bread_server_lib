@@ -9,6 +9,7 @@ import org.bread_experts_group.api.system.device.io.feature.IODeviceReleaseFeatu
 import org.bread_experts_group.api.system.device.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceFeatureIdentifier
 import org.bread_experts_group.api.system.device.io.transparent_encrpytion.WindowsOpenTransparentEncryptionRawIODeviceFeatures
 import org.bread_experts_group.ffi.nativeLinker
+import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor

@@ -7,7 +7,6 @@ import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkin
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.SOCK_DGRAM
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.feature.SocketFeatureImplementation
-import org.bread_experts_group.api.system.socket.ipv4.windows.winClose
 import org.bread_experts_group.api.system.socket.ipv6.IPv6Socket
 import org.bread_experts_group.api.system.socket.ipv6.IPv6SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.feature.IPv6UDPSocketFeature
@@ -15,7 +14,8 @@ import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketB
 import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketConfigureFeature
 import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketReceiveFromFeature
 import org.bread_experts_group.api.system.socket.ipv6.windows.WindowsIPv6SocketSendToFeature
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.winClose
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET
@@ -35,7 +35,7 @@ class WindowsIPv6UDPSocketFeature : IPv6UDPSocketFeature(), CheckedImplementatio
 		return object : IPv6Socket() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
 				WindowsIPv6UDPConnectFeature(socket, monitor, IPv6SocketFeatures.CONNECT),
-				WindowsIPv6SocketSendToFeature(socket, monitor, IPv6SocketFeatures.SEND),
+				WindowsIPv6SocketSendToFeature(socket, monitor, true, IPv6SocketFeatures.SEND),
 				WindowsIPv6SocketReceiveFromFeature(socket, monitor, IPv6SocketFeatures.RECEIVE),
 				WindowsIPv6SocketBindFeature(socket, IPv6SocketFeatures.BIND),
 				WindowsIPv6SocketConfigureFeature(socket, IPv6SocketFeatures.CONFIGURE)

@@ -2,6 +2,7 @@ package org.bread_experts_group.api.system.user.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.user.feature.SystemUserGetLogonTimeFeature
+import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
 import java.lang.foreign.ValueLayout

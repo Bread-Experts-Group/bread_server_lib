@@ -6,9 +6,9 @@ import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkin
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.IPPROTO_UDP
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.SOCK_DGRAM
 import org.bread_experts_group.api.system.socket.ipv4.datagram.udp.feature.IPv4UDPResolutionFeature
-import org.bread_experts_group.api.system.socket.ipv4.windows.winResolve
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataIdentifier
 import org.bread_experts_group.api.system.socket.resolution.ResolutionFeatureIdentifier
+import org.bread_experts_group.api.system.socket.system.windows.winResolve
 import org.bread_experts_group.ffi.windows.wsa.nativeFreeAddrInfoExW
 import org.bread_experts_group.ffi.windows.wsa.nativeGetAddrInfoExW
 

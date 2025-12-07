@@ -6,9 +6,9 @@ import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkin
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.IPPROTO_TCP
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.SOCK_STREAM
 import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCPResolutionFeature
-import org.bread_experts_group.api.system.socket.ipv4.windows.winResolve
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataIdentifier
 import org.bread_experts_group.api.system.socket.resolution.ResolutionFeatureIdentifier
+import org.bread_experts_group.api.system.socket.system.windows.winResolve
 import org.bread_experts_group.ffi.windows.wsa.nativeFreeAddrInfoExW
 import org.bread_experts_group.ffi.windows.wsa.nativeGetAddrInfoExW
 

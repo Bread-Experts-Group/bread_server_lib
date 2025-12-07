@@ -13,8 +13,8 @@ import org.bread_experts_group.api.system.socket.ipv4.datagram.udp.feature.IPv4U
 import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPv4SocketBindFeature
 import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPv4SocketReceiveFromFeature
 import org.bread_experts_group.api.system.socket.ipv4.windows.WindowsIPv4SocketSendToFeature
-import org.bread_experts_group.api.system.socket.ipv4.windows.winClose
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.winClose
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET
@@ -34,7 +34,7 @@ class WindowsIPv4UDPSocketFeature : IPv4UDPSocketFeature(), CheckedImplementatio
 		return object : IPv4Socket() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
 				WindowsIPv4UDPConnectFeature(socket, monitor, IPv4SocketFeatures.CONNECT),
-				WindowsIPv4SocketSendToFeature(socket, monitor, IPv4SocketFeatures.SEND),
+				WindowsIPv4SocketSendToFeature(socket, monitor, true, IPv4SocketFeatures.SEND),
 				WindowsIPv4SocketReceiveFromFeature(socket, monitor, IPv4SocketFeatures.RECEIVE),
 				WindowsIPv4SocketBindFeature(socket, IPv4SocketFeatures.BIND)
 			)

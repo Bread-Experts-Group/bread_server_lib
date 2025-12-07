@@ -5,15 +5,15 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET6
 import org.bread_experts_group.api.system.socket.DeferredSocketOperation
 import org.bread_experts_group.api.system.socket.feature.SocketConnectFeature
-import org.bread_experts_group.api.system.socket.ipv4.windows.SOL_SOCKET
-import org.bread_experts_group.api.system.socket.ipv4.windows.SO_UPDATE_CONNECT_CONTEXT
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionFeatureIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6LocalAddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6RemoteAddressPortData
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketConnect
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.system.DeferredSocketConnect
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
+import org.bread_experts_group.api.system.socket.system.windows.SOL_SOCKET
+import org.bread_experts_group.api.system.socket.system.windows.SO_UPDATE_CONNECT_CONTEXT
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
@@ -26,7 +26,7 @@ import java.lang.foreign.ValueLayout
 
 class WindowsIPv6TCPConnectFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketConnectFeature<IPv6ConnectionFeatureIdentifier, IPv6ConnectionDataIdentifier>>
 ) : SocketConnectFeature<IPv6ConnectionFeatureIdentifier, IPv6ConnectionDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE

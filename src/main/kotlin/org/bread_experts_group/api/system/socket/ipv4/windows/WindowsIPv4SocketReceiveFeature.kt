@@ -6,10 +6,10 @@ import org.bread_experts_group.api.system.socket.DeferredSocketOperation
 import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
 import org.bread_experts_group.api.system.socket.ipv4.receive.IPv4ReceiveDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv4.receive.IPv4ReceiveFeatureIdentifier
-import org.bread_experts_group.api.system.socket.listen.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.listen.WindowsReceiveFeatures
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketReceive
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
+import org.bread_experts_group.api.system.socket.system.DeferredSocketReceive
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
@@ -24,7 +24,7 @@ import java.lang.foreign.MemorySegment
 
 class WindowsIPv4SocketReceiveFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketReceiveFeature<IPv4ReceiveFeatureIdentifier, IPv4ReceiveDataIdentifier>>
 ) : SocketReceiveFeature<IPv4ReceiveFeatureIdentifier, IPv4ReceiveDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE

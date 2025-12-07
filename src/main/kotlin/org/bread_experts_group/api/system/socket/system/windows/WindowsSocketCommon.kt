@@ -1,8 +1,8 @@
-package org.bread_experts_group.api.system.socket.ipv4.windows
+package org.bread_experts_group.api.system.socket.system.windows
 
+import org.bread_experts_group.api.system.socket.close.SocketCloseDataIdentifier
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.close.StandardCloseFeatures
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.nativeCloseSocket
@@ -17,9 +17,8 @@ const val SOMAXCONN = 0x7FFFFFFF
 fun winClose(
 	socket: Long,
 	vararg features: SocketCloseFeatureIdentifier
-): List<SocketCloseFeatureIdentifier> {
-	WindowsSocketEventManager.dropSocket(socket)
-	val supportedFeatures = mutableListOf<SocketCloseFeatureIdentifier>()
+): List<SocketCloseDataIdentifier> {
+	val supportedFeatures = mutableListOf<SocketCloseDataIdentifier>()
 	val stopTx = features.contains(StandardCloseFeatures.STOP_TX)
 	val stopRx = features.contains(StandardCloseFeatures.STOP_RX)
 	if (stopTx || stopRx) {

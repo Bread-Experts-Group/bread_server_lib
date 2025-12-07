@@ -9,6 +9,8 @@ import kotlin.jvm.optionals.getOrNull
 
 private val nativeLogger: Logger = ColoredHandler.newLoggerResourced("ffi")
 
+val cLookup: SymbolLookup = nativeLinker.defaultLookup()
+
 fun Arena.getLookup(library: String): SymbolLookup? = try {
 	nativeLogger.finer { "Getting the library lookup for \"$library\"" }
 	SymbolLookup.libraryLookup(library, this).also {
@@ -95,3 +97,14 @@ fun MemorySegment.getFirstNull2Offset(): Long {
 	}
 	return -1
 }
+
+private val tlsPTR = ThreadLocal.withInitial {
+	globalArena.allocate(ValueLayout.ADDRESS)
+}
+private val tlsInt = ThreadLocal.withInitial {
+	globalArena.allocate(ValueLayout.JAVA_INT)
+}
+val threadLocalPTR: MemorySegment
+	get() = tlsPTR.get()
+val threadLocalInt: MemorySegment
+	get() = tlsInt.get()

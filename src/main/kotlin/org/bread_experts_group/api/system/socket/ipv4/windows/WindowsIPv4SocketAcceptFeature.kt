@@ -11,9 +11,10 @@ import org.bread_experts_group.api.system.socket.ipv4.IPv4SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressPortData
 import org.bread_experts_group.api.system.socket.ipv4.accept.IPv4AcceptDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv4.accept.IPv4AcceptFeatureIdentifier
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketAccept
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketEventManager
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.system.DeferredSocketAccept
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.system.windows.winClose
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
@@ -25,7 +26,7 @@ import java.lang.foreign.ValueLayout
 
 class WindowsIPv4SocketAcceptFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketAcceptFeature<IPv4AcceptFeatureIdentifier, IPv4AcceptDataIdentifier>>
 ) : SocketAcceptFeature<IPv4AcceptFeatureIdentifier, IPv4AcceptDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -59,8 +60,14 @@ class WindowsIPv4SocketAcceptFeature(
 					),
 					object : IPv4Socket() {
 						override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
-							WindowsIPv4SocketSendFeature(acceptedSocket, acceptedMonitor, IPv4SocketFeatures.SEND),
-							WindowsIPv4SocketReceiveFeature(acceptedSocket, acceptedMonitor, IPv4SocketFeatures.RECEIVE)
+							WindowsIPv4SocketSendToFeature(
+								acceptedSocket, acceptedMonitor, false,
+								IPv4SocketFeatures.SEND
+							),
+							WindowsIPv4SocketReceiveFeature(
+								acceptedSocket, acceptedMonitor,
+								IPv4SocketFeatures.RECEIVE
+							)
 						)
 
 						override fun close(

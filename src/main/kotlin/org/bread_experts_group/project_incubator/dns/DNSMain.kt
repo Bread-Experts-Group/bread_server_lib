@@ -17,10 +17,10 @@ import org.bread_experts_group.api.system.socket.ipv6.datagram.SystemInternetPro
 import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.IPv6UDPFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.SystemInternetProtocolV6StreamProtocolFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.IPv6TCPFeatures
-import org.bread_experts_group.api.system.socket.listen.ReceiveSizeData
+import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPart
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPartIdentifier
-import org.bread_experts_group.api.system.socket.resolution.WindowsResolutionFeatures
+import org.bread_experts_group.api.system.socket.resolution.StandardResolutionFeatures
 import org.bread_experts_group.ffi.windows.WindowsLastErrorException
 import org.bread_experts_group.logging.ColoredHandler
 import java.lang.foreign.Arena
@@ -57,11 +57,11 @@ fun main() {
 		val label = ByteArray(63)
 		val backReferences = mutableMapOf<String, Int>()
 		fun writeDomain(domain: String) {
+			val domain = if (domain.endsWith('.')) domain else "$domain."
 			if (domain == ".") {
 				buffer.put(0)
 				return
 			}
-			val domain = if (domain.endsWith('.')) domain else "$domain."
 			val backReference = backReferences[domain]
 			var backRefLocation = buffer.position() - startPosition
 			if (backReference != null) {
@@ -675,7 +675,7 @@ fun main() {
 				.block()
 			val acceptedTx = acceptData.firstNotNullOf { it as? InternetProtocolV6AddressPortData }
 			val acceptedSocket = acceptData.firstNotNullOf { it as? BSLSocket<*> }
-			Thread.ofPlatform().start {
+			Thread.ofVirtual().start {
 				logger.info("TCP ... $acceptedTx")
 				val requestData = Arena.ofAuto().allocate(UShort.MAX_VALUE.toLong() + 2)
 				val requestDataBuffer = requestData.asByteBuffer()
@@ -772,7 +772,7 @@ fun main() {
 			val tcpV6Resolution = tcpV6.get(IPv6TCPFeatures.NAME_RESOLUTION)
 			val tcpV6RecvAny = tcpV6Resolution.resolve(
 				"", 53u,
-				WindowsResolutionFeatures.PASSIVE
+				StandardResolutionFeatures.PASSIVE
 			).firstNotNullOf {
 				it as? ResolutionDataPart
 			}.data.firstNotNullOf { it as? InternetProtocolV6AddressData }
@@ -793,7 +793,7 @@ fun main() {
 			val udpV6Resolution = udpV6.get(IPv6UDPFeatures.NAME_RESOLUTION)
 			val udpV6RecvAny = udpV6Resolution.resolve(
 				"", 53u,
-				WindowsResolutionFeatures.PASSIVE
+				StandardResolutionFeatures.PASSIVE
 			).firstNotNullOf {
 				it as? ResolutionDataPart
 			}.data.firstNotNullOf { it as? InternetProtocolV6AddressData }

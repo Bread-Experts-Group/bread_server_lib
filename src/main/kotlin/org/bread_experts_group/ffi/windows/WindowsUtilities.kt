@@ -5,6 +5,7 @@ import org.bread_experts_group.ffi.OperatingSystemException
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.exception.IOAbortedException
 import org.bread_experts_group.ffi.globalArena
+import org.bread_experts_group.ffi.threadLocalPTR
 import java.lang.foreign.AddressLayout
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -75,9 +76,6 @@ private val tlsDWORD2 = ThreadLocal.withInitial {
 private val tlsLARGE_INTEGER0 = ThreadLocal.withInitial {
 	globalArena.allocate(LARGE_INTEGER)
 }
-private val tlsPTR = ThreadLocal.withInitial {
-	globalArena.allocate(ValueLayout.ADDRESS)
-}
 val threadLocalDWORD0: MemorySegment
 	get() = tlsDWORD0.get()
 val threadLocalDWORD1: MemorySegment
@@ -86,8 +84,6 @@ val threadLocalDWORD2: MemorySegment
 	get() = tlsDWORD2.get()
 val threadLocalLARGE_INTEGER0: MemorySegment
 	get() = tlsLARGE_INTEGER0.get()
-val threadLocalPTR: MemorySegment
-	get() = tlsPTR.get()
 
 fun decodeWin32Error(err: Int) {
 	when (err) {

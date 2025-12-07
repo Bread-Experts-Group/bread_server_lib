@@ -10,10 +10,10 @@ import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4ConnectionData
 import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4ConnectionFeatureIdentifier
 import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4LocalAddressPortData
 import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4RemoteAddressPortData
-import org.bread_experts_group.api.system.socket.ipv4.windows.SOL_SOCKET
-import org.bread_experts_group.api.system.socket.ipv4.windows.SO_UPDATE_CONNECT_CONTEXT
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketConnect
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.system.DeferredSocketConnect
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
+import org.bread_experts_group.api.system.socket.system.windows.SOL_SOCKET
+import org.bread_experts_group.api.system.socket.system.windows.SO_UPDATE_CONNECT_CONTEXT
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
@@ -26,7 +26,7 @@ import java.lang.foreign.ValueLayout
 
 class WindowsIPv4TCPConnectFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
 	expresses: FeatureExpression<SocketConnectFeature<IPv4ConnectionFeatureIdentifier, IPv4ConnectionDataIdentifier>>
 ) : SocketConnectFeature<IPv4ConnectionFeatureIdentifier, IPv4ConnectionDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE

@@ -8,70 +8,81 @@ import org.bread_experts_group.api.system.socket.feature.SocketSendFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendFeatureIdentifier
-import org.bread_experts_group.api.system.socket.windows.DeferredSocketSend
-import org.bread_experts_group.api.system.socket.windows.WindowsSocketMonitor
+import org.bread_experts_group.api.system.socket.send.SendSizeData
+import org.bread_experts_group.api.system.socket.system.DeferredSocketSend
+import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
+import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.*
+import org.bread_experts_group.ffi.windows.wsaLastError
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
 class WindowsIPv6SocketSendToFeature(
 	private val socket: Long,
-	private val monitor: WindowsSocketMonitor,
+	private val monitor: SocketMonitor,
+	private val checkForAddress: Boolean,
 	expresses: FeatureExpression<SocketSendFeature<IPv6SendFeatureIdentifier, IPv6SendDataIdentifier>>
 ) : SocketSendFeature<IPv6SendFeatureIdentifier, IPv6SendDataIdentifier>(expresses) {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun scatterSegments(
 		data: Collection<MemorySegment>,
 		vararg features: IPv6SendFeatureIdentifier
-	): DeferredSocketOperation<IPv6SendDataIdentifier> = object : DeferredSocketSend<IPv6SendDataIdentifier>(monitor) {
-		override fun send(): List<IPv6SendDataIdentifier> = Arena.ofConfined().use { tempArena ->
-			val allocated = tempArena.allocate(WSABUF, data.size.toLong())
-			var currentSegment = allocated
-			data.forEach {
-				WSABUF_len.set(currentSegment, 0L, it.byteSize().toInt())
-				WSABUF_buf.set(currentSegment, 0L, it)
-				currentSegment = currentSegment.asSlice(WSABUF.byteSize())
-			}
-			val address = features.firstNotNullOfOrNull { it as? InternetProtocolV6AddressPortData }
-			if (address != null) {
-				val addressSockAddr = tempArena.allocate(sockaddr_in6)
-				sockaddr_in6_sin6_family.set(addressSockAddr, 0L, AF_INET6.toShort())
-				var status = nativeWSAHtons!!.invokeExact(
-					capturedStateSegment,
-					socket,
-					address.port.toShort(),
-					threadLocalDWORD0
-				) as Int
-				if (status != 0) throwLastWSAError()
-				sockaddr_in6_sin6_port.set(
-					addressSockAddr, 0L,
-					threadLocalDWORD0.get(ValueLayout.JAVA_SHORT, 0)
-				)
-				MemorySegment.copy(
-					address.data, 0,
-					sockaddr_in6_sin6_addr_Byte.invokeExact(addressSockAddr, 0L) as MemorySegment,
-					ValueLayout.JAVA_BYTE, 0,
-					address.data.size
-				)
-				status = nativeWSASendTo!!.invokeExact(
-					capturedStateSegment,
-					socket,
-					allocated,
-					data.size,
-					threadLocalDWORD0,
-					0, // TODO FLAGS
-					addressSockAddr,
-					addressSockAddr.byteSize().toInt(),
-					MemorySegment.NULL,
-					MemorySegment.NULL
-				) as Int
-				if (status != 0) throwLastWSAError()
-				return listOf(address)
-			} else {
+	): DeferredSocketOperation<IPv6SendDataIdentifier> =
+		object : DeferredSocketSend<IPv6SendDataIdentifier>(monitor) {
+			override fun send(): List<IPv6SendDataIdentifier> = Arena.ofConfined().use { tempArena ->
+				val allocated = tempArena.allocate(WSABUF, data.size.toLong())
+				var currentSegment = allocated
+				data.forEach {
+					WSABUF_len.set(currentSegment, 0L, it.byteSize().toInt())
+					WSABUF_buf.set(currentSegment, 0L, it)
+					currentSegment = currentSegment.asSlice(WSABUF.byteSize())
+				}
+				if (checkForAddress) {
+					val address = features.firstNotNullOfOrNull { it as? InternetProtocolV6AddressPortData }
+					if (address != null) {
+						val addressSockAddr = tempArena.allocate(sockaddr_in6)
+						sockaddr_in6_sin6_family.set(addressSockAddr, 0L, AF_INET6.toShort())
+						var status = nativeWSAHtons!!.invokeExact(
+							capturedStateSegment,
+							socket,
+							address.port.toShort(),
+							threadLocalDWORD0
+						) as Int
+						if (status != 0) throwLastWSAError()
+						sockaddr_in6_sin6_port.set(
+							addressSockAddr, 0L,
+							threadLocalDWORD0.get(ValueLayout.JAVA_SHORT, 0)
+						)
+						MemorySegment.copy(
+							address.data, 0,
+							sockaddr_in6_sin6_addr_Byte.invokeExact(addressSockAddr, 0L) as MemorySegment,
+							ValueLayout.JAVA_BYTE, 0,
+							address.data.size
+						)
+						status = nativeWSASendTo!!.invokeExact(
+							capturedStateSegment,
+							socket,
+							allocated,
+							data.size,
+							threadLocalDWORD0,
+							0, // TODO FLAGS
+							addressSockAddr,
+							addressSockAddr.byteSize().toInt(),
+							MemorySegment.NULL,
+							MemorySegment.NULL
+						) as Int
+						if (status != 0 && wsaLastError != 10035) throwLastWSAError()
+						if (monitor.write.availablePermits() < 1) monitor.write.release()
+						return listOf(
+							address,
+							SendSizeData(threadLocalDWORD0.get(DWORD, 0))
+						)
+					}
+				}
 				val status = nativeWSASend!!.invokeExact(
 					capturedStateSegment,
 					socket,
@@ -82,9 +93,10 @@ class WindowsIPv6SocketSendToFeature(
 					MemorySegment.NULL,
 					MemorySegment.NULL
 				) as Int
-				if (status != 0) throwLastWSAError()
-				return emptyList()
+
+				if (status != 0 && wsaLastError != 10035) throwLastWSAError()
+				if (monitor.write.availablePermits() < 1) monitor.write.release()
+				return listOf(SendSizeData(threadLocalDWORD0.get(DWORD, 0)))
 			}
 		}
-	}
 }
