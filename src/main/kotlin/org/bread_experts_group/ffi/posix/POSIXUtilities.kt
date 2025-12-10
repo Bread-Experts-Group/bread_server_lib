@@ -22,7 +22,8 @@ fun decodeErrno(decodeErrno: Int) {
 		val nameSeg = nativeStrErrorNameNP!!.invokeExact(
 			decodeErrno
 		) as MemorySegment
-		val name = nameSeg.reinterpret(Long.MAX_VALUE).getString(0, Charsets.UTF_8)
+		val name = if (nameSeg == MemorySegment.NULL) "BSL NO ERRNO NAME"
+		else nameSeg.reinterpret(Long.MAX_VALUE).getString(0, Charsets.UTF_8)
 		val descriptionSeg = nativeStrErrorL!!.invokeExact(
 			decodeErrno,
 			locale

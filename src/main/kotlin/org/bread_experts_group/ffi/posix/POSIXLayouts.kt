@@ -31,6 +31,17 @@ val addrinfo_ai_addrlen: VarHandle = addrinfo.varHandle(groupElement("ai_addrlen
 val addrinfo_ai_addr: VarHandle = addrinfo.varHandle(groupElement("ai_addr"))
 val addrinfo_ai_next: VarHandle = addrinfo.varHandle(groupElement("ai_next"))
 
+val in_addr: StructLayout = MemoryLayout.structLayout(
+	MemoryLayout.sequenceLayout(4, ValueLayout.JAVA_BYTE).withName("s_addr")
+)
+
+val sockaddr_in: StructLayout = MemoryLayout.structLayout(
+	ValueLayout.JAVA_SHORT.withName("sin_family"),
+	ValueLayout.JAVA_SHORT.withName("sin_port"),
+	in_addr.withName("sin_addr"),
+)
+val sockaddr_in_sin_addr: MethodHandle = sockaddr_in.sliceHandle(groupElement("sin_addr"))
+
 val in6_addr: StructLayout = MemoryLayout.structLayout(
 	MemoryLayout.sequenceLayout(16, ValueLayout.JAVA_BYTE).withName("s6_addr")
 )

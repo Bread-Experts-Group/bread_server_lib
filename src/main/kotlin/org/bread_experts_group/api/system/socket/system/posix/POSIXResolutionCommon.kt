@@ -1,6 +1,8 @@
 package org.bread_experts_group.api.system.socket.system.posix
 
+import org.bread_experts_group.api.system.feature.linux.LinuxSystemNetworkingSocketsFeature.Companion.AF_INET
 import org.bread_experts_group.api.system.feature.linux.LinuxSystemNetworkingSocketsFeature.Companion.AF_INET6
+import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressData
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressData
 import org.bread_experts_group.api.system.socket.resolution.*
 import org.bread_experts_group.ffi.capturedStateSegment
@@ -42,15 +44,22 @@ fun posixResolve(
 			hints,
 			results
 		) as Int
-		if (status != 0) TODO("Get addr info errors")
+		when (status) {
+			-9 -> {
+				data.add(StandardResolutionStatus.NAME_NOT_FOUND)
+				return data
+			}
+
+			else -> decodeErrno(status)
+		}
 
 		fun getSockAddr(addrData: MemorySegment): ResolutionDataPartIdentifier {
 			return when (domain) {
-//				AF_INET -> InternetProtocolV4AddressData(
-//					(sockaddr_in_sin_addr.invokeExact(addrData, 0L) as MemorySegment)
-//						.toArray(ValueLayout.JAVA_BYTE)
-//				)
-//
+				AF_INET -> InternetProtocolV4AddressData(
+					(sockaddr_in_sin_addr.invokeExact(addrData, 0L) as MemorySegment)
+						.toArray(ValueLayout.JAVA_BYTE)
+				)
+
 				AF_INET6 -> InternetProtocolV6AddressData(
 					(sockaddr_in6_sin6_addr.invokeExact(addrData, 0L) as MemorySegment)
 						.toArray(ValueLayout.JAVA_BYTE)
