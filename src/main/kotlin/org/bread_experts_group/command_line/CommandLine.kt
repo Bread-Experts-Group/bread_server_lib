@@ -42,8 +42,8 @@ fun readArgs(
 			val afterDashes = it.substring(if (it[1] == '-') 2 else 1)
 			val equSeparator = afterDashes.indexOf('=')
 			if (equSeparator == -1) {
-				val adjacent = args[position]
-				if (adjacent[0] == '-') afterDashes.lowercase() to null
+				val adjacent = args.getOrNull(position)
+				if (adjacent == null || adjacent[0] == '-') afterDashes.lowercase() to null
 				else {
 					position++
 					afterDashes.lowercase() to adjacent
