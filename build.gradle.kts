@@ -7,11 +7,6 @@ plugins {
 	`maven-publish`
 	`java-library`
 	signing
-	application // internal testing only
-}
-
-application {
-	mainClass = "org.bread_experts_group.project_incubator.rfb.RemoteFrameBufferMainKt"
 }
 
 group = "org.bread_experts_group"
