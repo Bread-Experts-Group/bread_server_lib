@@ -14,7 +14,7 @@ import org.bread_experts_group.api.system.SystemProvider
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.SystemDeviceType
-import org.bread_experts_group.api.system.device.io.IODeviceFeatures
+import org.bread_experts_group.api.system.io.IODeviceFeatures
 import org.bread_experts_group.api.system.user.SystemUserFeatures
 import org.bread_experts_group.protocol.vt100d.*
 import java.time.Duration
@@ -67,8 +67,8 @@ class Console {
 	val cInEvents = cIn.get(GraphicsConsoleIOFeatures.EVENT_GET)
 
 	init {
-		cOut.get(GraphicsConsoleIOFeatures.CODING_SET).setCoding(
-			CodingFormatsProvider.get(CodingFormats.UTF_8).coding
+		cOut.get(GraphicsConsoleIOFeatures.SET_CODE_PAGE).setCodePage(
+			CodingFormatsProvider.get(CodingFormats.CODE_PAGE_UTF8).codePage
 		)
 		cOut.get(GraphicsConsoleIOFeatures.MODE_SET).setMode(
 			EnumSet.of(
@@ -76,8 +76,8 @@ class Console {
 				GraphicsConsoleModes.OUTPUT_CONTROL_SEQUENCES
 			)
 		)
-		cIn.get(GraphicsConsoleIOFeatures.CODING_SET).setCoding(
-			CodingFormatsProvider.get(CodingFormats.UTF_8).coding
+		cIn.get(GraphicsConsoleIOFeatures.SET_CODE_PAGE).setCodePage(
+			CodingFormatsProvider.get(CodingFormats.CODE_PAGE_UTF8).codePage
 		)
 		cIn.get(GraphicsConsoleIOFeatures.MODE_SET).setMode(
 			EnumSet.of(
@@ -86,7 +86,8 @@ class Console {
 				GraphicsConsoleModes.INPUT_MOUSE_EVENTS
 			)
 		)
-		cOutWrite.write(OPEN_ALT_BUFFER, Charsets.UTF_8)
+		TODO("IO 2")
+//		cOutWrite.write(OPEN_ALT_BUFFER, Charsets.UTF_8)
 	}
 
 	var bank = ConsoleBank(messageQueue)
@@ -147,15 +148,16 @@ class Console {
 							override fun opened(): Boolean {
 								bank = localBank
 								val (device) = device.get(SystemDeviceFeatures.IO_DEVICE).open()!!
-								val deviceRead = device.get(IODeviceFeatures.READ)
-								Thread.ofPlatform().start {
-									val buffer = ByteArray(512)
-									while (true) {
-										val read = deviceRead.read(buffer)
-										if (read == 0) continue
-										localBank.write(buffer.decodeToString(0, read))
-									}
-								}
+//								val deviceRead = device.get(IODeviceFeatures.READ)
+//								Thread.ofPlatform().start {
+//									val buffer = ByteArray(512)
+//									while (true) {
+//										val read = deviceRead.read(buffer)
+//										if (read == 0) continue
+//										localBank.write(buffer.decodeToString(0, read))
+//									}
+//								}
+								TODO("SRL2")
 								return false
 							}
 						}
@@ -332,7 +334,8 @@ class Console {
 				) +
 				CURSOR_XY_POS(mouse.x.toUShort(), mouse.y.toUShort()) +
 				ERASE_CHARACTERS(1u)
-		cOutWrite.write(buffer, Charsets.UTF_8)
+		TODO("IO 2")
+//		cOutWrite.write(buffer, Charsets.UTF_8)
 	}
 }
 

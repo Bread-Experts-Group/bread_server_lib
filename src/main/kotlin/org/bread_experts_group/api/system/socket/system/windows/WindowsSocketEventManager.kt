@@ -7,6 +7,7 @@ import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.*
+import org.bread_experts_group.ffi.windows.wsaLastError
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -30,11 +31,11 @@ internal object WindowsSocketEventManager {
 		override val position: Long = 1L shl ordinal
 	}
 
-	val pendingAdditions = ConcurrentLinkedQueue<Triple<MemorySegment, Long, SocketMonitor>>()
-	val pendingRemovals = ConcurrentLinkedQueue<Pair<MemorySegment, Long>>()
-	val socketEvents = ConcurrentHashMap<Long, MemorySegment>()
-	val eventSockets = ConcurrentHashMap<MemorySegment, Pair<Long, SocketMonitor>>()
-	val changeEvent: MemorySegment = nativeWSACreateEvent!!.invokeExact(
+	private val pendingAdditions = ConcurrentLinkedQueue<Triple<MemorySegment, Long, SocketMonitor>>()
+	private val pendingRemovals = ConcurrentLinkedQueue<Pair<MemorySegment, Long>>()
+	private val socketEvents = ConcurrentHashMap<Long, MemorySegment>()
+	private val eventSockets = ConcurrentHashMap<MemorySegment, Pair<Long, SocketMonitor>>()
+	private val changeEvent: MemorySegment = nativeWSACreateEvent!!.invokeExact(
 		capturedStateSegment
 	) as MemorySegment
 
@@ -72,7 +73,6 @@ internal object WindowsSocketEventManager {
 					pendingRemovals.removeIf { (event, socket) ->
 						val status = nativeWSACloseEvent!!.invokeExact(capturedStateSegment, event) as Int
 						if (status == 0) throwLastWSAError()
-						socketEvents.remove(socket)
 						eventSockets.remove(event)
 						true
 					}
@@ -90,7 +90,12 @@ internal object WindowsSocketEventManager {
 					triggeredEvent,
 					networkEvents
 				) as Int
-				if (status != 0) throwLastWSAError()
+				if (status != 0) {
+					if (wsaLastError == 10038) {
+						dropSocket(socket)
+						continue
+					} else throwLastWSAError()
+				}
 				val events = SocketEvents.entries.from(
 					WSANETWORKEVENTS_lNetworkEvents.get(networkEvents, 0L) as Int
 				)
@@ -145,7 +150,7 @@ internal object WindowsSocketEventManager {
 	}
 
 	fun dropSocket(s: Long) {
-		val event = socketEvents[s] ?: return
+		val event = socketEvents.remove(s) ?: return
 		pendingRemovals.add(event to s)
 		notifyChange()
 	}

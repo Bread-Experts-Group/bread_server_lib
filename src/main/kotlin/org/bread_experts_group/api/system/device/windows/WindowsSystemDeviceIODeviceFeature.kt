@@ -2,10 +2,9 @@ package org.bread_experts_group.api.system.device.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceIODeviceFeature
-import org.bread_experts_group.api.system.device.io.IODevice
-import org.bread_experts_group.api.system.device.io.open.*
-import org.bread_experts_group.api.system.device.io.windows.WindowsIODevice
-import org.bread_experts_group.api.system.device.io.windows.WindowsIODeviceReleaseFeature
+import org.bread_experts_group.api.system.io.feature.IODeviceReleaseFeature
+import org.bread_experts_group.api.system.io.open.*
+import org.bread_experts_group.api.system.io.windows.WindowsIODevice
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
@@ -126,9 +125,11 @@ class WindowsSystemDeviceIODeviceFeature(
 
 	override fun open(
 		vararg features: OpenIODeviceFeatureIdentifier
-	): Pair<IODevice, List<OpenIODeviceFeatureIdentifier>>? {
-		val supportedFeatures = mutableListOf<OpenIODeviceFeatureIdentifier>()
-		val desiredAccess = getDesiredAccessO(features, supportedFeatures)
+	): List<OpenIODeviceDataIdentifier> {
+		val supportedFeatures = mutableListOf<OpenIODeviceDataIdentifier>()
+
+		@Suppress("UNCHECKED_CAST")
+		val desiredAccess = getDesiredAccessO(features, supportedFeatures as MutableList<OpenIODeviceFeatureIdentifier>)
 		val shareMode = getShareModeO(features, supportedFeatures)
 
 		if (features.contains(StandardIOOpenFeatures.DIRECTORY)) {
@@ -167,7 +168,8 @@ class WindowsSystemDeviceIODeviceFeature(
 						supportedFeatures.add(StandardIOOpenFeatures.CREATE)
 					} else {
 						ePA.close()
-						return null
+						supportedFeatures.add(StandardIOOpenStatus.DEVICE_NOT_FOUND)
+						return supportedFeatures
 					}
 
 					else -> if (handle == INVALID_HANDLE_VALUE) {
@@ -178,13 +180,18 @@ class WindowsSystemDeviceIODeviceFeature(
 			}
 			supportedFeatures.add(StandardIOOpenFeatures.DIRECTORY)
 			val newDevice = WindowsIODevice(handle)
+			val cleaningAction = newDevice.registerCleaningAction {
+				if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0)
+					throwLastError()
+			}
 			newDevice.features.add(
-				WindowsIODeviceReleaseFeature(newDevice.registerCleaningAction {
-					if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0)
-						throwLastError()
-				})
+				IODeviceReleaseFeature(
+					ImplementationSource.SYSTEM_NATIVE,
+					cleaningAction::clean
+				)
 			)
-			return newDevice to supportedFeatures
+			supportedFeatures.add(newDevice)
+			return supportedFeatures
 		} else {
 			val creationDisposition = if (features.contains(StandardIOOpenFeatures.CREATE)) {
 				if (features.contains(FileIOOpenFeatures.TRUNCATE)) WindowsCreationDisposition.CREATE_ALWAYS
@@ -250,7 +257,11 @@ class WindowsSystemDeviceIODeviceFeature(
 				}
 			} catch (e: WindowsLastErrorException) {
 				when (e.error.enum) {
-					WindowsLastError.ERROR_FILE_NOT_FOUND -> return null
+					WindowsLastError.ERROR_FILE_NOT_FOUND -> {
+						supportedFeatures.add(StandardIOOpenStatus.DEVICE_NOT_FOUND)
+						return supportedFeatures
+					}
+
 					WindowsLastError.ERROR_ALREADY_EXISTS -> when (creationDisposition) {
 						WindowsCreationDisposition.CREATE_ALWAYS -> supportedFeatures.add(FileIOOpenFeatures.TRUNCATE)
 						WindowsCreationDisposition.OPEN_ALWAYS -> {}
@@ -273,13 +284,18 @@ class WindowsSystemDeviceIODeviceFeature(
 				supportedFeatures.add(WindowsIOReOpenFeatures.DELETE_ON_RESTART)
 			}
 			val newDevice = WindowsIODevice(handle)
+			val cleaningAction = newDevice.registerCleaningAction {
+				if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0)
+					throwLastError()
+			}
 			newDevice.features.add(
-				WindowsIODeviceReleaseFeature(newDevice.registerCleaningAction {
-					if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0)
-						throwLastError()
-				})
+				IODeviceReleaseFeature(
+					ImplementationSource.SYSTEM_NATIVE,
+					cleaningAction::clean
+				)
 			)
-			return newDevice to supportedFeatures
+			supportedFeatures.add(newDevice)
+			return supportedFeatures
 		}
 	}
 }

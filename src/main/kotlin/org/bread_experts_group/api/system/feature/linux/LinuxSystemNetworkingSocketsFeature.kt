@@ -4,6 +4,11 @@ import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.SystemNetworkingSocketsFeature
 import org.bread_experts_group.api.system.socket.ipv4.feature.SystemInternetProtocolV4SocketProviderFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv4.feature.SystemInternetProtocolV4StreamProtocolsSocketProviderFeature
+import org.bread_experts_group.api.system.socket.ipv4.stream.feature.SystemInternetProtocolV4StreamProtocolFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv4.stream.feature.SystemInternetProtocolV4TCPFeature
+import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.IPv4TCPFeatureImplementation
+import org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.posix.POSIXIPv4TCPResolutionFeature
 import org.bread_experts_group.api.system.socket.ipv6.feature.SystemInternetProtocolV6SocketProviderFeatureImplementation
 import org.bread_experts_group.api.system.socket.ipv6.feature.SystemInternetProtocolV6StreamProtocolsSocketProviderFeature
 import org.bread_experts_group.api.system.socket.ipv6.stream.feature.SystemInternetProtocolV6StreamProtocolFeatureImplementation
@@ -55,7 +60,28 @@ class LinuxSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 		if (ipv4DatagramUDP || ipv4StreamTCP) {
 			val ipv4 = mutableMapOf<Int, SystemInternetProtocolV4SocketProviderFeatureImplementation<*>>()
 //			if (ipv4DatagramUDP) TODO: IPv4 Datagram UDP
-//			if (ipv4StreamTCP) TODO: IPv4 Stream TCP
+			if (ipv4StreamTCP) {
+				@Suppress("UNCHECKED_CAST")
+				val streamProtocols = ipv4.getOrPut(SOCK_STREAM) {
+					object : SystemInternetProtocolV4StreamProtocolsSocketProviderFeature() {
+						override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+						override val features: MutableList<
+								SystemInternetProtocolV4StreamProtocolFeatureImplementation<*>> =
+							mutableListOf()
+					}
+				} as FeatureProvider<SystemInternetProtocolV4StreamProtocolFeatureImplementation<*>>
+
+				// Make sure to conditionalize based on future stream protocols
+				streamProtocols.features.add(
+					object : SystemInternetProtocolV4TCPFeature() {
+						override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+						override val features: MutableList<IPv4TCPFeatureImplementation<*>> =
+							mutableListOf(
+								POSIXIPv4TCPResolutionFeature()
+							)
+					}
+				)
+			}
 			implementations.add(object : SystemSocketProviderInternetProtocolV4Feature() {
 				override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 				override val features: MutableList<SystemInternetProtocolV4SocketProviderFeatureImplementation<*>> =

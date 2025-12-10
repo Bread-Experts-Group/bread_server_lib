@@ -2,14 +2,15 @@ package org.bread_experts_group.api.system.socket.ipv6.windows
 
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
+import org.bread_experts_group.api.system.socket.DeferredOperation
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveFeatureIdentifier
 import org.bread_experts_group.api.system.socket.listen.WindowsReceiveFeatures
-import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
-import org.bread_experts_group.api.system.socket.system.DeferredSocketReceive
+import org.bread_experts_group.api.system.socket.system.DeferredReceive
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
@@ -27,8 +28,8 @@ class WindowsIPv6SocketReceiveFromFeature(
 	override fun gatherSegments(
 		data: Collection<MemorySegment>,
 		vararg features: IPv6ReceiveFeatureIdentifier
-	): DeferredSocketOperation<IPv6ReceiveDataIdentifier> =
-		object : DeferredSocketReceive<IPv6ReceiveDataIdentifier>(monitor) {
+	): DeferredOperation<IPv6ReceiveDataIdentifier> =
+		object : DeferredReceive<IPv6ReceiveDataIdentifier>(monitor) {
 			override fun receive(): List<IPv6ReceiveDataIdentifier> = Arena.ofConfined().use { tempArena ->
 				val supportedFeatures = mutableListOf<IPv6ReceiveDataIdentifier>()
 				val allocated = tempArena.allocate(WSABUF, data.size.toLong())
@@ -45,6 +46,7 @@ class WindowsIPv6SocketReceiveFromFeature(
 				}
 				threadLocalDWORD1.set(DWORD, 0, flags)
 				val sender = tempArena.allocate(sockaddr_in6)
+				threadLocalDWORD0.set(DWORD, 0, 0)
 				threadLocalDWORD2.set(DWORD, 0, sender.byteSize().toInt())
 				var status = nativeWSARecvFrom!!.invokeExact(
 					capturedStateSegment,
@@ -58,8 +60,13 @@ class WindowsIPv6SocketReceiveFromFeature(
 					MemorySegment.NULL,
 					MemorySegment.NULL
 				) as Int
-
-				if (status != 0 && wsaLastError != 10035) throwLastWSAError()
+				if (status != 0) {
+					when (wsaLastError) {
+						10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+						10035 -> {}
+						else -> throwLastWSAError()
+					}
+				}
 				supportedFeatures.add(ReceiveSizeData(threadLocalDWORD0.get(DWORD, 0).toLong()))
 				val addrSeg = sockaddr_in6_sin6_addr_Byte.invokeExact(sender, 0L) as MemorySegment
 				val addrBytes = ByteArray(addrSeg.byteSize().toInt())

@@ -3,13 +3,14 @@ package org.bread_experts_group.api.system.socket.ipv6.windows
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET6
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.io.send.SendSizeData
+import org.bread_experts_group.api.system.socket.DeferredOperation
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketSendFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendFeatureIdentifier
-import org.bread_experts_group.api.system.socket.send.SendSizeData
-import org.bread_experts_group.api.system.socket.system.DeferredSocketSend
+import org.bread_experts_group.api.system.socket.system.DeferredSend
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.DWORD
@@ -31,9 +32,10 @@ class WindowsIPv6SocketSendToFeature(
 	override fun scatterSegments(
 		data: Collection<MemorySegment>,
 		vararg features: IPv6SendFeatureIdentifier
-	): DeferredSocketOperation<IPv6SendDataIdentifier> =
-		object : DeferredSocketSend<IPv6SendDataIdentifier>(monitor) {
+	): DeferredOperation<IPv6SendDataIdentifier> =
+		object : DeferredSend<IPv6SendDataIdentifier>(monitor) {
 			override fun send(): List<IPv6SendDataIdentifier> = Arena.ofConfined().use { tempArena ->
+				val supportedFeatures = mutableListOf<IPv6SendDataIdentifier>()
 				val allocated = tempArena.allocate(WSABUF, data.size.toLong())
 				var currentSegment = allocated
 				data.forEach {
@@ -63,6 +65,7 @@ class WindowsIPv6SocketSendToFeature(
 							ValueLayout.JAVA_BYTE, 0,
 							address.data.size
 						)
+						threadLocalDWORD0.set(DWORD, 0, 0)
 						status = nativeWSASendTo!!.invokeExact(
 							capturedStateSegment,
 							socket,
@@ -75,14 +78,19 @@ class WindowsIPv6SocketSendToFeature(
 							MemorySegment.NULL,
 							MemorySegment.NULL
 						) as Int
-						if (status != 0 && wsaLastError != 10035) throwLastWSAError()
-						if (monitor.write.availablePermits() < 1) monitor.write.release()
-						return listOf(
-							address,
-							SendSizeData(threadLocalDWORD0.get(DWORD, 0))
-						)
+						if (status != 0) {
+							when (wsaLastError) {
+								10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+								10035 -> {}
+								else -> throwLastWSAError()
+							}
+						} else if (monitor.write.availablePermits() < 1) monitor.write.release()
+						supportedFeatures.add(SendSizeData(threadLocalDWORD0.get(DWORD, 0)))
+						supportedFeatures.add(address)
+						return supportedFeatures
 					}
 				}
+				threadLocalDWORD0.set(DWORD, 0, 0)
 				val status = nativeWSASend!!.invokeExact(
 					capturedStateSegment,
 					socket,
@@ -93,10 +101,15 @@ class WindowsIPv6SocketSendToFeature(
 					MemorySegment.NULL,
 					MemorySegment.NULL
 				) as Int
-
-				if (status != 0 && wsaLastError != 10035) throwLastWSAError()
-				if (monitor.write.availablePermits() < 1) monitor.write.release()
-				return listOf(SendSizeData(threadLocalDWORD0.get(DWORD, 0)))
+				if (status != 0) {
+					when (wsaLastError) {
+						10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+						10035 -> {}
+						else -> throwLastWSAError()
+					}
+				} else if (monitor.write.availablePermits() < 1) monitor.write.release()
+				supportedFeatures.add(SendSizeData(threadLocalDWORD0.get(DWORD, 0)))
+				return supportedFeatures
 			}
 		}
 }

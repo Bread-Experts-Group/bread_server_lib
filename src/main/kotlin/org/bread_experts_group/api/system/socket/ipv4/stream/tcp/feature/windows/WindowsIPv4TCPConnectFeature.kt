@@ -3,14 +3,14 @@ package org.bread_experts_group.api.system.socket.ipv4.stream.tcp.feature.window
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.socket.DeferredOperation
 import org.bread_experts_group.api.system.socket.feature.SocketConnectFeature
 import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressPortData
 import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4ConnectionDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4ConnectionFeatureIdentifier
 import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4LocalAddressPortData
 import org.bread_experts_group.api.system.socket.ipv4.connect.IPv4RemoteAddressPortData
-import org.bread_experts_group.api.system.socket.system.DeferredSocketConnect
+import org.bread_experts_group.api.system.socket.system.DeferredConnect
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.api.system.socket.system.windows.SOL_SOCKET
 import org.bread_experts_group.api.system.socket.system.windows.SO_UPDATE_CONNECT_CONTEXT
@@ -32,8 +32,8 @@ class WindowsIPv4TCPConnectFeature(
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun connect(
 		vararg features: IPv4ConnectionFeatureIdentifier
-	): DeferredSocketOperation<IPv4ConnectionDataIdentifier> =
-		object : DeferredSocketConnect<IPv4ConnectionDataIdentifier>(monitor) {
+	): DeferredOperation<IPv4ConnectionDataIdentifier> =
+		object : DeferredConnect<IPv4ConnectionDataIdentifier>(monitor) {
 			override fun connect(): List<IPv4ConnectionDataIdentifier> = Arena.ofConfined().use { tempArena ->
 				val data = mutableListOf<IPv4ConnectionDataIdentifier>()
 				val addresses = features.mapNotNull { it as? InternetProtocolV4AddressPortData }

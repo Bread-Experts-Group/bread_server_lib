@@ -9,3 +9,4 @@ org.bread_experts_group.api.system.device.windows.WindowsSystemGetCurrentWorking
 org.bread_experts_group.api.system.device.windows.WindowsSystemGetTemporaryStorageDeviceFeature
 org.bread_experts_group.api.system.feature.macos.MacOSSystemThreadLocalUserFeature
 org.bread_experts_group.api.system.feature.linux.LinuxSystemNetworkingSocketsFeature
+org.bread_experts_group.api.system.device.linux.LinuxSystemGetCurrentWorkingDeviceFeature

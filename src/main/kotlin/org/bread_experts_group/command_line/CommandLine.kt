@@ -99,11 +99,19 @@ fun readArgs(
 		}
 	}
 	flags.forEach {
-		if (!it.repeatable && it.default != null && !singleArgs.contains(it.flagName)) {
-			logger.finer {
-				"Using default (\"${it.default}\" (${it.default::class.simpleName})) for flag \"${it.flagName}\""
+		if (it.default != null) {
+			if (!it.repeatable && !singleArgs.contains(it.flagName)) {
+				logger.finer {
+					"Using default (\"${it.default}\" (${it.default::class.simpleName})) for flag \"${it.flagName}\""
+				}
+				singleArgs.put(it.flagName, it.default)
 			}
-			singleArgs.put(it.flagName, it.default)
+			if (it.repeatable && !multipleArgs.contains(it.flagName)) {
+				logger.finer {
+					"Using default (\"${it.default}\" (${it.default::class.simpleName})) for flag \"${it.flagName}\""
+				}
+				multipleArgs.put(it.flagName, mutableListOf(it.default))
+			}
 		}
 		if (it.required != 0 && !(singleArgs.containsKey(it.flagName) || multipleArgs.containsKey(it.flagName)))
 			problems.add(RequiredArgumentsMissingException(it, 0))

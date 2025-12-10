@@ -17,4 +17,11 @@ open class InternetProtocolV6AddressPortData(
 	)
 
 	override fun toString(): String = "IPv6[${collect()}:$port]"
+	override fun equals(other: Any?): Boolean {
+		if (!super.equals(other)) return false
+		if (other !is InternetProtocolV6AddressPortData) return false
+		return port == other.port
+	}
+
+	override fun hashCode(): Int = super.hashCode() + (6 * port.toInt())
 }

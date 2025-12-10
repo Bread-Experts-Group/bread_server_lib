@@ -2,7 +2,7 @@ package org.bread_experts_group.api.system.socket.ipv6.posix
 
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.socket.DeferredOperation
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.feature.SocketAcceptFeature
 import org.bread_experts_group.api.system.socket.feature.SocketFeatureImplementation
@@ -11,7 +11,7 @@ import org.bread_experts_group.api.system.socket.ipv6.IPv6SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.accept.IPv6AcceptDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.accept.IPv6AcceptFeatureIdentifier
-import org.bread_experts_group.api.system.socket.system.DeferredSocketAccept
+import org.bread_experts_group.api.system.socket.system.DeferredAccept
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.api.system.socket.system.linux.LinuxSocketEventManager
 import org.bread_experts_group.api.system.socket.system.linux.linuxClose
@@ -30,8 +30,8 @@ class LinuxIPv6SocketAcceptFeature(
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun accept(
 		vararg features: IPv6AcceptFeatureIdentifier
-	): DeferredSocketOperation<IPv6AcceptDataIdentifier> =
-		object : DeferredSocketAccept<IPv6AcceptDataIdentifier>(monitor) {
+	): DeferredOperation<IPv6AcceptDataIdentifier> =
+		object : DeferredAccept<IPv6AcceptDataIdentifier>(monitor) {
 			override fun accept(): List<IPv6AcceptDataIdentifier> = Arena.ofConfined().use { tempArena ->
 				val sockAddr = tempArena.allocate(sockaddr_in6)
 				threadLocalInt.set(ValueLayout.JAVA_INT, 0, sockAddr.byteSize().toInt())

@@ -23,6 +23,6 @@ class WindowsSystemGetTemporaryStorageDeviceFeature : SystemGetPathDeviceFeature
 			val filePathSegment = filePathArena.allocate(size * 2L)
 			size = nativeGetTempPath2W.invokeExact(capturedStateSegment, size, filePathSegment) as Int
 			if (size == 0) throwLastError()
-			return createPathDevice(filePathArena, filePathSegment)
+			return winCreatePathDevice(filePathArena, filePathSegment)
 		}
 }

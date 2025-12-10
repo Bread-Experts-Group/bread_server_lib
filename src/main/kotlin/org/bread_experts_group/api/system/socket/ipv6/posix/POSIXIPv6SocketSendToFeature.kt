@@ -2,12 +2,14 @@ package org.bread_experts_group.api.system.socket.ipv6.posix
 
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.io.send.SendSizeData
+import org.bread_experts_group.api.system.socket.DeferredOperation
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketSendFeature
+import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendFeatureIdentifier
-import org.bread_experts_group.api.system.socket.send.SendSizeData
-import org.bread_experts_group.api.system.socket.system.DeferredSocketSend
+import org.bread_experts_group.api.system.socket.system.DeferredSend
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.posix.*
@@ -24,9 +26,12 @@ class POSIXIPv6SocketSendToFeature(
 	override fun scatterSegments(
 		data: Collection<MemorySegment>,
 		vararg features: IPv6SendFeatureIdentifier
-	): DeferredSocketOperation<IPv6SendDataIdentifier> =
-		object : DeferredSocketSend<IPv6SendDataIdentifier>(monitor) {
+	): DeferredOperation<IPv6SendDataIdentifier> =
+		object : DeferredSend<IPv6SendDataIdentifier>(monitor) {
 			override fun send(): List<IPv6SendDataIdentifier> = Arena.ofConfined().use { tempArena ->
+				val address = features.firstNotNullOfOrNull { it as? InternetProtocolV6AddressPortData }
+				if (address != null) TODO("SEND TO")
+				val dataOut = mutableListOf<IPv6SendDataIdentifier>()
 				val message = tempArena.allocate(msghdr)
 				val iov = tempArena.allocate(iovec, data.size.toLong())
 				msghdr_msg_iov.set(message, 0L, iov)
@@ -43,8 +48,12 @@ class POSIXIPv6SocketSendToFeature(
 					message,
 					0
 				) as Long
-				if (sent == -1L) throwLastErrno()
-				return listOf(SendSizeData(sent))
+				dataOut.add(SendSizeData(sent))
+				if (sent == -1L) {
+					if (errno == 104) dataOut.add(StandardSocketStatus.CONNECTION_CLOSED)
+					else throwLastErrno()
+				}
+				return dataOut
 			}
 		}
 }

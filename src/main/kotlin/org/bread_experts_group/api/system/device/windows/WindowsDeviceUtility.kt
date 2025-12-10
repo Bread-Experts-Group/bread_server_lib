@@ -8,8 +8,8 @@ import org.bread_experts_group.api.system.device.SystemDeviceType
 import org.bread_experts_group.api.system.device.feature.SystemDeviceBasicIdentifierFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceFriendlyNameFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceSerialPortNameFeature
-import org.bread_experts_group.api.system.device.io.open.OpenIODeviceFeatureIdentifier
 import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getFlags
+import org.bread_experts_group.api.system.io.open.OpenIODeviceFeatureIdentifier
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
@@ -181,7 +181,7 @@ fun decodeDevice(eventData: WindowsCMNotifyEventData, arena: Arena) = when (even
 	else -> TODO("Filter ... ${eventData.filterType}")
 }
 
-fun createPathDevice(
+fun winCreatePathDevice(
 	arena: Arena,
 	pathSegment: MemorySegment
 ): SystemDevice = SystemDevice(SystemDeviceType.FILE_SYSTEM_ENTRY).also {

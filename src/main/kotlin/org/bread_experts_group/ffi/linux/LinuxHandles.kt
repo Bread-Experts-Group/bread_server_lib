@@ -45,3 +45,13 @@ val nativeEPollCtl: MethodHandle? = cLookup.getDowncall(
 		ernCapture
 	)
 )
+
+val nativeGetCurrentDirName: MethodHandle? = cLookup.getDowncall(
+	nativeLinker, "get_current_dir_name",
+	arrayOf(
+		ValueLayout.ADDRESS /* char */
+	),
+	listOf(
+		ernCapture
+	)
+)

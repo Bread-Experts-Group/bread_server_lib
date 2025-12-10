@@ -97,7 +97,7 @@ val projectVersion = providers.provider { project.version.toString() }
 val generateBuildInfo: TaskProvider<Task> by tasks.registering {
 	val generatedDir = project.layout.buildDirectory.get().asFile.resolve("generated")
 	outputs.dir(generatedDir)
-	doLast {
+	doFirst {
 		generatedDir.mkdirs()
 		val file = File("$generatedDir/BuildInfo.kt")
 		val compileTime: String = ZonedDateTime.now().format(

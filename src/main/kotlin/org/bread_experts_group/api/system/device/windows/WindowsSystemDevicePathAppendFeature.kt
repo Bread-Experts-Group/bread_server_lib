@@ -26,6 +26,6 @@ class WindowsSystemDevicePathAppendFeature(private val pathSegment: MemorySegmen
 				0x00000003 // TODO PathCchAppendEx flags
 			) as Int
 		)
-		return createPathDevice(appendArena, buffer)
+		return winCreatePathDevice(appendArena, buffer)
 	}
 }

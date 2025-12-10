@@ -2,13 +2,13 @@ package org.bread_experts_group.api.system.socket.ipv6.posix
 
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
+import org.bread_experts_group.api.system.socket.DeferredOperation
 import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveFeatureIdentifier
-import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
-import org.bread_experts_group.api.system.socket.system.DeferredSocketReceive
+import org.bread_experts_group.api.system.socket.system.DeferredReceive
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.posix.*
@@ -24,8 +24,8 @@ class POSIXIPv6SocketReceiveFeature(
 	override fun gatherSegments(
 		data: Collection<MemorySegment>,
 		vararg features: IPv6ReceiveFeatureIdentifier
-	): DeferredSocketOperation<IPv6ReceiveDataIdentifier> =
-		object : DeferredSocketReceive<IPv6ReceiveDataIdentifier>(monitor) {
+	): DeferredOperation<IPv6ReceiveDataIdentifier> =
+		object : DeferredReceive<IPv6ReceiveDataIdentifier>(monitor) {
 			override fun receive(): List<IPv6ReceiveDataIdentifier> = Arena.ofConfined().use { tempArena ->
 				val dataOut = mutableListOf<IPv6ReceiveDataIdentifier>()
 				val message = tempArena.allocate(msghdr)

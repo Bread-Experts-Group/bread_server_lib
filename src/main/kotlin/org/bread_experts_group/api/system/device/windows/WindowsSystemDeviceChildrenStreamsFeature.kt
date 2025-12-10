@@ -79,7 +79,7 @@ class WindowsSystemDeviceChildrenStreamsFeature(
 			val fullPath = pathArena.allocate((pathSegment.byteSize() + streamName.byteSize())).copyFrom(pathSegment)
 			fullPath.asSlice(fullPath.getFirstNull2Offset()).copyFrom(streamName)
 			advance()
-			return createPathDevice(pathArena, fullPath)
+			return winCreatePathDevice(pathArena, fullPath)
 		}
 	}
 }

@@ -111,7 +111,7 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 				) as Int
 			)
 			advance()
-			return createPathDevice(pathArena, fullPath)
+			return winCreatePathDevice(pathArena, fullPath)
 		}
 	}
 }

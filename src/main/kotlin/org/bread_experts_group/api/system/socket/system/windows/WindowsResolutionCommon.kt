@@ -46,9 +46,13 @@ fun winResolve(
 			flags = flags or 0x02
 			data.add(StandardResolutionFeatures.CANONICAL_NAME)
 		}
-		if (features.contains(WindowsResolutionFeatures.NUMERIC_HOST)) {
+		if (features.contains(StandardResolutionFeatures.NUMERIC_HOST)) {
 			flags = flags or 0x04
-			data.add(WindowsResolutionFeatures.NUMERIC_HOST)
+			data.add(StandardResolutionFeatures.NUMERIC_HOST)
+		}
+		if (features.contains(StandardResolutionFeatures.MAP_IPV4_ON_IPV6)) {
+			flags = flags or 0x0800
+			data.add(StandardResolutionFeatures.MAP_IPV4_ON_IPV6)
 		}
 		if (features.contains(WindowsResolutionFeatures.REQUIRE_CONFIGURED_GLOBAL_ADDRESS)) {
 			flags = flags or 0x0400
@@ -130,7 +134,15 @@ fun winResolve(
 			MemorySegment.NULL,
 			MemorySegment.NULL
 		) as Int
-		if (status != 0) decodeWin32Error(status)
+		when (status) {
+			11001 -> {
+				data.add(StandardResolutionStatus.NAME_NOT_FOUND)
+				return data
+			}
+
+			0 -> {}
+			else -> decodeWin32Error(status)
+		}
 		var rsvData = threadLocalPTR.get(ValueLayout.ADDRESS, 0)
 		var iter = 0
 

@@ -21,6 +21,6 @@ class WindowsSystemDeviceParentFeature(private val pathSegment: MemorySegment) :
 			copied.byteSize() / 2
 		) as Int
 		if (status != 1) decodeWin32Error(status)
-		createPathDevice(copyArena, copied)
+		winCreatePathDevice(copyArena, copied)
 	}
 }

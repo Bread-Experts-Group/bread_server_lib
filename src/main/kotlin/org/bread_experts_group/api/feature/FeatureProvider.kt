@@ -46,7 +46,7 @@ interface FeatureProvider<X : FeatureImplementation<out X>> {
 		return found as I
 	}
 
-	fun <I : X, E : FeatureExpression<I>> get(feature: E, allowEmulated: Boolean = false): I {
+	fun <I : X, E : FeatureExpression<I>> get(feature: E, allowEmulated: Boolean = true): I {
 		return getOrNull(feature, allowEmulated) ?: throw NoFeatureAvailableException(feature.name)
 	}
 }

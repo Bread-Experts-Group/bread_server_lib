@@ -19,12 +19,12 @@ object GraphicsConsoleIOFeatures {
 		override val name: String = "Console I/O Mode Modification"
 	}
 
-	val CODING_GET = object : FeatureExpression<GraphicsConsoleIOCodingGetFeature> {
-		override val name: String = "Console I/O Coding Retrieval"
+	val GET_CODE_PAGE = object : FeatureExpression<GraphicsConsoleIOGetCodePageFeature> {
+		override val name: String = "Console I/O Code Page Retrieval"
 	}
 
-	val CODING_SET = object : FeatureExpression<GraphicsConsoleIOCodingSetFeature> {
-		override val name: String = "Console I/O Coding Modification"
+	val SET_CODE_PAGE = object : FeatureExpression<GraphicsConsoleIOSetCodePageFeature> {
+		override val name: String = "Console I/O Code Page Modification"
 	}
 
 	val EVENT_GET = object : FeatureExpression<GraphicsConsoleIOEventGetFeature> {

@@ -1,7 +1,7 @@
 package org.bread_experts_group.project_incubator.rfb
 
-import org.bread_experts_group.io.reader.BSLSocketReader
-import org.bread_experts_group.io.reader.BSLSocketWriter
+import org.bread_experts_group.io.reader.BSLReader
+import org.bread_experts_group.io.reader.BSLWriter
 
 data class PixelFormatDataStructure(
 	val bitsPerPixel: Int,
@@ -16,7 +16,7 @@ data class PixelFormatDataStructure(
 	val blueShift: Int
 ) {
 	companion object {
-		fun writePixelFormatStructure(write: BSLSocketWriter<*, *>, n: PixelFormatDataStructure) {
+		fun writePixelFormatStructure(write: BSLWriter<*, *>, n: PixelFormatDataStructure) {
 			write.write8i(n.bitsPerPixel)
 			write.write8i(n.depth)
 			write.write8i(if (n.bigEndian) 1 else 0)
@@ -30,7 +30,7 @@ data class PixelFormatDataStructure(
 			write.fill(3)
 		}
 
-		fun nextPixelFormatStructure(read: BSLSocketReader<*, *>): PixelFormatDataStructure {
+		fun nextPixelFormatStructure(read: BSLReader<*, *>): PixelFormatDataStructure {
 			val structure = PixelFormatDataStructure(
 				read.readU8i(),
 				read.readU8i(),

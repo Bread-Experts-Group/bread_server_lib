@@ -3,14 +3,14 @@ package org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.window
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET6
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.socket.DeferredOperation
 import org.bread_experts_group.api.system.socket.feature.SocketConnectFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionFeatureIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6LocalAddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6RemoteAddressPortData
-import org.bread_experts_group.api.system.socket.system.DeferredSocketConnect
+import org.bread_experts_group.api.system.socket.system.DeferredConnect
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.api.system.socket.system.windows.SOL_SOCKET
 import org.bread_experts_group.api.system.socket.system.windows.SO_UPDATE_CONNECT_CONTEXT
@@ -32,8 +32,8 @@ class WindowsIPv6TCPConnectFeature(
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun connect(
 		vararg features: IPv6ConnectionFeatureIdentifier
-	): DeferredSocketOperation<IPv6ConnectionDataIdentifier> =
-		object : DeferredSocketConnect<IPv6ConnectionDataIdentifier>(monitor) {
+	): DeferredOperation<IPv6ConnectionDataIdentifier> =
+		object : DeferredConnect<IPv6ConnectionDataIdentifier>(monitor) {
 			override fun connect(): List<IPv6ConnectionDataIdentifier> = Arena.ofConfined().use { tempArena ->
 				val data = mutableListOf<IPv6ConnectionDataIdentifier>()
 				val addresses = features.mapNotNull { it as? InternetProtocolV6AddressPortData }

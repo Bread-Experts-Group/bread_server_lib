@@ -1,5 +1,6 @@
 package org.bread_experts_group.api.system.socket.ipv6
 
+import org.bread_experts_group.api.system.socket.ipv4.InternetProtocolV4AddressData
 import org.bread_experts_group.api.system.socket.ipv6.accept.IPv6AcceptFeatureIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.bind.IPv6BindFeatureIdentifier
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPartIdentifier
@@ -20,6 +21,10 @@ open class InternetProtocolV6AddressData(
 		)
 	}
 
+	constructor(v4: InternetProtocolV4AddressData) : this(
+		v4Tov6Bytes(v4.data)
+	)
+
 	protected fun collect(): String {
 		var string = ""
 		var i = 0
@@ -32,4 +37,11 @@ open class InternetProtocolV6AddressData(
 	}
 
 	override fun toString(): String = "IPv6[${collect()}]"
+	override fun equals(other: Any?): Boolean {
+		if (other is ByteArray) return data.contentEquals(other)
+		if (other !is InternetProtocolV6AddressData) return false
+		return data.contentEquals(other.data)
+	}
+
+	override fun hashCode(): Int = data.contentHashCode()
 }

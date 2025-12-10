@@ -186,3 +186,47 @@ val nativeShutdown: MethodHandle? = cLookup.getDowncall(
 		ernCapture
 	)
 )
+
+val nativeFree: MethodHandle? = cLookup.getDowncallVoid(
+	nativeLinker, "free",
+	ValueLayout.ADDRESS
+)
+
+val nativeOpen: MethodHandle? = cLookup.getDowncall(
+	nativeLinker, "open",
+	arrayOf(
+		ValueLayout.JAVA_INT,
+		ValueLayout.ADDRESS.withName("path"),
+		ValueLayout.JAVA_INT.withName("flags"),
+		ValueLayout.JAVA_INT.withName("mode")
+	),
+	listOf(
+		ernCapture
+	)
+)
+
+val nativeRead: MethodHandle? = cLookup.getDowncall(
+	nativeLinker, "read",
+	arrayOf(
+		ValueLayout.JAVA_LONG,
+		ValueLayout.JAVA_INT.withName("fd"),
+		ValueLayout.ADDRESS.withName("buf"),
+		ValueLayout.JAVA_LONG.withName("count")
+	),
+	listOf(
+		ernCapture
+	)
+)
+
+val nativeWrite: MethodHandle? = cLookup.getDowncall(
+	nativeLinker, "write",
+	arrayOf(
+		ValueLayout.JAVA_LONG,
+		ValueLayout.JAVA_INT.withName("fd"),
+		ValueLayout.ADDRESS.withName("buf"),
+		ValueLayout.JAVA_LONG.withName("count")
+	),
+	listOf(
+		ernCapture
+	)
+)

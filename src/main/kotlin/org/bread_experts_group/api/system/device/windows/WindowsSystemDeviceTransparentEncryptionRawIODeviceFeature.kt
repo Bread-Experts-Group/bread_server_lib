@@ -2,12 +2,12 @@ package org.bread_experts_group.api.system.device.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceTransparentEncryptionRawIODeviceFeature
-import org.bread_experts_group.api.system.device.io.IODevice
-import org.bread_experts_group.api.system.device.io.IODeviceFeatureImplementation
-import org.bread_experts_group.api.system.device.io.feature.IODeviceReadCallbackFeature
-import org.bread_experts_group.api.system.device.io.feature.IODeviceReleaseFeature
-import org.bread_experts_group.api.system.device.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceFeatureIdentifier
-import org.bread_experts_group.api.system.device.io.transparent_encrpytion.WindowsOpenTransparentEncryptionRawIODeviceFeatures
+import org.bread_experts_group.api.system.io.IODevice
+import org.bread_experts_group.api.system.io.IODeviceFeatureImplementation
+import org.bread_experts_group.api.system.io.feature.IODeviceReadCallbackFeature
+import org.bread_experts_group.api.system.io.feature.IODeviceReleaseFeature
+import org.bread_experts_group.api.system.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceFeatureIdentifier
+import org.bread_experts_group.api.system.io.transparent_encrpytion.WindowsOpenTransparentEncryptionRawIODeviceFeatures
 import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.*
@@ -40,12 +40,11 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 				val encHandle = threadLocalPTR.get(PVOID, 0)
 				object : IODevice() {
 					override val features: MutableList<IODeviceFeatureImplementation<*>> = mutableListOf(
-						object : IODeviceReleaseFeature() {
-							override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
+						object : IODeviceReleaseFeature(
+							ImplementationSource.SYSTEM_NATIVE,
+							{ nativeCloseEncryptedFileRaw!!.invokeExact(encHandle) }
+						) {
 							override fun supported(): Boolean = nativeCloseEncryptedFileRaw != null
-							override fun close() {
-								nativeCloseEncryptedFileRaw!!.invokeExact(encHandle)
-							}
 						},
 						object : IODeviceReadCallbackFeature() {
 							override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE

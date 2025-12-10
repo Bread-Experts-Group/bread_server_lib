@@ -1,3 +1,0 @@
-package org.bread_experts_group.api.system.device.io.transparent_encrpytion
-
-interface OpenTransparentEncryptionRawIODeviceFeatureIdentifier

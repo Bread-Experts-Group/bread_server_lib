@@ -5,7 +5,7 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.GraphicsConsoleIOFeature
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleModes
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.windows.*
-import org.bread_experts_group.api.system.device.io.windows.WindowsIODevice
+import org.bread_experts_group.api.system.io.windows.WindowsIODevice
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.INVALID_HANDLE_VALUE
 import org.bread_experts_group.ffi.windows.nativeGetStdHandle
@@ -45,8 +45,8 @@ abstract class WindowsGraphicsConsoleIOFeature(
 				stdHandle, mapping.entries.associateBy({ it.value }) { it.key }, input
 			)
 		)
-		features.add(WindowsGraphicsConsoleIOCodingGetFeature(input))
-		features.add(WindowsGraphicsConsoleIOCodingSetFeature(input))
+		features.add(WindowsGraphicsConsoleIOGetCodePageFeature(input))
+		features.add(WindowsGraphicsConsoleIOSetCodePageFeature(input))
 		features.add(WindowsGraphicsConsoleIOEventGetFeature(stdHandle))
 		return true
 	}

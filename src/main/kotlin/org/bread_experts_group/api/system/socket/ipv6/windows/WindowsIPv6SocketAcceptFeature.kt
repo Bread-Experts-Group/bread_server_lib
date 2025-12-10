@@ -2,7 +2,7 @@ package org.bread_experts_group.api.system.socket.ipv6.windows
 
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
-import org.bread_experts_group.api.system.socket.DeferredSocketOperation
+import org.bread_experts_group.api.system.socket.DeferredOperation
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.feature.SocketAcceptFeature
 import org.bread_experts_group.api.system.socket.feature.SocketFeatureImplementation
@@ -11,7 +11,7 @@ import org.bread_experts_group.api.system.socket.ipv6.IPv6SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.accept.IPv6AcceptDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.accept.IPv6AcceptFeatureIdentifier
-import org.bread_experts_group.api.system.socket.system.DeferredSocketAccept
+import org.bread_experts_group.api.system.socket.system.DeferredAccept
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager
 import org.bread_experts_group.api.system.socket.system.windows.winClose
@@ -32,8 +32,8 @@ class WindowsIPv6SocketAcceptFeature(
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun accept(
 		vararg features: IPv6AcceptFeatureIdentifier
-	): DeferredSocketOperation<IPv6AcceptDataIdentifier> =
-		object : DeferredSocketAccept<IPv6AcceptDataIdentifier>(monitor) {
+	): DeferredOperation<IPv6AcceptDataIdentifier> =
+		object : DeferredAccept<IPv6AcceptDataIdentifier>(monitor) {
 			override fun accept(): List<IPv6AcceptDataIdentifier> = Arena.ofConfined().use { tempArena ->
 				val sockAddr = tempArena.allocate(sockaddr_in6)
 				threadLocalDWORD0.set(DWORD, 0, sockAddr.byteSize().toInt())

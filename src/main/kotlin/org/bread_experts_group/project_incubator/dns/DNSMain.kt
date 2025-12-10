@@ -4,6 +4,7 @@ import org.bread_experts_group.Mappable.Companion.id
 import org.bread_experts_group.MappedEnumeration
 import org.bread_experts_group.api.system.SystemFeatures
 import org.bread_experts_group.api.system.SystemProvider
+import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.BSLSocket
 import org.bread_experts_group.api.system.socket.SystemSocketProviderFeatures
 import org.bread_experts_group.api.system.socket.close.StandardCloseFeatures
@@ -17,7 +18,6 @@ import org.bread_experts_group.api.system.socket.ipv6.datagram.SystemInternetPro
 import org.bread_experts_group.api.system.socket.ipv6.datagram.udp.IPv6UDPFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.SystemInternetProtocolV6StreamProtocolFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.IPv6TCPFeatures
-import org.bread_experts_group.api.system.socket.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPart
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPartIdentifier
 import org.bread_experts_group.api.system.socket.resolution.StandardResolutionFeatures
