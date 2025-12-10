@@ -21,60 +21,69 @@ fun readArgs(
 	projectName: String,
 	projectUsage: String
 ): ArgumentContainer {
-	run {
-		val argNames = mutableSetOf("help")
-		flags.forEach {
-			if (argNames.contains(it.flagName))
-				throw ArgumentConstructionError("Duplicate argument parsing! [${it.flagName}]")
-			argNames.add(it.flagName)
-		}
-	}
-	if (args.any { it.substringAfter('-') == "help" }) {
-		val bslLocation = ColoredHandler::class.java.protectionDomain.codeSource.location.path
-		logger.info("Bread Server Library information")
-		logger.info("Location     [$bslLocation]")
-		logger.info("Version      [${bslVersion()}]")
-		logger.info("Compiled at  [${bslBuildDate()}]")
-		logger.info("Project information")
-		logger.info("Project      [$projectName]")
-		logger.info("Usage        [$projectUsage]")
-		logger.info("Flag information\n" + buildString {
-			var longestFlagName = 0
-			var longestFlagDescription = 0
-			flags.forEach {
-				if (it.flagName.length > longestFlagName)
-					longestFlagName = it.flagName.length
-				if (it.flagDescription.length > longestFlagDescription)
-					longestFlagDescription = it.flagDescription.length
-			}
-			flags.forEach {
-				append("\t-${it.flagName.padEnd(longestFlagName)}\n")
-				append("\t\t${it.flagDescription.replace("\n", "\n\t\t ").padEnd(longestFlagDescription)}\n")
-				if (it.default != null) append("\t\tDefault [${it.default}]\n")
-				if (it.required > 0) append("\t\tRequired ${it.required} time${if (it.required > 1) 's' else ""}\n")
-			}
-		})
-		exitProcess(3319)
+	val argNames = mutableSetOf("help")
+	flags.forEach {
+		if (argNames.contains(it.flagName))
+			throw ArgumentConstructionError("Duplicate argument parsing! [${it.flagName}]")
+		argNames.add(it.flagName)
 	}
 
 	val singleArgs = mutableMapOf<String, Any>()
 	val multipleArgs = mutableMapOf<String, MutableList<Any>>()
 	val problems = mutableListOf<ArgumentParsingError>()
-	for (arg in args) {
-		logger.finer { "Parse argument \"$arg\"" }
-		if (arg[0] != '-') {
-			problems.add(ArgumentParsingError("Bad argument \"$arg\", requires - before name"))
-			continue
+	var position = 0
+	while (position < args.size) {
+		val (name, parameter) = args[position++].let {
+			logger.finer { "Parse argument \"$it\"" }
+			if (it[0] != '-') {
+				problems.add(ArgumentParsingError("Bad argument \"$it\", requires - before name"))
+				continue
+			}
+			val afterDashes = it.substring(if (it[1] == '-') 2 else 1)
+			val equSeparator = afterDashes.indexOf('=')
+			if (equSeparator == -1) {
+				val adjacent = args[position]
+				if (adjacent[0] == '-') afterDashes.lowercase() to null
+				else {
+					position++
+					afterDashes.lowercase() to adjacent
+				}
+			} else afterDashes.lowercase().take(equSeparator) to afterDashes.substring(equSeparator + 1)
 		}
-		val equIndex = arg.indexOf('=')
-		val flag = flags.firstOrNull { f ->
-			f.flagName == arg.substring(1, if (equIndex == -1) arg.length else equIndex)
+		if (name == "help") {
+			val bslLocation = ColoredHandler::class.java.protectionDomain.codeSource.location.path
+			logger.info("Bread Server Library information")
+			logger.info("Location     [$bslLocation]")
+			logger.info("Version      [${bslVersion()}]")
+			logger.info("Compiled at  [${bslBuildDate()}]")
+			logger.info("Project information")
+			logger.info("Project      [$projectName]")
+			logger.info("Usage        [$projectUsage]")
+			logger.info("Flag information\n" + buildString {
+				var longestFlagName = 0
+				var longestFlagDescription = 0
+				flags.forEach {
+					if (it.flagName.length > longestFlagName)
+						longestFlagName = it.flagName.length
+					if (it.flagDescription.length > longestFlagDescription)
+						longestFlagDescription = it.flagDescription.length
+				}
+				flags.forEach {
+					append("\t-${it.flagName.padEnd(longestFlagName)}\n")
+					append("\t\t${it.flagDescription.replace("\n", "\n\t\t ").padEnd(longestFlagDescription)}\n")
+					if (it.default != null) append("\t\tDefault [${it.default}]\n")
+					if (it.required > 0) append("\t\tRequired ${it.required} time${if (it.required > 1) 's' else ""}\n")
+				}
+			})
+			exitProcess(3319)
 		}
+
+		val flag = flags.firstOrNull { f -> f.flagName == name }
 		if (flag == null) {
-			problems.add(ArgumentParsingError("Bad argument \"$arg\", not a flag; see -help"))
+			problems.add(ArgumentParsingError("Bad argument \"$name\", not a flag; see (-)-help"))
 			continue
 		}
-		val value = if (equIndex == -1) "true" else arg.substring(equIndex + 1)
+		val value = parameter ?: "true"
 		val typedValue = try {
 			if (value.isNotBlank()) flag.conv(value) else flag.default
 		} catch (e: Throwable) {
