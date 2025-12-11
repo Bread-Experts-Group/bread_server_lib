@@ -4,6 +4,7 @@ import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.close.SocketCloseDataIdentifier
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.close.StandardCloseFeatures
+import org.bread_experts_group.api.system.socket.system.linux.LinuxSocketEventManager.dropSocket
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.posix.errno
 import org.bread_experts_group.ffi.posix.nativeClose
@@ -45,6 +46,7 @@ fun posixClose(
 			socket
 		) as Int
 		if (status != 0) throwLastErrno()
+		dropSocket(socket)
 	}
 	return supportedFeatures
 }

@@ -113,13 +113,13 @@ fun readArgs(
 				logger.finer {
 					"Using default (\"${it.default}\" (${it.default::class.simpleName})) for flag \"${it.flagName}\""
 				}
-				singleArgs.put(it.flagName, it.default)
+				singleArgs[it.flagName] = it.default
 			}
 			if (it.repeatable && !multipleArgs.contains(it.flagName)) {
 				logger.finer {
 					"Using default (\"${it.default}\" (${it.default::class.simpleName})) for flag \"${it.flagName}\""
 				}
-				multipleArgs.put(it.flagName, mutableListOf(it.default))
+				multipleArgs[it.flagName] = mutableListOf(it.default)
 			}
 		}
 		if (it.required != 0 && !(singleArgs.containsKey(it.flagName) || multipleArgs.containsKey(it.flagName)))

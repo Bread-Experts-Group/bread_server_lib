@@ -3,6 +3,7 @@ package org.bread_experts_group.api.system.socket.system.windows
 import org.bread_experts_group.api.system.socket.close.SocketCloseDataIdentifier
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.close.StandardCloseFeatures
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.dropSocket
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.nativeCloseSocket
@@ -46,6 +47,7 @@ fun winClose(
 			socket
 		) as Int
 		if (status != 0) throwLastWSAError()
+		dropSocket(socket)
 	}
 	return supportedFeatures
 }
