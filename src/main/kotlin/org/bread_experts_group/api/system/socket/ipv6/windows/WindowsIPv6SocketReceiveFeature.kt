@@ -13,10 +13,7 @@ import org.bread_experts_group.api.system.socket.system.DeferredReceive
 import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
-import org.bread_experts_group.ffi.windows.wsa.WSABUF
-import org.bread_experts_group.ffi.windows.wsa.WSABUF_buf
-import org.bread_experts_group.ffi.windows.wsa.WSABUF_len
-import org.bread_experts_group.ffi.windows.wsa.nativeWSARecv
+import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
@@ -75,8 +72,8 @@ class WindowsIPv6SocketReceiveFeature(
 				) as Int
 				if (status != 0) {
 					when (wsaLastError) {
-						10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
-						10035 -> {}
+						WSAECONNRESET -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+						WSAEWOULDBLOCK -> {}
 						else -> throwLastWSAError()
 					}
 				}

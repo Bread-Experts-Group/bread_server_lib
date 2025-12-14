@@ -99,23 +99,20 @@ internal object WindowsSocketEventManager {
 				val events = SocketEvents.entries.from(
 					WSANETWORKEVENTS_lNetworkEvents.get(networkEvents, 0L) as Int
 				)
-				for (event in events) {
-					val semaphore = when (event) {
-						SocketEvents.FD_READ -> monitor.read
-						SocketEvents.FD_WRITE -> monitor.write
-						SocketEvents.FD_CONNECT -> monitor.connect
-						SocketEvents.FD_CLOSE -> {
-							dropSocket(socket)
-							if (monitor.read.availablePermits() < 1) monitor.read.release()
-							if (monitor.write.availablePermits() < 1) monitor.write.release()
-							monitor.close
-						}
-
-						SocketEvents.FD_ACCEPT -> monitor.accept
-						else -> continue
+				for (event in events) when (event) {
+					SocketEvents.FD_READ -> monitor.read
+					SocketEvents.FD_WRITE -> monitor.write
+					SocketEvents.FD_CONNECT -> monitor.connect
+					SocketEvents.FD_CLOSE -> {
+						dropSocket(socket)
+						monitor.read.release()
+						monitor.write.release()
+						monitor.close
 					}
-					if (semaphore.availablePermits() < 1) semaphore.release()
-				}
+
+					SocketEvents.FD_ACCEPT -> monitor.accept
+					else -> continue
+				}.release()
 			}
 		}
 	}

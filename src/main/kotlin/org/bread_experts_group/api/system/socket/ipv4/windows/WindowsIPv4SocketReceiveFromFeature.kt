@@ -62,8 +62,8 @@ class WindowsIPv4SocketReceiveFromFeature(
 				) as Int
 				if (status != 0) {
 					when (wsaLastError) {
-						10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
-						10035 -> {}
+						WSAECONNRESET -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+						WSAEWOULDBLOCK -> {}
 						else -> throwLastWSAError()
 					}
 				}

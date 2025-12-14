@@ -70,11 +70,11 @@ class WindowsIPv4SocketSendToFeature(
 						) as Int
 						if (status != 0) {
 							when (wsaLastError) {
-								10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
-								10035 -> {}
+								WSAECONNRESET -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+								WSAEWOULDBLOCK -> {}
 								else -> throwLastWSAError()
 							}
-						} else if (monitor.write.availablePermits() < 1) monitor.write.release()
+						} else monitor.write.release()
 						supportedFeatures.add(SendSizeData(threadLocalDWORD0.get(DWORD, 0)))
 						supportedFeatures.add(address)
 						return supportedFeatures
@@ -94,11 +94,11 @@ class WindowsIPv4SocketSendToFeature(
 				) as Int
 				if (status != 0) {
 					when (wsaLastError) {
-						10054 -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
-						10035 -> {}
+						WSAECONNRESET -> supportedFeatures.add(StandardSocketStatus.CONNECTION_CLOSED)
+						WSAEWOULDBLOCK -> {}
 						else -> throwLastWSAError()
 					}
-				} else if (monitor.write.availablePermits() < 1) monitor.write.release()
+				} else monitor.write.release()
 				supportedFeatures.add(SendSizeData(threadLocalDWORD0.get(DWORD, 0)))
 				return supportedFeatures
 			}

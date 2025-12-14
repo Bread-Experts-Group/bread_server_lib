@@ -41,7 +41,7 @@ class WindowsSystemDeviceEnumerationFeature : SystemDeviceEnumerationFeature() {
 			while ((offset + size) < buffer.byteSize()) {
 				val char = buffer.get(WCHAR, offset + size)
 				size += 2
-				if (char == 0.toShort()) break
+				if (char.code == 0) break
 			}
 			if (size == 2L) break
 			list.add(decodeDevice(GUID_DEVINTERFACE_COMPORT, buffer.asSlice(offset, size), tempArena))

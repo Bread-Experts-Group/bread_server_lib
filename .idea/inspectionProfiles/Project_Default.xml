@@ -74,6 +74,8 @@
           <option value="USELESS_IS_CHECK" />
           <option value="CAST_NEVER_SUCCEEDS" />
           <option value="AssignedValueIsNeverRead" />
+          <option value="ObjectPropertyName" />
+          <option value="DANGEROUS_CHARACTERS" />
         </list>
       </option>
     </inspection_tool>
