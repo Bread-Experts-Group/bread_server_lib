@@ -9,6 +9,7 @@ import org.bread_experts_group.api.secure.cryptography.windows.feature.random.Wi
 import org.bread_experts_group.ffi.windows.ULONG
 import org.bread_experts_group.ffi.windows.bcrypt.*
 import org.bread_experts_group.ffi.windows.returnsNTSTATUS
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import org.bread_experts_group.logging.ColoredHandler
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -39,11 +40,11 @@ class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
 			var offset = 0L
 			(0..<count).forEach { _ ->
 				val string = array.get(ValueLayout.ADDRESS, offset)
-				add(string.reinterpret(Long.MAX_VALUE).getString(0, Charsets.UTF_16LE))
+				add(string.reinterpret(Long.MAX_VALUE).getString(0, winCharsetWide))
 				offset += ValueLayout.ADDRESS.byteSize()
 			}
 		}
-		val allocatedStrings = readStrings.associateWith { arena.allocateFrom(it, Charsets.UTF_16LE) }
+		val allocatedStrings = readStrings.associateWith { arena.allocateFrom(it, winCharsetWide) }
 		providerInterfaceMap = WindowsBCryptInterface.entries.associateWith { bcInterface ->
 			val functionMap = mutableMapOf<String, MutableSet<String>>()
 			for (providerName in readStrings) {

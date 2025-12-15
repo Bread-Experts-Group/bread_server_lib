@@ -22,7 +22,7 @@ val nativeWSAGetLastError: VarHandle by lazy {
 	capturedStateLayout.varHandle(groupElement("WSAGetLastError"))
 }
 
-val nativeFormatMessageW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeFormatMessageWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "FormatMessageW", DWORD,
 	DWORD, LPCVOID, DWORD,
 	DWORD, LPWSTR, DWORD,
@@ -34,12 +34,12 @@ val nativeLocalFree: MethodHandle? = kernel32Lookup.getDowncall(
 	HLOCAL
 )
 
-val nativeGetModuleHandleW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeGetModuleHandleWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetModuleHandleW", HMODULE,
 	LPCWSTR
 )
 
-val nativeLoadLibraryExW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeLoadLibraryExWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "LoadLibraryExW",
 	arrayOf(
 		HMODULE,
@@ -83,7 +83,7 @@ val nativeCreateFile3: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeCreateDirectory2W: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeCreateDirectory2Wide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "CreateDirectory2W",
 	arrayOf(
 		HANDLE,
@@ -94,7 +94,7 @@ val nativeCreateDirectory2W: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeFindFirstFileExW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeFindFirstFileExWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "FindFirstFileExW",
 	arrayOf(
 		HANDLE,
@@ -105,18 +105,18 @@ val nativeFindFirstFileExW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeFindNextFileW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeFindNextFileWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "FindNextFileW",
 	arrayOf(
 		BOOL,
-		HANDLE, ValueLayout.ADDRESS /* of WIN32_FIND_DATAW */
+		HANDLE, ValueLayout.ADDRESS /* of WIN32_FIND_DATAWide */
 	),
 	listOf(
 		gleCapture
 	)
 )
 
-val nativeFindFirstStreamW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeFindFirstStreamWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "FindFirstStreamW",
 	arrayOf(
 		HANDLE,
@@ -127,7 +127,7 @@ val nativeFindFirstStreamW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeFindNextStreamW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeFindNextStreamWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "FindNextStreamW",
 	arrayOf(
 		BOOL,
@@ -181,28 +181,6 @@ val nativeFlushFileBuffers: MethodHandle? = kernel32Lookup.getDowncall(
 		gleCapture
 	)
 )
-
-//val nativeGetCommState: MethodHandle? = kernel32Lookup.getDowncall(
-//	nativeLinker, "GetCommState",
-//	arrayOf(
-//		BOOL,
-//		HANDLE, LPDCB
-//	),
-//	listOf(
-//		gleCapture
-//	)
-//)
-//
-//val nativeSetCommState: MethodHandle? = kernel32Lookup.getDowncall(
-//	nativeLinker, "SetCommState",
-//	arrayOf(
-//		BOOL,
-//		HANDLE, LPDCB
-//	),
-//	listOf(
-//		gleCapture
-//	)
-//)
 
 val nativeGetStdHandle: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetStdHandle",
@@ -279,18 +257,18 @@ val nativeSetConsoleOutputCP: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeGetCPInfoExW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeGetCPInfoExWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetCPInfoExW",
 	arrayOf(
 		BOOL,
-		UINT, DWORD, ValueLayout.ADDRESS /* of LPCPINFOEXW */
+		UINT, DWORD, ValueLayout.ADDRESS /* of LPCPINFOEXWide */
 	),
 	listOf(
 		gleCapture
 	)
 )
 
-val nativeReadConsoleInputExW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeReadConsoleInputExWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "ReadConsoleInputExW",
 	arrayOf(
 		BOOL,
@@ -342,7 +320,7 @@ val nativeGetFileInformationByHandleEx: MethodHandle? = kernel32Lookup.getDownca
 	)
 )
 
-val nativeGetCurrentDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeGetCurrentDirectoryWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetCurrentDirectoryW",
 	arrayOf(
 		DWORD,
@@ -353,7 +331,7 @@ val nativeGetCurrentDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeGetTempPath2W: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeGetTempPath2Wide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetTempPath2W",
 	arrayOf(
 		DWORD,
@@ -373,7 +351,7 @@ val nativeCopyFile2: MethodHandle? = kernel32Lookup.getDowncall(
 	listOf()
 )
 
-val nativeDeleteFile2W: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeDeleteFile2Wide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "DeleteFile2W",
 	arrayOf(
 		BOOL,
@@ -384,7 +362,7 @@ val nativeDeleteFile2W: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeRemoveDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeRemoveDirectoryWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "RemoveDirectoryW",
 	arrayOf(
 		BOOL,
@@ -395,7 +373,7 @@ val nativeRemoveDirectoryW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeMoveFileWithProgressW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeMoveFileWithProgressWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "MoveFileWithProgressW",
 	arrayOf(
 		BOOL,
@@ -406,7 +384,7 @@ val nativeMoveFileWithProgressW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeReplaceFileW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeReplaceFileWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "ReplaceFileW",
 	arrayOf(
 		BOOL,
@@ -417,7 +395,7 @@ val nativeReplaceFileW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeCreateSymbolicLinkW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeCreateSymbolicLinkWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "CreateSymbolicLinkW",
 	arrayOf(
 		BOOL,
@@ -428,7 +406,7 @@ val nativeCreateSymbolicLinkW: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeCreateHardLinkW: MethodHandle? = kernel32Lookup.getDowncall(
+val nativeCreateHardLinkWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "CreateHardLinkW",
 	arrayOf(
 		BOOL,
@@ -481,4 +459,9 @@ val nativeUnlockFileEx: MethodHandle? = kernel32Lookup.getDowncall(
 	listOf(
 		gleCapture
 	)
+)
+
+val nativeGetACP: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GetACP",
+	UINT
 )

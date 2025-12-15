@@ -15,7 +15,7 @@ class WindowsSystemDeviceIODeviceFeature(
 ) : SystemDeviceIODeviceFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeCreateFile3 != null && nativeCloseHandle != null &&
-			nativeCreateDirectory2W != null
+			nativeCreateDirectory2Wide != null
 
 	companion object {
 		// internally consistent
@@ -156,7 +156,7 @@ class WindowsSystemDeviceIODeviceFeature(
 							directoryFlags = directoryFlags or 0x00000001
 							supportedFeatures.add(WindowsIOOpenFeatures.DISABLE_REDIRECTION)
 						}
-						handle = nativeCreateDirectory2W!!.invokeExact(
+						handle = nativeCreateDirectory2Wide!!.invokeExact(
 							capturedStateSegment,
 							pathSegment,
 							0x100021,
@@ -271,8 +271,8 @@ class WindowsSystemDeviceIODeviceFeature(
 					else -> if (handle == INVALID_HANDLE_VALUE) throw e
 				}
 			}
-			if (features.contains(WindowsIOReOpenFeatures.DELETE_ON_RESTART) && nativeMoveFileWithProgressW != null) {
-				val status = nativeMoveFileWithProgressW.invokeExact(
+			if (features.contains(WindowsIOReOpenFeatures.DELETE_ON_RESTART) && nativeMoveFileWithProgressWide != null) {
+				val status = nativeMoveFileWithProgressWide.invokeExact(
 					capturedStateSegment,
 					pathSegment,
 					MemorySegment.NULL,

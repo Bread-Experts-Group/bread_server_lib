@@ -43,7 +43,7 @@ class WindowsIPv6SocketAcceptFeature(
 					sockAddr,
 					threadLocalDWORD0,
 					MemorySegment.NULL,
-					MemorySegment.NULL
+					0L
 				) as Long
 				if (acceptedSocket == INVALID_SOCKET) throwLastWSAError()
 				val acceptedMonitor = WindowsSocketEventManager.addSocket(acceptedSocket)

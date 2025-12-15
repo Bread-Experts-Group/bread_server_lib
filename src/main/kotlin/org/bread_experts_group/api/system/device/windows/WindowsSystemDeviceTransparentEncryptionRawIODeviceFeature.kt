@@ -9,8 +9,11 @@ import org.bread_experts_group.api.system.io.feature.IODeviceReleaseFeature
 import org.bread_experts_group.api.system.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceFeatureIdentifier
 import org.bread_experts_group.api.system.io.transparent_encrpytion.WindowsOpenTransparentEncryptionRawIODeviceFeatures
 import org.bread_experts_group.ffi.nativeLinker
-import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.*
+import org.bread_experts_group.ffi.windows.advapi.OpenEncryptedFileRawParameters
+import org.bread_experts_group.ffi.windows.advapi.nativeCloseEncryptedFileRaw
+import org.bread_experts_group.ffi.windows.advapi.nativeOpenEncryptedFileRaw
+import org.bread_experts_group.ffi.windows.advapi.nativeReadEncryptedFileRaw
 import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.MemorySegment
@@ -18,10 +21,10 @@ import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 
 class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
-	private val pathSegment: MemorySegment
+	private val path: String
 ) : SystemDeviceTransparentEncryptionRawIODeviceFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeOpenEncryptedFileRawW != null
+	override fun supported(): Boolean = nativeOpenEncryptedFileRaw != null
 
 	override fun open(
 		vararg features: OpenTransparentEncryptionRawIODeviceFeatureIdentifier
@@ -30,21 +33,14 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 		return when {
 			features.contains(WindowsOpenTransparentEncryptionRawIODeviceFeatures.EXPORT) -> {
 				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.EXPORT)
-				decodeWin32Error(
-					nativeOpenEncryptedFileRawW!!.invokeExact(
-						pathSegment,
-						0,
-						threadLocalPTR
-					) as Int
-				)
-				val encHandle = threadLocalPTR.get(PVOID, 0)
+				val encHandle = nativeCloseEncryptedFileRaw!!(OpenEncryptedFileRawParameters(path, 0))
 				object : IODevice() {
 					override val features: MutableList<IODeviceFeatureImplementation<*>> = mutableListOf(
 						object : IODeviceReleaseFeature(
 							ImplementationSource.SYSTEM_NATIVE,
-							{ nativeCloseEncryptedFileRaw!!.invokeExact(encHandle) }
+							{ nativeCloseEncryptedFileRaw.invokeExact(encHandle) }
 						) {
-							override fun supported(): Boolean = nativeCloseEncryptedFileRaw != null
+							override fun supported(): Boolean = true
 						},
 						object : IODeviceReadCallbackFeature() {
 							override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -95,37 +91,19 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 
 			features.contains(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_FILE) -> {
 				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_FILE)
-				decodeWin32Error(
-					nativeOpenEncryptedFileRawW!!.invokeExact(
-						pathSegment,
-						1,
-						threadLocalPTR
-					) as Int
-				)
+				val encHandle = nativeCloseEncryptedFileRaw!!(OpenEncryptedFileRawParameters(path, 1))
 				TODO("!")
 			}
 
 			features.contains(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_DIRECTORY) -> {
 				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_DIRECTORY)
-				decodeWin32Error(
-					nativeOpenEncryptedFileRawW!!.invokeExact(
-						pathSegment,
-						2,
-						threadLocalPTR
-					) as Int
-				)
+				val encHandle = nativeCloseEncryptedFileRaw!!(OpenEncryptedFileRawParameters(path, 2))
 				TODO("!")
 			}
 
 			features.contains(WindowsOpenTransparentEncryptionRawIODeviceFeatures.OVERWRITE_HIDDEN) -> {
 				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.OVERWRITE_HIDDEN)
-				decodeWin32Error(
-					nativeOpenEncryptedFileRawW!!.invokeExact(
-						pathSegment,
-						4,
-						threadLocalPTR
-					) as Int
-				)
+				val encHandle = nativeCloseEncryptedFileRaw!!(OpenEncryptedFileRawParameters(path, 4))
 				TODO("!")
 			}
 

@@ -22,13 +22,13 @@ class WindowsGraphicsWindowTemplate : GraphicsWindowTemplate() {
 
 	@Suppress("unused")
 	fun wndProc(hWnd: MemorySegment, message: Int, wParam: Long, lParam: Long): Long {
-		val proc = windows[hWnd] ?: return nativeDefWindowProcW!!.invokeExact(hWnd, message, wParam, lParam) as Long
+		val proc = windows[hWnd] ?: return nativeDefWindowProcWide!!.invokeExact(hWnd, message, wParam, lParam) as Long
 		return proc(hWnd, message, wParam, lParam)
 	}
 
 	init {
 		val classExA = arena.allocate(WNDCLASSEXA)
-		val localHandle = nativeGetModuleHandleW!!.invokeExact(MemorySegment.NULL) as MemorySegment
+		val localHandle = nativeGetModuleHandleWide!!.invokeExact(MemorySegment.NULL) as MemorySegment
 		val methodHandles = MethodHandles.lookup()
 		WNDCLASSEXA_cbSize.set(classExA, 0, classExA.byteSize().toInt())
 		WNDCLASSEXA_lpfnWndProc.set(
@@ -50,9 +50,9 @@ class WindowsGraphicsWindowTemplate : GraphicsWindowTemplate() {
 			)
 		)
 		WNDCLASSEXA_hInstance.set(classExA, 0, localHandle)
-		WNDCLASSEXA_lpszClassName.set(classExA, 0, arena.allocateFrom("bsl${counter++}", Charsets.UTF_16LE))
+		WNDCLASSEXA_lpszClassName.set(classExA, 0, arena.allocateFrom("bsl${counter++}", winCharsetWide))
 		// TODO: Needs extensibility for hIcon/hCursor/hbrBackground/menuName/hIconSm/style
-		val classAtom = nativeRegisterClassExW!!.invokeExact(capturedStateSegment, classExA) as Short
+		val classAtom = nativeRegisterClassExWide!!.invokeExact(capturedStateSegment, classExA) as Short
 		if (classAtom == 0.toShort()) throwLastError()
 		this.classAtom = classAtom
 	}

@@ -2,6 +2,7 @@ package org.bread_experts_group.ffi.windows.bcrypt
 
 import org.bread_experts_group.Mappable.Companion.id
 import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
@@ -20,7 +21,7 @@ class WindowsBCryptProviderInterfaceDescription(ptr: MemorySegment) {
 		List(count) {
 			val string = aliasArray.get(ValueLayout.ADDRESS, offset).reinterpret(Long.MAX_VALUE)
 			offset += ValueLayout.ADDRESS.byteSize()
-			string.getString(0, Charsets.UTF_16LE)
+			string.getString(0, winCharsetWide)
 		}
 	}
 

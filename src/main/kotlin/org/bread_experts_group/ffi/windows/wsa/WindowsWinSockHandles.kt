@@ -21,35 +21,35 @@ val nativeWSCEnumProtocols: MethodHandle? = ws232Lookup.getDowncall(
 	nativeLinker, "WSCEnumProtocols",
 	arrayOf(
 		ValueLayout.JAVA_INT,
-		LPINT, ValueLayout.ADDRESS /* of WSAPROTOCOL_INFOW */, LPDWORD, LPINT
+		LPINT, ValueLayout.ADDRESS /* of WSAPROTOCOL_INFOWide */, LPDWORD, LPINT
 	),
 	listOf()
 )
 
-val nativeWSAEnumNameSpaceProvidersW: MethodHandle? = ws232Lookup.getDowncall(
+val nativeWSAEnumNameSpaceProvidersWide: MethodHandle? = ws232Lookup.getDowncall(
 	nativeLinker, "WSAEnumNameSpaceProvidersW",
 	arrayOf(
 		ValueLayout.JAVA_INT,
-		LPDWORD, ValueLayout.ADDRESS /* of WSANAMESPACE_INFOW */
+		LPDWORD, ValueLayout.ADDRESS /* of WSANAMESPACE_INFOWide */
 	),
 	listOf()
 )
 
-val nativeGetAddrInfoExW: MethodHandle? = ws232Lookup.getDowncall(
+val nativeGetAddrInfoExWide: MethodHandle? = ws232Lookup.getDowncall(
 	nativeLinker, "GetAddrInfoExW",
 	arrayOf(
 		ValueLayout.JAVA_INT,
-		LPCWSTR, LPCWSTR, DWORD, ValueLayout.ADDRESS /* of GUID */, ValueLayout.ADDRESS /* of ADDRINFOEXW */,
-		ValueLayout.ADDRESS /* of ADDRINFOEXW */, ValueLayout.ADDRESS /* of timeval */,
+		LPCWSTR, LPCWSTR, DWORD, ValueLayout.ADDRESS /* of GUID */, ValueLayout.ADDRESS /* of ADDRINFOEXWide */,
+		ValueLayout.ADDRESS /* of ADDRINFOEXWide */, ValueLayout.ADDRESS /* of timeval */,
 		ValueLayout.ADDRESS /* of OVERLAPPED */, ValueLayout.ADDRESS /* of LOOKUPSERVICE_COMPLETION_ROUTINE */,
 		ValueLayout.ADDRESS /* of HANDLE */
 	),
 	listOf()
 )
 
-val nativeFreeAddrInfoExW: MethodHandle? = ws232Lookup.getDowncallVoid(
+val nativeFreeAddrInfoExWide: MethodHandle? = ws232Lookup.getDowncallVoid(
 	nativeLinker, "FreeAddrInfoExW",
-	ValueLayout.ADDRESS /* of ADDRINFOEXW */
+	ValueLayout.ADDRESS /* of ADDRINFOEXWide */
 )
 
 val nativeSocket: MethodHandle? = ws232Lookup.getDowncall(

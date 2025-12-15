@@ -1,10 +1,9 @@
 package org.bread_experts_group.ffi.windows.setup
 
-import org.bread_experts_group.ffi.getDowncall
-import org.bread_experts_group.ffi.getLookup
-import org.bread_experts_group.ffi.globalArena
-import org.bread_experts_group.ffi.nativeLinker
+import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.*
+import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
 import java.lang.foreign.SymbolLookup
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
@@ -12,29 +11,115 @@ import java.lang.invoke.MethodHandle
 private val setupAPILookup: SymbolLookup? = globalArena.getLookup("Setupapi.dll")
 
 val HDEVINFO = HANDLE
-val nativeSetupDiGetClassDevsW: MethodHandle? = setupAPILookup.getDowncall(
+private val nativeSetupDiGetClassDevsWide: MethodHandle? = setupAPILookup.getDowncall(
 	nativeLinker, "SetupDiGetClassDevsW",
 	arrayOf(
 		HDEVINFO,
-		ValueLayout.ADDRESS /* of GUID */, LPCWSTR, HWND, DWORD
+		ValueLayout.ADDRESS.withName("ClassGuid") /* of GUID */,
+		LPCWSTR.withName("Enumerator"),
+		HWND.withName("hwndParent"),
+		DWORD.withName("Flags")
 	),
 	listOf(
 		gleCapture
 	)
 )
 
-val nativeSetupDiOpenDeviceInfoW: MethodHandle? = setupAPILookup.getDowncall(
+private val nativeSetupDiGetClassDevsANSI: MethodHandle? = setupAPILookup.getDowncall(
+	nativeLinker, "SetupDiGetClassDevsA",
+	arrayOf(
+		HDEVINFO,
+		ValueLayout.ADDRESS.withName("ClassGuid") /* of GUID */,
+		LPCSTR.withName("Enumerator"),
+		HWND.withName("hwndParent"),
+		DWORD.withName("Flags")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+data class SetupDiGetClassDevsParameters(
+	val classGuid: MemorySegment,
+	val enumerator: String,
+	val hwndParent: MemorySegment,
+	val flags: Int
+)
+
+val nativeSetupDiGetClassDevs = codingSpecific(
+	nativeSetupDiGetClassDevsWide,
+	nativeSetupDiGetClassDevsANSI
+) { handle, parameters: SetupDiGetClassDevsParameters ->
+	Arena.ofConfined().use { tempArena ->
+		val returns = handle.invokeExact(
+			capturedStateSegment,
+			parameters.classGuid,
+			tempArena.allocateFrom(parameters.enumerator, winCharset),
+			parameters.hwndParent,
+			parameters.flags
+		) as MemorySegment
+		if (returns == INVALID_HANDLE_VALUE) throwLastError()
+		returns
+	}
+}
+
+private val nativeSetupDiOpenDeviceInfoWide: MethodHandle? = setupAPILookup.getDowncall(
 	nativeLinker, "SetupDiOpenDeviceInfoW",
 	arrayOf(
 		BOOL,
-		HDEVINFO, LPCWSTR, HWND, DWORD, ValueLayout.ADDRESS /* of SP_DEVINFO_DATA */
+		HDEVINFO.withName("DeviceInfoSet"),
+		PCWSTR.withName("DeviceInstanceId"),
+		HWND.withName("hwndParent"),
+		DWORD.withName("OpenFlags"),
+		PSP_DEVINFO_DATA.withName("DeviceInfoData")
 	),
 	listOf(
 		gleCapture
 	)
 )
 
-val nativeSetupDiGetDevicePropertyW: MethodHandle? = setupAPILookup.getDowncall(
+private val nativeSetupDiOpenDeviceInfoANSI: MethodHandle? = setupAPILookup.getDowncall(
+	nativeLinker, "SetupDiOpenDeviceInfoA",
+	arrayOf(
+		BOOL,
+		HDEVINFO.withName("DeviceInfoSet"),
+		PCSTR.withName("DeviceInstanceId"),
+		HWND.withName("hwndParent"),
+		DWORD.withName("OpenFlags"),
+		PSP_DEVINFO_DATA.withName("DeviceInfoData")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+data class SetupDiOpenDeviceInfoParameters(
+	val deviceInfoSet: MemorySegment,
+	val deviceInstanceId: String?,
+	val hwndParent: MemorySegment,
+	val openFlags: Int,
+	val deviceInfoData: MemorySegment
+)
+
+val nativeSetupDiOpenDeviceInfo = codingSpecific(
+	nativeSetupDiOpenDeviceInfoWide,
+	nativeSetupDiOpenDeviceInfoANSI
+) { handle, parameters: SetupDiOpenDeviceInfoParameters ->
+	Arena.ofConfined().use { tempArena ->
+		val status = handle.invokeExact(
+			capturedStateSegment,
+			parameters.deviceInfoSet,
+			if (parameters.deviceInstanceId == null) MemorySegment.NULL
+			else tempArena.allocateFrom(parameters.deviceInstanceId, winCharset),
+			parameters.hwndParent,
+			parameters.openFlags,
+			parameters.deviceInfoData
+		) as Int
+		if (status == 0) throwLastError()
+	}
+}
+
+val nativeSetupDiGetDevicePropertyWide: MethodHandle? = setupAPILookup.getDowncall(
 	nativeLinker, "SetupDiGetDevicePropertyW",
 	arrayOf(
 		BOOL,

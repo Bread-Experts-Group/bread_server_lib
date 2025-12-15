@@ -14,8 +14,8 @@ class WindowsSystemDeviceChildrenStreamsFeature(
 	private val pathSegment: MemorySegment
 ) : SystemDeviceChildrenStreamsFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeFindFirstStreamW != null && nativeFindClose != null &&
-			nativeFindNextStreamW != null
+	override fun supported(): Boolean = nativeFindFirstStreamWide != null && nativeFindClose != null &&
+			nativeFindNextStreamWide != null
 
 	private val cleaner: Cleaner = Cleaner.create()
 	override fun iterator(): Iterator<SystemDevice> = object : Iterator<SystemDevice> {
@@ -29,7 +29,7 @@ class WindowsSystemDeviceChildrenStreamsFeature(
 			var sD: MemorySegment
 			try {
 				sD = searchArena.allocate(WIN32_FIND_STREAM_DATA)
-				sH = nativeFindFirstStreamW!!.invokeExact(
+				sH = nativeFindFirstStreamWide!!.invokeExact(
 					capturedStateSegment,
 					pathSegment,
 					0, // TODO INFO LEVEL
@@ -61,7 +61,7 @@ class WindowsSystemDeviceChildrenStreamsFeature(
 		}
 
 		private fun advance() {
-			val status = nativeFindNextStreamW!!.invokeExact(
+			val status = nativeFindNextStreamWide!!.invokeExact(
 				capturedStateSegment,
 				searchHandle, searchData
 			) as Int

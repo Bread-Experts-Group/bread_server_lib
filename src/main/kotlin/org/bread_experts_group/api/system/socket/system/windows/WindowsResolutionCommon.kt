@@ -13,6 +13,7 @@ import org.bread_experts_group.api.system.socket.resolution_namespace_provider.t
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.decodeWin32Error
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -116,13 +117,13 @@ fun winResolve(
 			flags = flags or 0x01
 			data.add(StandardResolutionFeatures.PASSIVE)
 			MemorySegment.NULL
-		} else tempArena.allocateFrom(hostName, Charsets.UTF_16LE)
+		} else tempArena.allocateFrom(hostName, winCharsetWide)
 		ADDRINFOEXW_ai_flags.set(hints, 0L, flags)
 		ADDRINFOEXW_ai_family.set(hints, 0L, af)
 		ADDRINFOEXW_ai_socktype.set(hints, 0L, sockType)
 		ADDRINFOEXW_ai_protocol.set(hints, 0L, proto)
-		val serviceName = tempArena.allocateFrom(serviceName, Charsets.UTF_16LE)
-		val status = nativeGetAddrInfoExW!!.invokeExact(
+		val serviceName = tempArena.allocateFrom(serviceName, winCharsetWide)
+		val status = nativeGetAddrInfoExWide!!.invokeExact(
 			hostName,
 			serviceName,
 			nameSpace,
@@ -171,14 +172,14 @@ fun winResolve(
 						CanonicalNameData(
 							(ADDRINFOEX2W_ai_canonname.get(rsvData, 0L) as MemorySegment)
 								.reinterpret(Long.MAX_VALUE)
-								.getString(0, Charsets.UTF_16LE)
+								.getString(0, winCharsetWide)
 						)
 					)
 					dataPart.add(
 						FullyQualifiedDomainNameData(
 							(ADDRINFOEX2W_ai_fqdn.get(rsvData, 0L) as MemorySegment)
 								.reinterpret(Long.MAX_VALUE)
-								.getString(0, Charsets.UTF_16LE)
+								.getString(0, winCharsetWide)
 						)
 					)
 				}
@@ -196,7 +197,7 @@ fun winResolve(
 					if (fqdn || cn) {
 						val label = (ADDRINFOEXW_ai_canonname.get(rsvData, 0L) as MemorySegment)
 							.reinterpret(Long.MAX_VALUE)
-							.getString(0, Charsets.UTF_16LE)
+							.getString(0, winCharsetWide)
 						if (fqdn) dataPart.add(FullyQualifiedDomainNameData(label))
 						else dataPart.add(CanonicalNameData(label))
 					}
@@ -208,7 +209,7 @@ fun winResolve(
 				rsvData = ADDRINFOEXW_ai_next.get(rsvData, 0L) as MemorySegment
 			}
 		}
-		nativeFreeAddrInfoExW!!.invoke(threadLocalPTR.get(ValueLayout.ADDRESS, 0))
+		nativeFreeAddrInfoExWide!!.invoke(threadLocalPTR.get(ValueLayout.ADDRESS, 0))
 	}
 	return data
 }

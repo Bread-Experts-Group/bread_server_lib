@@ -7,14 +7,15 @@ import org.bread_experts_group.api.system.device.feature.SystemDeviceSoftLinkFea
 import org.bread_experts_group.api.system.device.softlink.SoftLinkSystemDeviceFeatureIdentifier
 import org.bread_experts_group.api.system.device.softlink.WindowsSoftLinkSystemDeviceFeatures
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.nativeCreateSymbolicLinkW
+import org.bread_experts_group.ffi.windows.nativeCreateSymbolicLinkWide
 import org.bread_experts_group.ffi.windows.throwLastError
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 class WindowsSystemDeviceSoftLinkFeature(private val pathSegment: MemorySegment) : SystemDeviceSoftLinkFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeCreateSymbolicLinkW != null
+	override fun supported(): Boolean = nativeCreateSymbolicLinkWide != null
 
 	override fun link(
 		towards: SystemDevice,
@@ -24,7 +25,7 @@ class WindowsSystemDeviceSoftLinkFeature(private val pathSegment: MemorySegment)
 		val arena = Arena.ofConfined()
 		val destinationSegment = arena.allocateFrom(
 			towards.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
-			Charsets.UTF_16LE
+			winCharsetWide
 		)
 		var flags = 0
 		if (features.contains(WindowsSoftLinkSystemDeviceFeatures.DIRECTORY)) {
@@ -35,7 +36,7 @@ class WindowsSystemDeviceSoftLinkFeature(private val pathSegment: MemorySegment)
 			flags = flags or 0x2
 			supportedFeatures.add(WindowsSoftLinkSystemDeviceFeatures.UNPRIVILEGED_CREATE_DEV)
 		}
-		val status = nativeCreateSymbolicLinkW!!.invokeExact(
+		val status = nativeCreateSymbolicLinkWide!!.invokeExact(
 			capturedStateSegment,
 			pathSegment,
 			destinationSegment,

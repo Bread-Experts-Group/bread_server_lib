@@ -16,7 +16,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 	override fun supported(): Boolean {
 		if (
 			nativeGetNumberOfConsoleInputEvents == null ||
-			nativeReadConsoleInputExW == null
+			nativeReadConsoleInputExWide == null
 		) return false
 		try {
 			getEventCount()
@@ -71,7 +71,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 	}
 
 	override fun getEvent(): GraphicsConsoleIOEvent? {
-		val status = nativeReadConsoleInputExW!!.invokeExact(
+		val status = nativeReadConsoleInputExWide!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			record,
@@ -85,7 +85,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 	}
 
 	override fun pollEvent(): GraphicsConsoleIOEvent {
-		val status = nativeReadConsoleInputExW!!.invokeExact(
+		val status = nativeReadConsoleInputExWide!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			record,
@@ -98,7 +98,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 	}
 
 	override fun peekEvent(): GraphicsConsoleIOEvent? {
-		val status = nativeReadConsoleInputExW!!.invokeExact(
+		val status = nativeReadConsoleInputExWide!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			record,
@@ -112,7 +112,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 	}
 
 	override fun peekNextEvent(): GraphicsConsoleIOEvent {
-		val status = nativeReadConsoleInputExW!!.invokeExact(
+		val status = nativeReadConsoleInputExWide!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			record,
@@ -128,7 +128,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 		returnIfNone: Boolean, maxLength: Int
 	): List<GraphicsConsoleIOEvent> = Arena.ofConfined().use {
 		val events = arena.allocate(INPUT_RECORD, maxLength.toLong())
-		val status = nativeReadConsoleInputExW!!.invokeExact(
+		val status = nativeReadConsoleInputExWide!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			events,
@@ -147,7 +147,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 		returnIfNone: Boolean, maxLength: Int
 	): List<GraphicsConsoleIOEvent> = Arena.ofConfined().use {
 		val events = arena.allocate(INPUT_RECORD, maxLength.toLong())
-		val status = nativeReadConsoleInputExW!!.invokeExact(
+		val status = nativeReadConsoleInputExWide!!.invokeExact(
 			capturedStateSegment,
 			handle,
 			events,

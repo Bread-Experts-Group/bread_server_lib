@@ -1,12 +1,13 @@
 package org.bread_experts_group.ffi.windows.bcrypt
 
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
 class WindowsBCryptProviderImageDescription(ptr: MemorySegment) {
 	val moduleFile: String = (CRYPT_IMAGE_REG_pszImage.get(ptr, 0) as MemorySegment)
 		.reinterpret(Long.MAX_VALUE)
-		.getString(0, Charsets.UTF_16LE)
+		.getString(0, winCharsetWide)
 	val interfaces: List<WindowsBCryptProviderInterfaceDescription> = run {
 		val ptr = ptr.reinterpret(CRYPT_IMAGE_REG.byteSize())
 		val count = CRYPT_IMAGE_REG_cInterfaces.get(ptr, 0) as Int

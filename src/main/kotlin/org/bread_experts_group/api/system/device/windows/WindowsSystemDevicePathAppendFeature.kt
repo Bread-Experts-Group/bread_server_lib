@@ -5,6 +5,7 @@ import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.feature.SystemDevicePathAppendFeature
 import org.bread_experts_group.ffi.windows.decodeWin32Error
 import org.bread_experts_group.ffi.windows.nativePathCchAppendEx
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
@@ -14,7 +15,7 @@ class WindowsSystemDevicePathAppendFeature(private val pathSegment: MemorySegmen
 
 	override fun append(element: String): SystemDevice {
 		val appendArena = Arena.ofShared()
-		val append = appendArena.allocateFrom(element, Charsets.UTF_16LE)
+		val append = appendArena.allocateFrom(element, winCharsetWide)
 		val buffer = appendArena
 			.allocate((pathSegment.byteSize() + (element.length * 2)) + 4)
 			.copyFrom(pathSegment)

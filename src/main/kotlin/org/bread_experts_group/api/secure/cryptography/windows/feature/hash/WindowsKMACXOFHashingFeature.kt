@@ -8,6 +8,7 @@ import org.bread_experts_group.ffi.windows.bcrypt.WindowsBCryptAlgorithmFlags
 import org.bread_experts_group.ffi.windows.bcrypt.nativeBCryptFinishHash
 import org.bread_experts_group.ffi.windows.bcrypt.nativeBCryptSetProperty
 import org.bread_experts_group.ffi.windows.returnsNTSTATUS
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -40,7 +41,7 @@ class WindowsKMACXOFHashingFeature(
 	}
 
 	override fun setCustomizationString(s: ByteArray) = Arena.ofConfined().use { tempArena ->
-		val cs = tempArena.allocateFrom("CustomizationString", Charsets.UTF_16LE)
+		val cs = tempArena.allocateFrom("CustomizationString", winCharsetWide)
 		val csA = tempArena.allocate(s.size.toLong())
 		MemorySegment.copy(s, 0, csA, ValueLayout.JAVA_BYTE, 0, s.size)
 		nativeBCryptSetProperty!!.returnsNTSTATUS(

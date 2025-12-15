@@ -8,8 +8,8 @@ import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.WCHAR
 import org.bread_experts_group.ffi.windows.cfgmgr.GUID_DEVINTERFACE_COMPORT
 import org.bread_experts_group.ffi.windows.cfgmgr.GUID_DEVINTERFACE_COMPORT_Segment
-import org.bread_experts_group.ffi.windows.cfgmgr.nativeCM_Get_Device_Interface_ListW
-import org.bread_experts_group.ffi.windows.cfgmgr.nativeCM_Get_Device_Interface_List_SizeW
+import org.bread_experts_group.ffi.windows.cfgmgr.nativeCM_Get_Device_Interface_ListWide
+import org.bread_experts_group.ffi.windows.cfgmgr.nativeCM_Get_Device_Interface_List_SizeWide
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -18,7 +18,7 @@ class WindowsSystemDeviceEnumerationFeature : SystemDeviceEnumerationFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = true // TODO supported
 	override fun enumerate(type: SystemDeviceType?): Iterable<SystemDevice> = Arena.ofConfined().use { tempArena ->
-		var status = nativeCM_Get_Device_Interface_List_SizeW!!.invokeExact(
+		var status = nativeCM_Get_Device_Interface_List_SizeWide!!.invokeExact(
 			threadLocalDWORD0,
 			GUID_DEVINTERFACE_COMPORT_Segment, // TODO: type
 			MemorySegment.NULL,
@@ -26,7 +26,7 @@ class WindowsSystemDeviceEnumerationFeature : SystemDeviceEnumerationFeature() {
 		) as Int
 		if (status != 0) TODO("CM Errors $status")
 		val buffer = tempArena.allocate(threadLocalDWORD0.get(DWORD, 0).toLong() * WCHAR.byteSize())
-		status = nativeCM_Get_Device_Interface_ListW!!.invokeExact(
+		status = nativeCM_Get_Device_Interface_ListWide!!.invokeExact(
 			GUID_DEVINTERFACE_COMPORT_Segment, // TODO: type
 			MemorySegment.NULL,
 			buffer,

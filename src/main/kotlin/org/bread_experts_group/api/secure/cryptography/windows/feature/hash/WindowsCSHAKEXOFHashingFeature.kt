@@ -7,6 +7,7 @@ import org.bread_experts_group.api.secure.cryptography.feature.hash.CSHAKEXOFHas
 import org.bread_experts_group.ffi.windows.WindowsNTSTATUSException
 import org.bread_experts_group.ffi.windows.bcrypt.nativeBCryptSetProperty
 import org.bread_experts_group.ffi.windows.returnsNTSTATUS
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -40,7 +41,7 @@ class WindowsCSHAKEXOFHashingFeature(
 	}
 
 	override fun setFunctionName(n: ByteArray) = Arena.ofConfined().use { tempArena ->
-		val fs = tempArena.allocateFrom("FunctionNameString", Charsets.UTF_16LE)
+		val fs = tempArena.allocateFrom("FunctionNameString", winCharsetWide)
 		val fsA = tempArena.allocate(n.size.toLong())
 		MemorySegment.copy(n, 0, fsA, ValueLayout.JAVA_BYTE, 0, n.size)
 		nativeBCryptSetProperty!!.returnsNTSTATUS(
@@ -53,7 +54,7 @@ class WindowsCSHAKEXOFHashingFeature(
 	}
 
 	override fun setCustomizationString(s: ByteArray) = Arena.ofConfined().use { tempArena ->
-		val cs = tempArena.allocateFrom("CustomizationString", Charsets.UTF_16LE)
+		val cs = tempArena.allocateFrom("CustomizationString", winCharsetWide)
 		val csA = tempArena.allocate(s.size.toLong())
 		MemorySegment.copy(s, 0, csA, ValueLayout.JAVA_BYTE, 0, s.size)
 		nativeBCryptSetProperty!!.returnsNTSTATUS(

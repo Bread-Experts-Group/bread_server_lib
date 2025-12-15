@@ -12,8 +12,8 @@ import java.lang.ref.Cleaner
 
 class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment) : SystemDeviceChildrenFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeFindFirstFileExW != null && nativePathCchRemoveBackslash != null &&
-			nativePathCchAppendEx != null && nativeFindNextFileW != null && nativeFindClose != null
+	override fun supported(): Boolean = nativeFindFirstFileExWide != null && nativePathCchRemoveBackslash != null &&
+			nativePathCchAppendEx != null && nativeFindNextFileWide != null && nativeFindClose != null
 
 	private val cleaner: Cleaner = Cleaner.create()
 	override fun iterator(): Iterator<SystemDevice> = object : Iterator<SystemDevice> {
@@ -39,7 +39,7 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 				sD = searchArena.allocate(WIN32_FIND_DATAW)
 				Arena.ofConfined().use { tempArena ->
 					val wildcard = tempArena.allocate(pathSegment.byteSize() + 4).copyFrom(pathSegment)
-					val append = tempArena.allocateFrom("\\*", Charsets.UTF_16LE)
+					val append = tempArena.allocateFrom("\\*", winCharsetWide)
 					decodeWin32Error(
 						nativePathCchAppendEx!!.invokeExact(
 							wildcard,
@@ -48,7 +48,7 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 							0x00000003 // TODO PathCchAppendEx flags
 						) as Int
 					)
-					sH = nativeFindFirstFileExW!!.invokeExact(
+					sH = nativeFindFirstFileExWide!!.invokeExact(
 						capturedStateSegment,
 						wildcard,
 						0, // TODO INFO LEVEL
@@ -84,7 +84,7 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 		}
 
 		private fun advance() {
-			val status = nativeFindNextFileW!!.invokeExact(
+			val status = nativeFindNextFileWide!!.invokeExact(
 				capturedStateSegment,
 				searchHandle, searchData
 			) as Int

@@ -1,11 +1,8 @@
 package org.bread_experts_group.api.secure.cryptography.windows.feature.hash
 
 import org.bread_experts_group.Flaggable.Companion.raw
-import org.bread_experts_group.ffi.windows.DWORD
-import org.bread_experts_group.ffi.windows.ULONG
+import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.bcrypt.*
-import org.bread_experts_group.ffi.windows.returnsNTSTATUS
-import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -18,8 +15,8 @@ fun createBCryptAlgorithm(
 	val handleRec = tempArena.allocate(ValueLayout.ADDRESS)
 	nativeBCryptOpenAlgorithmProvider!!.returnsNTSTATUS(
 		handleRec,
-		tempArena.allocateFrom(algorithmID, Charsets.UTF_16LE),
-		tempArena.allocateFrom(algorithmProvider, Charsets.UTF_16LE),
+		tempArena.allocateFrom(algorithmID, winCharsetWide),
+		tempArena.allocateFrom(algorithmProvider, winCharsetWide),
 		flags.raw().toInt()
 	)
 	handleRec.get(ValueLayout.ADDRESS, 0).reinterpret(arena) {
@@ -105,7 +102,7 @@ fun hashGetDigestLength(algorithm: MemorySegment, arena: Arena): Int {
 	val lengthSz = arena.allocate(ULONG)
 	nativeBCryptGetProperty!!.returnsNTSTATUS(
 		algorithm,
-		arena.allocateFrom("HashDigestLength", Charsets.UTF_16LE),
+		arena.allocateFrom("HashDigestLength", winCharsetWide),
 		threadLocalDWORD0,
 		threadLocalDWORD0.byteSize().toInt(),
 		lengthSz,

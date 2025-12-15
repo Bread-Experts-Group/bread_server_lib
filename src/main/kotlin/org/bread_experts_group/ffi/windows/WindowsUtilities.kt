@@ -39,7 +39,7 @@ fun decodeWin32Error(err: Int) {
 		995 -> throw IOAbortedException()
 		0 -> {}
 		else -> {
-			val count = nativeFormatMessageW!!.invokeExact(
+			val count = nativeFormatMessageWide!!.invokeExact(
 				0x00001100, // FORMAT_MESSAGE_ALLOCATE_BUFFER, FORMAT_MESSAGE_FROM_SYSTEM
 				MemorySegment.NULL,
 				err,
@@ -53,7 +53,7 @@ fun decodeWin32Error(err: Int) {
 				.get(ValueLayout.ADDRESS, 0)
 				.reinterpret(count.toLong() * 2)
 				.toArray(ValueLayout.JAVA_BYTE)
-				.toString(Charsets.UTF_16LE)
+				.toString(winCharsetWide)
 				.trim()
 			val deallocated = nativeLocalFree!!.invokeExact(
 				threadLocalPTR.get(ValueLayout.ADDRESS, 0)

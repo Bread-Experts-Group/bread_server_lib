@@ -8,7 +8,7 @@ import java.lang.foreign.ValueLayout
 
 private val mappings = nativeLinker.canonicalLayouts()
 
-private const val UNICODE = true // TODO: Unicode chk?
+const val UNICODE = true
 
 // TODO: 32-bit/64-bit separation
 val int64_t = mappings["int64_t"]!! as ValueLayout
@@ -24,6 +24,7 @@ val size_t = mappings["size_t"]!! as ValueLayout
 
 val __int64 = int64_t
 val _WIN64 = size_t.byteSize() == 8L
+val _MX_IX86 = System.getProperty("os.arch") == "x86"
 
 val BYTE = char // unsigned
 val WORD = short // unsigned
@@ -91,7 +92,7 @@ val LANGID = WORD
 val LCID = DWORD
 val LCTYPE = DWORD
 val LGRPID = DWORD
-val LONGLONG = if (_WIN64) __int64 else double // TODO: Arm support (actually uses _MX_IX86)
+val LONGLONG = if (!_MX_IX86) __int64 else double
 val LONG_PTR = size_t
 val LONG32 = int
 val LONG64 = __int64
@@ -190,7 +191,7 @@ val UINT16 = short // unsigned
 val UINT32 = int // unsigned
 val UINT64 = __int64 // unsigned
 val ULONG = long // unsigned
-val ULONGLONG = if (_WIN64) __int64 else double // TODO: Arm support (actually uses _MX_IX86) unsigned
+val ULONGLONG = if (!_MX_IX86) __int64 /* unsigned */ else double
 val ULONG32 = int // unsigned
 val ULONG64 = __int64 // unsigned
 val USHORT = short // unsigned

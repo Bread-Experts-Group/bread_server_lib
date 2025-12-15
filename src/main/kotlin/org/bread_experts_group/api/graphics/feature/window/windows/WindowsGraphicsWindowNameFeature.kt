@@ -4,6 +4,7 @@ import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowNameFeature
 import org.bread_experts_group.ffi.windows.WindowsMessageTypes
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.Arena
 
 class WindowsGraphicsWindowNameFeature(private val window: WindowsGraphicsWindow) : GraphicsWindowNameFeature(),
@@ -32,7 +33,7 @@ class WindowsGraphicsWindowNameFeature(private val window: WindowsGraphicsWindow
 					textLength,
 					buffer.address()
 				)
-				buffer.getString(0, Charsets.UTF_16LE)
+				buffer.getString(0, winCharsetWide)
 			}
 		}
 		set(value) {
@@ -41,7 +42,7 @@ class WindowsGraphicsWindowNameFeature(private val window: WindowsGraphicsWindow
 				window.sendMessage(
 					WindowsMessageTypes.WM_SETTEXT,
 					0,
-					arena.allocateFrom(value, Charsets.UTF_16LE).address()
+					arena.allocateFrom(value, winCharsetWide).address()
 				)
 			}
 		}

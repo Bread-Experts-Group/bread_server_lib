@@ -5,27 +5,27 @@ import org.bread_experts_group.api.system.device.delete.DeleteSystemDeviceFeatur
 import org.bread_experts_group.api.system.device.delete.StandardDeleteSystemDeviceFeatures
 import org.bread_experts_group.api.system.device.feature.SystemDeviceDeleteFeature
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.nativeDeleteFile2W
-import org.bread_experts_group.ffi.windows.nativeRemoveDirectoryW
+import org.bread_experts_group.ffi.windows.nativeDeleteFile2Wide
+import org.bread_experts_group.ffi.windows.nativeRemoveDirectoryWide
 import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
 
 class WindowsSystemDeviceDeleteFeature(private val pathSegment: MemorySegment) : SystemDeviceDeleteFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeDeleteFile2W != null && nativeRemoveDirectoryW != null
+	override fun supported(): Boolean = nativeDeleteFile2Wide != null && nativeRemoveDirectoryWide != null
 	override fun delete(
 		vararg features: DeleteSystemDeviceFeatureIdentifier
 	): List<DeleteSystemDeviceFeatureIdentifier> {
 		val supportedFeatures = mutableListOf<DeleteSystemDeviceFeatureIdentifier>()
 		if (features.contains(StandardDeleteSystemDeviceFeatures.DIRECTORY)) {
-			val status = nativeRemoveDirectoryW!!.invokeExact(
+			val status = nativeRemoveDirectoryWide!!.invokeExact(
 				capturedStateSegment,
 				pathSegment
 			) as Int
 			if (status == 0) throwLastError()
 			supportedFeatures.add(StandardDeleteSystemDeviceFeatures.DIRECTORY)
 		} else {
-			val status = nativeDeleteFile2W!!.invokeExact(
+			val status = nativeDeleteFile2Wide!!.invokeExact(
 				capturedStateSegment,
 				pathSegment,
 				0

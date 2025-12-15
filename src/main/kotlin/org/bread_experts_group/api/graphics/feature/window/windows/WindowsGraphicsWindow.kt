@@ -48,7 +48,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 
 	fun wndProc(hWnd: MemorySegment, message: Int, wParam: Long, lParam: Long): Long {
 		val proc = procedures[message]
-			?: return nativeDefWindowProcW!!.invokeExact(hWnd, message, wParam, lParam) as Long
+			?: return nativeDefWindowProcWide!!.invokeExact(hWnd, message, wParam, lParam) as Long
 		return proc(hWnd, message, wParam, lParam)
 	}
 
@@ -56,12 +56,12 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 		val initLatch = CountDownLatch(1)
 		processingLock.acquire()
 		Thread.ofPlatform().daemon().start {
-			val localHandle = nativeGetModuleHandleW!!.invokeExact(MemorySegment.NULL) as MemorySegment
-			hWnd = nativeCreateWindowExW!!.invokeExact(
+			val localHandle = nativeGetModuleHandleWide!!.invokeExact(MemorySegment.NULL) as MemorySegment
+			hWnd = nativeCreateWindowExWide!!.invokeExact(
 				capturedStateSegment,
 				0x00000300,
 				MemorySegment.ofAddress(template.classAtom.toLong() and 0xFFFF),
-				arena.allocateFrom(this.get(GraphicsWindowFeatures.WINDOW_NAME).name, Charsets.UTF_16LE),
+				arena.allocateFrom(this.get(GraphicsWindowFeatures.WINDOW_NAME).name, winCharsetWide),
 				0x10CC0000,
 				0, 0,
 				300, 400,
@@ -116,7 +116,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 			initLatch.countDown()
 			val message = arena.allocate(MSG)
 			while (true) {
-				val status = nativeGetMessageW!!.invokeExact(
+				val status = nativeGetMessageWide!!.invokeExact(
 					capturedStateSegment,
 					message, MemorySegment.NULL, 0, 0
 				) as Int
@@ -125,7 +125,7 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 					0 -> break
 					else -> {
 						nativeTranslateMessage!!.invokeExact(message) as Int
-						nativeDispatchMessageW!!.invokeExact(message) as Long
+						nativeDispatchMessageWide!!.invokeExact(message) as Long
 					}
 				}
 			}
@@ -141,6 +141,6 @@ class WindowsGraphicsWindow(private val template: WindowsGraphicsWindowTemplate)
 	}
 
 	internal fun sendMessage(message: WindowsMessageTypes, wParam: Long, lParam: Long): Long {
-		return nativeSendMessageW!!.invokeExact(hWnd, message.position.toInt(), wParam, lParam) as Long
+		return nativeSendMessageWide!!.invokeExact(hWnd, message.position.toInt(), wParam, lParam) as Long
 	}
 }

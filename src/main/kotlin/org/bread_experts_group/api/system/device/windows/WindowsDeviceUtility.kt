@@ -14,9 +14,7 @@ import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.cfgmgr.*
-import org.bread_experts_group.ffi.windows.setup.nativeSetupDiGetClassDevsW
-import org.bread_experts_group.ffi.windows.setup.nativeSetupDiGetDevicePropertyW
-import org.bread_experts_group.ffi.windows.setup.nativeSetupDiOpenDeviceInfoW
+import org.bread_experts_group.ffi.windows.setup.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -25,7 +23,7 @@ import java.util.*
 val deviceCache = mutableMapOf<String, SystemDevice>()
 fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 	threadLocalDWORD1.set(DWORD, 0, 0)
-	var status = nativeCM_Get_Device_Interface_PropertyW!!.invokeExact(
+	var status = nativeCM_Get_Device_Interface_PropertyWide!!.invokeExact(
 		link,
 		DEVPKEY_Device_InstanceId,
 		threadLocalDWORD0,
@@ -35,7 +33,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 	) as Int
 	if (status != 0x1A) TODO("CM Errors a: $status")
 	val instanceID = arena.allocate(threadLocalDWORD1.get(DWORD, 0).toLong())
-	status = nativeCM_Get_Device_Interface_PropertyW.invokeExact(
+	status = nativeCM_Get_Device_Interface_PropertyWide.invokeExact(
 		link,
 		DEVPKEY_Device_InstanceId,
 		threadLocalDWORD0,
@@ -43,7 +41,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 		threadLocalDWORD1,
 		0
 	) as Int
-	val instanceIDString = instanceID.getString(0, Charsets.UTF_16LE)
+	val instanceIDString = instanceID.getString(0, winCharsetWide)
 	if (status != 0) TODO("CM Errors b: $status")
 	return deviceCache[instanceIDString] ?: SystemDevice(
 		when (guid.toString()) {
@@ -76,7 +74,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			link, ValueLayout.JAVA_BYTE, 0,
 			identityBytes, 0, identityBytes.size
 		)
-		val symLinkString = String(identityBytes, Charsets.UTF_16LE)
+		val symLinkString = String(identityBytes, winCharsetWide)
 		it.features.add(
 			SystemDeviceBasicIdentifierFeature(
 				ImplementationSource.SYSTEM_NATIVE,
@@ -85,27 +83,28 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			)
 		)
 		val classGuid = guid.allocate(arena)
-		val deviceInfoList = nativeSetupDiGetClassDevsW!!.invokeExact(
-			capturedStateSegment,
-			classGuid,
-			instanceID,
-			MemorySegment.NULL,
-			0x00000010 // TODO DIGCF_DEVICEINTERFACE
-		) as MemorySegment
+		val deviceInfoList = nativeSetupDiGetClassDevs!!(
+			SetupDiGetClassDevsParameters(
+				classGuid,
+				instanceIDString,
+				MemorySegment.NULL,
+				0x00000010 // TODO DIGCF_DEVICEINTERFACE
+			)
+		)
 		if (deviceInfoList == INVALID_HANDLE_VALUE) throwLastError()
 		val devInfoData = arena.allocate(SP_DEVINFO_DATA)
 		SP_DEVINFO_DATA_cbSize.set(devInfoData, 0, devInfoData.byteSize().toInt())
-		status = nativeSetupDiOpenDeviceInfoW!!.invokeExact(
-			capturedStateSegment,
-			deviceInfoList,
-			instanceID,
-			MemorySegment.NULL,
-			0,
-			devInfoData
-		) as Int
-		if (status == 0) throwLastError()
+		nativeSetupDiOpenDeviceInfo!!(
+			SetupDiOpenDeviceInfoParameters(
+				deviceInfoList,
+				instanceIDString,
+				MemorySegment.NULL,
+				0,
+				devInfoData
+			)
+		)
 		try {
-			nativeSetupDiGetDevicePropertyW!!.invokeExact(
+			nativeSetupDiGetDevicePropertyWide!!.invokeExact(
 				capturedStateSegment,
 				deviceInfoList,
 				devInfoData,
@@ -117,7 +116,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 				0
 			) as Int
 			val friendlyNameArea = arena.allocate(threadLocalDWORD1.get(DWORD, 0).toLong())
-			status = nativeSetupDiGetDevicePropertyW.invokeExact(
+			status = nativeSetupDiGetDevicePropertyWide.invokeExact(
 				capturedStateSegment,
 				deviceInfoList,
 				devInfoData,
@@ -136,7 +135,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			)
 			it.features.add(
 				SystemDeviceFriendlyNameFeature(
-					String(friendlyNameBytes, Charsets.UTF_16LE),
+					String(friendlyNameBytes, winCharsetWide),
 					ImplementationSource.SYSTEM_NATIVE
 				)
 			)
@@ -144,7 +143,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			if (e.error.enum != WindowsLastError.ERROR_NOT_FOUND) throw e
 		}
 		threadLocalDWORD1.set(DWORD, 0, 0)
-		status = nativeCM_Get_Device_Interface_PropertyW.invokeExact(
+		status = nativeCM_Get_Device_Interface_PropertyWide.invokeExact(
 			link,
 			DEVPKEY_DeviceInterface_Serial_PortName,
 			threadLocalDWORD0,
@@ -155,7 +154,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 		if (status != 0x25) try { // TODO CM Errors
 			if (status != 0x1A) TODO("CM Errors c: $status")
 			val serialNameArea = arena.allocate(threadLocalDWORD1.get(DWORD, 0).toLong())
-			status = nativeCM_Get_Device_Interface_PropertyW.invokeExact(
+			status = nativeCM_Get_Device_Interface_PropertyWide.invokeExact(
 				link,
 				DEVPKEY_DeviceInterface_Serial_PortName,
 				threadLocalDWORD0,
@@ -166,7 +165,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 			if (status != 0) TODO("CM Errors d: $status")
 			it.features.add(
 				SystemDeviceSerialPortNameFeature(
-					serialNameArea.getString(0, Charsets.UTF_16LE),
+					serialNameArea.getString(0, winCharsetWide),
 					ImplementationSource.SYSTEM_NATIVE
 				)
 			)
@@ -192,7 +191,7 @@ fun winCreatePathDevice(
 	) as Int
 	if (status !in 0..1) throwLastError()
 	it.registerCleaningAction { arena.close() }
-	val path = safeSegment.getString(0, Charsets.UTF_16LE)
+	val path = safeSegment.getString(0, winCharsetWide)
 	it.features.add(
 		SystemDeviceBasicIdentifierFeature(
 			ImplementationSource.SYSTEM_NATIVE,
@@ -200,8 +199,8 @@ fun winCreatePathDevice(
 			path
 		)
 	)
-	val fileNameSegment = nativePathFindFileNameW!!.invokeExact(safeSegment) as MemorySegment
-	val fileName = fileNameSegment.reinterpret(Long.MAX_VALUE).getString(0, Charsets.UTF_16LE)
+	val fileNameSegment = nativePathFindFileName!!(path)
+	val fileName = fileNameSegment.reinterpret(Long.MAX_VALUE).getString(0, winCharsetWide)
 	if (fileNameSegment != safeSegment) it.features.add(
 		SystemDeviceFriendlyNameFeature(fileName, ImplementationSource.SYSTEM_NATIVE)
 	)
@@ -216,10 +215,10 @@ fun winCreatePathDevice(
 	it.features.add(WindowsSystemDeviceReplaceFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceSoftLinkFeature(safeSegment))
 	it.features.add(WindowsSystemDeviceHardLinkFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceQueryTransparentEncryptionFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceTransparentEncryptionEnableFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceTransparentEncryptionDisableFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(safeSegment))
+	it.features.add(WindowsSystemDeviceQueryTransparentEncryptionFeature(path))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionEnableFeature(path))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionDisableFeature(path))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(path))
 	it.features.add(WindowsSystemDeviceGetCreationTime(safeSegment))
 	it.features.add(WindowsSystemDeviceGetLastAccessTime(safeSegment))
 	it.features.add(WindowsSystemDeviceGetLastWriteTime(safeSegment))

@@ -6,14 +6,15 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.feature.SystemDeviceReplaceFeature
 import org.bread_experts_group.api.system.device.replace.SystemDeviceReplaceFeatureIdentifier
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.nativeReplaceFileW
+import org.bread_experts_group.ffi.windows.nativeReplaceFileWide
 import org.bread_experts_group.ffi.windows.throwLastError
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 class WindowsSystemDeviceReplaceFeature(private val pathSegment: MemorySegment) : SystemDeviceReplaceFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeReplaceFileW != null
+	override fun supported(): Boolean = nativeReplaceFileWide != null
 
 	override fun replace(
 		with: SystemDevice,
@@ -23,13 +24,13 @@ class WindowsSystemDeviceReplaceFeature(private val pathSegment: MemorySegment) 
 		val arena = Arena.ofConfined()
 		val withSegment = arena.allocateFrom(
 			with.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
-			Charsets.UTF_16LE
+			winCharsetWide
 		)
 		val backupSegment = if (backup != null) arena.allocateFrom(
 			backup.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
-			Charsets.UTF_16LE
+			winCharsetWide
 		) else MemorySegment.NULL
-		val status = nativeReplaceFileW!!.invokeExact(
+		val status = nativeReplaceFileWide!!.invokeExact(
 			capturedStateSegment,
 			pathSegment,
 			withSegment,

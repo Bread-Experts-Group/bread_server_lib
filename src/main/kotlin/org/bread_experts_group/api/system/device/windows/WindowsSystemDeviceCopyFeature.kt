@@ -292,7 +292,7 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 			val arena = Arena.ofConfined()
 			val destinationSegment = arena.allocateFrom(
 				destination.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
-				Charsets.UTF_16LE
+				winCharsetWide
 			)
 			val extraParameters = if (features.isNotEmpty()) {
 				val p = arena.allocate(COPYFILE2_EXTENDED_PARAMETERS_V2)

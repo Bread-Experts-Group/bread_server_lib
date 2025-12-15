@@ -93,7 +93,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 
 		const val SOCK_STREAM = 1
 		const val SOCK_DGRAM = 2
-		const val SOCK_RAW = 3
+		const val SOCK_RAWide = 3
 
 		const val IPPROTO_IP = 0
 		const val IPPROTO_TCP = 6
@@ -102,23 +102,23 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 		const val BTHPROTO_RFCOMM = 0x0003
 		const val BTHPROTO_L2CAP = 0x0100
 
-		const val HV_PROTOCOL_RAW = 1
+		const val HV_PROTOCOL_RAWide = 1
 	}
 
 	override val features: MutableList<SystemSocketProviderFeatureImplementation<*>> by lazy {
 		val implementations = mutableListOf<SystemSocketProviderFeatureImplementation<*>>()
-		if (nativeWSAEnumNameSpaceProvidersW != null) implementations.add(
+		if (nativeWSAEnumNameSpaceProvidersWide != null) implementations.add(
 			object : SystemSocketProvideResolutionNamespaceProvidersFeature() {
 				override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 				override fun iterator(): Iterator<ResolutionNamespaceProvider> {
 					threadLocalDWORD0.set(DWORD, 0, 0)
-					nativeWSAEnumNameSpaceProvidersW.invokeExact(
+					nativeWSAEnumNameSpaceProvidersWide.invokeExact(
 						threadLocalDWORD0,
 						MemorySegment.NULL
 					) as Int
 					val arena = Arena.ofConfined()
 					val providerData = arena.allocate(threadLocalDWORD0.get(DWORD, 0).toLong())
-					val providers = nativeWSAEnumNameSpaceProvidersW.invokeExact(
+					val providers = nativeWSAEnumNameSpaceProvidersWide.invokeExact(
 						threadLocalDWORD0,
 						providerData
 					) as Int
@@ -144,7 +144,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 											providerInfo, 0L
 										) as MemorySegment)
 											.reinterpret(Long.MAX_VALUE)
-											.getString(0, Charsets.UTF_16LE)
+											.getString(0, winCharsetWide)
 									),
 									ResolutionNamespaceProviderSystemIdentifierFeature(
 										ImplementationSource.SYSTEM_NATIVE,
@@ -199,7 +199,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 				val socketType = WSAPROTOCOL_INFOW_iSocketType.get(protocolInfo, 0L) as Int
 				val protocol = WSAPROTOCOL_INFOW_iProtocol.get(protocolInfo, 0L) as Int
 				val label = (WSAPROTOCOL_INFOW_szProtocol.invokeExact(protocolInfo, 0L) as MemorySegment)
-					.getString(0, Charsets.UTF_16LE)
+					.getString(0, winCharsetWide)
 				when (val addressFamily = WSAPROTOCOL_INFOW_iAddressFamily.get(protocolInfo, 0L) as Int) {
 					AF_UNIX -> when (socketType) {
 						SOCK_STREAM -> when (protocol) {
@@ -271,7 +271,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 							}
 						}
 
-						SOCK_RAW -> when (protocol) {
+						SOCK_RAWide -> when (protocol) {
 							IPPROTO_IP -> logger.severe("Raw/IPv4")
 							else -> logger.warning("Unknown WSA/IPv4/Raw iProtocol [$protocol]")
 						}
@@ -340,7 +340,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 							}
 						}
 
-						SOCK_RAW -> when (protocol) {
+						SOCK_RAWide -> when (protocol) {
 							IPPROTO_IP -> logger.severe("Raw/IPv6")
 							else -> logger.warning("Unknown WSA/IPv6/Raw iProtocol [$protocol]")
 						}
@@ -375,7 +375,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 
 					AF_HYPERV -> when (socketType) {
 						SOCK_STREAM -> when (protocol) {
-							HV_PROTOCOL_RAW -> logger.severe("HyperV/L2Cap")
+							HV_PROTOCOL_RAWide -> logger.severe("HyperV/L2Cap")
 							else -> logger.warning("Unknown WSA/HyperV/Stream iProtocol [$protocol]")
 						}
 

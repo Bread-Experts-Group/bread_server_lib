@@ -2,10 +2,8 @@ package org.bread_experts_group.ffi.windows.cfgmgr
 
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.globalArena
-import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.GUID
 import org.bread_experts_group.ffi.windows.ULONG
-import org.bread_experts_group.ffi.windows.ULONG_PTR
 import java.lang.foreign.MemoryLayout
 import java.lang.foreign.MemoryLayout.PathElement.groupElement
 import java.lang.foreign.MemorySegment
@@ -68,11 +66,3 @@ val DEVPKEY_DeviceInterface_Serial_PortName: MemorySegment = globalArena.allocat
 	).allocate(DEVPROPKEY_fmtid.invokeExact(it, 0L) as MemorySegment)
 	DEVPROPKEY_pid.set(it, 0, 4)
 }
-
-val SP_DEVINFO_DATA: StructLayout = MemoryLayout.structLayout(
-	DWORD.withName("cbSize"),
-	GUID.withName("ClassGuid"),
-	DWORD.withName("DevInst"),
-	ULONG_PTR.withName("Reserved")
-)
-val SP_DEVINFO_DATA_cbSize: VarHandle = SP_DEVINFO_DATA.varHandle(groupElement("cbSize"))

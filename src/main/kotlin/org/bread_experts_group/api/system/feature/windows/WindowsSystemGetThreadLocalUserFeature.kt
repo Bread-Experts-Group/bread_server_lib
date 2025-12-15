@@ -5,11 +5,11 @@ import org.bread_experts_group.api.system.feature.SystemGetThreadLocalUserFeatur
 import org.bread_experts_group.api.system.user.SystemUser
 import org.bread_experts_group.api.system.user.windows.WindowsSystemUser
 import org.bread_experts_group.ffi.windows.CURRENT_THREAD_EFFECTIVE_TOKEN
-import org.bread_experts_group.ffi.windows.nativeGetTokenInformation
+import org.bread_experts_group.ffi.windows.advapi.getTokenInformation
 
 class WindowsSystemGetThreadLocalUserFeature : SystemGetThreadLocalUserFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeGetTokenInformation != null
+	override fun supported(): Boolean = getTokenInformation != null
 
 	override val user: SystemUser
 		get() = WindowsSystemUser(CURRENT_THREAD_EFFECTIVE_TOKEN)

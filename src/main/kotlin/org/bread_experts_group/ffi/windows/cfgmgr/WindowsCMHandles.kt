@@ -31,7 +31,7 @@ val nativeCM_Unregister_Notification: MethodHandle? = cfgMgr32Lookup.getDowncall
 	listOf()
 )
 
-val nativeCM_Get_Device_Interface_PropertyW: MethodHandle? = cfgMgr32Lookup.getDowncall(
+val nativeCM_Get_Device_Interface_PropertyWide: MethodHandle? = cfgMgr32Lookup.getDowncall(
 	nativeLinker, "CM_Get_Device_Interface_PropertyW",
 	arrayOf(
 		CONFIGRET,
@@ -41,20 +41,20 @@ val nativeCM_Get_Device_Interface_PropertyW: MethodHandle? = cfgMgr32Lookup.getD
 	listOf()
 )
 
-val nativeCM_Get_Device_Interface_List_SizeW: MethodHandle? = cfgMgr32Lookup.getDowncall(
+val nativeCM_Get_Device_Interface_List_SizeWide: MethodHandle? = cfgMgr32Lookup.getDowncall(
 	nativeLinker, "CM_Get_Device_Interface_List_SizeW",
 	arrayOf(
 		CONFIGRET,
-		PULONG, ValueLayout.ADDRESS /* of GUID */, ValueLayout.ADDRESS /* of DEWINSTID_W */, ULONG
+		PULONG, ValueLayout.ADDRESS /* of GUID */, ValueLayout.ADDRESS /* of DEWINSTID_Wide */, ULONG
 	),
 	listOf()
 )
 
-val nativeCM_Get_Device_Interface_ListW: MethodHandle? = cfgMgr32Lookup.getDowncall(
+val nativeCM_Get_Device_Interface_ListWide: MethodHandle? = cfgMgr32Lookup.getDowncall(
 	nativeLinker, "CM_Get_Device_Interface_ListW",
 	arrayOf(
 		CONFIGRET,
-		ValueLayout.ADDRESS /* of GUID */, ValueLayout.ADDRESS /* of DEVINSTID_W */,
+		ValueLayout.ADDRESS /* of GUID */, ValueLayout.ADDRESS /* of DEVINSTID_Wide */,
 		ValueLayout.ADDRESS /* of ZZWSTR */, ULONG, ULONG
 	),
 	listOf()

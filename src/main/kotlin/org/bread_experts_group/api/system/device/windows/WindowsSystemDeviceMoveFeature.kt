@@ -30,7 +30,7 @@ import java.util.logging.Logger
 
 class WindowsSystemDeviceMoveFeature(private val pathSegment: MemorySegment) : SystemDeviceMoveFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeMoveFileWithProgressW != null
+	override fun supported(): Boolean = nativeMoveFileWithProgressWide != null
 
 	override fun move(
 		destination: SystemDevice,
@@ -128,9 +128,9 @@ class WindowsSystemDeviceMoveFeature(private val pathSegment: MemorySegment) : S
 			val arena = Arena.ofConfined()
 			val destinationSegment = arena.allocateFrom(
 				destination.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
-				Charsets.UTF_16LE
+				winCharsetWide
 			)
-			val status = nativeMoveFileWithProgressW!!.invokeExact(
+			val status = nativeMoveFileWithProgressWide!!.invokeExact(
 				capturedStateSegment,
 				pathSegment,
 				destinationSegment,

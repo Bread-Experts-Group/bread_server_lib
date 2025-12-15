@@ -6,14 +6,15 @@ import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.feature.SystemDeviceHardLinkFeature
 import org.bread_experts_group.api.system.device.hardlink.HardLinkSystemDeviceFeatureIdentifier
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.nativeCreateHardLinkW
+import org.bread_experts_group.ffi.windows.nativeCreateHardLinkWide
 import org.bread_experts_group.ffi.windows.throwLastError
+import org.bread_experts_group.ffi.windows.winCharsetWide
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 class WindowsSystemDeviceHardLinkFeature(private val pathSegment: MemorySegment) : SystemDeviceHardLinkFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeCreateHardLinkW != null
+	override fun supported(): Boolean = nativeCreateHardLinkWide != null
 
 	override fun link(
 		towards: SystemDevice,
@@ -22,9 +23,9 @@ class WindowsSystemDeviceHardLinkFeature(private val pathSegment: MemorySegment)
 		val arena = Arena.ofConfined()
 		val destinationSegment = arena.allocateFrom(
 			towards.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
-			Charsets.UTF_16LE
+			winCharsetWide
 		)
-		val status = nativeCreateHardLinkW!!.invokeExact(
+		val status = nativeCreateHardLinkWide!!.invokeExact(
 			capturedStateSegment,
 			pathSegment,
 			destinationSegment,

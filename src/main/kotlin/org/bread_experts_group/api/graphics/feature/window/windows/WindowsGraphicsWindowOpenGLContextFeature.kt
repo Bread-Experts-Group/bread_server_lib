@@ -25,9 +25,9 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	private lateinit var hglrc: MemorySegment
 	private val procedures: MutableMap<String, MethodHandle> = mutableMapOf()
 
-	private val oglM = (nativeLoadLibraryExW!!.invokeExact(
+	private val oglM = (nativeLoadLibraryExWide!!.invokeExact(
 		capturedStateSegment,
-		arena.allocateFrom("Opengl32.dll", Charsets.UTF_16LE),
+		arena.allocateFrom("Opengl32.dll", winCharsetWide),
 		MemorySegment.NULL,
 		0
 	) as MemorySegment).also {
