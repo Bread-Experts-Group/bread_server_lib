@@ -10,17 +10,16 @@ private val mappings = nativeLinker.canonicalLayouts()
 
 const val UNICODE = true
 
-// TODO: 32-bit/64-bit separation
-val int64_t = mappings["int64_t"]!! as ValueLayout
+val int64_t = mappings["long long"]!! as ValueLayout.OfLong
 val wchar_t = mappings["wchar_t"]!! as ValueLayout.OfChar
-val char = mappings["char"]!! as ValueLayout
-val short = mappings["short"]!! as ValueLayout
+val char = mappings["char"]!! as ValueLayout.OfByte
+val short = mappings["short"]!! as ValueLayout.OfShort
 val int = mappings["int"]!! as ValueLayout.OfInt
 val long = mappings["long"]!! as ValueLayout.OfInt
-val float = mappings["float"]!! as ValueLayout
-val double = mappings["double"]!! as ValueLayout
+val float = mappings["float"]!! as ValueLayout.OfFloat
+val double = mappings["double"]!! as ValueLayout.OfDouble
 val `void*` = mappings["void*"]!! as AddressLayout
-val size_t = mappings["size_t"]!! as ValueLayout
+val size_t = mappings["size_t"]!! as ValueLayout.OfLong
 
 val __int64 = int64_t
 val _WIN64 = size_t.byteSize() == 8L

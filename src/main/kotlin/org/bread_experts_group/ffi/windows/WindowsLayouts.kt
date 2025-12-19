@@ -296,15 +296,15 @@ val LPMSG: AddressLayout = AddressLayout.ADDRESS
 //			"\n\tEvent char: 0x${eventChar.toHexString(HexFormat.UpperCase)}"
 //}
 
-val CPINFOEXW: StructLayout = MemoryLayout.structLayout(
-	UINT.withName("MaxCharSize"),
-	MemoryLayout.sequenceLayout(2, BYTE).withName("DefaultChar"),
-	MemoryLayout.sequenceLayout(12, BYTE).withName("LeadByte"),
-	WCHAR.withName("UnicodeDefaultChar"),
-	UINT.withName("CodePage"),
-	MemoryLayout.sequenceLayout(260, WCHAR).withName("CodePageName")
-)
-val CPINFOEXW_CodePageName: MethodHandle = CPINFOEXW.sliceHandle(groupElement("CodePageName"))
+//val CPINFOEXW: StructLayout = MemoryLayout.structLayout(
+//	UINT.withName("MaxCharSize"),
+//	MemoryLayout.sequenceLayout(2, BYTE).withName("DefaultChar"),
+//	MemoryLayout.sequenceLayout(12, BYTE).withName("LeadByte"),
+//	WCHAR.withName("UnicodeDefaultChar"),
+//	UINT.withName("CodePage"),
+//	MemoryLayout.sequenceLayout(260, WCHAR).withName("CodePageName")
+//)
+//val CPINFOEXW_CodePageName: MethodHandle = CPINFOEXW.sliceHandle(groupElement("CodePageName"))
 
 val KEY_EVENT_RECORD: StructLayout = MemoryLayout.structLayout(
 	BOOL.withName("bKeyDown"),
@@ -676,19 +676,6 @@ val COPYFILE2_MESSAGE: StructLayout = MemoryLayout.structLayout(
 )
 val COPYFILE2_MESSAGE_Type: VarHandle = COPYFILE2_MESSAGE.varHandle(groupElement("Type"))
 val COPYFILE2_MESSAGE_Info: MethodHandle = COPYFILE2_MESSAGE.sliceHandle(groupElement("Info"))
-
-val OVERLAPPED: StructLayout = MemoryLayout.structLayout(
-	ULONG_PTR.withName("Internal"),
-	ULONG_PTR.withName("InternalHigh"),
-	MemoryLayout.unionLayout(
-		MemoryLayout.structLayout(
-			DWORD.withName("Offset"),
-			DWORD.withName("OffsetHigh"),
-		).withName("DUMMYSTRUCTNAME"),
-		PVOID.withName("Pointer")
-	).withName("DUMMYUNIONNAME"),
-	HANDLE.withName("hEvent")
-)
 
 const val INFINITE = 0xFFFFFFFF.toInt()
 const val WAIT_FAILED = 0xFFFFFFFF.toInt()

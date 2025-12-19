@@ -14,7 +14,10 @@ import org.bread_experts_group.api.system.SystemProvider
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
 import org.bread_experts_group.api.system.device.SystemDeviceType
+import org.bread_experts_group.api.system.io.IODevice
 import org.bread_experts_group.api.system.io.IODeviceFeatures
+import org.bread_experts_group.api.system.io.open.FileIOReOpenFeatures
+import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.user.SystemUserFeatures
 import org.bread_experts_group.protocol.vt100d.*
 import java.time.Duration
@@ -86,8 +89,7 @@ class Console {
 				GraphicsConsoleModes.INPUT_MOUSE_EVENTS
 			)
 		)
-		TODO("IO 2")
-//		cOutWrite.write(OPEN_ALT_BUFFER, Charsets.UTF_8)
+		cOutWrite.sendString(OPEN_ALT_BUFFER, Charsets.UTF_8).block()
 	}
 
 	var bank = ConsoleBank(messageQueue)
@@ -147,17 +149,22 @@ class Console {
 
 							override fun opened(): Boolean {
 								bank = localBank
-								val (device) = device.get(SystemDeviceFeatures.IO_DEVICE).open()!!
-//								val deviceRead = device.get(IODeviceFeatures.READ)
-//								Thread.ofPlatform().start {
-//									val buffer = ByteArray(512)
-//									while (true) {
-//										val read = deviceRead.read(buffer)
-//										if (read == 0) continue
-//										localBank.write(buffer.decodeToString(0, read))
-//									}
-//								}
-								TODO("SRL2")
+								val openData = device.get(SystemDeviceFeatures.IO_DEVICE).open(
+									FileIOReOpenFeatures.READ,
+									FileIOReOpenFeatures.WRITE
+								)
+								val device = openData.firstNotNullOf { it as? IODevice }
+								val deviceRead = device.get(IODeviceFeatures.READ)
+								Thread.ofPlatform().start {
+									val buffer = ByteArray(512)
+									while (true) {
+										val readData = deviceRead.receiveBytes(buffer).block()
+										val received = readData.firstNotNullOf { it as? ReceiveSizeData }.bytes
+										localBank.write(
+											buffer.decodeToString(0, received.toInt())
+										)
+									}
+								}
 								return false
 							}
 						}
@@ -334,8 +341,7 @@ class Console {
 				) +
 				CURSOR_XY_POS(mouse.x.toUShort(), mouse.y.toUShort()) +
 				ERASE_CHARACTERS(1u)
-		TODO("IO 2")
-//		cOutWrite.write(buffer, Charsets.UTF_8)
+		cOutWrite.sendString(buffer, Charsets.UTF_8).block()
 	}
 }
 
@@ -345,7 +351,6 @@ fun main() {
 	val console = Console()
 	var commandBuffer = ""
 
-	@Suppress("AssignedValueIsNeverRead")
 	fun keyPress(char: Char) {
 		if (commandBuffer.isEmpty()) {
 			if (char == VT100D_ESC) commandBuffer = "$VT100D_ESC"

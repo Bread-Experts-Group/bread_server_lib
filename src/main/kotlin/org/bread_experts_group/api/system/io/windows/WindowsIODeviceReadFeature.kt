@@ -16,9 +16,7 @@ import java.util.concurrent.TimeUnit
 
 class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceReadFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-
-	// TODO: Figure out a better way to ascertain read.
-	override fun supported(): Boolean = true
+	override fun supported(): Boolean = nativeReadFile != null
 
 	// TODO: Asynchronous I/O
 	override fun gatherSegments(

@@ -1,3 +1,5 @@
+@file:Suppress("LongLine")
+
 package org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.windows
 
 import org.bread_experts_group.api.feature.FeatureExpression
@@ -8,115 +10,119 @@ import org.bread_experts_group.api.system.socket.feature.SocketConnectFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6ConnectionFeatureIdentifier
-import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6LocalAddressPortData
-import org.bread_experts_group.api.system.socket.ipv6.connect.IPv6RemoteAddressPortData
-import org.bread_experts_group.api.system.socket.system.DeferredConnect
-import org.bread_experts_group.api.system.socket.system.SocketMonitor
-import org.bread_experts_group.api.system.socket.system.windows.SOL_SOCKET
-import org.bread_experts_group.api.system.socket.system.windows.SO_UPDATE_CONNECT_CONTEXT
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.CONNECT_OPERATION
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate_identification
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate_operation
+import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketManager
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.DWORD
-import org.bread_experts_group.ffi.windows.threadLocalDWORD0
-import org.bread_experts_group.ffi.windows.threadLocalDWORD1
-import org.bread_experts_group.ffi.windows.throwLastWSAError
+import org.bread_experts_group.ffi.getDowncall
+import org.bread_experts_group.ffi.nativeLinker
+import org.bread_experts_group.ffi.threadLocalPTR
+import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+import java.lang.invoke.MethodHandle
+import java.util.concurrent.TimeUnit
 
 class WindowsIPv6TCPConnectFeature(
 	private val socket: Long,
-	private val monitor: SocketMonitor,
+	private val manager: WindowsSocketManager,
 	expresses: FeatureExpression<SocketConnectFeature<IPv6ConnectionFeatureIdentifier, IPv6ConnectionDataIdentifier>>
 ) : SocketConnectFeature<IPv6ConnectionFeatureIdentifier, IPv6ConnectionDataIdentifier>(expresses) {
+	val nativeLpfnConnectEx: MethodHandle = run {
+		val status = nativeWSAIoctl!!.invokeExact(
+			capturedStateSegment,
+			socket,
+			SIO_GET_EXTENSION_FUNCTION_POINTER,
+			WSAID_CONNECTEX,
+			WSAID_CONNECTEX.byteSize().toInt(),
+			threadLocalPTR,
+			threadLocalPTR.byteSize().toInt(),
+			threadLocalDWORD0,
+			MemorySegment.NULL,
+			MemorySegment.NULL
+		) as Int
+		if (status == SOCKET_ERROR) throwLastWSAError()
+		threadLocalPTR.get(ValueLayout.ADDRESS, 0).getDowncall(
+			nativeLinker,
+			arrayOf(
+				BOOL,
+				SOCKET.withName("s"),
+				ValueLayout.ADDRESS.withName("name"), /* sockaddr */
+				int.withName("namelen"),
+				PVOID.withName("lpSendBuffer"),
+				DWORD.withName("dwSendDataLength"),
+				LPDWORD.withName("lpdwBytesSent"),
+				LPOVERLAPPED.withName("lpOverlapped")
+			),
+			listOf(
+				gleCapture
+			)
+		)
+	}
+
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun connect(
 		vararg features: IPv6ConnectionFeatureIdentifier
-	): DeferredOperation<IPv6ConnectionDataIdentifier> =
-		object : DeferredConnect<IPv6ConnectionDataIdentifier>(monitor) {
-			override fun connect(): List<IPv6ConnectionDataIdentifier> = Arena.ofConfined().use { tempArena ->
-				val data = mutableListOf<IPv6ConnectionDataIdentifier>()
-				val addresses = features.mapNotNull { it as? InternetProtocolV6AddressPortData }
-				if (addresses.isEmpty()) return data
-				data.addAll(addresses)
-				val list = tempArena.allocate((SOCKET_ADDRESS.byteSize() * addresses.size) + 8)
-				list.set(DWORD, 0, addresses.size)
-				var nextEntry = list.asSlice(8)
-				addresses.forEach {
-					val sockAddr = tempArena.allocate(sockaddr_in6)
-					sockaddr_in6_sin6_family.set(sockAddr, 0L, AF_INET6.toShort())
-					val status = nativeWSAHtons!!.invokeExact(
-						capturedStateSegment,
-						socket,
-						it.port.toShort(),
-						threadLocalDWORD0
-					) as Int
-					if (status != 0) throwLastWSAError()
-					sockaddr_in6_sin6_port.set(
-						sockAddr, 0L,
-						threadLocalDWORD0.get(ValueLayout.JAVA_SHORT, 0)
-					)
-					MemorySegment.copy(
-						it.data, 0,
-						(sockaddr_in6_sin6_addr_Byte.invokeExact(sockAddr, 0L) as MemorySegment),
-						ValueLayout.JAVA_BYTE, 0, it.data.size
-					)
-					SOCKET_ADDRESS_lpSockaddr.set(nextEntry, 0L, sockAddr)
-					SOCKET_ADDRESS_iSockaddrLength.set(nextEntry, 0L, sockAddr.byteSize().toInt())
-					nextEntry = nextEntry.asSlice(SOCKET_ADDRESS.byteSize())
-				}
-				val localAddr = tempArena.allocate(sockaddr_in6)
-				threadLocalDWORD0.set(DWORD, 0, localAddr.byteSize().toInt())
-				val remoteAddr = tempArena.allocate(sockaddr_in6)
-				threadLocalDWORD1.set(DWORD, 0, remoteAddr.byteSize().toInt())
-				var status = nativeWSAConnectByList!!.invokeExact(
-					capturedStateSegment,
-					socket,
-					list,
-					threadLocalDWORD0,
-					localAddr,
-					threadLocalDWORD1,
-					remoteAddr,
-					MemorySegment.NULL,
-					MemorySegment.NULL
-				) as Int
-				if (status == 0) throwLastWSAError()
-				status = nativeSetSockOpt!!.invokeExact(
-					capturedStateSegment,
-					socket,
-					SOL_SOCKET,
-					SO_UPDATE_CONNECT_CONTEXT,
-					MemorySegment.NULL,
-					0
-				) as Int
-				if (status != 0) throwLastWSAError()
-				fun MemorySegment.readPort(): UShort {
-					val port = sockaddr_in6_sin6_port.get(this, 0L) as Short
-					val status = nativeWSANtohs!!.invokeExact(
-						capturedStateSegment,
-						socket,
-						port,
-						threadLocalDWORD0
-					) as Int
-					if (status != 0) throwLastWSAError()
-					return threadLocalDWORD0.get(ValueLayout.JAVA_SHORT, 0).toUShort()
-				}
+	): DeferredOperation<IPv6ConnectionDataIdentifier> {
+		val connectData = mutableListOf<IPv6ConnectionDataIdentifier>()
+		val connectArena = Arena.ofConfined()
+		val (identification, semaphore, _) = manager.getSemaphore()
+		try {
+			val address = features.firstNotNullOfOrNull { it as? InternetProtocolV6AddressPortData }
+				?: return DeferredOperation.Immediate(emptyList())
+			connectData.add(address)
+			val overlapped = connectArena.allocate(WSAOVERLAPPEDEncapsulate)
+			WSAOVERLAPPEDEncapsulate_operation.set(overlapped, 0L, CONNECT_OPERATION)
+			WSAOVERLAPPEDEncapsulate_identification.set(overlapped, 0L, identification)
+			val sockAddr = connectArena.allocate(sockaddr_in6)
+			sockaddr_in6_sin6_family.set(sockAddr, 0L, AF_INET6.toShort())
+			var status = nativeWSAHtons!!.invokeExact(
+				capturedStateSegment,
+				socket,
+				address.port.toShort(),
+				threadLocalDWORD0
+			) as Int
+			if (status != 0) throwLastWSAError()
+			sockaddr_in6_sin6_port.set(
+				sockAddr, 0L,
+				threadLocalDWORD0.get(ValueLayout.JAVA_SHORT, 0)
+			)
+			MemorySegment.copy(
+				address.data, 0,
+				(sockaddr_in6_sin6_addr_Byte.invokeExact(sockAddr, 0L) as MemorySegment),
+				ValueLayout.JAVA_BYTE, 0, address.data.size
+			)
+			status = nativeLpfnConnectEx.invokeExact(
+				capturedStateSegment,
+				socket,
+				sockAddr,
+				sockAddr.byteSize().toInt(),
+				MemorySegment.NULL,
+				0,
+				MemorySegment.NULL,
+				overlapped
+			) as Int
+			if (status == 0 && wsaLastError != WindowsLastError.ERROR_IO_PENDING.id.toInt()) throwLastWSAError()
+		} catch (e: Throwable) {
+			connectArena.close()
+			manager.releaseSemaphore(identification, null)
+			throw e
+		}
 
-				data.add(
-					IPv6LocalAddressPortData(
-						(sockaddr_in6_sin6_addr_Byte.invokeExact(localAddr, 0L) as MemorySegment)
-							.toArray(ValueLayout.JAVA_BYTE),
-						localAddr.readPort()
-					)
-				)
-				data.add(
-					IPv6RemoteAddressPortData(
-						(sockaddr_in6_sin6_addr_Byte.invokeExact(remoteAddr, 0L) as MemorySegment)
-							.toArray(ValueLayout.JAVA_BYTE),
-						remoteAddr.readPort()
-					)
-				)
-				data
+		return object : DeferredOperation<IPv6ConnectionDataIdentifier> {
+			override fun block(): List<IPv6ConnectionDataIdentifier> {
+				semaphore.acquire()
+				return connectData
+			}
+
+			override fun block(time: Long, unit: TimeUnit): List<IPv6ConnectionDataIdentifier> {
+				if (!semaphore.tryAcquire(time, unit)) return emptyList()
+				return connectData
 			}
 		}
+	}
 }

@@ -1,3 +1,2 @@
 org.bread_experts_group.api.graphics.feature.window.windows.WindowsGraphicsWindowFeature
-org.bread_experts_group.api.graphics.feature.window.wayland.WaylandGraphicsWindowFeature
 org.bread_experts_group.api.graphics.feature.console.windows.WindowsGraphicsConsoleFeature

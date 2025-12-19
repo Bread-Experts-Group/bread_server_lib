@@ -47,8 +47,8 @@ data class SetupDiGetClassDevsParameters(
 )
 
 val nativeSetupDiGetClassDevs = codingSpecific(
-	nativeSetupDiGetClassDevsWide,
-	nativeSetupDiGetClassDevsANSI
+	nativeSetupDiGetClassDevsANSI,
+	nativeSetupDiGetClassDevsWide
 ) { handle, parameters: SetupDiGetClassDevsParameters ->
 	Arena.ofConfined().use { tempArena ->
 		val returns = handle.invokeExact(
@@ -102,8 +102,8 @@ data class SetupDiOpenDeviceInfoParameters(
 )
 
 val nativeSetupDiOpenDeviceInfo = codingSpecific(
-	nativeSetupDiOpenDeviceInfoWide,
-	nativeSetupDiOpenDeviceInfoANSI
+	nativeSetupDiOpenDeviceInfoANSI,
+	nativeSetupDiOpenDeviceInfoWide
 ) { handle, parameters: SetupDiOpenDeviceInfoParameters ->
 	Arena.ofConfined().use { tempArena ->
 		val status = handle.invokeExact(

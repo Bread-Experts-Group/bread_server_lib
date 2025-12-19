@@ -5,7 +5,7 @@ import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.windows.HRESULT
 import org.bread_experts_group.ffi.windows.REFIID
 import org.bread_experts_group.ffi.windows.UINT
-import org.bread_experts_group.ffi.windows.decodeWin32Error
+import org.bread_experts_group.ffi.windows.tryThrowWin32Error
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -110,7 +110,7 @@ class ID3D12Device(
 		D3D12Feature.D3D12_FEATURE_D3D12_OPTIONS -> {
 			val struct = D3D12FeatureDataD3D12Options(arena.allocate(D3D12_FEATURE_DATA_D3D12_OPTIONS))
 			structPreprocessing(struct)
-			decodeWin32Error(this.checkFeatureSupport(feature, struct.ptr))
+			tryThrowWin32Error(this.checkFeatureSupport(feature, struct.ptr))
 			struct
 		}
 
@@ -120,7 +120,7 @@ class ID3D12Device(
 			struct.numFeatureLevels = featureLevels.size.toUInt()
 			struct.pFeatureLevelsRequested = arena.allocateFrom(D3D_FEATURE_LEVEL, *featureLevels)
 			structPreprocessing(struct)
-			decodeWin32Error(this.checkFeatureSupport(feature, struct.ptr))
+			tryThrowWin32Error(this.checkFeatureSupport(feature, struct.ptr))
 			struct
 		}
 
@@ -129,7 +129,7 @@ class ID3D12Device(
 			struct.support1 = EnumSet.allOf(D3D12FormatSupport1::class.java)
 			struct.support2 = EnumSet.allOf(D3D12FormatSupport2::class.java)
 			structPreprocessing(struct)
-			decodeWin32Error(this.checkFeatureSupport(feature, struct.ptr))
+			tryThrowWin32Error(this.checkFeatureSupport(feature, struct.ptr))
 			struct
 		}
 

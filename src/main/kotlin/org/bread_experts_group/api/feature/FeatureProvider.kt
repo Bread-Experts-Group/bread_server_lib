@@ -32,7 +32,7 @@ interface FeatureProvider<X : FeatureImplementation<out X>> {
 			try {
 				if (it is CheckedImplementation) !it.supported()
 				else false
-			} catch (e: Exception) {
+			} catch (e: Throwable) {
 				logger.log(Level.INFO, e) { "Exception during feature support check" }
 				true
 			}

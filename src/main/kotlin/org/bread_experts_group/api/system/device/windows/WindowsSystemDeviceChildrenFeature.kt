@@ -3,6 +3,7 @@ package org.bread_experts_group.api.system.device.windows
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.feature.SystemDeviceChildrenFeature
+import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
@@ -40,7 +41,7 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 				Arena.ofConfined().use { tempArena ->
 					val wildcard = tempArena.allocate(pathSegment.byteSize() + 4).copyFrom(pathSegment)
 					val append = tempArena.allocateFrom("\\*", winCharsetWide)
-					decodeWin32Error(
+					tryThrowWin32Error(
 						nativePathCchAppendEx!!.invokeExact(
 							wildcard,
 							wildcard.byteSize() / 2,
@@ -99,19 +100,20 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 		override fun next(): SystemDevice {
 			if (!nextPrepared) throw IllegalStateException()
 			val fileName = WIN32_FIND_DATAW_cFileName.invokeExact(searchData, 0L) as MemorySegment
-			val pathArena = Arena.ofShared()
-			val fullPath = pathArena.allocate((pathSegment.byteSize() + fileName.byteSize()) + 4)
+			val fullPath = autoArena.allocate(
+				(pathSegment.byteSize() + fileName.byteSize()) + (WCHAR.byteSize() * 2)
+			)
 			fullPath.copyFrom(pathSegment)
-			decodeWin32Error(
+			tryThrowWin32Error(
 				nativePathCchAppendEx!!.invokeExact(
 					fullPath,
-					fullPath.byteSize() / 2,
+					fullPath.byteSize() / WCHAR.byteSize(),
 					fileName,
 					0x00000003 // TODO PathCchAppendEx flags
 				) as Int
 			)
 			advance()
-			return winCreatePathDevice(pathArena, fullPath)
+			return winCreatePathDevice(fullPath)
 		}
 	}
 }

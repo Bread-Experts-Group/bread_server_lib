@@ -62,7 +62,7 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 				0x0202.toShort(),
 				wsaData
 			) as Int
-			if (status != 0) decodeWin32Error(status)
+			if (status != 0) tryThrowWin32Error(status)
 			features.add(
 				SystemSocketProviderTextualFeature(
 					ImplementationSource.SYSTEM_NATIVE,
@@ -191,7 +191,9 @@ class WindowsSystemNetworkingSocketsFeature : SystemNetworkingSocketsFeature() {
 				threadLocalDWORD0,
 				threadLocalDWORD1
 			) as Int
-			if (protocols == SOCKET_ERROR) decodeWin32Error(threadLocalDWORD1.get(DWORD, 0))
+			if (protocols == SOCKET_ERROR) throw getWin32Error(
+				threadLocalDWORD1.get(DWORD, 0)
+			) ?: IllegalStateException()
 			var protocolInfo = protocolData
 			val ipv4 = mutableMapOf<Int, SystemInternetProtocolV4SocketProviderFeatureImplementation<*>>()
 			val ipv6 = mutableMapOf<Int, SystemInternetProtocolV6SocketProviderFeatureImplementation<*>>()

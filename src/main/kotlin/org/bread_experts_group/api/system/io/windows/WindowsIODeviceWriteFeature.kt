@@ -18,18 +18,7 @@ class WindowsIODeviceWriteFeature(
 	private val handle: MemorySegment
 ) : IODeviceWriteFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean {
-		threadLocalDWORD0.set(DWORD, 0, 0)
-		val status = (nativeWriteFile ?: return false).invokeExact(
-			capturedStateSegment,
-			handle,
-			threadLocalDWORD0,
-			0,
-			threadLocalDWORD0,
-			MemorySegment.NULL
-		) as Int
-		return status != 0
-	}
+	override fun supported(): Boolean = nativeWriteFile != null
 
 	override fun scatterSegments(
 		data: Collection<MemorySegment>,
@@ -56,5 +45,4 @@ class WindowsIODeviceWriteFeature(
 		override fun block(): List<IOSendDataIdentifier> = write()
 		override fun block(time: Long, unit: TimeUnit): List<IOSendDataIdentifier> = write()
 	}
-
 }

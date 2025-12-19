@@ -2,13 +2,15 @@ package org.bread_experts_group.api.system.device.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceIODeviceFeature
+import org.bread_experts_group.api.system.io.IODevice
 import org.bread_experts_group.api.system.io.feature.IODeviceReleaseFeature
 import org.bread_experts_group.api.system.io.open.*
-import org.bread_experts_group.api.system.io.windows.WindowsIODevice
+import org.bread_experts_group.api.system.io.windows.*
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
+import java.lang.ref.Cleaner
 
 class WindowsSystemDeviceIODeviceFeature(
 	private val pathSegment: MemorySegment
@@ -18,38 +20,44 @@ class WindowsSystemDeviceIODeviceFeature(
 			nativeCreateDirectory2Wide != null
 
 	companion object {
-		// internally consistent
+		private val cleaner = Cleaner.create()
+		fun winCleanFileHandle(handle: MemorySegment): Cleaner.Cleanable = cleaner.register(handle) {
+			if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0)
+				throwLastError()
+		}
+
 		@Suppress("UNCHECKED_CAST")
+		// internally consistent
 		internal fun getDesiredAccessO(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
-		): Int = getDesiredAccess(features, supportedFeatures as MutableList<ReOpenIODeviceFeatureIdentifier>)
+			data: MutableList<OpenIODeviceDataIdentifier>
+		): Int = getDesiredAccess(features, data)
 
 		internal fun getDesiredAccess(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
+			data: MutableList<OpenIODeviceDataIdentifier>
 		): Int {
 			val rC = features.contains(FileIOReOpenFeatures.READ)
 			val wC = features.contains(FileIOReOpenFeatures.WRITE)
 			val eC = features.contains(FileIOReOpenFeatures.EXECUTE)
 			return if (rC && wC && eC) {
-				supportedFeatures.add(FileIOReOpenFeatures.READ)
-				supportedFeatures.add(FileIOReOpenFeatures.WRITE)
-				supportedFeatures.add(FileIOReOpenFeatures.EXECUTE)
+				data.add(FileIOReOpenFeatures.READ)
+				data.add(FileIOReOpenFeatures.WRITE)
+				data.add(FileIOReOpenFeatures.EXECUTE)
 				WindowsGenericAccessRights.GENERIC_ALL.position.toInt()
 			} else {
 				var localAR = 0
 				if (rC) {
 					localAR = WindowsGenericAccessRights.GENERIC_READ.position.toInt()
-					supportedFeatures.add(FileIOReOpenFeatures.READ)
+					data.add(FileIOReOpenFeatures.READ)
 				}
 				if (wC) {
 					localAR = localAR or WindowsGenericAccessRights.GENERIC_WRITE.position.toInt()
-					supportedFeatures.add(FileIOReOpenFeatures.WRITE)
+					data.add(FileIOReOpenFeatures.WRITE)
 				}
 				if (eC) {
 					localAR = localAR or WindowsGenericAccessRights.GENERIC_EXECUTE.position.toInt()
-					supportedFeatures.add(FileIOReOpenFeatures.EXECUTE)
+					data.add(FileIOReOpenFeatures.EXECUTE)
 				}
 				localAR
 			}
@@ -59,64 +67,64 @@ class WindowsSystemDeviceIODeviceFeature(
 		@Suppress("UNCHECKED_CAST")
 		internal fun getShareModeO(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
-		): Int = getShareMode(features, supportedFeatures as MutableList<ReOpenIODeviceFeatureIdentifier>)
+			data: MutableList<OpenIODeviceDataIdentifier>
+		): Int = getShareMode(features, data)
 
 		internal fun getShareMode(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<ReOpenIODeviceFeatureIdentifier>
+			data: MutableList<OpenIODeviceDataIdentifier>
 		): Int {
 			var shareMode = if (features.contains(FileIOReOpenFeatures.SHARE_READ)) {
-				supportedFeatures.add(FileIOReOpenFeatures.SHARE_READ)
+				data.add(FileIOReOpenFeatures.SHARE_READ)
 				WindowsFileSharingTypes.FILE_SHARE_READ.position.toInt()
 			} else 0
 			if (features.contains(FileIOReOpenFeatures.SHARE_WRITE)) {
 				shareMode = shareMode or WindowsFileSharingTypes.FILE_SHARE_WRITE.position.toInt()
-				supportedFeatures.add(FileIOReOpenFeatures.SHARE_WRITE)
+				data.add(FileIOReOpenFeatures.SHARE_WRITE)
 			}
 			return shareMode
 		}
 
 		internal fun getFlags(
 			features: Array<out OpenIODeviceFeatureIdentifier>,
-			supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>
+			data: MutableList<OpenIODeviceDataIdentifier>
 		): Int {
 			var flags = 0
 			if (features.contains(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)) {
 				flags = 0x00100000
-				supportedFeatures.add(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)
+				data.add(WindowsIOReOpenFeatures.DISABLE_REMOTE_RECALL)
 			}
 			if (features.contains(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)) {
 				flags = flags or 0x00200000
-				supportedFeatures.add(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)
+				data.add(WindowsIOReOpenFeatures.OPEN_REPARSE_POINT)
 			}
 			if (features.contains(WindowsIOOpenFeatures.DISABLE_REDIRECTION)) {
 				flags = flags or 0x00010000
-				supportedFeatures.add(WindowsIOOpenFeatures.DISABLE_REDIRECTION)
+				data.add(WindowsIOOpenFeatures.DISABLE_REDIRECTION)
 			}
 			if (features.contains(StandardIOOpenFeatures.DIRECTORY)) {
 				flags = 0x02000000
-				supportedFeatures.add(StandardIOOpenFeatures.DIRECTORY)
+				data.add(StandardIOOpenFeatures.DIRECTORY)
 			} else {
 				if (features.contains(WindowsIOReOpenFeatures.DELETE_ON_RELEASE)) {
 					flags = flags or 0x04000000
-					supportedFeatures.add(WindowsIOReOpenFeatures.DELETE_ON_RELEASE)
+					data.add(WindowsIOReOpenFeatures.DELETE_ON_RELEASE)
 				}
 				if (features.contains(WindowsIOReOpenFeatures.OPTIMIZE_SEQUENTIAL_ACCESS)) {
 					flags = flags or 0x08000000
-					supportedFeatures.add(WindowsIOReOpenFeatures.OPTIMIZE_SEQUENTIAL_ACCESS)
+					data.add(WindowsIOReOpenFeatures.OPTIMIZE_SEQUENTIAL_ACCESS)
 				}
 				if (features.contains(WindowsIOReOpenFeatures.OPTIMIZE_RANDOM_ACCESS)) {
 					flags = flags or 0x10000000
-					supportedFeatures.add(WindowsIOReOpenFeatures.OPTIMIZE_RANDOM_ACCESS)
+					data.add(WindowsIOReOpenFeatures.OPTIMIZE_RANDOM_ACCESS)
 				}
 				if (features.contains(WindowsIOReOpenFeatures.DISABLE_SYSTEM_BUFFERING)) {
 					flags = flags or 0x20000000
-					supportedFeatures.add(WindowsIOReOpenFeatures.DISABLE_SYSTEM_BUFFERING)
+					data.add(WindowsIOReOpenFeatures.DISABLE_SYSTEM_BUFFERING)
 				}
 				if (features.contains(WindowsIOReOpenFeatures.WRITE_THROUGH)) {
 					flags = flags or 0x80000000.toInt()
-					supportedFeatures.add(WindowsIOReOpenFeatures.WRITE_THROUGH)
+					data.add(WindowsIOReOpenFeatures.WRITE_THROUGH)
 				}
 			}
 			return flags or 0x01000000 // FILE_FLAG_POSIX_SEMANTICS
@@ -125,18 +133,17 @@ class WindowsSystemDeviceIODeviceFeature(
 
 	override fun open(
 		vararg features: OpenIODeviceFeatureIdentifier
-	): List<OpenIODeviceDataIdentifier> {
-		val supportedFeatures = mutableListOf<OpenIODeviceDataIdentifier>()
+	): List<OpenIODeviceDataIdentifier> = Arena.ofConfined().use { tempArena ->
+		val data = mutableListOf<OpenIODeviceDataIdentifier>()
 
 		@Suppress("UNCHECKED_CAST")
-		val desiredAccess = getDesiredAccessO(features, supportedFeatures as MutableList<OpenIODeviceFeatureIdentifier>)
-		val shareMode = getShareModeO(features, supportedFeatures)
+		val desiredAccess = getDesiredAccessO(features, data)
+		val shareMode = getShareModeO(features, data)
 
 		if (features.contains(StandardIOOpenFeatures.DIRECTORY)) {
-			val ePA = Arena.ofConfined()
-			val parameters = ePA.allocate(CREATEFILE3_EXTENDED_PARAMETERS)
+			val parameters = tempArena.allocate(CREATEFILE3_EXTENDED_PARAMETERS)
 			CREATEFILE3_EXTENDED_PARAMETERS_dwSize.set(parameters, 0L, parameters.byteSize().toInt())
-			CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, getFlags(features, supportedFeatures))
+			CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, getFlags(features, data))
 			var handle = nativeCreateFile3!!.invokeExact(
 				capturedStateSegment,
 				pathSegment,
@@ -147,14 +154,13 @@ class WindowsSystemDeviceIODeviceFeature(
 			) as MemorySegment
 			try {
 				if (handle == INVALID_HANDLE_VALUE) throwLastError()
-				ePA.close()
 			} catch (e: WindowsLastErrorException) {
 				when (e.error.enum) {
 					WindowsLastError.ERROR_FILE_NOT_FOUND -> if (features.contains(StandardIOOpenFeatures.CREATE)) {
 						var directoryFlags = 0
 						if (features.contains(WindowsIOOpenFeatures.DISABLE_REDIRECTION)) {
 							directoryFlags = directoryFlags or 0x00000001
-							supportedFeatures.add(WindowsIOOpenFeatures.DISABLE_REDIRECTION)
+							data.add(WindowsIOOpenFeatures.DISABLE_REDIRECTION)
 						}
 						handle = nativeCreateDirectory2Wide!!.invokeExact(
 							capturedStateSegment,
@@ -165,33 +171,25 @@ class WindowsSystemDeviceIODeviceFeature(
 							MemorySegment.NULL
 						) as MemorySegment
 						if (handle == INVALID_HANDLE_VALUE) throwLastError()
-						supportedFeatures.add(StandardIOOpenFeatures.CREATE)
+						data.add(StandardIOOpenFeatures.CREATE)
 					} else {
-						ePA.close()
-						supportedFeatures.add(StandardIOOpenStatus.DEVICE_NOT_FOUND)
-						return supportedFeatures
+						data.add(StandardIOOpenStatus.DEVICE_NOT_FOUND)
+						return data
 					}
 
-					else -> if (handle == INVALID_HANDLE_VALUE) {
-						ePA.close()
-						throw e
-					}
+					else -> if (handle == INVALID_HANDLE_VALUE) throw e
 				}
 			}
-			supportedFeatures.add(StandardIOOpenFeatures.DIRECTORY)
-			val newDevice = WindowsIODevice(handle)
-			val cleaningAction = newDevice.registerCleaningAction {
-				if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0)
-					throwLastError()
-			}
+			data.add(StandardIOOpenFeatures.DIRECTORY)
+			val newDevice = IODevice()
 			newDevice.features.add(
 				IODeviceReleaseFeature(
 					ImplementationSource.SYSTEM_NATIVE,
-					cleaningAction::clean
+					winCleanFileHandle(handle).let { { it.clean() } }
 				)
 			)
-			supportedFeatures.add(newDevice)
-			return supportedFeatures
+			data.add(newDevice)
+			return data
 		} else {
 			val creationDisposition = if (features.contains(StandardIOOpenFeatures.CREATE)) {
 				if (features.contains(FileIOOpenFeatures.TRUNCATE)) WindowsCreationDisposition.CREATE_ALWAYS
@@ -207,34 +205,34 @@ class WindowsSystemDeviceIODeviceFeature(
 				var attributes = CREATEFILE3_EXTENDED_PARAMETERS_dwFileAttributes.get(parameters, 0L) as Int
 				if (features.contains(WindowsIOOpenAttributeFeatures.READ_ONLY)) {
 					attributes = attributes or 0x1
-					supportedFeatures.add(WindowsIOOpenAttributeFeatures.READ_ONLY)
+					data.add(WindowsIOOpenAttributeFeatures.READ_ONLY)
 				}
 				if (features.contains(WindowsIOOpenAttributeFeatures.HIDDEN)) {
 					attributes = attributes or 0x2
-					supportedFeatures.add(WindowsIOOpenAttributeFeatures.HIDDEN)
+					data.add(WindowsIOOpenAttributeFeatures.HIDDEN)
 				}
 				if (features.contains(WindowsIOOpenAttributeFeatures.SYSTEM)) {
 					attributes = attributes or 0x4
-					supportedFeatures.add(WindowsIOOpenAttributeFeatures.SYSTEM)
+					data.add(WindowsIOOpenAttributeFeatures.SYSTEM)
 				}
 				if (features.contains(WindowsIOOpenAttributeFeatures.ARCHIVE)) {
 					attributes = attributes or 0x20
-					supportedFeatures.add(WindowsIOOpenAttributeFeatures.ARCHIVE)
+					data.add(WindowsIOOpenAttributeFeatures.ARCHIVE)
 				}
 				if (features.contains(WindowsIOOpenAttributeFeatures.TEMPORARY)) {
 					attributes = attributes or 0x100
-					supportedFeatures.add(WindowsIOOpenAttributeFeatures.TEMPORARY)
+					data.add(WindowsIOOpenAttributeFeatures.TEMPORARY)
 				}
 				if (features.contains(WindowsIOOpenAttributeFeatures.ENCRYPT)) {
 					attributes = attributes or 0x4000
-					supportedFeatures.add(WindowsIOOpenAttributeFeatures.ENCRYPT)
+					data.add(WindowsIOOpenAttributeFeatures.ENCRYPT)
 				}
 				if (features.contains(WindowsIOOpenAttributeFeatures.REFS_INTEGRITY)) {
 					attributes = attributes or 0x8000
-					supportedFeatures.add(WindowsIOOpenAttributeFeatures.REFS_INTEGRITY)
+					data.add(WindowsIOOpenAttributeFeatures.REFS_INTEGRITY)
 				}
 				CREATEFILE3_EXTENDED_PARAMETERS_dwFileAttributes.set(parameters, 0L, attributes)
-				CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, getFlags(features, supportedFeatures))
+				CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(parameters, 0L, getFlags(features, data))
 				parameters
 			} else MemorySegment.NULL
 			val handle = nativeCreateFile3!!.invokeExact(
@@ -247,23 +245,23 @@ class WindowsSystemDeviceIODeviceFeature(
 			) as MemorySegment
 			ePA?.close()
 			try {
-				decodeWin32Error(win32LastError)
+				tryThrowWin32Error(win32LastError)
 				when (creationDisposition) {
 					WindowsCreationDisposition.CREATE_ALWAYS, WindowsCreationDisposition.OPEN_ALWAYS ->
-						supportedFeatures.add(StandardIOOpenFeatures.CREATE)
+						data.add(StandardIOOpenFeatures.CREATE)
 
-					WindowsCreationDisposition.TRUNCATE_EXISTING -> supportedFeatures.add(FileIOOpenFeatures.TRUNCATE)
+					WindowsCreationDisposition.TRUNCATE_EXISTING -> data.add(FileIOOpenFeatures.TRUNCATE)
 					else -> {}
 				}
 			} catch (e: WindowsLastErrorException) {
 				when (e.error.enum) {
 					WindowsLastError.ERROR_FILE_NOT_FOUND -> {
-						supportedFeatures.add(StandardIOOpenStatus.DEVICE_NOT_FOUND)
-						return supportedFeatures
+						data.add(StandardIOOpenStatus.DEVICE_NOT_FOUND)
+						return data
 					}
 
 					WindowsLastError.ERROR_ALREADY_EXISTS -> when (creationDisposition) {
-						WindowsCreationDisposition.CREATE_ALWAYS -> supportedFeatures.add(FileIOOpenFeatures.TRUNCATE)
+						WindowsCreationDisposition.CREATE_ALWAYS -> data.add(FileIOOpenFeatures.TRUNCATE)
 						WindowsCreationDisposition.OPEN_ALWAYS -> {}
 						else -> throw e
 					}
@@ -271,7 +269,10 @@ class WindowsSystemDeviceIODeviceFeature(
 					else -> if (handle == INVALID_HANDLE_VALUE) throw e
 				}
 			}
-			if (features.contains(WindowsIOReOpenFeatures.DELETE_ON_RESTART) && nativeMoveFileWithProgressWide != null) {
+			if (
+				features.contains(WindowsIOReOpenFeatures.DELETE_ON_RESTART) &&
+				nativeMoveFileWithProgressWide != null
+			) {
 				val status = nativeMoveFileWithProgressWide.invokeExact(
 					capturedStateSegment,
 					pathSegment,
@@ -281,21 +282,29 @@ class WindowsSystemDeviceIODeviceFeature(
 					0x4
 				) as Int
 				if (status == 0) throwLastError()
-				supportedFeatures.add(WindowsIOReOpenFeatures.DELETE_ON_RESTART)
+				data.add(WindowsIOReOpenFeatures.DELETE_ON_RESTART)
 			}
-			val newDevice = WindowsIODevice(handle)
-			val cleaningAction = newDevice.registerCleaningAction {
-				if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0)
-					throwLastError()
-			}
+			val newDevice = IODevice()
 			newDevice.features.add(
 				IODeviceReleaseFeature(
 					ImplementationSource.SYSTEM_NATIVE,
-					cleaningAction::clean
+					winCleanFileHandle(handle).let { { it.clean() } }
 				)
 			)
-			supportedFeatures.add(newDevice)
-			return supportedFeatures
+			val oR = data.contains(FileIOReOpenFeatures.READ)
+			val oW = data.contains(FileIOReOpenFeatures.WRITE)
+			if (oR || oW) newDevice.features.add(WindowsIODeviceSeekFeature(handle))
+			if (oR) newDevice.features.add(WindowsIODeviceReadFeature(handle))
+			if (oW) {
+				newDevice.features.add(WindowsIODeviceWriteFeature(handle))
+				newDevice.features.add(WindowsIODeviceFlushFeature(handle))
+				newDevice.features.add(WindowsIODeviceSetSizeFeature(handle))
+			}
+			newDevice.features.add(WindowsIODeviceReopenFeature(handle))
+			newDevice.features.add(WindowsIODeviceGetSizeFeature(handle))
+			newDevice.features.add(WindowsIODeviceDataRangeLockFeature(handle))
+			data.add(newDevice)
+			return data
 		}
 	}
 }

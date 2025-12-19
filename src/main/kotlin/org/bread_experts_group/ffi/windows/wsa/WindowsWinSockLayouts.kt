@@ -3,7 +3,6 @@ package org.bread_experts_group.ffi.windows.wsa
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.MemoryLayout
 import java.lang.foreign.MemoryLayout.PathElement.groupElement
-import java.lang.foreign.MemorySegment
 import java.lang.foreign.StructLayout
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
@@ -13,6 +12,7 @@ const val WSADESCRIPTION_LEN = 256
 const val WSASYS_STATUS_LEN = 128
 
 val SOCKET = UINT_PTR
+val GROUP = int // unsigned
 const val INVALID_SOCKET = 0L.inv()
 
 val WSAData: StructLayout = MemoryLayout.structLayout(
@@ -36,7 +36,7 @@ val WSAPROTOCOLCHAIN: StructLayout = MemoryLayout.structLayout(
 	MemoryLayout.sequenceLayout(MAX_PROTOCOL_CHAIN.toLong(), DWORD).withName("ChainEntries")
 )
 
-val WSAPROTOCOL_INFOW: StructLayout = MemoryLayout.structLayout(
+val _WSAPROTOCOL_INFOW: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("dwServiceFlags1"),
 	DWORD.withName("dwServiceFlags2"),
 	DWORD.withName("dwServiceFlags3"),
@@ -58,6 +58,9 @@ val WSAPROTOCOL_INFOW: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("dwProviderReserved"),
 	MemoryLayout.sequenceLayout(WSAPROTOCOL_LEN + 1L, WCHAR).withName("szProtocol")
 )
+val WSAPROTOCOL_INFOW = _WSAPROTOCOL_INFOW
+val LPWSAPROTOCOL_INFOW = `void*` // WSAPROTOCOL_INFOW
+
 val WSAPROTOCOL_INFOW_iAddressFamily: VarHandle = WSAPROTOCOL_INFOW.varHandle(groupElement("iAddressFamily"))
 val WSAPROTOCOL_INFOW_iSocketType: VarHandle = WSAPROTOCOL_INFOW.varHandle(groupElement("iSocketType"))
 val WSAPROTOCOL_INFOW_iProtocol: VarHandle = WSAPROTOCOL_INFOW.varHandle(groupElement("iProtocol"))
@@ -180,20 +183,23 @@ val WSABUF: StructLayout = MemoryLayout.structLayout(
 val WSABUF_len: VarHandle = WSABUF.varHandle(groupElement("len"))
 val WSABUF_buf: VarHandle = WSABUF.varHandle(groupElement("buf"))
 
-val WSAEVENT = HANDLE
-val WSA_INVALID_EVENT: MemorySegment = MemorySegment.NULL
+//val WSAEVENT = DWORD
+//val WSA_INVALID_EVENT: MemorySegment = MemorySegment.NULL
+//
+//const val WSA_INFINITE = INFINITE
+//const val WSA_WAIT_FAILED = WAIT_FAILED
+//
+//const val WSA_WAIT_EVENT_0 = WAIT_OBJECT_0
 
-const val WSA_INFINITE = INFINITE
-const val WSA_WAIT_FAILED = WAIT_FAILED
+//const val FD_MAX_EVENTS = 10
+//val WSANETWORKEVENTS: StructLayout = MemoryLayout.structLayout(
+//	ValueLayout.JAVA_INT.withName("lNetworkEvents"),
+//	MemoryLayout.sequenceLayout(
+//		FD_MAX_EVENTS.toLong(),
+//		ValueLayout.JAVA_INT
+//	).withName("iErrorCode")
+//)
+//val WSANETWORKEVENTS_lNetworkEvents: VarHandle = WSANETWORKEVENTS.varHandle(groupElement("lNetworkEvents"))
 
-const val WSA_WAIT_EVENT_0 = WAIT_OBJECT_0
-
-const val FD_MAX_EVENTS = 10
-val WSANETWORKEVENTS: StructLayout = MemoryLayout.structLayout(
-	ValueLayout.JAVA_INT.withName("lNetworkEvents"),
-	MemoryLayout.sequenceLayout(
-		FD_MAX_EVENTS.toLong(),
-		ValueLayout.JAVA_INT
-	).withName("iErrorCode")
-)
-val WSANETWORKEVENTS_lNetworkEvents: VarHandle = WSANETWORKEVENTS.varHandle(groupElement("lNetworkEvents"))
+val WSAOVERLAPPED = OVERLAPPED
+val LPWSAOVERLAPPED = LPOVERLAPPED

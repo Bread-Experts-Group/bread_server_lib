@@ -396,7 +396,7 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 				)
 				p
 			} else MemorySegment.NULL
-			decodeWin32Error(
+			tryThrowWin32Error(
 				nativeCopyFile2!!.invokeExact(
 					pathSegment,
 					destinationSegment,

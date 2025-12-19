@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.coding
 
+import org.bread_experts_group.api.coding.feature.CodePageCodingFeature
 import org.bread_experts_group.api.coding.feature.PortableNetworkGraphicsCodingFeature
-import org.bread_experts_group.api.coding.feature.UTF8CodePageCodingFeature
 import org.bread_experts_group.api.feature.FeatureExpression
 
 object CodingFormats {
@@ -9,7 +9,7 @@ object CodingFormats {
 		override val name: String = "Portable Network Graphics"
 	}
 
-	val CODE_PAGE_UTF8 = object : FeatureExpression<UTF8CodePageCodingFeature> {
+	val CODE_PAGE_UTF8 = object : FeatureExpression<CodePageCodingFeature> {
 		override val name: String = "UTF-8 Code Page"
 	}
 }

@@ -257,17 +257,6 @@ val nativeSetConsoleOutputCP: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
-val nativeGetCPInfoExWide: MethodHandle? = kernel32Lookup.getDowncall(
-	nativeLinker, "GetCPInfoExW",
-	arrayOf(
-		BOOL,
-		UINT, DWORD, ValueLayout.ADDRESS /* of LPCPINFOEXWide */
-	),
-	listOf(
-		gleCapture
-	)
-)
-
 val nativeReadConsoleInputExWide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "ReadConsoleInputExW",
 	arrayOf(
@@ -439,6 +428,29 @@ val nativeSetFilePointerEx: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
+val nativeGetFileSizeEx: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GetFileSizeEx",
+	arrayOf(
+		BOOL,
+		HANDLE.withName("hFile"),
+		PLARGE_INTEGER.withName("lpFileSize")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeSetEndOfFile: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "SetEndOfFile",
+	arrayOf(
+		BOOL,
+		HANDLE.withName("hFile")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeLockFileEx: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "LockFileEx",
 	arrayOf(
@@ -464,4 +476,33 @@ val nativeUnlockFileEx: MethodHandle? = kernel32Lookup.getDowncall(
 val nativeGetACP: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetACP",
 	UINT
+)
+
+val nativeCreateIoCompletionPort: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "CreateIoCompletionPort",
+	arrayOf(
+		HANDLE,
+		HANDLE.withName("FileHandle"),
+		HANDLE.withName("ExistingCompletionPort"),
+		ULONG_PTR.withName("CompletionKey"),
+		DWORD.withName("NumberOfConcurrentThreads")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeGetQueuedCompletionStatus: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GetQueuedCompletionStatus",
+	arrayOf(
+		BOOL,
+		HANDLE.withName("CompletionPort"),
+		LPDWORD.withName("lpNumberOfBytesTransferred"),
+		PULONG_PTR.withName("lpCompletionKey"),
+		LPOVERLAPPED.withName("lpOverlapped"),
+		DWORD.withName("dwMilliseconds"),
+	),
+	listOf(
+		gleCapture
+	)
 )

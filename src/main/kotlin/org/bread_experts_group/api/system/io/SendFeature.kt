@@ -5,6 +5,7 @@ import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.charset.Charset
+import java.util.concurrent.TimeUnit
 
 interface SendFeature<F : D, D> {
 	fun scatterSegments(
@@ -20,32 +21,42 @@ interface SendFeature<F : D, D> {
 	fun scatterBytes(
 		data: Collection<ByteArray>,
 		vararg features: F
-	): DeferredOperation<D> = Arena.ofConfined().use { tempArena ->
-		return scatterSegments(
-			data.map {
-				val segment = tempArena.allocate(it.size.toLong())
-				MemorySegment.copy(
-					it, 0,
-					segment, ValueLayout.JAVA_BYTE, 0,
-					it.size
-				)
-				segment
-			},
-			*features
-		)
+	): DeferredOperation<D> = object : DeferredOperation<D> {
+		fun action() = Arena.ofConfined().use { tempArena ->
+			scatterSegments(
+				data.map {
+					val segment = tempArena.allocate(it.size.toLong())
+					MemorySegment.copy(
+						it, 0,
+						segment, ValueLayout.JAVA_BYTE, 0,
+						it.size
+					)
+					segment
+				},
+				*features
+			).block()
+		}
+
+		override fun block(): List<D> = action()
+		override fun block(time: Long, unit: TimeUnit): List<D> = action()
 	}
 
 	fun sendBytes(
 		data: ByteArray,
 		vararg features: F
-	): DeferredOperation<D> = Arena.ofConfined().use { tempArena ->
-		val segment = tempArena.allocate(data.size.toLong())
-		MemorySegment.copy(
-			data, 0,
-			segment, ValueLayout.JAVA_BYTE, 0,
-			data.size
-		)
-		return sendSegment(segment, *features)
+	): DeferredOperation<D> = object : DeferredOperation<D> {
+		fun action() = Arena.ofConfined().use { tempArena ->
+			val segment = tempArena.allocate(data.size.toLong())
+			MemorySegment.copy(
+				data, 0,
+				segment, ValueLayout.JAVA_BYTE, 0,
+				data.size
+			)
+			sendSegment(segment, *features).block()
+		}
+
+		override fun block(): List<D> = action()
+		override fun block(time: Long, unit: TimeUnit): List<D> = action()
 	}
 
 	fun scatterStrings(

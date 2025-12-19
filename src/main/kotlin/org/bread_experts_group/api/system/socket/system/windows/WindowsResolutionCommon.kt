@@ -12,7 +12,7 @@ import org.bread_experts_group.api.system.socket.resolution_namespace_provider.t
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.WindowsResolutionNamespaceTypes
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.threadLocalPTR
-import org.bread_experts_group.ffi.windows.decodeWin32Error
+import org.bread_experts_group.ffi.windows.tryThrowWin32Error
 import org.bread_experts_group.ffi.windows.winCharsetWide
 import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
@@ -142,7 +142,7 @@ fun winResolve(
 			}
 
 			0 -> {}
-			else -> decodeWin32Error(status)
+			else -> tryThrowWin32Error(status)
 		}
 		var rsvData = threadLocalPTR.get(ValueLayout.ADDRESS, 0)
 		var iter = 0

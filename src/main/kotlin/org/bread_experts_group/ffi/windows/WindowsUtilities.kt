@@ -1,7 +1,6 @@
 package org.bread_experts_group.ffi.windows
 
 import org.bread_experts_group.Mappable.Companion.id
-import org.bread_experts_group.ffi.OperatingSystemException
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.exception.IOAbortedException
 import org.bread_experts_group.ffi.globalArena
@@ -22,6 +21,9 @@ private val tlsDWORD1 = ThreadLocal.withInitial {
 private val tlsDWORD2 = ThreadLocal.withInitial {
 	globalArena.allocate(DWORD)
 }
+private val tlsULONG_PTR0 = ThreadLocal.withInitial {
+	globalArena.allocate(ULONG_PTR)
+}
 private val tlsLARGE_INTEGER0 = ThreadLocal.withInitial {
 	globalArena.allocate(LARGE_INTEGER)
 }
@@ -31,37 +33,41 @@ val threadLocalDWORD1: MemorySegment
 	get() = tlsDWORD1.get()
 val threadLocalDWORD2: MemorySegment
 	get() = tlsDWORD2.get()
+val threadLocalULONG_PTR0: MemorySegment
+	get() = tlsULONG_PTR0.get()
 val threadLocalLARGE_INTEGER0: MemorySegment
 	get() = tlsLARGE_INTEGER0.get()
 
-fun decodeWin32Error(err: Int) {
-	when (err) {
-		995 -> throw IOAbortedException()
-		0 -> {}
-		else -> {
-			val count = nativeFormatMessageWide!!.invokeExact(
-				0x00001100, // FORMAT_MESSAGE_ALLOCATE_BUFFER, FORMAT_MESSAGE_FROM_SYSTEM
-				MemorySegment.NULL,
-				err,
-				0,
-				threadLocalPTR,
-				0,
-				MemorySegment.NULL
-			) as Int
-			if (count == 0) TODO("Formatting error on error code: $err")
-			val asString = threadLocalPTR
-				.get(ValueLayout.ADDRESS, 0)
-				.reinterpret(count.toLong() * 2)
-				.toArray(ValueLayout.JAVA_BYTE)
-				.toString(winCharsetWide)
-				.trim()
-			val deallocated = nativeLocalFree!!.invokeExact(
-				threadLocalPTR.get(ValueLayout.ADDRESS, 0)
-			) as MemorySegment
-			if (deallocated != MemorySegment.NULL) TODO("LOCAL FREE GET LAST ERROR")
-			throw WindowsLastErrorException(err.toUInt(), asString)
-		}
+fun getWin32Error(err: Int): Throwable? = when (err) {
+	995 -> IOAbortedException()
+	0 -> null
+	else -> {
+		val count = nativeFormatMessageWide!!.invokeExact(
+			0x00001100, // FORMAT_MESSAGE_ALLOCATE_BUFFER, FORMAT_MESSAGE_FROM_SYSTEM
+			MemorySegment.NULL,
+			err,
+			0,
+			threadLocalPTR,
+			0,
+			MemorySegment.NULL
+		) as Int
+		if (count == 0) TODO("Formatting error on error code: $err")
+		val asString = threadLocalPTR
+			.get(ValueLayout.ADDRESS, 0)
+			.reinterpret(count.toLong() * 2)
+			.toArray(ValueLayout.JAVA_BYTE)
+			.toString(winCharsetWide)
+			.trim()
+		val deallocated = nativeLocalFree!!.invokeExact(
+			threadLocalPTR.get(ValueLayout.ADDRESS, 0)
+		) as MemorySegment
+		if (deallocated != MemorySegment.NULL) TODO("LOCAL FREE GET LAST ERROR")
+		WindowsLastErrorException(err.toUInt(), asString)
 	}
+}
+
+fun tryThrowWin32Error(err: Int) {
+	throw getWin32Error(err) ?: return
 }
 
 val win32LastError: Int
@@ -69,15 +75,8 @@ val win32LastError: Int
 val wsaLastError: Int
 	get() = nativeWSAGetLastError.get(capturedStateSegment, 0L) as Int
 
-fun throwLastError(): Nothing {
-	decodeWin32Error(win32LastError)
-	throw OperatingSystemException("General exception (GetLastError did not produce error code).")
-}
-
-fun throwLastWSAError(): Nothing {
-	decodeWin32Error(wsaLastError)
-	throw OperatingSystemException("General exception (WSAGetLastError did not produce error code).")
-}
+fun throwLastError(): Nothing = throw getWin32Error(win32LastError) ?: IllegalStateException()
+fun throwLastWSAError(): Nothing = throw getWin32Error(wsaLastError) ?: IllegalStateException()
 
 fun MethodHandle.returnsNTSTATUS(p0: Any) {
 	(this.invoke(p0) as Int).decodeNTSTATUS()

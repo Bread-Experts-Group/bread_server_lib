@@ -6,13 +6,9 @@ import org.bread_experts_group.MappedEnumeration
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowOpenGLContextFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
-import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.getDowncall
-import org.bread_experts_group.ffi.getDowncallVoid
-import org.bread_experts_group.ffi.nativeLinker
+import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.numeric.geometry.Matrix4F
-import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
@@ -20,14 +16,13 @@ import java.lang.invoke.MethodHandle
 class WindowsGraphicsWindowOpenGLContextFeature(
 	private val window: WindowsGraphicsWindow
 ) : GraphicsWindowOpenGLContextFeature() {
-	private val arena = Arena.ofAuto()
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	private lateinit var hglrc: MemorySegment
 	private val procedures: MutableMap<String, MethodHandle> = mutableMapOf()
 
 	private val oglM = (nativeLoadLibraryExWide!!.invokeExact(
 		capturedStateSegment,
-		arena.allocateFrom("Opengl32.dll", winCharsetWide),
+		autoArena.allocateFrom("Opengl32.dll", winCharsetWide),
 		MemorySegment.NULL,
 		0
 	) as MemorySegment).also {
@@ -35,7 +30,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	fun procedureAddress(name: String): MemorySegment {
-		val namePCSTR = arena.allocateFrom(name, Charsets.US_ASCII)
+		val namePCSTR = autoArena.allocateFrom(name, Charsets.US_ASCII)
 		val address = nativeWGLGetProcAddress!!.invokeExact(capturedStateSegment, namePCSTR) as MemorySegment
 		if (address == MemorySegment.NULL) {
 			if (nativeGetLastError.get(capturedStateSegment, 0L) as Int != 0x7F) throwLastError()
@@ -252,7 +247,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 		"glGetUniformLocation",
 		ValueLayout.JAVA_INT,
 		ValueLayout.JAVA_INT, ValueLayout.ADDRESS
-	).invokeExact(program, arena.allocateFrom(name, Charsets.US_ASCII)) as Int
+	).invokeExact(program, autoArena.allocateFrom(name, Charsets.US_ASCII)) as Int
 
 	override fun glUniform(location: Int, v0: Int) {
 		getHandleVoid(
@@ -277,7 +272,7 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	}
 
 	override fun glUniformMatrix(location: Int, count: Int, transpose: Boolean, value: Matrix4F) {
-		val allocated = arena.allocate(ValueLayout.JAVA_FLOAT, 4 * 4)
+		val allocated = autoArena.allocate(ValueLayout.JAVA_FLOAT, 4 * 4)
 		value.fillArray(allocated, 0)
 		getHandleVoid(
 			"glUniformMatrix4fv",
@@ -368,6 +363,5 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	override fun close() {
 		nativeWGLMakeCurrent!!.invokeExact(MemorySegment.NULL, MemorySegment.NULL) as Boolean
 		nativeWGLDeleteContext!!.invokeExact(hglrc) as Boolean
-		arena.close()
 	}
 }

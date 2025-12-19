@@ -52,13 +52,16 @@ val nativeFreeAddrInfoExWide: MethodHandle? = ws232Lookup.getDowncallVoid(
 	ValueLayout.ADDRESS /* of ADDRINFOEXWide */
 )
 
-val nativeSocket: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "socket",
+val nativeWSASocketWide: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSASocketW",
 	arrayOf(
 		SOCKET,
-		ValueLayout.JAVA_INT.withName("af"),
-		ValueLayout.JAVA_INT.withName("type"),
-		ValueLayout.JAVA_INT.withName("protocol")
+		int.withName("af"),
+		int.withName("type"),
+		int.withName("protocol"),
+		LPWSAPROTOCOL_INFOW.withName("lpProtocolInfo"),
+		GROUP.withName("g"),
+		DWORD.withName("dwFlags")
 	),
 	listOf(
 		gleCapture
@@ -76,24 +79,6 @@ val nativeWSAConnect: MethodHandle? = ws232Lookup.getDowncall(
 		ValueLayout.ADDRESS.withName("lpCalleeData"), /* of type WSABUF */
 		ValueLayout.ADDRESS.withName("lpSQOS"), /* of type QOS */
 		ValueLayout.ADDRESS.withName("lpGQOS") /* of type QOS */
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeWSAConnectByList: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSAConnectByList",
-	arrayOf(
-		BOOL,
-		SOCKET.withName("s"),
-		ValueLayout.ADDRESS.withName("SocketAddress"), /* of type SOCKET_ADDRESS_LIST */
-		LPDWORD.withName("LocalAddressLength"),
-		ValueLayout.ADDRESS.withName("LocalAddress"), /* of type SOCKADDR */
-		LPDWORD.withName("RemoteAddressLength"),
-		ValueLayout.ADDRESS.withName("RemoteAddress"), /* of type SOCKADDR */
-		ValueLayout.ADDRESS.withName("timeout"), /* of type timeval */
-		ValueLayout.ADDRESS.withName("Reserved") /* of type WSAOVERLAPPED */
 	),
 	listOf(
 		gleCapture
@@ -173,7 +158,7 @@ val nativeWSASend: MethodHandle? = ws232Lookup.getDowncall(
 		DWORD.withName("dwBufferCount"),
 		LPDWORD.withName("lpNumberOfBytesSent"),
 		DWORD.withName("dwFlags"),
-		ValueLayout.ADDRESS.withName("lpOverlapped"), /* WSAOVERLAPPED */
+		LPWSAOVERLAPPED.withName("lpOverlapped"),
 		ValueLayout.ADDRESS.withName("lpCompletionRoutine") /* WSAOVERLAPPED_COMPLETION_ROUTINE */
 	),
 	listOf(
@@ -276,84 +261,19 @@ val nativeWSAAccept: MethodHandle? = ws232Lookup.getDowncall(
 	)
 )
 
-val nativeWSACreateEvent: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSACreateEvent",
+val nativeWSAIoctl: MethodHandle? = ws232Lookup.getDowncall(
+	nativeLinker, "WSAIoctl",
 	arrayOf(
-		WSAEVENT
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeWSACloseEvent: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSACloseEvent",
-	arrayOf(
-		BOOL,
-		WSAEVENT.withName("hEvent")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeWSASetEvent: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSASetEvent",
-	arrayOf(
-		BOOL,
-		WSAEVENT.withName("hEvent")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeWSAResetEvent: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSAResetEvent",
-	arrayOf(
-		BOOL,
-		WSAEVENT.withName("hEvent")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeWSAEventSelect: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSAEventSelect",
-	arrayOf(
-		ValueLayout.JAVA_INT,
+		int,
 		SOCKET.withName("s"),
-		WSAEVENT.withName("hEventObject"),
-		ValueLayout.JAVA_INT.withName("lNetworkEvents")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeWSAWaitForMultipleEvents: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSAWaitForMultipleEvents",
-	arrayOf(
-		DWORD,
-		DWORD.withName("cEvents"),
-		ValueLayout.ADDRESS.withName("lphEvents"), /* WSAEVENT */
-		BOOL.withName("fWaitAll"),
-		DWORD.withName("dwTimeout"),
-		BOOL.withName("fAlertable")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeWSAEnumNetworkEvents: MethodHandle? = ws232Lookup.getDowncall(
-	nativeLinker, "WSAEnumNetworkEvents",
-	arrayOf(
-		ValueLayout.JAVA_INT,
-		SOCKET.withName("s"),
-		WSAEVENT.withName("hEventObject"),
-		ValueLayout.ADDRESS.withName("lpNetworkEvents") /* WSANETWORKEVENTS */
+		DWORD.withName("dwIoControlCode"),
+		LPVOID.withName("lpvInBuffer"),
+		DWORD.withName("cbInBuffer"),
+		LPVOID.withName("lpvOutBuffer"),
+		DWORD.withName("cbOutBuffer"),
+		LPDWORD.withName("lpcbBytesReturned"),
+		LPWSAOVERLAPPED.withName("lpOverlapped"),
+		ValueLayout.ADDRESS.withName("lpCompletionRoutine") /* WSAOVERLAPPED_COMPLETION_ROUTINE */
 	),
 	listOf(
 		gleCapture

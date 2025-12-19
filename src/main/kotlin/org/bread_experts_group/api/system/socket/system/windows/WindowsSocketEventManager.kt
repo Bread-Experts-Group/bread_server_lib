@@ -1,154 +1,117 @@
 package org.bread_experts_group.api.system.socket.system.windows
 
-import org.bread_experts_group.Flaggable
-import org.bread_experts_group.Flaggable.Companion.from
-import org.bread_experts_group.Flaggable.Companion.raw
-import org.bread_experts_group.api.system.socket.system.SocketMonitor
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.throwLastWSAError
-import org.bread_experts_group.ffi.windows.wsa.*
-import org.bread_experts_group.ffi.windows.wsaLastError
-import java.lang.foreign.Arena
+import org.bread_experts_group.ffi.threadLocalPTR
+import org.bread_experts_group.ffi.windows.*
+import org.bread_experts_group.ffi.windows.wsa.WSAOVERLAPPED
+import java.lang.foreign.MemoryLayout
+import java.lang.foreign.MemoryLayout.PathElement.groupElement
 import java.lang.foreign.MemorySegment
+import java.lang.foreign.StructLayout
 import java.lang.foreign.ValueLayout
-import java.util.*
+import java.lang.invoke.VarHandle
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
 
 internal object WindowsSocketEventManager {
-	enum class SocketEvents : Flaggable {
-		FD_READ,
-		FD_WRITE,
-		FD_OOB,
-		FD_ACCEPT,
-		FD_CONNECT,
-		FD_CLOSE,
-		FD_QOS,
-		FD_GROUP_QOS,
-		FD_ROUTING_INTERFACE_CHANGE,
-		FD_ADDRESS_LIST_CHANGE;
+	val WSAOVERLAPPEDEncapsulate: StructLayout = MemoryLayout.structLayout(
+		WSAOVERLAPPED.withName("overlapped"),
+		DWORD.withName("operation"),
+		DWORD.withName("identification")
+	)
+	val WSAOVERLAPPEDEncapsulate_operation: VarHandle = WSAOVERLAPPEDEncapsulate.varHandle(
+		groupElement("operation")
+	)
+	val WSAOVERLAPPEDEncapsulate_identification: VarHandle = WSAOVERLAPPEDEncapsulate.varHandle(
+		groupElement("identification")
+	)
+	const val RECEIVE_OPERATION = 1
+	const val SEND_OPERATION = 2
+	const val CONNECT_OPERATION = 3
 
-		override val position: Long = 1L shl ordinal
-	}
-
-	private val pendingAdditions = ConcurrentLinkedQueue<Triple<MemorySegment, Long, SocketMonitor>>()
-	private val pendingRemovals = ConcurrentLinkedQueue<Pair<MemorySegment, Long>>()
-	private val socketEvents = ConcurrentHashMap<Long, MemorySegment>()
-	private val eventSockets = ConcurrentHashMap<MemorySegment, Pair<Long, SocketMonitor>>()
-	private val changeEvent: MemorySegment = nativeWSACreateEvent!!.invokeExact(
-		capturedStateSegment
-	) as MemorySegment
-
-	init {
-		if (changeEvent == WSA_INVALID_EVENT) throwLastWSAError()
-		Thread.ofPlatform().daemon().name("BSL Socket Management, for Windows").start {
-			val arena = Arena.ofConfined()
-			val networkEvents = arena.allocate(WSANETWORKEVENTS)
-
-			while (true) {
-				val triggeredEvent = Arena.ofConfined().use { tempArena ->
-					val waitArray = tempArena.allocate(WSAEVENT, 1L + eventSockets.size)
-					waitArray.setAtIndex(ValueLayout.ADDRESS, 0, changeEvent)
-					eventSockets.keys.forEachIndexed { i, event ->
-						waitArray.setAtIndex(ValueLayout.ADDRESS, i + 1L, event)
-					}
-					var status = nativeWSAWaitForMultipleEvents!!.invokeExact(
-						capturedStateSegment,
-						1 + eventSockets.size,
-						waitArray,
-						0,
-						WSA_INFINITE,
-						0
-					) as Int
-					if (status == WSA_WAIT_FAILED) throwLastWSAError()
-					val index = status - WSA_WAIT_EVENT_0.toLong()
-					waitArray.getAtIndex(ValueLayout.ADDRESS, index)
-				}
-				if (triggeredEvent == changeEvent) {
-					val status = nativeWSAResetEvent!!.invokeExact(
-						capturedStateSegment,
-						triggeredEvent
-					) as Int
-					if (status == 0) throwLastWSAError()
-					pendingRemovals.removeIf { (event, socket) ->
-						val status = nativeWSACloseEvent!!.invokeExact(capturedStateSegment, event) as Int
-						if (status == 0) throwLastWSAError()
-						eventSockets.remove(event)
-						true
-					}
-					pendingAdditions.removeIf { (event, socket, monitor) ->
-						socketEvents[socket] = event
-						eventSockets[event] = socket to monitor
-						true
-					}
-					continue
-				}
-				val (socket, monitor) = eventSockets[triggeredEvent]!!
-				val status = nativeWSAEnumNetworkEvents!!.invokeExact(
-					capturedStateSegment,
-					socket,
-					triggeredEvent,
-					networkEvents
-				) as Int
-				if (status != 0) {
-					if (wsaLastError == 10038) {
-						dropSocket(socket)
-						continue
-					} else throwLastWSAError()
-				}
-				val events = SocketEvents.entries.from(
-					WSANETWORKEVENTS_lNetworkEvents.get(networkEvents, 0L) as Int
-				)
-				for (event in events) when (event) {
-					SocketEvents.FD_READ -> monitor.read
-					SocketEvents.FD_WRITE -> monitor.write
-					SocketEvents.FD_CONNECT -> monitor.connect
-					SocketEvents.FD_CLOSE -> {
-						dropSocket(socket)
-						monitor.read.release()
-						monitor.write.release()
-						monitor.close
-					}
-
-					SocketEvents.FD_ACCEPT -> monitor.accept
-					else -> continue
-				}.release()
+	private val associatedSockets = ConcurrentHashMap<Long, WindowsSocketManager>()
+	private var centralPortInternal: MemorySegment? = null
+		set(value) {
+			if (value != null) {
+				field = value
+				return
 			}
+			TODO("Destroy threads")
 		}
-	}
 
-	fun notifyChange() {
-		val status = nativeWSASetEvent!!.invokeExact(capturedStateSegment, changeEvent) as Int
-		if (status == 0) throwLastWSAError()
-	}
+	@get:Synchronized
+	private val centralPort: MemorySegment
+		get() {
+			val internal = centralPortInternal
+			if (internal != null) return internal
+			val newPort = nativeCreateIoCompletionPort!!.invokeExact(
+				capturedStateSegment,
+				INVALID_HANDLE_VALUE,
+				MemorySegment.NULL,
+				0L,
+				0
+			) as MemorySegment
+			if (newPort == MemorySegment.NULL) throwLastError()
+			Thread.ofPlatform().daemon(true).name("BSL Socket Manager, for Windows - IOCP manager").start {
+				while (true) {
+					val status = nativeGetQueuedCompletionStatus!!.invokeExact(
+						capturedStateSegment,
+						newPort,
+						threadLocalDWORD0,
+						threadLocalULONG_PTR0,
+						threadLocalPTR,
+						INFINITE
+					) as Int
+					val overlapped = threadLocalPTR.get(ValueLayout.ADDRESS, 0)
+					if (status == 0 && overlapped == MemorySegment.NULL) throwLastError()
+					val socketDesc = threadLocalULONG_PTR0.get(ULONG_PTR, 0)
+					val socketManager = associatedSockets[socketDesc] ?: continue
+					val encapsulate = overlapped.reinterpret(WSAOVERLAPPEDEncapsulate.byteSize())
+					val identification = WSAOVERLAPPEDEncapsulate_identification.get(encapsulate, 0L) as Int
+					if (status == 0) {
+						socketManager.releaseSemaphoreExceptionally(
+							identification,
+							getWin32Error(win32LastError) ?: IllegalStateException()
+						)
+						continue
+					}
+					when (val operation = WSAOVERLAPPEDEncapsulate_operation.get(encapsulate, 0L) as Int) {
+						RECEIVE_OPERATION, SEND_OPERATION -> socketManager.releaseSemaphore(
+							identification,
+							threadLocalDWORD0.get(DWORD, 0)
+						)
 
-	fun addSocket(s: Long): SocketMonitor {
-		val event = nativeWSACreateEvent!!.invokeExact(
-			capturedStateSegment
-		) as MemorySegment
-		if (event == WSA_INVALID_EVENT) throwLastWSAError()
-		val status = nativeWSAEventSelect!!.invokeExact(
+						CONNECT_OPERATION -> socketManager.releaseSemaphore(
+							identification,
+							0
+						)
+
+						else -> throw IllegalStateException(
+							"Unknown socket operation [$operation]"
+						)
+					}
+				}
+			}
+			centralPortInternal = newPort
+			return newPort
+		}
+
+	fun addSocket(s: Long): WindowsSocketManager {
+		if (associatedSockets.containsKey(s)) throw IllegalArgumentException("Duplicate addition of socket $s")
+		val status = nativeCreateIoCompletionPort!!.invokeExact(
 			capturedStateSegment,
+			MemorySegment.ofAddress(s),
+			centralPort,
 			s,
-			event,
-			EnumSet.of(
-				SocketEvents.FD_READ,
-				SocketEvents.FD_WRITE,
-				SocketEvents.FD_ACCEPT,
-				SocketEvents.FD_CONNECT,
-				SocketEvents.FD_CLOSE
-			).raw().toInt()
-		) as Int
-		if (status != 0) throwLastWSAError()
-		val monitor = SocketMonitor()
-		pendingAdditions.add(Triple(event, s, monitor))
-		notifyChange()
-		return monitor
+			0
+		) as MemorySegment
+		if (status == MemorySegment.NULL) throwLastError()
+		val manager = WindowsSocketManager()
+		associatedSockets[s] = manager
+		return manager
 	}
 
-	fun dropSocket(s: Long) {
-		val event = socketEvents.remove(s) ?: return
-		pendingRemovals.add(event to s)
-		notifyChange()
+	fun dropSocket(s: Long) = synchronized(associatedSockets) {
+		if (associatedSockets.remove(s) == null) return@synchronized
+		if (associatedSockets.isEmpty()) centralPortInternal = null
 	}
 }

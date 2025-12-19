@@ -7,32 +7,33 @@ import org.bread_experts_group.api.system.device.feature.SystemDeviceTransparent
 import org.bread_experts_group.api.system.device.transparent_encrypt.EnableTransparentEncryptionSystemDeviceFeatureIdentifier
 import org.bread_experts_group.api.system.device.transparent_encrypt.WindowsTransparentEncryptionEnableFeatures
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.advapi.nativeEncryptFile
+import org.bread_experts_group.ffi.windows.advapi.nativeEncryptFileWide
 import org.bread_experts_group.ffi.windows.advapi.nativeEncryptionDisable
 import org.bread_experts_group.ffi.windows.throwLastError
-import org.bread_experts_group.ffi.windows.winCharsetWide
-import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
 
 class WindowsSystemDeviceTransparentEncryptionEnableFeature(
-	private val path: String
+	private val pathSegment: MemorySegment
 ) : SystemDeviceTransparentEncryptionEnableFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeEncryptFile != null && nativeEncryptionDisable != null
+	override fun supported(): Boolean = nativeEncryptFileWide != null && nativeEncryptionDisable != null
 	override fun enable(
 		vararg features: EnableTransparentEncryptionSystemDeviceFeatureIdentifier
 	): List<EnableTransparentEncryptionSystemDeviceFeatureIdentifier> {
 		if (features.contains(WindowsTransparentEncryptionEnableFeatures.DIRECTORY)) {
-			Arena.ofConfined().use { tempArena ->
-				val status = nativeEncryptionDisable!!.invokeExact(
-					capturedStateSegment,
-					tempArena.allocateFrom(path, winCharsetWide),
-					0
-				) as Int
-				if (status == 0) throwLastError()
-			}
+			val status = nativeEncryptionDisable!!.invokeExact(
+				capturedStateSegment,
+				pathSegment,
+				0
+			) as Int
+			if (status == 0) throwLastError()
 			return listOf(WindowsTransparentEncryptionEnableFeatures.DIRECTORY)
 		} else {
-			nativeEncryptFile!!(path)
+			val status = nativeEncryptFileWide!!.invokeExact(
+				capturedStateSegment,
+				pathSegment
+			) as Int
+			if (status == 0) throwLastError()
 			return emptyList()
 		}
 	}

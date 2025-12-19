@@ -118,8 +118,7 @@ val nativeLookupAccountSid = codingSpecific(
 			threadLocalDWORD2
 		) as Int
 		if (status == 0) {
-			if (win32LastError != -9999) throwLastError()
-			// TODO correct error code
+			if (win32LastError != 122) throwLastError()
 		}
 		val name = tempArena.allocate(TCHAR, threadLocalDWORD0.get(DWORD, 0).toLong())
 		val referencedDomainName = tempArena.allocate(TCHAR, threadLocalDWORD1.get(DWORD, 0).toLong())
@@ -142,7 +141,7 @@ val nativeLookupAccountSid = codingSpecific(
 	}
 }
 
-private val nativeFileEncryptionStatusWide: MethodHandle? = advapi32Lookup.getDowncall(
+val nativeFileEncryptionStatusWide: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "FileEncryptionStatusW",
 	arrayOf(
 		BOOL,
@@ -154,34 +153,7 @@ private val nativeFileEncryptionStatusWide: MethodHandle? = advapi32Lookup.getDo
 	)
 )
 
-private val nativeFileEncryptionStatusANSI: MethodHandle? = advapi32Lookup.getDowncall(
-	nativeLinker, "FileEncryptionStatusA",
-	arrayOf(
-		BOOL,
-		LPCSTR.withName("lpFileName"),
-		LPDWORD.withName("lpStatus")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeFileEncryptionStatus = codingSpecific(
-	nativeFileEncryptionStatusWide,
-	nativeFileEncryptionStatusANSI
-) { handle, parameters: String ->
-	Arena.ofConfined().use { tempArena ->
-		val status = handle.invokeExact(
-			capturedStateSegment,
-			tempArena.allocateFrom(parameters, winCharset),
-			threadLocalDWORD0
-		) as Int
-		if (status == 0) throwLastError()
-		threadLocalDWORD0.get(DWORD, 0)
-	}
-}
-
-private val nativeOpenEncryptedFileRawWide: MethodHandle? = advapi32Lookup.getDowncall(
+val nativeOpenEncryptedFileRawWide: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "OpenEncryptedFileRawW",
 	arrayOf(
 		DWORD,
@@ -192,39 +164,6 @@ private val nativeOpenEncryptedFileRawWide: MethodHandle? = advapi32Lookup.getDo
 	listOf()
 )
 
-private val nativeOpenEncryptedFileRawANSI: MethodHandle? = advapi32Lookup.getDowncall(
-	nativeLinker, "OpenEncryptedFileRawA",
-	arrayOf(
-		DWORD,
-		LPCSTR.withName("lpFileName"),
-		ULONG.withName("ulFlags"),
-		PVOID.withName("pvContext")
-	),
-	listOf()
-)
-
-data class OpenEncryptedFileRawParameters(
-	val fileName: String,
-	val flags: Int
-)
-
-val nativeOpenEncryptedFileRaw = codingSpecific(
-	nativeOpenEncryptedFileRawWide,
-	nativeOpenEncryptedFileRawANSI
-) { handle, parameters: OpenEncryptedFileRawParameters ->
-	Arena.ofConfined().use { tempArena ->
-		decodeWin32Error(
-			handle.invokeExact(
-				capturedStateSegment,
-				tempArena.allocateFrom(parameters.fileName, winCharset),
-				parameters.flags,
-				threadLocalPTR
-			) as Int
-		)
-		threadLocalPTR.get(PVOID, 0)
-	}
-}
-
 val nativeReadEncryptedFileRaw: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "ReadEncryptedFileRaw",
 	arrayOf(
@@ -234,7 +173,7 @@ val nativeReadEncryptedFileRaw: MethodHandle? = advapi32Lookup.getDowncall(
 	listOf()
 )
 
-private val nativeEncryptFileWide: MethodHandle? = advapi32Lookup.getDowncall(
+val nativeEncryptFileWide: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "EncryptFileW",
 	arrayOf(
 		BOOL,
@@ -245,31 +184,7 @@ private val nativeEncryptFileWide: MethodHandle? = advapi32Lookup.getDowncall(
 	)
 )
 
-private val nativeEncryptFileANSI: MethodHandle? = advapi32Lookup.getDowncall(
-	nativeLinker, "EncryptFileA",
-	arrayOf(
-		BOOL,
-		LPCSTR.withName("lpFileName")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeEncryptFile = codingSpecific(
-	nativeEncryptFileWide,
-	nativeEncryptFileANSI
-) { handle, parameters: String ->
-	Arena.ofConfined().use { tempArena ->
-		val status = handle.invokeExact(
-			capturedStateSegment,
-			tempArena.allocateFrom(parameters, winCharset)
-		) as Int
-		if (status == 0) throwLastError()
-	}
-}
-
-private val nativeDecryptFileWide: MethodHandle? = advapi32Lookup.getDowncall(
+val nativeDecryptFileWide: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "DecryptFileW",
 	arrayOf(
 		BOOL,
@@ -280,32 +195,6 @@ private val nativeDecryptFileWide: MethodHandle? = advapi32Lookup.getDowncall(
 		gleCapture
 	)
 )
-
-private val nativeDecryptFileANSI: MethodHandle? = advapi32Lookup.getDowncall(
-	nativeLinker, "DecryptFileA",
-	arrayOf(
-		BOOL,
-		LPCSTR.withName("lpFileName"),
-		DWORD.withName("dwReserved")
-	),
-	listOf(
-		gleCapture
-	)
-)
-
-val nativeDecryptFile = codingSpecific(
-	nativeDecryptFileWide,
-	nativeDecryptFileANSI
-) { handle, parameters: String ->
-	Arena.ofConfined().use { tempArena ->
-		val status = handle.invokeExact(
-			capturedStateSegment,
-			tempArena.allocateFrom(parameters, winCharset),
-			0
-		) as Int
-		if (status == 0) throwLastError()
-	}
-}
 
 val nativeEncryptionDisable: MethodHandle? = advapi32Lookup.getDowncall(
 	nativeLinker, "EncryptionDisable",

@@ -50,15 +50,6 @@ class BSLReader<F : D, D>(
 
 	override var order: ByteOrder = ByteOrder.nativeOrder()
 
-	override fun readU8k(): UByte = readS8().toUByte()
-	override fun readU16k(): UShort = readS16().toUShort()
-	override fun readU32k(): UInt = readS32().toUInt()
-	override fun readU64k(): ULong = readS64().toULong()
-
-	override fun readU8i(): Int = readS8().toInt() and 0xFF
-	override fun readU16i(): Int = readS16().toInt() and 0xFFFF
-	override fun readU32l(): Long = readS32().toLong() and 0xFFFFFFFF
-
 	override fun readS8(): Byte {
 		prepLength(1)
 		remainingData -= 1

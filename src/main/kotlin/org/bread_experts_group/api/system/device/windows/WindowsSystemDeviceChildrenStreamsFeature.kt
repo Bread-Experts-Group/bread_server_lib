@@ -3,6 +3,7 @@ package org.bread_experts_group.api.system.device.windows
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.feature.SystemDeviceChildrenStreamsFeature
+import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.getFirstNull2Offset
 import org.bread_experts_group.ffi.windows.*
@@ -75,11 +76,10 @@ class WindowsSystemDeviceChildrenStreamsFeature(
 		override fun next(): SystemDevice {
 			if (!nextPrepared) throw IllegalStateException()
 			val streamName = WIN32_FIND_STREAM_DATA_cStreamName.invokeExact(searchData, 0L) as MemorySegment
-			val pathArena = Arena.ofShared()
-			val fullPath = pathArena.allocate((pathSegment.byteSize() + streamName.byteSize())).copyFrom(pathSegment)
+			val fullPath = autoArena.allocate((pathSegment.byteSize() + streamName.byteSize())).copyFrom(pathSegment)
 			fullPath.asSlice(fullPath.getFirstNull2Offset()).copyFrom(streamName)
 			advance()
-			return winCreatePathDevice(pathArena, fullPath)
+			return winCreatePathDevice(fullPath)
 		}
 	}
 }

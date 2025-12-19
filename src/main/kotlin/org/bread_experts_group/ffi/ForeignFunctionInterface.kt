@@ -9,8 +9,6 @@ import kotlin.jvm.optionals.getOrNull
 
 private val nativeLogger: Logger = ColoredHandler.newLoggerResourced("ffi")
 
-val cLookup: SymbolLookup = nativeLinker.defaultLookup()
-
 fun Arena.getLookup(library: String): SymbolLookup? = try {
 	nativeLogger.finer { "Getting the library lookup for \"$library\"" }
 	SymbolLookup.libraryLookup(library, this).also {
@@ -48,6 +46,15 @@ fun MemorySegment.getDowncall(linker: Linker, vararg layouts: ValueLayout): Meth
 	return linker.downcallHandle(this, descriptor)
 }
 
+fun MemorySegment.getDowncall(
+	linker: Linker,
+	layouts: Array<out ValueLayout>,
+	options: List<Linker.Option?>
+): MethodHandle {
+	val descriptor = FunctionDescriptor.of(layouts[0], *layouts.sliceArray(1 until layouts.size))
+	return linker.downcallHandle(this, descriptor, *options.toTypedArray())
+}
+
 fun MemorySegment.getDowncallVoid(linker: Linker, vararg layouts: ValueLayout): MethodHandle {
 	val descriptor = FunctionDescriptor.ofVoid(*layouts)
 	return linker.downcallHandle(this, descriptor)
@@ -79,6 +86,9 @@ fun SymbolLookup?.getDowncallVoid(linker: Linker, name: String, vararg layouts: 
 
 val globalArena: Arena
 	get() = Arena.global()
+val autoArena: Arena
+	get() = Arena.ofAuto()
+
 val nativeLinker: Linker
 	get() = Linker.nativeLinker()
 val capturedStateLayout: StructLayout = Linker.Option.captureStateLayout()
@@ -106,5 +116,3 @@ private val tlsInt = ThreadLocal.withInitial {
 }
 val threadLocalPTR: MemorySegment
 	get() = tlsPTR.get()
-val threadLocalInt: MemorySegment
-	get() = tlsInt.get()

@@ -4,10 +4,11 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.SystemFeatures
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.feature.SystemGetPathDeviceFeature
+import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.ffi.capturedStateSegment
+import org.bread_experts_group.ffi.windows.WCHAR
 import org.bread_experts_group.ffi.windows.nativeGetCurrentDirectoryWide
 import org.bread_experts_group.ffi.windows.throwLastError
-import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 class WindowsSystemGetCurrentWorkingDeviceFeature : SystemGetPathDeviceFeature(
@@ -19,10 +20,9 @@ class WindowsSystemGetCurrentWorkingDeviceFeature : SystemGetPathDeviceFeature(
 		get() {
 			var size = nativeGetCurrentDirectoryWide!!.invokeExact(capturedStateSegment, 0, MemorySegment.NULL) as Int
 			if (size == 0) throwLastError()
-			val filePathArena = Arena.ofShared()
-			val filePathSegment = filePathArena.allocate(size * 2L)
+			val filePathSegment = autoArena.allocate(size * WCHAR.byteSize())
 			size = nativeGetCurrentDirectoryWide.invokeExact(capturedStateSegment, size, filePathSegment) as Int
 			if (size == 0) throwLastError()
-			return winCreatePathDevice(filePathArena, filePathSegment)
+			return winCreatePathDevice(filePathSegment)
 		}
 }

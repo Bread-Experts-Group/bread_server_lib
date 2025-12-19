@@ -53,7 +53,7 @@ class WindowsGraphicsConsoleIOEventGetFeature(
 				(KEY_EVENT_RECORD_wRepeatCount.get(key, 0L) as Short).toInt(),
 				(KEY_EVENT_RECORD_wVirtualKeyCode.get(key, 0L) as Short).toInt(),
 				(KEY_EVENT_RECORD_wVirtualScanCode.get(key, 0L) as Short).toInt(),
-				Char((KEY_EVENT_RECORD_uChar_UnicodeChar.get(key, 0L) as Short).toUShort()),
+				KEY_EVENT_RECORD_uChar_UnicodeChar.get(key, 0L) as Char,
 				modifiers
 			)
 		}

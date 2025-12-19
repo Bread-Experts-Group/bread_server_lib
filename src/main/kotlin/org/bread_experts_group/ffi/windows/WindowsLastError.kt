@@ -9,6 +9,7 @@ enum class WindowsLastError(override val id: UInt) : Mappable<WindowsLastError, 
 	ERROR_HANDLE_EOF(38u),
 	ERROR_ALREADY_EXISTS(183u),
 	ERROR_DIRECTORY(267u),
+	ERROR_IO_PENDING(997u),
 	ERROR_NOT_FOUND(1168u);
 
 	override val tag: String = name

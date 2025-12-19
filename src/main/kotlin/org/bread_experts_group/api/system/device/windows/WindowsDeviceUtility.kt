@@ -9,6 +9,7 @@ import org.bread_experts_group.api.system.device.feature.SystemDeviceBasicIdenti
 import org.bread_experts_group.api.system.device.feature.SystemDeviceFriendlyNameFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceSerialPortNameFeature
 import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getFlags
+import org.bread_experts_group.api.system.io.open.OpenIODeviceDataIdentifier
 import org.bread_experts_group.api.system.io.open.OpenIODeviceFeatureIdentifier
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.capturedStateSegment
@@ -69,11 +70,7 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 				guid
 			)
 		)
-		val identityBytes = ByteArray(link.byteSize().toInt())
-		MemorySegment.copy(
-			link, ValueLayout.JAVA_BYTE, 0,
-			identityBytes, 0, identityBytes.size
-		)
+		val identityBytes = link.toArray(ValueLayout.JAVA_BYTE)
 		val symLinkString = String(identityBytes, winCharsetWide)
 		it.features.add(
 			SystemDeviceBasicIdentifierFeature(
@@ -181,60 +178,59 @@ fun decodeDevice(eventData: WindowsCMNotifyEventData, arena: Arena) = when (even
 }
 
 fun winCreatePathDevice(
-	arena: Arena,
-	pathSegment: MemorySegment
+	widePathSegment: MemorySegment
 ): SystemDevice = SystemDevice(SystemDeviceType.FILE_SYSTEM_ENTRY).also {
-	val safeSegment = pathSegment.asReadOnly()
+	val readOnlySegment = widePathSegment.asReadOnly()
 	val status = nativePathCchRemoveBackslash!!.invokeExact(
-		safeSegment,
-		safeSegment.byteSize() / 2
+		readOnlySegment,
+		readOnlySegment.byteSize() / WCHAR.byteSize()
 	) as Int
-	if (status !in 0..1) throwLastError()
-	it.registerCleaningAction { arena.close() }
-	val path = safeSegment.getString(0, winCharsetWide)
+	if (status != 0 && status != 1) throwLastError()
 	it.features.add(
 		SystemDeviceBasicIdentifierFeature(
 			ImplementationSource.SYSTEM_NATIVE,
 			SystemDeviceFeatures.SYSTEM_IDENTIFIER,
-			path
+			readOnlySegment.getString(0, winCharsetWide)
 		)
 	)
-	val fileNameSegment = nativePathFindFileName!!(path)
-	val fileName = fileNameSegment.reinterpret(Long.MAX_VALUE).getString(0, winCharsetWide)
-	if (fileNameSegment != safeSegment) it.features.add(
-		SystemDeviceFriendlyNameFeature(fileName, ImplementationSource.SYSTEM_NATIVE)
+	val fileNameSegment = nativePathFindFileNameWide!!.invokeExact(readOnlySegment) as MemorySegment
+	if (fileNameSegment != readOnlySegment) it.features.add(
+		SystemDeviceFriendlyNameFeature(
+			fileNameSegment.reinterpret(Long.MAX_VALUE).getString(0, winCharsetWide),
+			ImplementationSource.SYSTEM_NATIVE
+		)
 	)
-	it.features.add(WindowsSystemDeviceIODeviceFeature(safeSegment))
-	it.features.add(WindowsSystemDevicePathAppendFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceParentFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceChildrenFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceChildrenStreamsFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceCopyFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceDeleteFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceMoveFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceReplaceFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceSoftLinkFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceHardLinkFeature(safeSegment))
-	it.features.add(WindowsSystemDeviceQueryTransparentEncryptionFeature(path))
-	it.features.add(WindowsSystemDeviceTransparentEncryptionEnableFeature(path))
-	it.features.add(WindowsSystemDeviceTransparentEncryptionDisableFeature(path))
-	it.features.add(WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(path))
-	it.features.add(WindowsSystemDeviceGetCreationTime(safeSegment))
-	it.features.add(WindowsSystemDeviceGetLastAccessTime(safeSegment))
-	it.features.add(WindowsSystemDeviceGetLastWriteTime(safeSegment))
-	it.features.add(WindowsSystemDeviceGetLastMetadataWriteTime(safeSegment))
+	it.features.add(WindowsSystemDeviceIODeviceFeature(readOnlySegment))
+	it.features.add(WindowsSystemDevicePathAppendFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceParentFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceChildrenFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceChildrenStreamsFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceCopyFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceDeleteFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceMoveFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceReplaceFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceSoftLinkFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceHardLinkFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceQueryTransparentEncryptionFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionEnableFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionDisableFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceGetCreationTime(readOnlySegment))
+	it.features.add(WindowsSystemDeviceGetLastAccessTime(readOnlySegment))
+	it.features.add(WindowsSystemDeviceGetLastWriteTime(readOnlySegment))
+	it.features.add(WindowsSystemDeviceGetLastMetadataWriteTime(readOnlySegment))
 }
 
 fun <T> readFileInfo(
 	pathSegment: MemorySegment,
 	features: Array<out OpenIODeviceFeatureIdentifier>,
-	supportedFeatures: MutableList<OpenIODeviceFeatureIdentifier>,
+	data: MutableList<OpenIODeviceDataIdentifier>,
 	transformer: (MemorySegment) -> T
 ): T {
 	var arena = Arena.ofConfined()
 	val ext3 = arena.allocate(CREATEFILE3_EXTENDED_PARAMETERS)
 	CREATEFILE3_EXTENDED_PARAMETERS_dwSize.set(ext3, 0L, ext3.byteSize().toInt())
-	CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(ext3, 0L, getFlags(features, supportedFeatures))
+	CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags.set(ext3, 0L, getFlags(features, data))
 	val handle = nativeCreateFile3!!.invokeExact(
 		capturedStateSegment,
 		pathSegment,

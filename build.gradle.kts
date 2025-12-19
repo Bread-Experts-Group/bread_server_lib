@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 plugins {
-	kotlin("jvm") version "2.2.21"
+	kotlin("jvm") version "2.3.0"
 	`maven-publish`
 	`java-library`
 	signing
@@ -33,7 +33,7 @@ tasks.test {
 	maxHeapSize = "20G"
 }
 kotlin {
-	jvmToolchain(24)
+	jvmToolchain(25)
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
 		freeCompilerArgs.add("-Xannotations-in-metadata")

@@ -41,11 +41,6 @@ class BSLWriter<F : D, D>(
 		}
 	}
 
-	override fun write8(u: UByte) = write8(u.toByte())
-	override fun write16(u: UShort) = write16(u.toShort())
-	override fun write32(u: UInt) = write32(u.toInt())
-	override fun write64(u: ULong) = write64(u.toLong())
-
 	override fun write8(s: Byte) {
 		if (usefulData + 1 > txBuffer.byteSize()) flush()
 		txBuffer.set(

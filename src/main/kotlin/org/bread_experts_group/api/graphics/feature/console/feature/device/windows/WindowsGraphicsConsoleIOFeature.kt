@@ -5,7 +5,10 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.console.feature.device.GraphicsConsoleIOFeature
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.GraphicsConsoleModes
 import org.bread_experts_group.api.graphics.feature.console.feature.device.feature.windows.*
-import org.bread_experts_group.api.system.io.windows.WindowsIODevice
+import org.bread_experts_group.api.system.io.IODevice
+import org.bread_experts_group.api.system.io.windows.WindowsIODeviceFlushFeature
+import org.bread_experts_group.api.system.io.windows.WindowsIODeviceReadFeature
+import org.bread_experts_group.api.system.io.windows.WindowsIODeviceWriteFeature
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.INVALID_HANDLE_VALUE
 import org.bread_experts_group.ffi.windows.nativeGetStdHandle
@@ -25,7 +28,11 @@ abstract class WindowsGraphicsConsoleIOFeature(
 			stdHandle.toInt()
 		) as MemorySegment
 		if (stdHandle == INVALID_HANDLE_VALUE) throwLastError()
-		features.add(WindowsGraphicsConsoleIODeviceGetFeature(WindowsIODevice(stdHandle)))
+		val consoleIODevice = IODevice()
+		consoleIODevice.features.add(WindowsIODeviceWriteFeature(stdHandle))
+		consoleIODevice.features.add(WindowsIODeviceReadFeature(stdHandle))
+		consoleIODevice.features.add(WindowsIODeviceFlushFeature(stdHandle))
+		features.add(WindowsGraphicsConsoleIODeviceGetFeature(consoleIODevice))
 		val mapping = if (input) mapOf(
 			0x0001u to GraphicsConsoleModes.INPUT_SYSTEM_PROCESSED,
 			0x0002u to GraphicsConsoleModes.INPUT_LINE_BLOCK,

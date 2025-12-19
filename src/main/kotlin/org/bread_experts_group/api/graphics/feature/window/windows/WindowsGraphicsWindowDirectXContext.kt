@@ -2,15 +2,14 @@ package org.bread_experts_group.api.graphics.feature.window.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowDirectXContext
-import java.lang.foreign.Arena
+import org.bread_experts_group.ffi.autoArena
 import java.lang.foreign.ValueLayout
 
 class WindowsGraphicsWindowDirectXContext(private val window: WindowsGraphicsWindow) : GraphicsWindowDirectXContext() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	private val arena = Arena.ofAuto()
 
 	override fun open() {
-		val d3dRedirection = arena.allocate(ValueLayout.ADDRESS)
+		val d3dRedirection = autoArena.allocate(ValueLayout.ADDRESS)
 //		decodeCOMError(
 //			arena,
 //			nativeD3D12GetInterface.invokeExact(

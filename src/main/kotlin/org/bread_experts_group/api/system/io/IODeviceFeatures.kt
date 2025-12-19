@@ -24,6 +24,14 @@ object IODeviceFeatures {
 		override val name: String = "Seek Data"
 	}
 
+	val GET_SIZE = object : FeatureExpression<IODeviceGetSizeFeature> {
+		override val name: String = "Get Data Size"
+	}
+
+	val SET_SIZE = object : FeatureExpression<IODeviceSetSizeFeature> {
+		override val name: String = "Set Data Size"
+	}
+
 	val RELEASE = object : FeatureExpression<IODeviceReleaseFeature> {
 		override val name: String = "Release Device"
 	}

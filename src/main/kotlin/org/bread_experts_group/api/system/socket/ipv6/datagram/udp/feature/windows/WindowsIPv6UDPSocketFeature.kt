@@ -19,24 +19,26 @@ import org.bread_experts_group.api.system.socket.system.windows.winClose
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET
-import org.bread_experts_group.ffi.windows.wsa.nativeSocket
+import org.bread_experts_group.ffi.windows.wsa.nativeWSASocketWide
+import java.lang.foreign.MemorySegment
 
 class WindowsIPv6UDPSocketFeature : IPv6UDPSocketFeature(), CheckedImplementation {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeSocket != null
+	override fun supported(): Boolean = nativeWSASocketWide != null
 
 	override fun openSocket(): IPv6Socket {
-		val socket = nativeSocket!!.invokeExact(
+		val socket = nativeWSASocketWide!!.invokeExact(
 			capturedStateSegment,
-			AF_INET6, SOCK_DGRAM, IPPROTO_UDP
+			AF_INET6, SOCK_DGRAM, IPPROTO_UDP,
+			MemorySegment.NULL, 0, 0x01
 		) as Long
 		if (socket == INVALID_SOCKET) throwLastWSAError()
-		val monitor = WindowsSocketEventManager.addSocket(socket)
+		val manager = WindowsSocketEventManager.addSocket(socket)
 		return object : IPv6Socket() {
 			override val features: MutableList<SocketFeatureImplementation<*>> = mutableListOf(
-				WindowsIPv6UDPConnectFeature(socket, monitor, IPv6SocketFeatures.CONNECT),
-				WindowsIPv6SocketSendToFeature(socket, monitor, true, IPv6SocketFeatures.SEND),
-				WindowsIPv6SocketReceiveFromFeature(socket, monitor, IPv6SocketFeatures.RECEIVE),
+				WindowsIPv6UDPConnectFeature(socket, IPv6SocketFeatures.CONNECT),
+				WindowsIPv6SocketSendToFeature(socket, manager, true, IPv6SocketFeatures.SEND),
+				WindowsIPv6SocketReceiveFromFeature(socket, manager, IPv6SocketFeatures.RECEIVE),
 				WindowsIPv6SocketBindFeature(socket, IPv6SocketFeatures.BIND),
 				WindowsIPv6SocketConfigureFeature(socket, IPv6SocketFeatures.CONFIGURE)
 			)
