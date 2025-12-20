@@ -6,6 +6,7 @@ import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.DeferredOperation
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveDataIdentifier
@@ -79,8 +80,7 @@ class WindowsIPv6SocketReceiveFromFeature(
 
 		return object : DeferredOperation<IPv6ReceiveDataIdentifier> {
 			fun prepareData() {
-				try {
-					receiveData.add(ReceiveSizeData(value.value as Int))
+				receiveArena.use { _ ->
 					val addrSeg = sockaddr_in6_sin6_addr_Byte.invokeExact(sender, 0L) as MemorySegment
 					val addrBytes = ByteArray(addrSeg.byteSize().toInt())
 					MemorySegment.copy(
@@ -100,8 +100,14 @@ class WindowsIPv6SocketReceiveFromFeature(
 							threadLocalDWORD0.get(ValueLayout.JAVA_SHORT, 0).toUShort()
 						)
 					)
-				} finally {
-					receiveArena.close()
+					receiveData.add(ReceiveSizeData(value.value as Int))
+					value.throwable?.let {
+						if (it is WindowsLastErrorException) {
+							if (it.error.enum == WindowsLastError.ERROR_NETNAME_DELETED) receiveData.add(
+								StandardSocketStatus.CONNECTION_CLOSED
+							) else throw it
+						}
+					}
 				}
 			}
 

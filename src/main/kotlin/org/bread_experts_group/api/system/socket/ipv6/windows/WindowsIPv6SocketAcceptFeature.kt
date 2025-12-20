@@ -130,7 +130,9 @@ class WindowsIPv6SocketAcceptFeature(
 				MemorySegment.NULL,
 				overlapped
 			) as Int
-			if (status == 0 && wsaLastError != WindowsLastError.ERROR_IO_PENDING.id.toInt()) throwLastWSAError()
+			if (status == 0) {
+				if (wsaLastError != WindowsLastError.ERROR_IO_PENDING.id.toInt()) throwLastWSAError()
+			}
 		} catch (e: Throwable) {
 			acceptArena.close()
 			manager.releaseSemaphore(identification, null)

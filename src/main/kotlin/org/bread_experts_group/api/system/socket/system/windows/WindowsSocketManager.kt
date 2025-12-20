@@ -11,15 +11,9 @@ class WindowsSocketManager {
 		return Triple(id, semaphore, value)
 	}
 
-	fun releaseSemaphore(id: Int, result: Any?) {
+	fun releaseSemaphore(id: Int, result: Any?, exception: Throwable? = null) {
 		val (semaphore, value) = semaphores.remove(id)!!
 		value.value = result
-		semaphore.release()
-		identificationList.returnID(id)
-	}
-
-	fun releaseSemaphoreExceptionally(id: Int, exception: Throwable) {
-		val (semaphore, value) = semaphores.remove(id)!!
 		value.throwable = exception
 		semaphore.release()
 		identificationList.returnID(id)

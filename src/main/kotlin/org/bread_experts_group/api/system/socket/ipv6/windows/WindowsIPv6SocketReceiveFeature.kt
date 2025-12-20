@@ -6,6 +6,7 @@ import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.DeferredOperation
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketReceiveFeature
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveFeatureIdentifier
@@ -89,10 +90,15 @@ class WindowsIPv6SocketReceiveFeature(
 
 		return object : DeferredOperation<IPv6ReceiveDataIdentifier> {
 			fun prepareData() {
-				try {
+				receiveArena.use { _ ->
 					receiveData.add(ReceiveSizeData(value.value as Int))
-				} finally {
-					receiveArena.close()
+					value.throwable?.let {
+						if (it is WindowsLastErrorException) {
+							if (it.error.enum == WindowsLastError.ERROR_NETNAME_DELETED) receiveData.add(
+								StandardSocketStatus.CONNECTION_CLOSED
+							) else throw it
+						}
+					}
 				}
 			}
 

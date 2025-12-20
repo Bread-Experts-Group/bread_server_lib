@@ -7,6 +7,7 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET6
 import org.bread_experts_group.api.system.io.send.SendSizeData
 import org.bread_experts_group.api.system.socket.DeferredOperation
+import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.feature.SocketSendFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
@@ -17,8 +18,7 @@ import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEve
 import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate_operation
 import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketManager
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.windows.threadLocalDWORD0
-import org.bread_experts_group.ffi.windows.throwLastWSAError
+import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -87,7 +87,9 @@ class WindowsIPv6SocketSendToFeature(
 						overlapped,
 						MemorySegment.NULL
 					) as Int
-					if (status != 0) throwLastWSAError()
+					if (status != 0) {
+						if (wsaLastError != WindowsLastError.ERROR_IO_PENDING.id.toInt()) throwLastWSAError()
+					}
 				}
 			}
 			if (addressClear) {
@@ -101,7 +103,9 @@ class WindowsIPv6SocketSendToFeature(
 					overlapped,
 					MemorySegment.NULL
 				) as Int
-				if (status != 0) throwLastWSAError()
+				if (status != 0) {
+					if (wsaLastError != WindowsLastError.ERROR_IO_PENDING.id.toInt()) throwLastWSAError()
+				}
 			}
 		} catch (e: Throwable) {
 			sendArena.close()
@@ -113,6 +117,13 @@ class WindowsIPv6SocketSendToFeature(
 			fun prepareData() {
 				sendArena.use { _ ->
 					sendData.add(SendSizeData(value.value as Int))
+					value.throwable?.let {
+						if (it is WindowsLastErrorException) {
+							if (it.error.enum == WindowsLastError.ERROR_NETNAME_DELETED) sendData.add(
+								StandardSocketStatus.CONNECTION_CLOSED
+							) else throw it
+						}
+					}
 				}
 			}
 

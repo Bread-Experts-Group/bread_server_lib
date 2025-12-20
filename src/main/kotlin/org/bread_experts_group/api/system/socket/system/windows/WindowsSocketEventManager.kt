@@ -53,6 +53,7 @@ internal object WindowsSocketEventManager {
 			if (newPort == MemorySegment.NULL) throwLastError()
 			Thread.ofPlatform().daemon(true).name("BSL Socket Manager, for Windows - IOCP manager").start {
 				while (true) {
+					threadLocalDWORD0.set(DWORD, 0, 0)
 					val status = nativeGetQueuedCompletionStatus!!.invokeExact(
 						capturedStateSegment,
 						newPort,
@@ -68,9 +69,10 @@ internal object WindowsSocketEventManager {
 					val encapsulate = overlapped.reinterpret(WSAOVERLAPPEDEncapsulate.byteSize())
 					val identification = WSAOVERLAPPEDEncapsulate_identification.get(encapsulate, 0L) as Int
 					if (status == 0) {
-						socketManager.releaseSemaphoreExceptionally(
+						socketManager.releaseSemaphore(
 							identification,
-							getWin32Error(win32LastError) ?: IllegalStateException()
+							threadLocalDWORD0.get(DWORD, 0),
+							getWin32Error(wsaLastError) ?: IllegalStateException()
 						)
 						continue
 					}
