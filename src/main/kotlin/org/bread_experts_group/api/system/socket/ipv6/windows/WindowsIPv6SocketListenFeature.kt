@@ -6,7 +6,7 @@ import org.bread_experts_group.api.system.socket.feature.SocketListenFeature
 import org.bread_experts_group.api.system.socket.ipv6.listen.IPv6ListenDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.listen.IPv6ListenFeatureIdentifier
 import org.bread_experts_group.api.system.socket.listen.ListenBacklogFeature
-import org.bread_experts_group.api.system.socket.system.windows.SOMAXCONN
+import org.bread_experts_group.api.system.socket.sys_feature.windows.SOMAXCONN
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.nativeListen

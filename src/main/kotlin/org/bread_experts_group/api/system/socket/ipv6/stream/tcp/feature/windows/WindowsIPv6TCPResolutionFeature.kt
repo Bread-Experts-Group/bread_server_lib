@@ -8,7 +8,7 @@ import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkin
 import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.IPv6TCPResolutionFeature
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataIdentifier
 import org.bread_experts_group.api.system.socket.resolution.ResolutionFeatureIdentifier
-import org.bread_experts_group.api.system.socket.system.windows.winResolve
+import org.bread_experts_group.api.system.socket.sys_feature.windows.winResolve
 import org.bread_experts_group.ffi.windows.wsa.nativeFreeAddrInfoExWide
 import org.bread_experts_group.ffi.windows.wsa.nativeGetAddrInfoExWide
 

@@ -45,7 +45,7 @@ import org.bread_experts_group.api.system.socket.resolution_namespace_provider.t
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.StandardResolutionNamespaceTypes
 import org.bread_experts_group.api.system.socket.resolution_namespace_provider.type.WindowsResolutionNamespaceTypes
 import org.bread_experts_group.api.system.socket.sys_feature.*
-import org.bread_experts_group.api.system.socket.system.windows.*
+import org.bread_experts_group.api.system.socket.sys_feature.windows.*
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*

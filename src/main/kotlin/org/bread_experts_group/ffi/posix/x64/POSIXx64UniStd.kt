@@ -48,3 +48,12 @@ fun posix64FStat(lookup: SymbolLookup?, `stat*`: ValueLayout): MethodHandle? = l
 	),
 	listOf(ernCapture)
 )
+
+fun posix64Close(lookup: SymbolLookup?): MethodHandle? = lookup?.getDowncall(
+	nativeLinker, "close",
+	arrayOf(
+		int,
+		int.withName("fildes")
+	),
+	listOf(ernCapture)
+)

@@ -11,8 +11,8 @@ import org.bread_experts_group.api.system.socket.ipv6.IPv6Socket
 import org.bread_experts_group.api.system.socket.ipv6.IPv6SocketFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.feature.IPv6TCPSocketFeature
 import org.bread_experts_group.api.system.socket.ipv6.windows.*
-import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager
-import org.bread_experts_group.api.system.socket.system.windows.winClose
+import org.bread_experts_group.api.system.socket.sys_feature.windows.WindowsSocketEventManager
+import org.bread_experts_group.api.system.socket.sys_feature.windows.winClose
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.throwLastWSAError
 import org.bread_experts_group.ffi.windows.wsa.INVALID_SOCKET

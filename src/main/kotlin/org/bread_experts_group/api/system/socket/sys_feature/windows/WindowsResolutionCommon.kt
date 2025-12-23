@@ -1,4 +1,4 @@
-package org.bread_experts_group.api.system.socket.system.windows
+package org.bread_experts_group.api.system.socket.sys_feature.windows
 
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET
 import org.bread_experts_group.api.system.feature.windows.WindowsSystemNetworkingSocketsFeature.Companion.AF_INET6

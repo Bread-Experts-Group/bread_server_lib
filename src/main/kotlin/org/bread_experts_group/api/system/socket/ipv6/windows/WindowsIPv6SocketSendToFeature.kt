@@ -12,11 +12,11 @@ import org.bread_experts_group.api.system.socket.feature.SocketSendFeature
 import org.bread_experts_group.api.system.socket.ipv6.InternetProtocolV6AddressPortData
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendFeatureIdentifier
-import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.SEND_OPERATION
-import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate
-import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate_identification
-import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate_operation
-import org.bread_experts_group.api.system.socket.system.windows.WindowsSocketManager
+import org.bread_experts_group.api.system.socket.sys_feature.windows.WindowsSocketEventManager.SEND_OPERATION
+import org.bread_experts_group.api.system.socket.sys_feature.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate
+import org.bread_experts_group.api.system.socket.sys_feature.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate_identification
+import org.bread_experts_group.api.system.socket.sys_feature.windows.WindowsSocketEventManager.WSAOVERLAPPEDEncapsulate_operation
+import org.bread_experts_group.api.system.socket.sys_feature.windows.WindowsSocketManager
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.wsa.*
