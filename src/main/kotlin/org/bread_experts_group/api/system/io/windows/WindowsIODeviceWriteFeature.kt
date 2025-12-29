@@ -12,7 +12,6 @@ import org.bread_experts_group.ffi.windows.nativeWriteFile
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
-import java.util.concurrent.TimeUnit
 
 class WindowsIODeviceWriteFeature(
 	private val handle: MemorySegment
@@ -23,26 +22,21 @@ class WindowsIODeviceWriteFeature(
 	override fun scatterSegments(
 		data: Collection<MemorySegment>,
 		vararg features: IOSendFeatureIdentifier
-	): DeferredOperation<IOSendDataIdentifier> = object : DeferredOperation<IOSendDataIdentifier> {
-		fun write(): List<IOSendDataIdentifier> {
-			var size = 0L
-			data.forEach { segment ->
-				threadLocalDWORD0.set(DWORD, 0, 0)
-				val status = nativeWriteFile!!.invokeExact(
-					capturedStateSegment,
-					handle,
-					segment,
-					segment.byteSize().coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-					threadLocalDWORD0,
-					MemorySegment.NULL
-				) as Int
-				if (status == 0) throwLastError()
-				size += threadLocalDWORD0.get(DWORD, 0)
-			}
-			return listOf(SendSizeData(size))
+	): DeferredOperation<IOSendDataIdentifier> {
+		var size = 0L
+		data.forEach { segment ->
+			threadLocalDWORD0.set(DWORD, 0, 0)
+			val status = nativeWriteFile!!.invokeExact(
+				capturedStateSegment,
+				handle,
+				segment,
+				segment.byteSize().coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+				threadLocalDWORD0,
+				MemorySegment.NULL
+			) as Int
+			if (status == 0) throwLastError()
+			size += threadLocalDWORD0.get(DWORD, 0)
 		}
-
-		override fun block(): List<IOSendDataIdentifier> = write()
-		override fun block(time: Long, unit: TimeUnit): List<IOSendDataIdentifier> = write()
+		return DeferredOperation.Immediate(listOf(SendSizeData(size)))
 	}
 }

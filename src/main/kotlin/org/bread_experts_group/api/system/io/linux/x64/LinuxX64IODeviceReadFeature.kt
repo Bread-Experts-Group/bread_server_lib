@@ -14,7 +14,6 @@ import org.bread_experts_group.ffi.posix.linux.x64.nativeReadV
 import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-import java.util.concurrent.TimeUnit
 
 class LinuxX64IODeviceReadFeature(private val fd: Int) : IODeviceReadFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -43,10 +42,6 @@ class LinuxX64IODeviceReadFeature(private val fd: Int) : IODeviceReadFeature() {
 			if (read == -1L) throwLastErrno()
 		}
 
-		val data = listOf(ReceiveSizeData(read))
-		return object : DeferredOperation<IOReceiveDataIdentifier> {
-			override fun block(): List<IOReceiveDataIdentifier> = data
-			override fun block(time: Long, unit: TimeUnit): List<IOReceiveDataIdentifier> = data
-		}
+		return DeferredOperation.Immediate(listOf(ReceiveSizeData(read)))
 	}
 }

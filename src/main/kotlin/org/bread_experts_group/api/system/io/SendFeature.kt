@@ -5,7 +5,7 @@ import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.charset.Charset
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
 
 interface SendFeature<F : D, D> {
 	fun scatterSegments(
@@ -37,8 +37,7 @@ interface SendFeature<F : D, D> {
 			).block()
 		}
 
-		override fun block(): List<D> = action()
-		override fun block(time: Long, unit: TimeUnit): List<D> = action()
+		override fun block(duration: Duration): List<D> = action()
 	}
 
 	fun sendBytes(
@@ -55,8 +54,7 @@ interface SendFeature<F : D, D> {
 			sendSegment(segment, *features).block()
 		}
 
-		override fun block(): List<D> = action()
-		override fun block(time: Long, unit: TimeUnit): List<D> = action()
+		override fun block(duration: Duration): List<D> = action()
 	}
 
 	fun scatterStrings(

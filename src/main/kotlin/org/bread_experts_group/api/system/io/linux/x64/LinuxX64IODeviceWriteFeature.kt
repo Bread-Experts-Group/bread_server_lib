@@ -14,7 +14,6 @@ import org.bread_experts_group.ffi.posix.linux.x64.nativeWriteV
 import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-import java.util.concurrent.TimeUnit
 
 class LinuxX64IODeviceWriteFeature(
 	private val fd: Int
@@ -45,10 +44,6 @@ class LinuxX64IODeviceWriteFeature(
 			if (read == -1L) throwLastErrno()
 		}
 
-		val data = listOf(SendSizeData(read))
-		return object : DeferredOperation<IOSendDataIdentifier> {
-			override fun block(): List<IOSendDataIdentifier> = data
-			override fun block(time: Long, unit: TimeUnit): List<IOSendDataIdentifier> = data
-		}
+		return DeferredOperation.Immediate(listOf(SendSizeData(read)))
 	}
 }

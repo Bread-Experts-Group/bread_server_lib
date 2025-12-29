@@ -4,12 +4,16 @@ import org.bread_experts_group.api.system.io.BSLIODataEnded
 import org.bread_experts_group.api.system.io.ReceiveFeature
 import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.BSLSocketConnectionEnded
+import org.bread_experts_group.api.system.socket.BSLSocketTimeoutExhausted
 import org.bread_experts_group.api.system.socket.StandardSocketStatus
+import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.io.reader.BSLWriter.Companion.reverse
-import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.min
+import kotlin.time.Duration
 
 class BSLReader<F : D, D>(
 	val reading: ReceiveFeature<F, D>,
@@ -26,7 +30,8 @@ class BSLReader<F : D, D>(
 		}
 	}
 
-	private val rxBuffer = Arena.ofConfined().allocate(65535)
+	override var timeout: Duration = Duration.INFINITE
+	private val rxBuffer = autoArena.allocate(65535)
 	private var remainingData = 0L
 	private var dataPointer = 0L
 	private fun prepLength(n: Long) {
@@ -41,8 +46,8 @@ class BSLReader<F : D, D>(
 			val rxData = reading.receiveSegment(
 				rxBuffer.asSlice(remainingData),
 				*features
-			).block()
-			val readSize = rxData.firstNotNullOf { it as? ReceiveSizeData }
+			).block(this.timeout)
+			val readSize = rxData.firstNotNullOfOrNull { it as? ReceiveSizeData } ?: throw BSLSocketTimeoutExhausted()
 			remainingData += readSize.bytes
 			bugCheck(rxData, readSize)
 		}
@@ -81,6 +86,16 @@ class BSLReader<F : D, D>(
 		dataPointer += 8
 		return if (order != ByteOrder.nativeOrder()) l.reverse
 		else l
+	}
+
+	override fun read(into: ByteBuffer) {
+		prepLength(1)
+		val toWrite = min(into.remaining(), remainingData.toInt())
+		val buffer = rxBuffer.asSlice(dataPointer, remainingData).asByteBuffer()
+			.limit(toWrite)
+		into.put(buffer)
+		remainingData -= toWrite
+		dataPointer += toWrite
 	}
 
 	override fun readN(n: Int): ByteArray {

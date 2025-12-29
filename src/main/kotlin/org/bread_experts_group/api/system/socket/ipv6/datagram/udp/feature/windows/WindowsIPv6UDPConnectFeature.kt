@@ -15,7 +15,6 @@ import org.bread_experts_group.ffi.windows.wsa.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
-import java.util.concurrent.TimeUnit
 
 class WindowsIPv6UDPConnectFeature(
 	private val socket: Long,
@@ -61,9 +60,7 @@ class WindowsIPv6UDPConnectFeature(
 			if (status != 0) throwLastWSAError()
 		}
 
-		return object : DeferredOperation<IPv6ConnectionDataIdentifier> {
-			override fun block(): List<IPv6ConnectionDataIdentifier> = data
-			override fun block(time: Long, unit: TimeUnit): List<IPv6ConnectionDataIdentifier> = data
-		}
+		// TODO: Asynchronous connect
+		return DeferredOperation.Immediate(data)
 	}
 }

@@ -12,7 +12,6 @@ import org.bread_experts_group.ffi.windows.nativeReadFile
 import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
-import java.util.concurrent.TimeUnit
 
 class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceReadFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -22,26 +21,22 @@ class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceRe
 	override fun gatherSegments(
 		data: Collection<MemorySegment>,
 		vararg features: IOReceiveFeatureIdentifier
-	): DeferredOperation<IOReceiveDataIdentifier> = object : DeferredOperation<IOReceiveDataIdentifier> {
-		private fun read(): List<IOReceiveDataIdentifier> {
-			var read = 0L
-			data.forEach { segment ->
-				threadLocalDWORD0.set(DWORD, 0, 0)
-				val status = nativeReadFile!!.invokeExact(
-					capturedStateSegment,
-					handle,
-					segment,
-					segment.byteSize().coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-					threadLocalDWORD0,
-					MemorySegment.NULL
-				) as Int
-				if (status == 0) throwLastError()
-				read += threadLocalDWORD0.get(DWORD, 0)
-			}
-			return listOf(ReceiveSizeData(read))
+	): DeferredOperation<IOReceiveDataIdentifier> {
+		var read = 0L
+		data.forEach { segment ->
+			threadLocalDWORD0.set(DWORD, 0, 0)
+			val status = nativeReadFile!!.invokeExact(
+				capturedStateSegment,
+				handle,
+				segment,
+				segment.byteSize().coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+				threadLocalDWORD0,
+				MemorySegment.NULL
+			) as Int
+			if (status == 0) throwLastError()
+			read += threadLocalDWORD0.get(DWORD, 0)
 		}
 
-		override fun block(): List<IOReceiveDataIdentifier> = read()
-		override fun block(time: Long, unit: TimeUnit): List<IOReceiveDataIdentifier> = read()
+		return DeferredOperation.Immediate(listOf(ReceiveSizeData(read)))
 	}
 }

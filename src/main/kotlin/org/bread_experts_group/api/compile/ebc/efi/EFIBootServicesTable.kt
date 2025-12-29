@@ -56,7 +56,7 @@ interface EFIBootServicesTable {
 					EBCRegisters.R0, false,
 					null, naturalIndex16(
 						false,
-						3u, 0u
+						2u, 8u
 					)
 				)
 				// TODO: Class returns

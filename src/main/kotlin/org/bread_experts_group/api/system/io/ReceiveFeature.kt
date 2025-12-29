@@ -4,7 +4,7 @@ import org.bread_experts_group.api.system.socket.DeferredOperation
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
 
 interface ReceiveFeature<F : D, D> {
 	fun gatherSegments(
@@ -33,8 +33,7 @@ interface ReceiveFeature<F : D, D> {
 			supported
 		}
 
-		override fun block(): List<D> = action()
-		override fun block(time: Long, unit: TimeUnit): List<D> = action()
+		override fun block(duration: Duration): List<D> = action()
 	}
 
 	fun receiveBytes(
@@ -51,7 +50,6 @@ interface ReceiveFeature<F : D, D> {
 			supported
 		}
 
-		override fun block(): List<D> = action()
-		override fun block(time: Long, unit: TimeUnit): List<D> = action()
+		override fun block(duration: Duration): List<D> = action()
 	}
 }

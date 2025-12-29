@@ -462,7 +462,7 @@ object EFIExample {
 	fun efiMain(imageHandle: MemorySegment, systemTable: EFISystemTable): Long {
 		val a = "dynvar12345"
 		val b = "dynvarABCD"
-		systemTable.conOut.outputString("prefix-$a$b-suffix")
+		systemTable.conOut.outputString("prefix-$a$b-suffix\r\n")
 //		systemTable.conOut.reset(false)
 //		systemTable.conOut.outputString(
 //			"       #++++*       \r\n" +

@@ -24,6 +24,7 @@ import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
 
 class WindowsIPv6SocketReceiveFromFeature(
 	private val socket: Long,
@@ -111,14 +112,9 @@ class WindowsIPv6SocketReceiveFromFeature(
 				}
 			}
 
-			override fun block(): List<IPv6ReceiveDataIdentifier> {
-				semaphore.acquire()
-				prepareData()
-				return receiveData
-			}
-
-			override fun block(time: Long, unit: TimeUnit): List<IPv6ReceiveDataIdentifier> {
-				if (!semaphore.tryAcquire(time, unit)) return emptyList()
+			override fun block(duration: Duration): List<IPv6ReceiveDataIdentifier> {
+				// TODO: Figure out a better way to wait acquires on Kotlin durations (ms may lose ns accuracy)
+				if (!semaphore.tryAcquire(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS)) return emptyList()
 				prepareData()
 				return receiveData
 			}

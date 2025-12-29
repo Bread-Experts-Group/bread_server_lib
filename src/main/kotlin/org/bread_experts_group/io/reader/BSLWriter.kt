@@ -5,7 +5,7 @@ import org.bread_experts_group.api.system.io.send.SendSizeData
 import org.bread_experts_group.api.system.socket.BSLSocketConnectionEnded
 import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
-import java.lang.foreign.Arena
+import org.bread_experts_group.ffi.autoArena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.ByteOrder
@@ -28,7 +28,7 @@ class BSLWriter<F : D, D>(
 		}
 	}
 
-	private val txBuffer = Arena.ofConfined().allocate(65535)
+	private val txBuffer = autoArena.allocate(65535)
 	private var usefulData = 0L
 	override var order: ByteOrder = ByteOrder.nativeOrder()
 

@@ -19,101 +19,117 @@ class JavaStringConcatFactoryDynamicProvider : KotlinEBCDynamicProvider {
 			"makeConcatWithConstants",
 			MethodTypeDesc.ofDescriptor("(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;")
 		) to { procedure, stack, data, arguments ->
-			stack.POPn(EBCRegisters.R4, false, null) // S2
-			stack.POPn(EBCRegisters.R3, false, null) // S1
+			@Suppress("CAST_NEVER_SUCCEEDS") val template = arguments[0] as String
+			stack.POPn(EBCRegisters.R7, false, null) // T1
+			stack.POPn(EBCRegisters.R6, false, null) // T0
+			stack.PUSHn(EBCRegisters.R6, false, null)
+			stack.PUSHn(EBCRegisters.R7, false, null)
+			procedure.MOVIqw(
+				EBCRegisters.R5, false, null,
+				template.filter { it.code != 0 && it.code != 1 }.length.toUShort()
+			)
+			procedure.MOVIdw(EBCRegisters.R4, false, null, 0u)
+			// T0 Count
+			procedure.MOVww( // 1
+				EBCRegisters.R4, false, null,
+				EBCRegisters.R6, true, null
+			)
+			procedure.CMPI32weq( // 2
+				EBCRegisters.R4, false, null,
+				0u
+			)
+			procedure.JMP8( // 1
+				conditional = true, conditionSet = true,
+				wordOffset = 6
+			)
+			procedure.MOVIdw( // 2
+				EBCRegisters.R4, false, null,
+				2u
+			)
+			procedure.ADD32( // 1
+				EBCRegisters.R6, false,
+				EBCRegisters.R4, false, null
+			)
+			procedure.ADD32( // 2
+				EBCRegisters.R5, false,
+				EBCRegisters.R4, false, (-1).toUShort()
+			)
+			procedure.JMP8( // 1
+				conditional = false, conditionSet = false,
+				wordOffset = -10
+			)
+			// End T0 Count
+			// TODO: PROCEDURIZE
+			// T1 Count
+			procedure.MOVww( // 1
+				EBCRegisters.R4, false, null,
+				EBCRegisters.R7, true, null
+			)
+			procedure.CMPI32weq( // 2
+				EBCRegisters.R4, false, null,
+				0u
+			)
+			procedure.JMP8( // 1
+				conditional = true, conditionSet = true,
+				wordOffset = 6
+			)
+			procedure.MOVIdw( // 2
+				EBCRegisters.R4, false, null,
+				2u
+			)
+			procedure.ADD32( // 1
+				EBCRegisters.R7, false,
+				EBCRegisters.R4, false, null
+			)
+			procedure.ADD32( // 2
+				EBCRegisters.R5, false,
+				EBCRegisters.R4, false, (-1).toUShort()
+			)
+			procedure.JMP8( // 1
+				conditional = false, conditionSet = false,
+				wordOffset = -10
+			)
+			// End T1 Count
+			// TODO: AUTO REGISTER ALLOCATION
+			// R4 is empty here
+			procedure.ADD32(
+				EBCRegisters.R5, false,
+				EBCRegisters.R4, false, 1u
+			)
+			procedure.MUL32(
+				EBCRegisters.R5, false,
+				EBCRegisters.R4, false, 2u
+			)
+			// String allocation
 			procedure.MOVIqq(
 				EBCRegisters.R1, false, null,
 				data.unInitBase
 			)
 			procedure.PUSHn(
-				EBCRegisters.R6, true, naturalIndex16(
+				EBCRegisters.R1, true, naturalIndex16(
 					false,
 					data.systemTableNatural, data.systemTableConstant
 				)
 			)
 			getBootServices(procedure, stack, data)
-			procedure.MOVIdw(EBCRegisters.R6, false, null, 2u) // TODO: Correct pool
-			procedure.PUSH32(EBCRegisters.R6, false, null)
-			@Suppress("CAST_NEVER_SUCCEEDS")
-			val template = arguments[0] as String
-			val replaceCount = template.sumOf { if (it.code == 1 || it.code == 2) 1 else 0 }
-			procedure.MOVIdd(
-				EBCRegisters.R6, false, null,
-				((template.length - replaceCount) + 1).toUInt() * 2u
-			)
-
-			val (countNatural, countConstant) = data.allocator.bump32()
-			procedure.MOVIqw(
-				EBCRegisters.R5, false, null,
-				2u
-			)
-			procedure.ADD64(
+			stack.PUSH32(
 				EBCRegisters.R4, false,
-				EBCRegisters.R5, false, null
+				2u // EfiLoaderData
 			)
-			procedure.MOVww(
-				EBCRegisters.R5, false, null,
-				EBCRegisters.R4, true, naturalIndex16(true, 0u, 2u)
-			)
-			procedure.MOVIqw(
-				EBCRegisters.R2, false, null,
-				0u
-			)
-			procedure.CMP64eq(
-				EBCRegisters.R5,
-				EBCRegisters.R2, false, null
-			)
-			procedure.JMP8(
-				true,
-				conditionSet = true,
-				wordOffset = 8
-			)
-			procedure.MOVIqw(
-				EBCRegisters.R2, false, null,
-				1u
-			)
-			procedure.MOVdw(
-				EBCRegisters.R5, false, null,
-				EBCRegisters.R1, true, naturalIndex16(
-					false,
-					countNatural, countConstant
-				)
-			)
-			procedure.ADD32(
-				EBCRegisters.R5, false,
-				EBCRegisters.R2, false, null
-			)
-			procedure.MOVdw(
-				EBCRegisters.R1, true, naturalIndex16(
-					false,
-					countNatural, countConstant
-				),
-				EBCRegisters.R5, false, null
-			)
-			procedure.JMP8(
-				conditional = false,
-				conditionSet = false,
-				wordOffset = -17
-			)
-
-			procedure.PUSH64(EBCRegisters.R6, false, null)
+			stack.PUSH64(EBCRegisters.R5, false, null)
 			allocatePool(procedure, stack, data)
-			procedure.POPn(EBCRegisters.R6, false, null) // Concatenated
-			procedure.POP64(EBCRegisters.R5, false, null) // TODO: Error handling
-
-			// CONCATENATE HERE !!!!!!!!!!
-
-			procedure.PUSHn(EBCRegisters.R6, false, null)
-			procedure.POPn(EBCRegisters.R6, false, null) // TODO gunk
-			procedure.POPn(EBCRegisters.R6, false, null) // TODO gunk
-			procedure.MOVqw(
-				EBCRegisters.R7, false, null,
-				EBCRegisters.R1, true, naturalIndex16(
-					false,
-					countNatural, countConstant
-				)
-			)
-			procedure.RET()
+			procedure.POPn(EBCRegisters.R5, false, null)
+			procedure.POP64(EBCRegisters.R6, false, null) // TODO: error handling
+			val templatePosition = data.allocator.getOrAllocateString(template)
+			// T1 Concatenate
+			// TODO: Concatenate
+			// T1 Concatenate end
+			// T0 Concatenate
+			// TODO: Concatenate
+			// T0 Concatenate end
+			procedure.POPn(EBCRegisters.R2, false, null)
+			procedure.POPn(EBCRegisters.R2, false, null)
+			stack.PUSHn(EBCRegisters.R5, false, null)
 		}
 	)
 }

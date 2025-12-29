@@ -666,7 +666,7 @@ object EBCJVMCompilation {
 					stack.PUSH64(EBCRegisters.R6, false, null)
 				}
 
-				TypeKind.REFERENCE -> @Suppress("USELESS_IS_CHECK") when (val desc = element.constantValue()) {
+				TypeKind.REFERENCE -> when (val desc = element.constantValue()) {
 					is String -> {
 						val dataPosition = data.allocator.getOrAllocateString(desc)
 						procedure.MOVIqq(
