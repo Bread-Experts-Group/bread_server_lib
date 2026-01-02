@@ -11,5 +11,6 @@ enum class StandardSocketStatus :
 	IPv4SendDataIdentifier, IPv6SendDataIdentifier,
 	SocketCloseDataIdentifier {
 	CONNECTION_CLOSED,
-	NOT_CONNECTED
+	NOT_CONNECTED,
+	OPERATION_TIMEOUT
 }

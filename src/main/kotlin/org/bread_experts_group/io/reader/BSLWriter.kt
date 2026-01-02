@@ -3,12 +3,14 @@ package org.bread_experts_group.io.reader
 import org.bread_experts_group.api.system.io.SendFeature
 import org.bread_experts_group.api.system.io.send.SendSizeData
 import org.bread_experts_group.api.system.socket.BSLSocketConnectionEnded
+import org.bread_experts_group.api.system.socket.BSLSocketTimeoutExhausted
 import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
 import org.bread_experts_group.ffi.autoArena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.ByteOrder
+import kotlin.math.max
 
 class BSLWriter<F : D, D>(
 	val writing: SendFeature<F, D>,
@@ -34,10 +36,12 @@ class BSLWriter<F : D, D>(
 
 	override fun flush() {
 		while (usefulData > 0) {
-			val sendData = writing.sendSegment(txBuffer.reinterpret(usefulData), *features).block()
-			val sendSize = sendData.firstNotNullOf { it as? SendSizeData }
-			usefulData -= sendSize.bytes
-			bugCheck(sendData, sendSize)
+			val txData = writing.sendSegment(txBuffer.reinterpret(usefulData), *features).block()
+			if ((txData as List<*>).contains(StandardSocketStatus.OPERATION_TIMEOUT)) throw BSLSocketTimeoutExhausted()
+			if ((txData as List<*>).contains(StandardSocketStatus.CONNECTION_CLOSED)) throw BSLSocketConnectionEnded()
+			val sendSize = txData.firstNotNullOf { it as? SendSizeData }
+			usefulData = max(usefulData - sendSize.bytes, 0)
+			bugCheck(txData, sendSize)
 		}
 	}
 
@@ -88,7 +92,7 @@ class BSLWriter<F : D, D>(
 			txBuffer, ValueLayout.JAVA_BYTE, usefulData,
 			length
 		)
-		usefulData += b.size
+		usefulData += length
 	}
 
 	override fun fill(n: Long, v: Byte) {

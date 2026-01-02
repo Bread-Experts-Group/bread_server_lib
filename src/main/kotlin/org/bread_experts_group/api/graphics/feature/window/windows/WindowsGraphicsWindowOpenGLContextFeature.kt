@@ -8,7 +8,7 @@ import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindo
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
 import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.*
-import org.bread_experts_group.numeric.geometry.Matrix4F
+import org.bread_experts_group.numeric.geometry.matrix.Matrix4
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
@@ -271,9 +271,10 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 		).invokeExact(location, v0, v1, v2, v3)
 	}
 
-	override fun glUniformMatrix(location: Int, count: Int, transpose: Boolean, value: Matrix4F) {
+	override fun glUniformMatrix(location: Int, count: Int, transpose: Boolean, value: Matrix4<Float>) {
 		val allocated = autoArena.allocate(ValueLayout.JAVA_FLOAT, 4 * 4)
-		value.fillArray(allocated, 0)
+//		value.fillArray(allocated, 0)
+		TODO("M4F OGL")
 		getHandleVoid(
 			"glUniformMatrix4fv",
 			ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BOOLEAN, ValueLayout.ADDRESS

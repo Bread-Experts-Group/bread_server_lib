@@ -70,12 +70,19 @@ class WindowsIPv6SocketReceiveFromFeature(
 				overlapped,
 				MemorySegment.NULL
 			) as Int
-			if (status == SOCKET_ERROR) {
-				if (wsaLastError != WindowsLastError.ERROR_IO_PENDING.id.toInt()) throwLastWSAError()
+			if (status == SOCKET_ERROR) when (val code = wsaLastError.toUInt()) {
+				WindowsLastError.ERROR_IO_PENDING.id -> {}
+				WindowsLastError.WSAECONNABORTED.id,
+				WindowsLastError.WSAECONNRESET.id -> manager.releaseSemaphore(
+					identification, null,
+					getWin32Error(code.toInt())
+				)
+
+				else -> throwLastWSAError()
 			}
 		} catch (e: Throwable) {
 			receiveArena.close()
-			manager.releaseSemaphore(identification, null)
+			manager.releaseSemaphore(identification, null, e)
 			throw e
 		}
 
@@ -101,12 +108,17 @@ class WindowsIPv6SocketReceiveFromFeature(
 							threadLocalDWORD0.get(ValueLayout.JAVA_SHORT, 0).toUShort()
 						)
 					)
-					receiveData.add(ReceiveSizeData(value.value as Int))
+					if (value.value != null) receiveData.add(ReceiveSizeData(value.value as Int))
 					value.throwable?.let {
-						if (it is WindowsLastErrorException) {
-							if (it.error.enum == WindowsLastError.ERROR_NETNAME_DELETED) receiveData.add(
+						if (it is WindowsLastErrorException) when (it.error.enum) {
+							// TODO CONNECTION_ABORTED, CONNECTION_RESET
+							WindowsLastError.ERROR_NETNAME_DELETED,
+							WindowsLastError.WSAECONNABORTED,
+							WindowsLastError.WSAECONNRESET -> receiveData.add(
 								StandardSocketStatus.CONNECTION_CLOSED
-							) else throw it
+							)
+
+							else -> throw it
 						}
 					}
 				}
@@ -114,7 +126,8 @@ class WindowsIPv6SocketReceiveFromFeature(
 
 			override fun block(duration: Duration): List<IPv6ReceiveDataIdentifier> {
 				// TODO: Figure out a better way to wait acquires on Kotlin durations (ms may lose ns accuracy)
-				if (!semaphore.tryAcquire(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS)) return emptyList()
+				if (!semaphore.tryAcquire(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS))
+					return listOf(StandardSocketStatus.OPERATION_TIMEOUT)
 				prepareData()
 				return receiveData
 			}

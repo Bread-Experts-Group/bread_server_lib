@@ -47,7 +47,9 @@ class BSLReader<F : D, D>(
 				rxBuffer.asSlice(remainingData),
 				*features
 			).block(this.timeout)
-			val readSize = rxData.firstNotNullOfOrNull { it as? ReceiveSizeData } ?: throw BSLSocketTimeoutExhausted()
+			if ((rxData as List<*>).contains(StandardSocketStatus.OPERATION_TIMEOUT)) throw BSLSocketTimeoutExhausted()
+			if ((rxData as List<*>).contains(StandardSocketStatus.CONNECTION_CLOSED)) throw BSLSocketConnectionEnded()
+			val readSize = rxData.firstNotNullOf { it as? ReceiveSizeData }
 			remainingData += readSize.bytes
 			bugCheck(rxData, readSize)
 		}
@@ -96,6 +98,21 @@ class BSLReader<F : D, D>(
 		into.put(buffer)
 		remainingData -= toWrite
 		dataPointer += toWrite
+	}
+
+	override fun read(into: ByteArray, offset: Int, length: Int) {
+		var lOffset = 0L
+		while (lOffset < length) {
+			val prepped = (length - lOffset).coerceAtMost(rxBuffer.byteSize())
+			prepLength(prepped)
+			MemorySegment.copy(
+				rxBuffer, ValueLayout.JAVA_BYTE, dataPointer,
+				into, offset + lOffset.toInt(), prepped.toInt()
+			)
+			remainingData -= prepped
+			dataPointer += prepped
+			lOffset += prepped
+		}
 	}
 
 	override fun readN(n: Int): ByteArray {

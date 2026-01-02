@@ -3,6 +3,7 @@ package org.bread_experts_group.project_incubator.httpbrowse
 import org.bread_experts_group.api.system.SystemFeatures
 import org.bread_experts_group.api.system.SystemProvider
 import org.bread_experts_group.api.system.socket.SystemSocketProviderFeatures
+import org.bread_experts_group.api.system.socket.close.StandardCloseFeatures
 import org.bread_experts_group.api.system.socket.ipv6.*
 import org.bread_experts_group.api.system.socket.ipv6.config.WindowsIPv6SocketConfigurationFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.SystemInternetProtocolV6StreamProtocolFeatures
@@ -43,37 +44,56 @@ fun main() {
 	)
 	v6Socket.get(IPv6SocketFeatures.LISTEN).listen()
 	while (true) {
-		val next = v6Socket.get(IPv6SocketFeatures.ACCEPT).accept().block()
-			.firstNotNullOf { it as? IPv6Socket }
-		val reader = BSLReader(next.get(IPv6SocketFeatures.RECEIVE), socketReadCheck)
-		val writer = BSLWriter(next.get(IPv6SocketFeatures.SEND), socketWriteCheck)
-		val h11Request = h11RequestFrom(reader)
-		val h11Fail = h11Request.firstNotNullOfOrNull { it as? HTTP11ParsingStatus.BadForm.Version.HTTP11 }
-		if (h11Fail == null) {
-			println("H11: $h11Request")
-			continue
-		}
-		if (h11Fail.was.contentEquals("2.0")) {
-			if (h11Request.firstNotNullOf { it as? RequestH11Method }.method.raw != "PRI") {
-				println("Not PRI: $h11Request")
-				continue
-			}
-			if (h11Request.firstNotNullOf { it as? RequestH11Target }.target != "*") {
-				println("Not *: $h11Request")
-				continue
-			}
-			val h2 = HTTP2ConnectionManager.create(reader, writer) as HTTP2ConnectionManager
-			val (stream, headers) = h2.nextStreamHeaders()
-			println(headers)
-			h2.sendHeaders(
-				stream,
-				mapOf(
-					":status" to "200",
-					"content-length" to "200"
+		val nextData = v6Socket.get(IPv6SocketFeatures.ACCEPT).accept().block()
+		val next = nextData.firstNotNullOf { it as? IPv6Socket }
+		Thread.ofPlatform().start {
+			val reader = BSLReader(next.get(IPv6SocketFeatures.RECEIVE), socketReadCheck)
+			val writer = BSLWriter(next.get(IPv6SocketFeatures.SEND), socketWriteCheck)
+			val h11Request = h11RequestFrom(reader)
+			val h11Fail = h11Request.firstNotNullOfOrNull { it as? HTTP11ParsingStatus.BadForm.Version.HTTP11 }
+			if (h11Fail == null) {
+				println("H11: $h11Request")
+				writer.write("HTTP/1.1 200 OK\r\nconnection:close\r\ncontent-length:0\r\n\r\n".toByteArray(Charsets.UTF_8))
+				writer.flush()
+				next.close(
+					StandardCloseFeatures.STOP_RX, StandardCloseFeatures.STOP_TX,
+					StandardCloseFeatures.RELEASE
 				)
+				return@start
+			}
+			if (h11Fail.was.contentEquals("2.0")) {
+				if (h11Request.firstNotNullOf { it as? RequestH11Method }.method.raw != "PRI") {
+					println("Not PRI: $h11Request")
+					return@start
+				}
+				if (h11Request.firstNotNullOf { it as? RequestH11Target }.target != "*") {
+					println("Not *: $h11Request")
+					return@start
+				}
+				val h2 = HTTP2ConnectionManager.create(reader, writer) as HTTP2ConnectionManager
+//				println("$h2: $nextData")
+				val request = h2.nextStreamHeaders()
+				val data = h2.startGetStreamData(request.stream)
+//				println("\"${reader.readN(data).toString(Charsets.UTF_8)}\"")
+				h2.endGetStreamData(request.stream)
+//				println(request.headers)
+				h2.sendHeaders(
+					request.stream,
+					mapOf(
+						":status" to "200"
+					),
+					false
+				)
+				h2.sendData(request.stream, "hello".toByteArray(Charsets.UTF_8), true)
+				return@start
+			}
+			println("?: $h11Request")
+		}.uncaughtExceptionHandler = { a, b ->
+			println("!!! ${b.stackTraceToString()}")
+			next.close(
+				StandardCloseFeatures.STOP_RX, StandardCloseFeatures.STOP_TX,
+				StandardCloseFeatures.RELEASE
 			)
-			continue
 		}
-		println("?: $h11Request")
 	}
 }

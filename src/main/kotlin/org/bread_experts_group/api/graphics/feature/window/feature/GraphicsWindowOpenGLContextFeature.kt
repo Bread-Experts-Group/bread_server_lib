@@ -4,7 +4,7 @@ import org.bread_experts_group.MappedEnumeration
 import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
-import org.bread_experts_group.numeric.geometry.Matrix4F
+import org.bread_experts_group.numeric.geometry.matrix.Matrix4
 import java.lang.foreign.MemorySegment
 
 abstract class GraphicsWindowOpenGLContextFeature :
@@ -40,7 +40,7 @@ abstract class GraphicsWindowOpenGLContextFeature :
 	abstract fun glUniform(location: Int, v0: Int)
 	abstract fun glUniform(location: Int, v0: Int, v1: Int)
 	abstract fun glUniform(location: Int, v0: Float, v1: Float, v2: Float, v3: Float)
-	abstract fun glUniformMatrix(location: Int, count: Int, transpose: Boolean, value: Matrix4F)
+	abstract fun glUniformMatrix(location: Int, count: Int, transpose: Boolean, value: Matrix4<Float>)
 	abstract fun glGenTextures(n: Int, textures: MemorySegment)
 	abstract fun glBindTexture(target: OpenGLTextureTarget, texture: Int)
 	abstract fun glTexImage2D(

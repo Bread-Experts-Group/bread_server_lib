@@ -64,6 +64,7 @@ interface SequentialDataSource {
 	}
 
 	fun readN(n: Int): ByteArray
+	fun read(into: ByteArray, offset: Int = 0, length: Int = into.size)
 	fun read(into: ByteBuffer)
 	fun skip(n: Long)
 }

@@ -112,7 +112,7 @@ class WindowsIPv6TCPConnectFeature(
 			}
 		} catch (e: Throwable) {
 			connectArena.close()
-			manager.releaseSemaphore(identification, null)
+			manager.releaseSemaphore(identification, null, e)
 			throw e
 		}
 

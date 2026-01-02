@@ -104,25 +104,37 @@ class WindowsIPv6SocketSendToFeature(
 					overlapped,
 					MemorySegment.NULL
 				) as Int
-				if (status != 0) {
-					if (wsaLastError != WindowsLastError.ERROR_IO_PENDING.id.toInt()) throwLastWSAError()
+				if (status != 0) when (val code = wsaLastError.toUInt()) {
+					WindowsLastError.ERROR_IO_PENDING.id -> {}
+					WindowsLastError.WSAECONNABORTED.id,
+					WindowsLastError.WSAECONNRESET.id -> manager.releaseSemaphore(
+						identification, null,
+						getWin32Error(code.toInt())
+					)
+
+					else -> throwLastWSAError()
 				}
 			}
 		} catch (e: Throwable) {
 			sendArena.close()
-			manager.releaseSemaphore(identification, null)
+			manager.releaseSemaphore(identification, null, e)
 			throw e
 		}
 
 		return object : DeferredOperation<IPv6SendDataIdentifier> {
 			fun prepareData() {
 				sendArena.use { _ ->
-					sendData.add(SendSizeData(value.value as Int))
+					if (value.value != null) sendData.add(SendSizeData(value.value as Int))
 					value.throwable?.let {
-						if (it is WindowsLastErrorException) {
-							if (it.error.enum == WindowsLastError.ERROR_NETNAME_DELETED) sendData.add(
+						if (it is WindowsLastErrorException) when (it.error.enum) {
+							// TODO CONNECTION_ABORTED, CONNECTION_RESET
+							WindowsLastError.ERROR_NETNAME_DELETED,
+							WindowsLastError.WSAECONNABORTED,
+							WindowsLastError.WSAECONNRESET -> sendData.add(
 								StandardSocketStatus.CONNECTION_CLOSED
-							) else throw it
+							)
+
+							else -> throw it
 						}
 					}
 				}
@@ -130,7 +142,8 @@ class WindowsIPv6SocketSendToFeature(
 
 			override fun block(duration: Duration): List<IPv6SendDataIdentifier> {
 				// TODO: Figure out a better way to wait acquires on Kotlin durations (ms may lose ns accuracy)
-				if (!semaphore.tryAcquire(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS)) return emptyList()
+				if (!semaphore.tryAcquire(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS))
+					return listOf(StandardSocketStatus.OPERATION_TIMEOUT)
 				prepareData()
 				return sendData
 			}

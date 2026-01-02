@@ -79,6 +79,7 @@
           <option value="AssignedValueIsNeverRead" />
           <option value="ObjectPropertyName" />
           <option value="DANGEROUS_CHARACTERS" />
+          <option value="PLATFORM_CLASS_MAPPED_TO_KOTLIN" />
         </list>
       </option>
     </inspection_tool>

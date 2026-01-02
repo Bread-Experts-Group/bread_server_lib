@@ -256,18 +256,35 @@ val huffmanCode: HuffmanBranch<Char> = HuffmanBranch(
 						)
 					)
 				),
-				// 1111001
 				HuffmanBranch(
 					HuffmanBranch(
 						HuffmanBranch(
 							HuffmanEdge('w'),
 							HuffmanEdge('x')
 						),
-						HuffmanCut()
+						HuffmanBranch(
+							HuffmanEdge('y'),
+							HuffmanEdge('z')
+						)
 					),
 					HuffmanBranch(
-						HuffmanCut(),
-						HuffmanCut()
+						HuffmanBranch(
+							HuffmanCut(),
+							HuffmanBranch(
+								HuffmanEdge(','),
+								HuffmanEdge(';')
+							)
+						),
+						HuffmanBranch(
+							HuffmanCut(),
+							HuffmanBranch(
+								HuffmanCut(),
+								HuffmanBranch(
+									HuffmanCut(),
+									HuffmanCut()
+								)
+							)
+						)
 					)
 				) // TODO: continue
 			)
