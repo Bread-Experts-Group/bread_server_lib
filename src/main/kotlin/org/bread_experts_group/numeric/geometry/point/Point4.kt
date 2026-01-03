@@ -3,7 +3,7 @@ package org.bread_experts_group.numeric.geometry.point
 import java.nio.ByteBuffer
 
 data class Point4<T>(
-	override val x: T,
+	val x: T,
 	val y: T,
 	val z: T,
 	val w: T

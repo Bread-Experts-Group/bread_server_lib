@@ -2,7 +2,7 @@ package org.bread_experts_group.numeric.geometry.point
 
 import java.nio.ByteBuffer
 
-data class Point1<T>(override val x: T) : Point<T>(x) {
+data class Point1<T>(val x: T) : Point<T>(x) {
 	override val elementCount: Int = 1
 	override fun putInto(buffer: ByteBuffer, at: Int, vararg arrangement: PointLabels) {
 		arrangement.forEach {

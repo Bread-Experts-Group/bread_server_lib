@@ -2,14 +2,14 @@ package org.bread_experts_group.numeric.geometry.point
 
 import java.nio.ByteBuffer
 
-abstract class Point<T>(open val x: T) {
+abstract class Point<T>(x: T) {
 	protected val elementSize = when (x) {
 		is Byte -> 1
 		is Short -> 2
 		is Int, Float -> 4
 		is Long, Double -> 8
 		null -> throw IllegalStateException()
-		else -> throw IllegalArgumentException("Unsupported element ${x!!::class.qualifiedName}")
+		else -> throw IllegalArgumentException("Unsupported element ${x::class.qualifiedName}")
 	}
 
 	protected val byteBufferOperation = when (x) {
@@ -20,7 +20,7 @@ abstract class Point<T>(open val x: T) {
 		is Long -> { buffer: ByteBuffer, at: Int, e: T -> buffer.putLong(at, e as Long) }
 		is Double -> { buffer: ByteBuffer, at: Int, e: T -> buffer.putDouble(at, e as Double) }
 		null -> throw IllegalStateException()
-		else -> throw IllegalArgumentException("Unsupported element ${x!!::class.qualifiedName}")
+		else -> throw IllegalArgumentException("Unsupported element ${x::class.qualifiedName}")
 	}
 
 	abstract val elementCount: Int
@@ -39,7 +39,7 @@ abstract class Point<T>(open val x: T) {
 		is Long -> { a: T, b: T -> ((a as Long) + (b as Long)) as T }
 		is Double -> { a: T, b: T -> ((a as Double) + (b as Double)) as T }
 		null -> throw IllegalStateException()
-		else -> throw IllegalArgumentException("Unsupported element ${x!!::class.qualifiedName}")
+		else -> throw IllegalArgumentException("Unsupported element ${x::class.qualifiedName}")
 	}
 
 	@Suppress("UNCHECKED_CAST")
@@ -51,7 +51,7 @@ abstract class Point<T>(open val x: T) {
 		is Long -> { a: T, b: T -> ((a as Long) - (b as Long)) as T }
 		is Double -> { a: T, b: T -> ((a as Double) - (b as Double)) as T }
 		null -> throw IllegalStateException()
-		else -> throw IllegalArgumentException("Unsupported element ${x!!::class.qualifiedName}")
+		else -> throw IllegalArgumentException("Unsupported element ${x::class.qualifiedName}")
 	}
 
 	@Suppress("UNCHECKED_CAST")
@@ -63,7 +63,7 @@ abstract class Point<T>(open val x: T) {
 		is Long -> { a: T, b: T -> ((a as Long) * (b as Long)) as T }
 		is Double -> { a: T, b: T -> ((a as Double) * (b as Double)) as T }
 		null -> throw IllegalStateException()
-		else -> throw IllegalArgumentException("Unsupported element ${x!!::class.qualifiedName}")
+		else -> throw IllegalArgumentException("Unsupported element ${x::class.qualifiedName}")
 	}
 
 	@Suppress("UNCHECKED_CAST")
@@ -75,6 +75,6 @@ abstract class Point<T>(open val x: T) {
 		is Long -> { a: T, b: T -> ((a as Long) / (b as Long)) as T }
 		is Double -> { a: T, b: T -> ((a as Double) / (b as Double)) as T }
 		null -> throw IllegalStateException()
-		else -> throw IllegalArgumentException("Unsupported element ${x!!::class.qualifiedName}")
+		else -> throw IllegalArgumentException("Unsupported element ${x::class.qualifiedName}")
 	}
 }

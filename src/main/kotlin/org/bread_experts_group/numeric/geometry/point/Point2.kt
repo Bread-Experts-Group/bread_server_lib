@@ -3,7 +3,7 @@ package org.bread_experts_group.numeric.geometry.point
 import java.nio.ByteBuffer
 
 data class Point2<T>(
-	override val x: T,
+	val x: T,
 	val y: T
 ) : Point<T>(x) {
 	override val elementCount: Int = 2
