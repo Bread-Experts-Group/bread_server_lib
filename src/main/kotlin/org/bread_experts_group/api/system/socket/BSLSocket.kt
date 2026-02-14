@@ -6,10 +6,9 @@ import org.bread_experts_group.api.system.socket.close.SocketCloseDataIdentifier
 import org.bread_experts_group.api.system.socket.close.SocketCloseFeatureIdentifier
 import org.bread_experts_group.api.system.socket.feature.SocketFeatureImplementation
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPartIdentifier
-import java.util.logging.Logger
 
 abstract class BSLSocket<T : ResolutionDataPartIdentifier> : FeatureProvider<SocketFeatureImplementation<*>> {
-	override val logger: Logger
+	override val logger
 		get() = TODO("Not yet implemented")
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out SocketFeatureImplementation<*>>,

@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows.cfgmgr
 
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.MappedEnumeration
 import org.bread_experts_group.ffi.GUID
 import java.lang.foreign.MemorySegment
 

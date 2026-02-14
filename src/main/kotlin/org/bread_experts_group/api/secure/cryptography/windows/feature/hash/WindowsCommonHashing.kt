@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.secure.cryptography.windows.feature.hash
 
-import org.bread_experts_group.Flaggable.Companion.raw
+import org.bread_experts_group.generic.Flaggable.Companion.raw
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.bcrypt.*
 import java.lang.foreign.Arena

@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows.bcrypt
 
-import org.bread_experts_group.Mappable
+import org.bread_experts_group.generic.Mappable
 
 enum class WindowsBCryptProviderMode(
 	override val id: UInt,

@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.pe
 
-import org.bread_experts_group.Mappable
+import org.bread_experts_group.generic.Mappable
 
 enum class PE32Magic(override val id: UShort, override val tag: String) : Mappable<PE32Magic, UShort> {
 	ROM(0x107u, "ROM"),

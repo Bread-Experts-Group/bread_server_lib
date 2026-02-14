@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows.directx
 
-import org.bread_experts_group.Flaggable.Companion.raw
+import org.bread_experts_group.generic.Flaggable.Companion.raw
 import org.bread_experts_group.ffi.getDowncall
 import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.windows.HRESULT

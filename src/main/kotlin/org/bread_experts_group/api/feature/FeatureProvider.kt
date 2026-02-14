@@ -1,7 +1,9 @@
 package org.bread_experts_group.api.feature
 
+import org.bread_experts_group.BSLLogMessage
+import org.bread_experts_group.BSLLogMessage.Companion.log
+import org.bread_experts_group.generic.logging.LevelLogger
 import java.util.logging.Level
-import java.util.logging.Logger
 
 /**
  * Feature providers allow programs to use features from APIs where *expressed features* may not be present across all
@@ -19,7 +21,7 @@ import java.util.logging.Logger
 interface FeatureProvider<X : FeatureImplementation<out X>> {
 	val features: MutableList<X>
 	val supportedFeatures: MutableMap<FeatureExpression<out X>, MutableList<X>>
-	val logger: Logger
+	val logger: LevelLogger<BSLLogMessage>
 
 	fun <I : X, E : FeatureExpression<I>> getOrNull(feature: E, allowEmulated: Boolean = false): I? {
 		val supported = supportedFeatures[feature]

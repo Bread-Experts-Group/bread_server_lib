@@ -26,7 +26,6 @@ import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
-import java.util.logging.Logger
 
 class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : SystemDeviceCopyFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -268,7 +267,7 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 				}
 				val actions = routine.invoke(
 					object : FeatureProvider<CopyProgressRoutineFeatureImplementation<*>> {
-						override val logger: Logger
+						override val logger
 							get() = TODO("Not yet implemented")
 						override val supportedFeatures: MutableMap<FeatureExpression<
 								out CopyProgressRoutineFeatureImplementation<*>>,

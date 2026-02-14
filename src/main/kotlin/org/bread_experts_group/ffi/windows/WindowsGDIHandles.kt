@@ -36,3 +36,58 @@ val nativeSwapBuffers: MethodHandle? = gdi32Lookup.getDowncall(
 	nativeLinker, "SwapBuffers", BOOL,
 	HDC
 )
+
+val nativeCreateCompatibleDC: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "CreateCompatibleDC", HDC,
+	HDC.withName("hdc")
+)
+
+val nativeDeleteDC: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "DeleteDC", BOOL,
+	HDC.withName("hdc")
+)
+
+val nativeDeleteObject: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "DeleteObject", BOOL,
+	HGDIOBJ.withName("ho")
+)
+
+val nativeCreateCompatibleBitmap: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "CreateCompatibleBitmap", HBITMAP,
+	HDC.withName("hdc"),
+	int.withName("cx"),
+	int.withName("cy")
+)
+
+val nativeCreateDIBSection: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "CreateDIBSection", HBITMAP,
+	HDC.withName("hdc"),
+	PBITMAPV5HEADER.withName("pbmi"), // TODO: PBITMAPINFO.withName("pbmi"),
+	UINT.withName("usage"),
+	`void*`.withName("ppvBits"),
+	HANDLE.withName("hSection"),
+	DWORD.withName("offset")
+)
+
+val nativeCreateBitmap: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "CreateBitmap", HBITMAP,
+	int.withName("nWidth"),
+	int.withName("nHeight"),
+	UINT.withName("nPlanes"),
+	UINT.withName("nBitCount"),
+	`void*`.withName("lpBits")
+)
+
+val nativeSetPixelV: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "SetPixelV", BOOL,
+	HDC.withName("hdc"),
+	int.withName("x"),
+	int.withName("y"),
+	COLORREF.withName("color")
+)
+
+val nativeSelectObject: MethodHandle? = gdi32Lookup.getDowncall(
+	nativeLinker, "SelectObject", HGDIOBJ,
+	HDC.withName("hdc"),
+	HGDIOBJ.withName("h")
+)

@@ -78,6 +78,11 @@ val nativeGetDCEx: MethodHandle? = user32Lookup.getDowncall(
 	HWND, HRGN, DWORD
 )
 
+val nativeGetDC: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "GetDC", HDC,
+	HWND
+)
+
 val nativeReleaseDC: MethodHandle? = user32Lookup.getDowncall(
 	nativeLinker, "ReleaseDC", ValueLayout.JAVA_INT,
 	HWND, HDC
@@ -107,4 +112,32 @@ val nativeDispatchMessageWide: MethodHandle? = user32Lookup.getDowncall(
 
 val nativePostQuitMessage: MethodHandle? = user32Lookup.getDowncallVoid(
 	nativeLinker, "PostQuitMessage", ValueLayout.JAVA_INT
+)
+
+val nativeLoadIconWide: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "LoadIconW",
+	arrayOf(
+		HICON,
+		HINSTANCE.withName("hInstance"),
+		LPCWSTR.withName("lpIconName")
+	),
+	listOf(gleCapture)
+)
+
+val nativeCreateIconIndirect: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "CreateIconIndirect",
+	arrayOf(
+		HICON,
+		PICONINFO.withName("piconinfo")
+	),
+	listOf(gleCapture)
+)
+
+val nativeDestroyIcon: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "DestroyIcon",
+	arrayOf(
+		BOOL,
+		HICON.withName("hIcon")
+	),
+	listOf(gleCapture)
 )

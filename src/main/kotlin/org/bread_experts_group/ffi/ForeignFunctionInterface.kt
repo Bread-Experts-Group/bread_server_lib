@@ -1,13 +1,16 @@
 package org.bread_experts_group.ffi
 
-import org.bread_experts_group.hex
-import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.BSLLogMessage.Companion.fine
+import org.bread_experts_group.BSLLogMessage.Companion.finer
+import org.bread_experts_group.BSLLogMessage.Companion.warning
+import org.bread_experts_group.generic.bslRootLogger
+import org.bread_experts_group.generic.hex
+import org.bread_experts_group.generic.logging.LevelLogger
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
-import java.util.logging.Logger
 import kotlin.jvm.optionals.getOrNull
 
-private val nativeLogger: Logger = ColoredHandler.newLoggerResourced("ffi")
+private val nativeLogger = LevelLogger("ffi", bslRootLogger)
 
 fun Arena.getLookup(library: String): SymbolLookup? = try {
 	nativeLogger.finer { "Getting the library lookup for \"$library\"" }

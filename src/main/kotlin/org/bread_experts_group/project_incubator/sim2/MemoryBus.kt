@@ -1,6 +1,6 @@
 package org.bread_experts_group.project_incubator.sim2
 
-import org.bread_experts_group.io.reader.DirectDataProvisioner
+import org.bread_experts_group.generic.io.reader.DirectDataProvisioner
 import java.nio.ByteOrder
 
 class MemoryBus<T : Comparable<T>>(val minus: (T, T) -> T) : DirectDataProvisioner<T> {

@@ -5,7 +5,6 @@ import org.bread_experts_group.api.compile.ebc.EBCProcedure
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex32
 import org.bread_experts_group.api.compile.ebc.EBCRegisters
-import org.bread_experts_group.api.compile.ebc.EBCStackTracker
 import org.bread_experts_group.api.compile.ebc.efi.EFIStatusReturned1
 import org.bread_experts_group.api.compile.ebc.intrinsic.KotlinEBCIntrinsicProvider
 import java.lang.constant.ClassDesc
@@ -26,20 +25,20 @@ interface EFIFileProtocol {
 			"org/bread_experts_group/api/compile/ebc/efi/protocol/EFIFileProtocol"
 		)
 
-		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit> =
+		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCCompilerData) -> Unit> =
 			mapOf(
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getSegment",
 					MethodTypeDesc.ofDescriptor("()Ljava/lang/foreign/MemorySegment;")
-				) to { _, _, _ -> },
+				) to { procedure, _ -> },
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getRevision",
 					MethodTypeDesc.ofDescriptor("()J")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH64(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSH64(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,
@@ -53,11 +52,11 @@ interface EFIFileProtocol {
 					MethodTypeDesc.ofDescriptor(
 						"(Ljava/lang/String;JJ)Lorg/bread_experts_group/api/compile/ebc/efi/EFIStatusReturned1;"
 					)
-				) to { procedure, stack, data ->
-					stack.POP64(EBCRegisters.R7, false, null) // Attributes
-					stack.POP64(EBCRegisters.R6, false, null) // OpenMode
-					stack.POPn(EBCRegisters.R5, false, null) // *FileName
-					stack.POPn(EBCRegisters.R4, false, null) // *This
+				) to { procedure, data ->
+					procedure.POP64(EBCRegisters.R7, false, null) // Attributes
+					procedure.POP64(EBCRegisters.R6, false, null) // OpenMode
+					procedure.POPn(EBCRegisters.R5, false, null) // *FileName
+					procedure.POPn(EBCRegisters.R4, false, null) // *This
 					procedure.MOVIqq(
 						EBCRegisters.R3, false, null,
 						data.unInitBase
@@ -92,17 +91,17 @@ interface EFIFileProtocol {
 							5u, 0u
 						)
 					)
-					stack.PUSH64(EBCRegisters.R7, false, null)
-					stack.PUSHn(EBCRegisters.R3, true, null)
+					procedure.PUSH64(EBCRegisters.R7, false, null)
+					procedure.PUSHn(EBCRegisters.R3, true, null)
 				},
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"read",
 					MethodTypeDesc.ofDescriptor("(Ljava/lang/foreign/MemorySegment;Ljava/lang/foreign/MemorySegment;)J")
-				) to { procedure, stack, _ ->
-					stack.POPn(EBCRegisters.R7, false, null) // *Buffer
-					stack.POPn(EBCRegisters.R6, false, null) // *BufferSize
-					stack.POPn(EBCRegisters.R4, false, null) // *This
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R7, false, null) // *Buffer
+					procedure.POPn(EBCRegisters.R6, false, null) // *BufferSize
+					procedure.POPn(EBCRegisters.R4, false, null) // *This
 					procedure.PUSHn(EBCRegisters.R7, false, null)
 					procedure.PUSHn(EBCRegisters.R6, false, null)
 					procedure.PUSHn(EBCRegisters.R4, false, null)
@@ -124,7 +123,7 @@ interface EFIFileProtocol {
 							3u, 0u
 						)
 					)
-					stack.PUSH64(EBCRegisters.R7, false, null)
+					procedure.PUSH64(EBCRegisters.R7, false, null)
 				},
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
@@ -133,11 +132,11 @@ interface EFIFileProtocol {
 						"(Ljava/lang/foreign/MemorySegment;Ljava/lang/foreign/MemorySegment" +
 								";Ljava/lang/foreign/MemorySegment;)J"
 					)
-				) to { procedure, stack, _ ->
-					stack.POPn(EBCRegisters.R7, false, null) // *Buffer
-					stack.POPn(EBCRegisters.R6, false, null) // *BufferSize
-					stack.POPn(EBCRegisters.R5, false, null) // *InformationType
-					stack.POPn(EBCRegisters.R4, false, null) // *This
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R7, false, null) // *Buffer
+					procedure.POPn(EBCRegisters.R6, false, null) // *BufferSize
+					procedure.POPn(EBCRegisters.R5, false, null) // *InformationType
+					procedure.POPn(EBCRegisters.R4, false, null) // *This
 					procedure.PUSHn(EBCRegisters.R7, false, null)
 					procedure.PUSHn(EBCRegisters.R6, false, null)
 					procedure.PUSHn(EBCRegisters.R5, false, null)
@@ -160,7 +159,7 @@ interface EFIFileProtocol {
 							4u, 0u
 						)
 					)
-					stack.PUSH64(EBCRegisters.R7, false, null)
+					procedure.PUSH64(EBCRegisters.R7, false, null)
 				},
 			)
 	}

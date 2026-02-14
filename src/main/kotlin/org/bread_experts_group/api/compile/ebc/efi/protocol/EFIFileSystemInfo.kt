@@ -4,7 +4,6 @@ import org.bread_experts_group.api.compile.ebc.EBCCompilerData
 import org.bread_experts_group.api.compile.ebc.EBCProcedure
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
 import org.bread_experts_group.api.compile.ebc.EBCRegisters
-import org.bread_experts_group.api.compile.ebc.EBCStackTracker
 import org.bread_experts_group.api.compile.ebc.intrinsic.KotlinEBCIntrinsicProvider
 import java.lang.constant.ClassDesc
 import java.lang.constant.DirectMethodHandleDesc
@@ -26,20 +25,20 @@ interface EFIFileSystemInfo {
 			"org/bread_experts_group/api/compile/ebc/efi/protocol/EFIFileSystemInfo"
 		)
 
-		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit> =
+		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCCompilerData) -> Unit> =
 			mapOf(
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getSegment",
 					MethodTypeDesc.ofDescriptor("()Ljava/lang/foreign/MemorySegment;")
-				) to { _, _, _ -> },
+				) to { _, _ -> },
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getStructureSize",
 					MethodTypeDesc.ofDescriptor("()J")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH64(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSH64(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,
@@ -51,9 +50,9 @@ interface EFIFileSystemInfo {
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getReadOnly",
 					MethodTypeDesc.ofDescriptor("()Z")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH32(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSH32(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,
@@ -65,9 +64,9 @@ interface EFIFileSystemInfo {
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getVolumeSize",
 					MethodTypeDesc.ofDescriptor("()J")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH64(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSH64(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,
@@ -79,9 +78,9 @@ interface EFIFileSystemInfo {
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getFreeSpace",
 					MethodTypeDesc.ofDescriptor("()J")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH64(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSH64(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,
@@ -93,9 +92,9 @@ interface EFIFileSystemInfo {
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getBlockSize",
 					MethodTypeDesc.ofDescriptor("()I")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH32(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSH32(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,
@@ -107,9 +106,9 @@ interface EFIFileSystemInfo {
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getVolumeLabel",
 					MethodTypeDesc.ofDescriptor("()Ljava/lang/foreign/MemorySegment;")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSHn(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSHn(
 						EBCRegisters.R6, false,
 						naturalIndex16(
 							false,

@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.pe
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 
 enum class PEDLLCharacteristics(override val position: Long) : Flaggable {
 	IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA(0x0020),

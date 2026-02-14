@@ -4,15 +4,15 @@ import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.graphics.GraphicsFeatureImplementation
 import org.bread_experts_group.api.graphics.GraphicsFeatures
+import org.bread_experts_group.api.graphics.GraphicsProvider
 import org.bread_experts_group.api.graphics.feature.console.feature.device.GraphicsConsoleFeatureImplementation
-import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.generic.logging.LevelLogger
 import java.util.*
-import java.util.logging.Logger
 
 abstract class GraphicsConsoleFeature : GraphicsFeatureImplementation<GraphicsConsoleFeature>(),
 	FeatureProvider<GraphicsConsoleFeatureImplementation<*>> {
 	override val expresses: FeatureExpression<GraphicsConsoleFeature> = GraphicsFeatures.CUI_CONSOLE
-	override val logger: Logger = ColoredHandler.newLogger("TMP logger")
+	override val logger = LevelLogger("console", GraphicsProvider.logger)
 	override val features: MutableList<GraphicsConsoleFeatureImplementation<*>> = ServiceLoader.load(
 		GraphicsConsoleFeatureImplementation::class.java
 	).toMutableList()

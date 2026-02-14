@@ -2,7 +2,7 @@
 
 package org.bread_experts_group.ffi.windows.advapi
 
-import org.bread_experts_group.Mappable
+import org.bread_experts_group.generic.Mappable
 import org.bread_experts_group.ffi.windows.DWORD
 import org.bread_experts_group.ffi.windows.`void*`
 

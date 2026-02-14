@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows.directx
 
-import org.bread_experts_group.Mappable
+import org.bread_experts_group.generic.Mappable
 import java.lang.foreign.ValueLayout
 
 enum class D3D12ConservativeRasterizationTier(

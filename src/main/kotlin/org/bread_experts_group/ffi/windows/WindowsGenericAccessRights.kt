@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 
 enum class WindowsGenericAccessRights(override val position: Long) : Flaggable {
 	GENERIC_ALL(0x10000000),

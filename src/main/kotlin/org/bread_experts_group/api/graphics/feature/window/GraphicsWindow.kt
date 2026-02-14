@@ -1,23 +1,18 @@
 package org.bread_experts_group.api.graphics.feature.window
 
-import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.FeatureProvider
+import org.bread_experts_group.api.graphics.GraphicsProvider
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowFeatureImplementation
-import org.bread_experts_group.logging.ColoredHandler
-import java.util.*
-import java.util.concurrent.Semaphore
-import java.util.logging.Logger
+import org.bread_experts_group.api.graphics.feature.window.open.GraphicsWindowOpenDataIdentifier
+import org.bread_experts_group.generic.logging.LevelLogger
 
-abstract class GraphicsWindow : FeatureProvider<GraphicsWindowFeatureImplementation<*>>, PreInitializableClosable {
-	override val logger: Logger = ColoredHandler.newLogger("TMP logger")
-	override val features: MutableList<GraphicsWindowFeatureImplementation<*>> = ServiceLoader.load(
-		GraphicsWindowFeatureImplementation::class.java
-	).toMutableList()
+abstract class GraphicsWindow : FeatureProvider<GraphicsWindowFeatureImplementation<*>>,
+	GraphicsWindowOpenDataIdentifier {
+	override val logger = LevelLogger("window", GraphicsProvider.logger)
+	override val features: MutableList<GraphicsWindowFeatureImplementation<*>> = mutableListOf()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out GraphicsWindowFeatureImplementation<*>>,
 			MutableList<GraphicsWindowFeatureImplementation<*>>
 			> = mutableMapOf()
-
-	val processingLock: Semaphore = Semaphore(1)
 }

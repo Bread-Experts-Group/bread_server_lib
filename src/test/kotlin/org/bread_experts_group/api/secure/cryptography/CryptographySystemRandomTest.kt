@@ -2,7 +2,6 @@ package org.bread_experts_group.org.bread_experts_group.api.secure.cryptography
 
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemProvider
-import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.Test
 

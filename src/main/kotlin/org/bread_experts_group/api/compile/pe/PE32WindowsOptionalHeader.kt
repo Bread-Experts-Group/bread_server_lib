@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.compile.pe
 
-import org.bread_experts_group.Flaggable.Companion.raw
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.Flaggable.Companion.raw
+import org.bread_experts_group.generic.MappedEnumeration
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.SeekableByteChannel

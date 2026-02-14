@@ -5,7 +5,6 @@ import org.bread_experts_group.api.compile.ebc.EBCProcedure
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex32
 import org.bread_experts_group.api.compile.ebc.EBCRegisters
-import org.bread_experts_group.api.compile.ebc.EBCStackTracker
 import org.bread_experts_group.api.compile.ebc.intrinsic.KotlinEBCIntrinsicProvider
 import java.lang.constant.ClassDesc
 import java.lang.constant.DirectMethodHandleDesc
@@ -24,9 +23,9 @@ interface EFISimpleTextOutputProtocol {
 			"org/bread_experts_group/api/compile/ebc/efi/protocol/EFISimpleTextOutputProtocol"
 		)
 
-		private val outputStringShared = { procedure: EBCProcedure, stack: EBCStackTracker, _: EBCCompilerData ->
-			stack.POPn(EBCRegisters.R6, false, null)
-			stack.POPn(EBCRegisters.R5, false, null)
+		private val outputStringShared: (EBCProcedure, EBCCompilerData) -> Unit = { procedure, _ ->
+			procedure.POPn(EBCRegisters.R6, false, null)
+			procedure.POPn(EBCRegisters.R5, false, null)
 			procedure.PUSHn(EBCRegisters.R6, false, null)
 			procedure.PUSHn(EBCRegisters.R5, false, null)
 			procedure.CALL32(
@@ -47,23 +46,23 @@ interface EFISimpleTextOutputProtocol {
 					2u, 0u
 				)
 			)
-			stack.PUSH64(EBCRegisters.R7, false, null)
+			procedure.PUSH64(EBCRegisters.R7, false, null)
 		}
 
-		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit> =
+		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCCompilerData) -> Unit> =
 			mapOf(
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getSegment",
 					MethodTypeDesc.ofDescriptor("()Ljava/lang/foreign/MemorySegment;")
-				) to { _, _, _ -> },
+				) to { _, _ -> },
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"reset",
 					MethodTypeDesc.ofDescriptor("(Z)J")
-				) to { procedure, stack, _ ->
-					stack.POP32(EBCRegisters.R6, false, null)
-					stack.POPn(EBCRegisters.R5, false, null)
+				) to { procedure, _ ->
+					procedure.POP32(EBCRegisters.R6, false, null)
+					procedure.POPn(EBCRegisters.R5, false, null)
 					procedure.PUSHn(EBCRegisters.R6, false, null)
 					procedure.PUSHn(EBCRegisters.R5, false, null)
 					procedure.CALL32(
@@ -81,7 +80,7 @@ interface EFISimpleTextOutputProtocol {
 							2u, 0u
 						)
 					)
-					stack.PUSH64(EBCRegisters.R7, false, null)
+					procedure.PUSH64(EBCRegisters.R7, false, null)
 				},
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,

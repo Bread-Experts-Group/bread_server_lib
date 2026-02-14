@@ -3,9 +3,9 @@ package org.bread_experts_group.api.graphics.feature.window.windows
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.GraphicsFeatures
-import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowFeature
-import org.bread_experts_group.api.graphics.feature.window.GraphicsWindowTemplate
+import org.bread_experts_group.api.graphics.feature.window.open.GraphicsWindowOpenDataIdentifier
+import org.bread_experts_group.api.graphics.feature.window.open.GraphicsWindowOpenFeatureIdentifier
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -44,8 +44,11 @@ class WindowsGraphicsWindowFeature : GraphicsWindowFeature() {
 		return stationDesktopOK
 	}
 
-	override fun createTemplate(): GraphicsWindowTemplate = WindowsGraphicsWindowTemplate()
-	override fun createWindow(template: GraphicsWindowTemplate): GraphicsWindow = WindowsGraphicsWindow(
-		template as WindowsGraphicsWindowTemplate
-	)
+	override fun open(
+		vararg features: GraphicsWindowOpenFeatureIdentifier
+	): List<GraphicsWindowOpenDataIdentifier> {
+		val data = mutableListOf<GraphicsWindowOpenDataIdentifier>()
+		data.add(WindowsGraphicsWindow(data, *features))
+		return data
+	}
 }

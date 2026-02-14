@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.graphics.feature.window.feature.opengl
 
-import org.bread_experts_group.Mappable
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.Mappable
+import org.bread_experts_group.generic.MappedEnumeration
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.OpenGLError.GL_NO_ERROR
 
 enum class OpenGLError(override val id: UInt, override val tag: String) : Mappable<OpenGLError, UInt> {

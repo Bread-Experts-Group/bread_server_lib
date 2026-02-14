@@ -4,7 +4,6 @@ import org.bread_experts_group.api.compile.ebc.EBCCompilerData
 import org.bread_experts_group.api.compile.ebc.EBCProcedure
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
 import org.bread_experts_group.api.compile.ebc.EBCRegisters
-import org.bread_experts_group.api.compile.ebc.EBCStackTracker
 import org.bread_experts_group.api.compile.ebc.efi.EFIBootServicesTable.IntrinsicProvider.Companion.allocatePool
 import org.bread_experts_group.api.compile.ebc.efi.EFISystemTable.IntrinsicProvider.Companion.getBootServices
 import java.lang.constant.*
@@ -13,17 +12,17 @@ class JavaStringConcatFactoryDynamicProvider : KotlinEBCDynamicProvider {
 	private val owner = ClassDesc.of("java.lang.invoke.StringConcatFactory")
 
 	override fun dynamics(
-	): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData, List<ConstantDesc>) -> Unit> = mapOf(
+	): Map<MethodHandleDesc, (EBCProcedure, EBCCompilerData, List<ConstantDesc>) -> Unit> = mapOf(
 		MethodHandleDesc.ofMethod(
 			DirectMethodHandleDesc.Kind.SPECIAL, owner,
 			"makeConcatWithConstants",
 			MethodTypeDesc.ofDescriptor("(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;")
-		) to { procedure, stack, data, arguments ->
+		) to { procedure, data, arguments ->
 			@Suppress("CAST_NEVER_SUCCEEDS") val template = arguments[0] as String
-			stack.POPn(EBCRegisters.R7, false, null) // T1
-			stack.POPn(EBCRegisters.R6, false, null) // T0
-			stack.PUSHn(EBCRegisters.R6, false, null)
-			stack.PUSHn(EBCRegisters.R7, false, null)
+			procedure.POPn(EBCRegisters.R7, false, null) // T1
+			procedure.POPn(EBCRegisters.R6, false, null) // T0
+			procedure.PUSHn(EBCRegisters.R6, false, null)
+			procedure.PUSHn(EBCRegisters.R7, false, null)
 			procedure.MOVIqw(
 				EBCRegisters.R5, false, null,
 				template.filter { it.code != 0 && it.code != 1 }.length.toUShort()
@@ -111,13 +110,13 @@ class JavaStringConcatFactoryDynamicProvider : KotlinEBCDynamicProvider {
 					data.systemTableNatural, data.systemTableConstant
 				)
 			)
-			getBootServices(procedure, stack, data)
-			stack.PUSH32(
+			getBootServices(procedure, data)
+			procedure.PUSH32(
 				EBCRegisters.R4, false,
 				2u // EfiLoaderData
 			)
-			stack.PUSH64(EBCRegisters.R5, false, null)
-			allocatePool(procedure, stack, data)
+			procedure.PUSH64(EBCRegisters.R5, false, null)
+			allocatePool(procedure, data)
 			procedure.POPn(EBCRegisters.R5, false, null)
 			procedure.POP64(EBCRegisters.R6, false, null) // TODO: error handling
 			val templatePosition = data.allocator.getOrAllocateString(template)
@@ -129,7 +128,7 @@ class JavaStringConcatFactoryDynamicProvider : KotlinEBCDynamicProvider {
 			// T0 Concatenate end
 			procedure.POPn(EBCRegisters.R2, false, null)
 			procedure.POPn(EBCRegisters.R2, false, null)
-			stack.PUSHn(EBCRegisters.R5, false, null)
+			procedure.PUSHn(EBCRegisters.R5, false, null)
 		}
 	)
 }

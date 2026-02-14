@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows.directx
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 
 enum class DXGIPresent(override val position: Long) : Flaggable {
 	DXGI_PRESENT_TEST(0x1),

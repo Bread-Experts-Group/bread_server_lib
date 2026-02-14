@@ -1,20 +1,21 @@
 package org.bread_experts_group.api.graphics.feature.window.windows
 
-import org.bread_experts_group.Flaggable.Companion.raw
-import org.bread_experts_group.Mappable.Companion.id
-import org.bread_experts_group.MappedEnumeration
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowOpenGLContextFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
 import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.*
-import org.bread_experts_group.numeric.geometry.matrix.Matrix4
+import org.bread_experts_group.generic.Flaggable.Companion.raw
+import org.bread_experts_group.generic.Mappable.Companion.id
+import org.bread_experts_group.generic.MappedEnumeration
+import org.bread_experts_group.generic.numeric.geometry.matrix.Matrix4
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.lang.invoke.MethodHandle
 
 class WindowsGraphicsWindowOpenGLContextFeature(
-	private val window: WindowsGraphicsWindow
+	private val window: WindowsGraphicsWindow,
+	private val hdc: Long
 ) : GraphicsWindowOpenGLContextFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	private lateinit var hglrc: MemorySegment
@@ -343,25 +344,25 @@ class WindowsGraphicsWindowOpenGLContextFeature(
 	override fun acquireContext() {
 		val makeStatus = nativeWGLMakeCurrent!!.invokeExact(
 			capturedStateSegment,
-			window.hdc, hglrc
+			hdc, hglrc
 		) as Int
 		if (makeStatus == 0) throwLastError()
 	}
 
 	override fun swapBuffers() {
-		nativeSwapBuffers!!.invokeExact(window.hdc) as Int
+		nativeSwapBuffers!!.invokeExact(hdc) as Int
 	}
 
-	override fun open() {
+	fun open() {
 		if (!use) return
 		hglrc = nativeWGLCreateContext!!.invokeExact(
 			capturedStateSegment,
-			window.hdc
+			hdc
 		) as MemorySegment
 		if (hglrc == MemorySegment.NULL) throwLastError()
 	}
 
-	override fun close() {
+	fun close() {
 		nativeWGLMakeCurrent!!.invokeExact(MemorySegment.NULL, MemorySegment.NULL) as Boolean
 		nativeWGLDeleteContext!!.invokeExact(hglrc) as Boolean
 	}

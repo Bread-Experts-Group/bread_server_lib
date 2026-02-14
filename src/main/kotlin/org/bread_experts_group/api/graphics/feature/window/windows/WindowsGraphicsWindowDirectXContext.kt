@@ -8,7 +8,7 @@ import java.lang.foreign.ValueLayout
 class WindowsGraphicsWindowDirectXContext(private val window: WindowsGraphicsWindow) : GraphicsWindowDirectXContext() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 
-	override fun open() {
+	fun open() {
 		val d3dRedirection = autoArena.allocate(ValueLayout.ADDRESS)
 //		decodeCOMError(
 //			arena,
@@ -85,7 +85,7 @@ class WindowsGraphicsWindowDirectXContext(private val window: WindowsGraphicsWin
 //		println(rt.get(ValueLayout.ADDRESS, 0))
 	}
 
-	override fun close() {
+	fun close() {
 		TODO("Not yet implemented")
 	}
 }

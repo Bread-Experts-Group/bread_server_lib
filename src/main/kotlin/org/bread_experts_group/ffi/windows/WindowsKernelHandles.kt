@@ -506,3 +506,16 @@ val nativeGetQueuedCompletionStatus: MethodHandle? = kernel32Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeGlobalGetAtomNameWide: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GlobalGetAtomNameW",
+	arrayOf(
+		UINT,
+		ATOM.withName("nAtom"),
+		LPWSTR.withName("lpBuffer"),
+		int.withName("int")
+	),
+	listOf(
+		gleCapture
+	)
+)

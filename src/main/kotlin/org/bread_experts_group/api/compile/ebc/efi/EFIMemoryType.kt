@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.ebc.efi
 
-import org.bread_experts_group.Mappable
+import org.bread_experts_group.generic.Mappable
 
 enum class EFIMemoryType(override val id: UInt) : Mappable<EFIMemoryType, UInt> {
 	EfiReservedMemoryType(0u),

@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows.directx
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 import java.lang.foreign.ValueLayout
 
 enum class D3D12FormatSupport1(override val position: Long) : Flaggable {

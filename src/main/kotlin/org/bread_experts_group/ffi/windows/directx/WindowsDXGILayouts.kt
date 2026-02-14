@@ -1,9 +1,9 @@
 package org.bread_experts_group.ffi.windows.directx
 
-import org.bread_experts_group.Flaggable.Companion.from
-import org.bread_experts_group.Flaggable.Companion.raw
-import org.bread_experts_group.Mappable.Companion.id
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.Flaggable.Companion.from
+import org.bread_experts_group.generic.Flaggable.Companion.raw
+import org.bread_experts_group.generic.Mappable.Companion.id
+import org.bread_experts_group.generic.MappedEnumeration
 import org.bread_experts_group.ffi.windows.BOOL
 import org.bread_experts_group.ffi.windows.UINT
 import java.lang.foreign.MemoryLayout

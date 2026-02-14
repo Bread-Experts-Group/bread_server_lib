@@ -26,7 +26,6 @@ import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.MemorySegment
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
-import java.util.logging.Logger
 
 class WindowsSystemDeviceMoveFeature(private val pathSegment: MemorySegment) : SystemDeviceMoveFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -85,7 +84,7 @@ class WindowsSystemDeviceMoveFeature(private val pathSegment: MemorySegment) : S
 				)
 				val actions = routine(
 					object : FeatureProvider<MoveProgressRoutineFeatureImplementation<*>> {
-						override val logger: Logger
+						override val logger
 							get() = TODO("Not yet implemented")
 						override val supportedFeatures: MutableMap<FeatureExpression<
 								out MoveProgressRoutineFeatureImplementation<*>>,

@@ -1,25 +1,27 @@
 package org.bread_experts_group.api.secure.cryptography.windows
 
+import org.bread_experts_group.BSLLogMessage.Companion.info
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.secure.cryptography.CryptographySystem
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemFeatures
 import org.bread_experts_group.api.secure.cryptography.CryptographySystemProvider
 import org.bread_experts_group.api.secure.cryptography.windows.feature.hash.*
 import org.bread_experts_group.api.secure.cryptography.windows.feature.random.WindowsRandomFeature
+import org.bread_experts_group.api.system.SystemProvider
 import org.bread_experts_group.ffi.windows.ULONG
 import org.bread_experts_group.ffi.windows.bcrypt.*
 import org.bread_experts_group.ffi.windows.returnsNTSTATUS
 import org.bread_experts_group.ffi.windows.winCharsetWide
-import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.generic.logging.LevelLogger
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.util.*
 
 class WindowsBCryptCryptographySystemProvider : CryptographySystemProvider() {
+	val logger = LevelLogger("bcrypt", SystemProvider.logger)
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	private var providerInterfaceMap: Map<WindowsBCryptInterface, MutableMap<String, MutableSet<String>>> = emptyMap()
-	private val logger = ColoredHandler.newLogger("TMP logger")
 	override fun supported(): Boolean = Arena.ofConfined().use { arena ->
 		val bufferSz = arena.allocate(ULONG)
 		val bufferLoc = arena.allocate(ValueLayout.ADDRESS)

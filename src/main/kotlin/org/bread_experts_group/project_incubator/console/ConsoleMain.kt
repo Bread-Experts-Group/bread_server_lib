@@ -19,7 +19,7 @@ import org.bread_experts_group.api.system.io.IODeviceFeatures
 import org.bread_experts_group.api.system.io.open.FileIOReOpenFeatures
 import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.user.SystemUserFeatures
-import org.bread_experts_group.protocol.vt100d.*
+import org.bread_experts_group.generic.protocol.vt100d.*
 import java.time.Duration
 import java.time.Instant
 import java.time.OffsetDateTime

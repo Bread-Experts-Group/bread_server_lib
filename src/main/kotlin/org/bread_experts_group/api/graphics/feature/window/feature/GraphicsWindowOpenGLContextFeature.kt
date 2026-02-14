@@ -1,14 +1,13 @@
 package org.bread_experts_group.api.graphics.feature.window.feature
 
-import org.bread_experts_group.MappedEnumeration
-import org.bread_experts_group.api.PreInitializableClosable
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.graphics.feature.window.feature.opengl.*
-import org.bread_experts_group.numeric.geometry.matrix.Matrix4
+import org.bread_experts_group.generic.MappedEnumeration
+import org.bread_experts_group.generic.numeric.geometry.matrix.Matrix4
 import java.lang.foreign.MemorySegment
 
 abstract class GraphicsWindowOpenGLContextFeature :
-	GraphicsWindowFeatureImplementation<GraphicsWindowOpenGLContextFeature>(), PreInitializableClosable {
+	GraphicsWindowFeatureImplementation<GraphicsWindowOpenGLContextFeature>() {
 	final override val expresses: FeatureExpression<GraphicsWindowOpenGLContextFeature> =
 		GraphicsWindowFeatures.OPENGL_CONTEXT
 	var use: Boolean = false

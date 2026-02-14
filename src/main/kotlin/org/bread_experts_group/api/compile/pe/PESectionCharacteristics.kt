@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.pe
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 
 enum class PESectionCharacteristics(override val position: Long) : Flaggable {
 	IMAGE_SCN_TYPE_NO_PAD(0x00000008),

@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.gps.nmea0183
 
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.MappedEnumeration
 
 class NMEATXTMessage(
 	talker: MappedEnumeration<String, NMEATalker>,

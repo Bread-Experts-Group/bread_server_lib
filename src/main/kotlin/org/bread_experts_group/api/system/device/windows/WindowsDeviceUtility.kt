@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.system.device.windows
 
-import org.bread_experts_group.Flaggable.Companion.raw
+import org.bread_experts_group.generic.Flaggable.Companion.raw
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures

@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows.bcrypt
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 
 enum class WindowsBCryptAlgorithmFlags(override val position: Long) : Flaggable {
 	BCRYPT_HASH_DONT_RESET_FLAG(0x00000001),

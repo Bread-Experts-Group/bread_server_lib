@@ -2,6 +2,8 @@
 
 package org.bread_experts_group.api.system.feature.windows
 
+import org.bread_experts_group.BSLLogMessage.Companion.severe
+import org.bread_experts_group.BSLLogMessage.Companion.warning
 import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.feature.SystemNetworkingSocketsFeature

@@ -1,12 +1,16 @@
 package org.bread_experts_group.api.compile.ebc
 
+import org.bread_experts_group.BSLLogMessage.Companion.info
+import org.bread_experts_group.BSLLogMessage.Companion.severe
+import org.bread_experts_group.BSLLogMessage.Companion.warning
+import org.bread_experts_group.api.compile.compileRootLogger
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex32
 import org.bread_experts_group.api.compile.ebc.dynamic.KotlinEBCDynamicProvider
 import org.bread_experts_group.api.compile.ebc.efi.EFIMemoryType
 import org.bread_experts_group.api.compile.ebc.efi.EFISystemTable
 import org.bread_experts_group.api.compile.ebc.intrinsic.KotlinEBCIntrinsicProvider
-import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.generic.logging.LevelLogger
 import java.lang.classfile.*
 import java.lang.classfile.ClassFile.ACC_PUBLIC
 import java.lang.classfile.ClassFile.ACC_STATIC
@@ -22,10 +26,9 @@ import kotlin.reflect.KClass
 
 object EBCJVMCompilation {
 	private val cf = ClassFile.of()
-	private val logger = ColoredHandler.newLogger("TMP logger")
+	private val logger = LevelLogger("ebc", compileRootLogger)
 	private val intrinsics = ServiceLoader.load(KotlinEBCIntrinsicProvider::class.java).fold(
-		mutableMapOf<String, MutableMap<String,
-				MutableMap<String, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit>>>()
+		mutableMapOf<String, MutableMap<String, MutableMap<String, (EBCProcedure, EBCCompilerData) -> Unit>>>()
 	) { a, m ->
 		m.intrinsics().forEach {
 			val desc = (it.key as DirectMethodHandleDesc)
@@ -39,7 +42,7 @@ object EBCJVMCompilation {
 
 	private val dynamics = ServiceLoader.load(KotlinEBCDynamicProvider::class.java).fold(
 		mutableMapOf<String, MutableMap<String,
-				MutableMap<String, (EBCProcedure, EBCStackTracker, EBCCompilerData, List<ConstantDesc>) -> Unit>>>()
+				MutableMap<String, (EBCProcedure, EBCCompilerData, List<ConstantDesc>) -> Unit>>>()
 	) { a, m ->
 		m.dynamics().forEach {
 			val desc = (it.key as DirectMethodHandleDesc)
@@ -184,7 +187,6 @@ object EBCJVMCompilation {
 			data.allocatorNatural = it.first
 			data.allocatorConstant = it.second
 		}
-		val stack = EBCStackTracker(procedure)
 		for (element in code) when (element) {
 			is LoadInstruction -> {
 				procedure.MOVIqq(
@@ -196,7 +198,7 @@ object EBCJVMCompilation {
 					TypeKind.INT -> {
 						val (natural, constant) = data.allocator.getOrAllocate32(element.slot())
 						try {
-							stack.PUSH32(
+							procedure.PUSH32(
 								EBCRegisters.R6, true,
 								naturalIndex16(false, natural, constant)
 							)
@@ -208,14 +210,14 @@ object EBCJVMCompilation {
 									natural, constant
 								)
 							)
-							stack.PUSH32(EBCRegisters.R6, true, null)
+							procedure.PUSH32(EBCRegisters.R6, true, null)
 						}
 					}
 
 					TypeKind.LONG -> {
 						val (natural, constant) = data.allocator.getOrAllocate64(element.slot())
 						try {
-							stack.PUSH64(
+							procedure.PUSH64(
 								EBCRegisters.R6, true,
 								naturalIndex16(false, natural, constant)
 							)
@@ -227,7 +229,7 @@ object EBCJVMCompilation {
 					TypeKind.REFERENCE -> {
 						val (natural, constant) = data.allocator.getOrAllocateNatural(element.slot())
 						try {
-							stack.PUSHn(
+							procedure.PUSHn(
 								EBCRegisters.R6, true,
 								naturalIndex16(false, natural, constant)
 							)
@@ -248,7 +250,7 @@ object EBCJVMCompilation {
 				when (element.typeKind()) {
 					TypeKind.INT -> {
 						val (natural, constant) = data.allocator.getOrAllocate32(element.slot())
-						stack.POP32(EBCRegisters.R5, false, null)
+						procedure.POP32(EBCRegisters.R5, false, null)
 						procedure.MOVdw(
 							EBCRegisters.R6, true, naturalIndex16(false, natural, constant),
 							EBCRegisters.R5, false, null
@@ -257,7 +259,7 @@ object EBCJVMCompilation {
 
 					TypeKind.LONG -> {
 						val (natural, constant) = data.allocator.getOrAllocate64(element.slot())
-						stack.POP64(EBCRegisters.R5, false, operand1Index = null)
+						procedure.POP64(EBCRegisters.R5, false, operand1Index = null)
 						procedure.MOVqw(
 							EBCRegisters.R6, true, naturalIndex16(false, natural, constant),
 							EBCRegisters.R5, false, null
@@ -266,7 +268,7 @@ object EBCJVMCompilation {
 
 					TypeKind.REFERENCE -> {
 						val (natural, constant) = data.allocator.getOrAllocateNatural(element.slot())
-						stack.POPn(EBCRegisters.R5, false, null)
+						procedure.POPn(EBCRegisters.R5, false, null)
 						procedure.MOVnw(
 							EBCRegisters.R6, true,
 							EBCRegisters.R5, false,
@@ -311,89 +313,89 @@ object EBCJVMCompilation {
 
 			is OperatorInstruction -> when (element.opcode()) {
 				Opcode.IADD -> {
-					stack.POP32(EBCRegisters.R5, false, null)
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R5, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.ADD32(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false, null
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.IAND -> {
-					stack.POP32(EBCRegisters.R5, false, null)
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R5, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.AND32(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false, null
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LADD -> {
-					stack.POP64(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.ADD64(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false, null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LSUB -> {
-					stack.POP64(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.SUB64(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false, null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LMUL -> {
-					stack.POP64(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.MUL64(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false, null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LDIV -> {
-					stack.POP64(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.DIV64(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false, null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LREM -> {
-					stack.POP64(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.MOD64(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false, null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LAND -> {
-					stack.POP64(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.AND64(
 						EBCRegisters.R6, false,
 						EBCRegisters.R5, false,
 						null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LUSHR -> {
-					stack.POP32(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.EXTNDD64(
 						EBCRegisters.R5, false,
 						EBCRegisters.R5, false, null
@@ -403,12 +405,12 @@ object EBCJVMCompilation {
 						EBCRegisters.R5, false,
 						null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.LCMP -> {
-					stack.POP64(EBCRegisters.R5, false, null)
-					stack.POP64(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R5, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
 					procedure.CMP64gte(
 						EBCRegisters.R6,
 						EBCRegisters.R5, false, null
@@ -457,7 +459,7 @@ object EBCJVMCompilation {
 						EBCRegisters.R6, false, null,
 						0u
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 				else -> throw IllegalArgumentException("Unknown operator opcode: ${element.opcode()}")
@@ -465,8 +467,8 @@ object EBCJVMCompilation {
 
 			is BranchInstruction -> when (element.opcode()) {
 				Opcode.IF_ICMPGE -> {
-					stack.POP32(EBCRegisters.R6, false, null)
-					stack.POP32(EBCRegisters.R5, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R5, false, null)
 					procedure.CMP32gte(
 						EBCRegisters.R5,
 						EBCRegisters.R6, false, null
@@ -484,8 +486,8 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.IF_ICMPLE -> {
-					stack.POP32(EBCRegisters.R6, false, null)
-					stack.POP32(EBCRegisters.R5, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R5, false, null)
 					procedure.CMP32lte(
 						EBCRegisters.R5,
 						EBCRegisters.R6, false, null
@@ -503,8 +505,8 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.IF_ICMPNE -> {
-					stack.POP32(EBCRegisters.R6, false, null)
-					stack.POP32(EBCRegisters.R5, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R5, false, null)
 					procedure.CMP32eq(
 						EBCRegisters.R5,
 						EBCRegisters.R6, false, null
@@ -522,7 +524,7 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.IFGT -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.CMPI32wgte(
 						EBCRegisters.R6, false, null,
 						0u
@@ -560,7 +562,7 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.IFGE -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.CMPI32wgte(
 						EBCRegisters.R6, false, null,
 						0u
@@ -578,7 +580,7 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.IFLE -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.CMPI32wlte(
 						EBCRegisters.R6, false, null,
 						0u
@@ -596,7 +598,7 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.IFEQ -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.CMPI32weq(
 						EBCRegisters.R6, false, null,
 						0u
@@ -614,7 +616,7 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.IFNE -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.CMPI32weq(
 						EBCRegisters.R6, false, null,
 						0u
@@ -649,21 +651,21 @@ object EBCJVMCompilation {
 
 			is ConstantInstruction -> when (element.typeKind()) {
 				TypeKind.INT -> {
-					@Suppress("KotlinConstantConditions")
+					@Suppress("KotlinConstantConditions", "PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 					procedure.MOVIdd(
 						EBCRegisters.R6, false, null,
 						(element.constantValue() as Integer).toInt().toUInt()
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 				TypeKind.LONG -> {
-					@Suppress("KotlinConstantConditions")
+					@Suppress("KotlinConstantConditions", "PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 					procedure.MOVIqq(
 						EBCRegisters.R6, false, null,
 						(element.constantValue() as java.lang.Long).toLong().toULong()
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				TypeKind.REFERENCE -> when (val desc = element.constantValue()) {
@@ -673,7 +675,7 @@ object EBCJVMCompilation {
 							EBCRegisters.R6, false, null,
 							dataPosition
 						)
-						stack.PUSHn(EBCRegisters.R6, false, null)
+						procedure.PUSHn(EBCRegisters.R6, false, null)
 					}
 
 					else -> throw IllegalArgumentException("Unknown CD: ${desc::class.java.name}")
@@ -690,7 +692,7 @@ object EBCJVMCompilation {
 						EBCRegisters.R6, false, null,
 						EFIMemoryType.EfiLoaderData.id
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 				"org/bread_experts_group/api/compile/ebc/efi/EFIMemoryType.EfiBootServicesData" -> {
@@ -698,7 +700,7 @@ object EBCJVMCompilation {
 						EBCRegisters.R6, false, null,
 						EFIMemoryType.EfiBootServicesData.id
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 				"java/lang/foreign/ValueLayout.JAVA_LONG" -> {
@@ -718,11 +720,11 @@ object EBCJVMCompilation {
 
 				"java/lang/foreign/MemorySegment.NULL" -> {
 					procedure.MOVIqw(EBCRegisters.R6, false, null, 0u)
-					stack.PUSHn(EBCRegisters.R6, false, null)
+					procedure.PUSHn(EBCRegisters.R6, false, null)
 				}
 
 				"org/bread_experts_group/api/compile/ebc/efi/EFIExample.INSTANCE" -> {
-					stack.PUSHn(EBCRegisters.R6, false, null)
+					procedure.PUSHn(EBCRegisters.R6, false, null)
 					logger.severe("!!!!!! WARNING `THIS` DOES NOT EXIST AT RUNTIME !!!!!!")
 				}
 
@@ -735,7 +737,7 @@ object EBCJVMCompilation {
 					val descriptors = methods[element.name().stringValue()]
 					if (descriptors != null) descriptors[element.type().stringValue()] else null
 				} else null
-				if (method != null) method(procedure, stack, data.copy()) else {
+				if (method != null) method(procedure, data.copy()) else {
 					val localMethod = classParent.methods().firstOrNull {
 						element.owner().name().contentEquals(classParent.thisClass().name()) &&
 								element.name().contentEquals(it.methodName()) &&
@@ -763,7 +765,7 @@ object EBCJVMCompilation {
 										)
 									)
 									offsetConstant += 4u
-									stack.PUSHn(EBCRegisters.R4, false, null)
+									procedure.PUSHn(EBCRegisters.R4, false, null)
 								}
 
 								ConstantDescs.CD_long -> {
@@ -776,7 +778,7 @@ object EBCJVMCompilation {
 										)
 									)
 									offsetConstant += 8u
-									stack.PUSH64(EBCRegisters.R4, false, null)
+									procedure.PUSH64(EBCRegisters.R4, false, null)
 								}
 
 								else -> {
@@ -790,7 +792,7 @@ object EBCJVMCompilation {
 										)
 									)
 									offsetNatural += 1u
-									stack.PUSHn(EBCRegisters.R4, false, null)
+									procedure.PUSHn(EBCRegisters.R4, false, null)
 								}
 							}
 						}
@@ -807,17 +809,14 @@ object EBCJVMCompilation {
 						val (naturalR, constantR) = parameters.asReversed().fold(0u to 0u) { a, c ->
 							when (c) {
 								ConstantDescs.CD_byte, ConstantDescs.CD_short, ConstantDescs.CD_int -> {
-									stack.expectNatural()
 									(a.first + 1u) to a.second
 								}
 
 								ConstantDescs.CD_long -> {
-									stack.expect64()
 									a.first to (a.second + 8u)
 								}
 
 								else -> {
-									stack.expectNatural()
 									(a.first + 1u) to a.second
 								}
 							}
@@ -825,17 +824,14 @@ object EBCJVMCompilation {
 						val (natural, constant) = parameters.fold(0u to 0u) { a, c ->
 							when (c) {
 								ConstantDescs.CD_byte, ConstantDescs.CD_short, ConstantDescs.CD_int -> {
-									stack.expect32()
 									a.first to (a.second + 4u)
 								}
 
 								ConstantDescs.CD_long -> {
-									stack.expect64()
 									a.first to (a.second + 8u)
 								}
 
 								else -> {
-									stack.expectNatural()
 									(a.first + 1u) to a.second
 								}
 							}
@@ -848,7 +844,7 @@ object EBCJVMCompilation {
 								natural + naturalR, constant + constantR
 							)
 						)
-						stack.PUSH64(EBCRegisters.R7, false, null)
+						procedure.PUSH64(EBCRegisters.R7, false, null)
 					} else throw IllegalArgumentException(
 						"No translation for [" +
 								element.owner().name().stringValue() + '.' + element.name() + element.type() + "]"
@@ -864,46 +860,46 @@ object EBCJVMCompilation {
 					val descriptors = dynamicMethods[element.name().stringValue()]
 					if (descriptors != null) descriptors[element.type().stringValue()] else null
 				} else null
-				if (dynamicMethod != null) dynamicMethod.invoke(procedure, stack, data.copy(), element.bootstrapArgs())
+				if (dynamicMethod != null) dynamicMethod.invoke(procedure, data.copy(), element.bootstrapArgs())
 				else throw IllegalArgumentException("No dynamic implementor for $element.")
 			}
 
 			is ConvertInstruction -> when (element.opcode()) {
 				Opcode.I2L -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.EXTNDD64(
 						EBCRegisters.R6, false,
 						EBCRegisters.R6, false,
 						null
 					)
-					stack.PUSH64(EBCRegisters.R6, false, null)
+					procedure.PUSH64(EBCRegisters.R6, false, null)
 				}
 
 				Opcode.L2I -> {
-					stack.POP64(EBCRegisters.R6, false, null)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.POP64(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 
 				Opcode.I2S -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.EXTNDW32(
 						EBCRegisters.R6, false,
 						EBCRegisters.R6, false,
 						null
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 
 				Opcode.I2B -> {
-					stack.POP32(EBCRegisters.R6, false, null)
+					procedure.POP32(EBCRegisters.R6, false, null)
 					procedure.EXTNDB32(
 						EBCRegisters.R6, false,
 						EBCRegisters.R6, false,
 						null
 					)
-					stack.PUSH32(EBCRegisters.R6, false, null)
+					procedure.PUSH32(EBCRegisters.R6, false, null)
 				}
 
 				else -> throw IllegalArgumentException(element.opcode().toString())
@@ -911,46 +907,47 @@ object EBCJVMCompilation {
 
 			is StackInstruction -> when (element.opcode()) {
 				Opcode.POP -> {
-					if (stack.last == EBCCompilerStackType.BIT_32) {
-						stack.POP32(EBCRegisters.R6, false, null)
-					} else {
-						stack.POPn(EBCRegisters.R6, false, null)
-					}
+					TODO("SPC")
+//					if (stack.last == EBCCompilerStackType.BIT_32) {
+//						procedure.POP32(EBCRegisters.R6, false, null)
+//					} else {
+//						procedure.POPn(EBCRegisters.R6, false, null)
+//					}
 				}
 
-				Opcode.POP2 -> when (stack.last) {
+				Opcode.POP2 -> TODO("SPC") /*when (stack.last) {
 					EBCCompilerStackType.BIT_32 -> {
-						stack.POP32(EBCRegisters.R6, false, null)
-						stack.POP32(EBCRegisters.R6, false, null)
+						procedure.POP32(EBCRegisters.R6, false, null)
+						procedure.POP32(EBCRegisters.R6, false, null)
 					}
 
 					EBCCompilerStackType.NATURAL -> {
-						stack.POPn(EBCRegisters.R6, false, null)
-						stack.POPn(EBCRegisters.R6, false, null)
+						procedure.POPn(EBCRegisters.R6, false, null)
+						procedure.POPn(EBCRegisters.R6, false, null)
 					}
 
 					EBCCompilerStackType.BIT_64 -> {
-						stack.POP64(EBCRegisters.R6, false, null)
+						procedure.POP64(EBCRegisters.R6, false, null)
 					}
-				}
+				}*/
 
-				Opcode.DUP -> {
+				Opcode.DUP -> TODO("SPC") /* {
 					if (stack.last == EBCCompilerStackType.BIT_32) {
-						stack.POP32(EBCRegisters.R6, false, null)
-						stack.PUSH32(EBCRegisters.R6, false, null)
-						stack.PUSH32(EBCRegisters.R6, false, null)
+						procedure.POP32(EBCRegisters.R6, false, null)
+						procedure.PUSH32(EBCRegisters.R6, false, null)
+						procedure.PUSH32(EBCRegisters.R6, false, null)
 					} else {
-						stack.POPn(EBCRegisters.R6, false, null)
-						stack.PUSHn(EBCRegisters.R6, false, null)
-						stack.PUSHn(EBCRegisters.R6, false, null)
+						procedure.POPn(EBCRegisters.R6, false, null)
+						procedure.PUSHn(EBCRegisters.R6, false, null)
+						procedure.PUSHn(EBCRegisters.R6, false, null)
 					}
-				}
+				}*/
 
 				else -> throw IllegalArgumentException(element.opcode().toString())
 			}
 
 			is ReturnInstruction -> {
-				stack.POP64(EBCRegisters.R7, false, null)
+				procedure.POP64(EBCRegisters.R7, false, null)
 				procedure.RET()
 			}
 

@@ -9,15 +9,15 @@ import org.bread_experts_group.api.system.socket.ipv6.config.WindowsIPv6SocketCo
 import org.bread_experts_group.api.system.socket.ipv6.stream.SystemInternetProtocolV6StreamProtocolFeatures
 import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.IPv6TCPFeatures
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPart
-import org.bread_experts_group.io.reader.BSLReader
-import org.bread_experts_group.io.reader.BSLReader.Companion.socketReadCheck
-import org.bread_experts_group.io.reader.BSLWriter
-import org.bread_experts_group.io.reader.BSLWriter.Companion.socketWriteCheck
-import org.bread_experts_group.protocol.http.h11.HTTP11ParsingStatus
-import org.bread_experts_group.protocol.http.h11.RequestH11Method
-import org.bread_experts_group.protocol.http.h11.RequestH11Target
-import org.bread_experts_group.protocol.http.h11.h11RequestFrom
-import org.bread_experts_group.protocol.http.h2.HTTP2ConnectionManager
+import org.bread_experts_group.generic.io.reader.BSLReader
+import org.bread_experts_group.generic.io.reader.BSLReader.Companion.socketReadCheck
+import org.bread_experts_group.generic.io.reader.BSLWriter
+import org.bread_experts_group.generic.io.reader.BSLWriter.Companion.socketWriteCheck
+import org.bread_experts_group.generic.protocol.http.h11.HTTP11ParsingStatus
+import org.bread_experts_group.generic.protocol.http.h11.RequestH11Method
+import org.bread_experts_group.generic.protocol.http.h11.RequestH11Target
+import org.bread_experts_group.generic.protocol.http.h11.h11RequestFrom
+import org.bread_experts_group.generic.protocol.http.h2.HTTP2ConnectionManager
 
 fun main() {
 	val ipv6 = SystemProvider.get(SystemFeatures.NETWORKING_SOCKETS)
@@ -71,6 +71,7 @@ fun main() {
 					return@start
 				}
 				val h2 = HTTP2ConnectionManager.create(reader, writer) as HTTP2ConnectionManager
+				h2.logger.label = nextData.toString()
 //				println("$h2: $nextData")
 				val request = h2.nextStreamHeaders()
 				val data = h2.startGetStreamData(request.stream)
@@ -88,12 +89,6 @@ fun main() {
 				return@start
 			}
 			println("?: $h11Request")
-		}.uncaughtExceptionHandler = { a, b ->
-			println("!!! ${b.stackTraceToString()}")
-			next.close(
-				StandardCloseFeatures.STOP_RX, StandardCloseFeatures.STOP_TX,
-				StandardCloseFeatures.RELEASE
-			)
 		}
 	}
 }

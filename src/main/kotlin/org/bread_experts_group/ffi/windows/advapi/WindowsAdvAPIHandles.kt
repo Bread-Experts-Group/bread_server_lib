@@ -2,8 +2,8 @@
 
 package org.bread_experts_group.ffi.windows.advapi
 
-import org.bread_experts_group.Mappable.Companion.id
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.Mappable.Companion.id
+import org.bread_experts_group.generic.MappedEnumeration
 import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena

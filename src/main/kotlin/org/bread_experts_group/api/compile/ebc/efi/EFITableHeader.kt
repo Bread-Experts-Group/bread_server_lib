@@ -4,7 +4,6 @@ import org.bread_experts_group.api.compile.ebc.EBCCompilerData
 import org.bread_experts_group.api.compile.ebc.EBCProcedure
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
 import org.bread_experts_group.api.compile.ebc.EBCRegisters
-import org.bread_experts_group.api.compile.ebc.EBCStackTracker
 import org.bread_experts_group.api.compile.ebc.intrinsic.KotlinEBCIntrinsicProvider
 import java.lang.constant.ClassDesc
 import java.lang.constant.DirectMethodHandleDesc
@@ -22,20 +21,20 @@ interface EFITableHeader {
 
 	class IntrinsicProvider : KotlinEBCIntrinsicProvider {
 		private val owner = ClassDesc.ofInternalName("org/bread_experts_group/api/compile/ebc/efi/EFITableHeader")
-		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCStackTracker, EBCCompilerData) -> Unit> =
+		override fun intrinsics(): Map<MethodHandleDesc, (EBCProcedure, EBCCompilerData) -> Unit> =
 			mapOf(
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getSegment",
 					MethodTypeDesc.ofDescriptor("()Ljava/lang/foreign/MemorySegment;")
-				) to { _, _, _ -> },
+				) to { procedure, _ -> },
 				MethodHandleDesc.ofMethod(
 					DirectMethodHandleDesc.Kind.SPECIAL, owner,
 					"getSignature",
 					MethodTypeDesc.ofDescriptor("()J")
-				) to { _, stack, _ ->
-					stack.POPn(EBCRegisters.R6, false, null)
-					stack.PUSH64(
+				) to { procedure, _ ->
+					procedure.POPn(EBCRegisters.R6, false, null)
+					procedure.PUSH64(
 						EBCRegisters.R6, true,
 						naturalIndex16(
 							false,

@@ -7,8 +7,8 @@ import org.bread_experts_group.api.coding.png.PNGReadingFeatureIdentifier
 import org.bread_experts_group.api.coding.png.PNGWritingDataIdentifier
 import org.bread_experts_group.api.coding.png.PNGWritingFeatureIdentifier
 import org.bread_experts_group.api.feature.FeatureExpression
-import org.bread_experts_group.io.reader.SequentialDataSink
-import org.bread_experts_group.io.reader.SequentialDataSource
+import org.bread_experts_group.generic.io.reader.SequentialDataSink
+import org.bread_experts_group.generic.io.reader.SequentialDataSource
 
 abstract class PortableNetworkGraphicsCodingFeature :
 	CodingFeatureImplementation<PortableNetworkGraphicsCodingFeature>() {
@@ -16,12 +16,12 @@ abstract class PortableNetworkGraphicsCodingFeature :
 		CodingFormats.PORTABLE_NETWORK_GRAPHICS
 
 	abstract fun read(
-		from: SequentialDataSource,
+		from: org.bread_experts_group.generic.io.reader.SequentialDataSource,
 		vararg features: PNGReadingFeatureIdentifier
 	): List<PNGReadingDataIdentifier>
 
 	abstract fun write(
-		into: SequentialDataSink,
+		into: org.bread_experts_group.generic.io.reader.SequentialDataSink,
 		vararg features: PNGWritingFeatureIdentifier
 	): List<PNGWritingDataIdentifier>
 }

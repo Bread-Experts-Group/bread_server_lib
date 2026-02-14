@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.pe
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 
 enum class PECharacteristics(override val position: Long) : Flaggable {
 	IMAGE_FILE_RELOCS_STRIPPED(0x0001),

@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.gps.nmea0183
 
-import org.bread_experts_group.Mappable
+import org.bread_experts_group.generic.Mappable
 
 enum class NMEATalker(
 	override val id: String, override val tag: String

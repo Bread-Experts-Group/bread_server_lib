@@ -1,8 +1,8 @@
 package org.bread_experts_group.api.coding.png
 
-import org.bread_experts_group.Flaggable
-import org.bread_experts_group.Mappable
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.Flaggable
+import org.bread_experts_group.generic.Mappable
+import org.bread_experts_group.generic.MappedEnumeration
 import java.util.*
 import kotlin.time.Duration
 

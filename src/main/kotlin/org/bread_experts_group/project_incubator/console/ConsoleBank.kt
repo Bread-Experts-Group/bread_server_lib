@@ -1,7 +1,7 @@
 package org.bread_experts_group.project_incubator.console
 
-import org.bread_experts_group.protocol.vt100d.SET_ATTRIBUTE
-import org.bread_experts_group.protocol.vt100d.VT100DGraphicsAttributes
+import org.bread_experts_group.generic.protocol.vt100d.SET_ATTRIBUTE
+import org.bread_experts_group.generic.protocol.vt100d.VT100DGraphicsAttributes
 import java.util.*
 
 class ConsoleBank(private val messageQueue: Queue<ConsoleMessage>) {

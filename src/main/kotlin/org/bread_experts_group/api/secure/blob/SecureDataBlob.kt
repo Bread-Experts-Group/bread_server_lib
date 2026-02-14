@@ -3,11 +3,11 @@ package org.bread_experts_group.api.secure.blob
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.secure.blob.feature.SecureDataBlobFeatureImplementation
-import org.bread_experts_group.logging.ColoredHandler
+import org.bread_experts_group.api.system.SystemProvider
+import org.bread_experts_group.generic.logging.LevelLogger
 import java.lang.AutoCloseable
 import java.lang.ref.Cleaner
 import java.util.*
-import java.util.logging.Logger
 
 /**
  * [SecureDataBlob]s allow the secure storage of data in-memory by encrypting / decrypting it during use.
@@ -26,7 +26,7 @@ abstract class SecureDataBlob : FeatureProvider<SecureDataBlobFeatureImplementat
 		val sdbCleaner: Cleaner = Cleaner.create()
 	}
 
-	override val logger: Logger = ColoredHandler.newLogger("TMP logger")
+	override val logger = LevelLogger("sdb", SystemProvider.logger)
 	override val features: MutableList<SecureDataBlobFeatureImplementation<*>> = ServiceLoader.load(
 		SecureDataBlobFeatureImplementation::class.java
 	).toMutableList()

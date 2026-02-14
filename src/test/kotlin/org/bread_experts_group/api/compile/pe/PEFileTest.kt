@@ -1,6 +1,6 @@
 package org.bread_experts_group.org.bread_experts_group.api.compile.pe
 
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.MappedEnumeration
 import org.bread_experts_group.api.compile.ebc.EBCJVMCompilation
 import org.bread_experts_group.api.compile.ebc.efi.EFIExample
 import org.bread_experts_group.api.compile.mzdos.MZDOSFile
@@ -16,7 +16,7 @@ class PEFileTest {
 	@Test
 	fun test() {
 		Files.newByteChannel(
-			testBase.resolve("D:\\test.pe.efi"),
+			testBase.resolve("J:\\test.pe.efi"),
 			StandardOpenOption.CREATE,
 			StandardOpenOption.WRITE,
 			StandardOpenOption.TRUNCATE_EXISTING

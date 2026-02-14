@@ -3,6 +3,7 @@ package org.bread_experts_group.api.system.device.linux.x64
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceIODeviceFeature
 import org.bread_experts_group.api.system.io.IODevice
+import org.bread_experts_group.api.system.io.feature.IODeviceReleaseFeature
 import org.bread_experts_group.api.system.io.linux.x64.*
 import org.bread_experts_group.api.system.io.open.*
 import org.bread_experts_group.ffi.capturedStateSegment
@@ -70,6 +71,12 @@ class LinuxX64SystemDeviceIODeviceFeature(
 			ioDevice.features.add(LinuxX64IODeviceSetSizeFeature(fd, seek))
 		}
 		ioDevice.features.add(LinuxX64IODeviceGetSizeFeature(fd))
+		ioDevice.features.add(
+			IODeviceReleaseFeature(
+				ImplementationSource.SYSTEM_NATIVE,
+				{ nativeClose!!.invokeExact(capturedStateSegment, fd) as Int }
+			) // TODO: Report errors
+		)
 		data.add(ioDevice)
 		return data
 	}

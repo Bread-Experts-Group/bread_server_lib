@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.pe
 
-import org.bread_experts_group.Mappable
+import org.bread_experts_group.generic.Mappable
 
 enum class PEWindowsSubsystem(
 	override val id: UShort,

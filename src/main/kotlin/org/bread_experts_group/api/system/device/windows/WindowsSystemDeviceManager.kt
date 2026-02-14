@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.system.device.windows
 
-import org.bread_experts_group.Mappable.Companion.id
-import org.bread_experts_group.MappedEnumeration
+import org.bread_experts_group.generic.Mappable.Companion.id
+import org.bread_experts_group.generic.MappedEnumeration
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.threadLocalPTR

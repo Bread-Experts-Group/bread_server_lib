@@ -3,10 +3,9 @@ package org.bread_experts_group.api.system.device.feature.move
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.feature.FeatureProvider
 import org.bread_experts_group.api.system.device.move.MoveSystemDeviceFeatureIdentifier
-import java.util.logging.Logger
 
 abstract class SystemDeviceMoveHandle : FeatureProvider<SystemDeviceMoveFeatureImplementation<*>> {
-	override val logger: Logger
+	override val logger
 		get() = TODO("not implemented")
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out SystemDeviceMoveFeatureImplementation<*>>,

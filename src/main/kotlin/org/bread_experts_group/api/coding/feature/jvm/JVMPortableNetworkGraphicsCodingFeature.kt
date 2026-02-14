@@ -1,13 +1,11 @@
 package org.bread_experts_group.api.coding.feature.jvm
 
-import org.bread_experts_group.Flaggable.Companion.from
-import org.bread_experts_group.Flaggable.Companion.raw
-import org.bread_experts_group.Mappable.Companion.id
+import org.bread_experts_group.generic.Flaggable.Companion.from
+import org.bread_experts_group.generic.Flaggable.Companion.raw
+import org.bread_experts_group.generic.Mappable.Companion.id
 import org.bread_experts_group.api.coding.feature.PortableNetworkGraphicsCodingFeature
 import org.bread_experts_group.api.coding.png.*
 import org.bread_experts_group.api.feature.ImplementationSource
-import org.bread_experts_group.io.reader.SequentialDataSink
-import org.bread_experts_group.io.reader.SequentialDataSource
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -16,7 +14,7 @@ class JVMPortableNetworkGraphicsCodingFeature : PortableNetworkGraphicsCodingFea
 	private val magic = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
 
 	override fun read(
-		from: SequentialDataSource,
+		from: org.bread_experts_group.generic.io.reader.SequentialDataSource,
 		vararg features: PNGReadingFeatureIdentifier
 	): List<PNGReadingDataIdentifier> {
 		if (features.contains(StandardPNGReadingFeatures.CHECK_MAGIC)) {
@@ -158,7 +156,7 @@ class JVMPortableNetworkGraphicsCodingFeature : PortableNetworkGraphicsCodingFea
 	}
 
 	override fun write(
-		into: SequentialDataSink,
+		into: org.bread_experts_group.generic.io.reader.SequentialDataSink,
 		vararg features: PNGWritingFeatureIdentifier
 	): List<PNGWritingDataIdentifier> {
 		TODO("Not yet implemented")

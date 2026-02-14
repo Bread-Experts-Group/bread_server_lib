@@ -1,6 +1,6 @@
 package org.bread_experts_group.ffi.windows
 
-import org.bread_experts_group.Flaggable
+import org.bread_experts_group.generic.Flaggable
 
 enum class WindowsFileSharingTypes(override val position: Long) : Flaggable {
 	FILE_SHARE_READ(0x00000001),

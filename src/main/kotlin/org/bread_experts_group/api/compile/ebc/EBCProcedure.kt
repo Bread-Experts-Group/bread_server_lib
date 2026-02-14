@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.ebc
 
-import org.bread_experts_group.normalize
+import org.bread_experts_group.generic.normalize
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 

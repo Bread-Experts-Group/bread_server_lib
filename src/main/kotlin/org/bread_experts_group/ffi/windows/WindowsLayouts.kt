@@ -13,24 +13,26 @@ val GUID: StructLayout = MemoryLayout.structLayout(
 )
 
 val WNDPROC: AddressLayout = ValueLayout.ADDRESS
-val WNDCLASSEXA: StructLayout = MemoryLayout.structLayout(
+val WNDCLASSEXW: StructLayout = MemoryLayout.structLayout(
 	UINT.withName("cbSize"),
 	UINT.withName("style"),
 	WNDPROC.withName("lpfnWndProc"),
-	ValueLayout.JAVA_INT.withName("cbClsExtra"),
-	ValueLayout.JAVA_INT.withName("cbWndExtra"),
+	int.withName("cbClsExtra"),
+	int.withName("cbWndExtra"),
 	HINSTANCE.withName("hInstance"),
 	HICON.withName("hIcon"),
 	HCURSOR.withName("hCursor"),
 	HBRUSH.withName("hbrBackground"),
-	LPCSTR.withName("lpszMenuName"),
-	LPCSTR.withName("lpszClassName"),
+	LPCWSTR.withName("lpszMenuName"),
+	LPCWSTR.withName("lpszClassName"),
 	HICON.withName("hIconSm")
 )
-val WNDCLASSEXA_cbSize: VarHandle = WNDCLASSEXA.varHandle(groupElement("cbSize"))
-val WNDCLASSEXA_lpfnWndProc: VarHandle = WNDCLASSEXA.varHandle(groupElement("lpfnWndProc"))
-val WNDCLASSEXA_hInstance: VarHandle = WNDCLASSEXA.varHandle(groupElement("hInstance"))
-val WNDCLASSEXA_lpszClassName: VarHandle = WNDCLASSEXA.varHandle(groupElement("lpszClassName"))
+val WNDCLASSEXW_cbSize: VarHandle = WNDCLASSEXW.varHandle(groupElement("cbSize"))
+val WNDCLASSEXW_style: VarHandle = WNDCLASSEXW.varHandle(groupElement("style"))
+val WNDCLASSEXW_lpfnWndProc: VarHandle = WNDCLASSEXW.varHandle(groupElement("lpfnWndProc"))
+val WNDCLASSEXW_hInstance: VarHandle = WNDCLASSEXW.varHandle(groupElement("hInstance"))
+val WNDCLASSEXW_hIcon: VarHandle = WNDCLASSEXW.varHandle(groupElement("hIcon"))
+val WNDCLASSEXW_lpszClassName: VarHandle = WNDCLASSEXW.varHandle(groupElement("lpszClassName"))
 
 val PIXELFORMATDESCRIPTOR: StructLayout = MemoryLayout.structLayout(
 	WORD.withName("nSize"),
@@ -483,7 +485,7 @@ val WIN32_FIND_DATAW: StructLayout = MemoryLayout.structLayout(
 	DWORD.withName("nFileSizeLow"),
 	DWORD.withName("dwReserved0"),
 	DWORD.withName("dwReserved1"),
-	MemoryLayout.sequenceLayout(260, WCHAR).withName("cFileName"),
+	MemoryLayout.sequenceLayout(MAX_PATH, WCHAR).withName("cFileName"),
 	MemoryLayout.sequenceLayout(14, WCHAR).withName("cAlternateFileName"),
 	DWORD.withName("dwFileType"),
 	DWORD.withName("dwCreatorType"),
@@ -493,7 +495,7 @@ val WIN32_FIND_DATAW_cFileName: MethodHandle = WIN32_FIND_DATAW.sliceHandle(grou
 
 val WIN32_FIND_STREAM_DATA: StructLayout = MemoryLayout.structLayout(
 	LARGE_INTEGER.withName("StreamSize"),
-	MemoryLayout.sequenceLayout(260 + 36, WCHAR).withName("cStreamName"),
+	MemoryLayout.sequenceLayout(MAX_PATH + 36, WCHAR).withName("cStreamName"),
 )
 val WIN32_FIND_STREAM_DATA_cStreamName: MethodHandle = WIN32_FIND_STREAM_DATA.sliceHandle(groupElement("cStreamName"))
 

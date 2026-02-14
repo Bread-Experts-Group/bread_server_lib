@@ -2,7 +2,6 @@ package org.bread_experts_group.org.bread_experts_group.api.secure.blob
 
 import org.bread_experts_group.api.secure.blob.SecureDataBlobFeatures
 import org.bread_experts_group.api.secure.blob.SecureDataBlobProvider
-import org.bread_experts_group.logging.ColoredHandler
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
