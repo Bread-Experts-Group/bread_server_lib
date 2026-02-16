@@ -7,6 +7,18 @@ object GraphicsWindowFeatures {
 		override val name: String = "Modify / Read Window Title"
 	}
 
+	val WINDOW_STATUS = object : FeatureExpression<GraphicsWindowStatusFeature> {
+		override val name: String = "Modify / Read Window Status"
+	}
+
+	val WINDOW_DISPLAY_AFFINITY = object : FeatureExpression<GraphicsWindowDisplayAffinityFeature> {
+		override val name: String = "Modify / Read Window Display Affinity"
+	}
+
+	val WINDOW_EVENT = object : FeatureExpression<GraphicsWindowEventLoopFeature> {
+		override val name: String = "Control Window Event / Message Loop"
+	}
+
 	val RENDER_LAMBDA = object : FeatureExpression<GraphicsWindowRenderEventFeature> {
 		override val name: String = "Lambda on Render / Re-paint"
 	}

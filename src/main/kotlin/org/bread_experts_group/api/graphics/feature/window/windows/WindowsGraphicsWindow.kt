@@ -1,7 +1,15 @@
 package org.bread_experts_group.api.graphics.feature.window.windows
 
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
+import org.bread_experts_group.api.graphics.feature.window.feature.display_affinity.windows.WindowsGraphicsWindowDisplayAffinityFeature
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.*
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.resize_2d.GraphicsWindowEventLoopResize2D32
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.resize_2d.GraphicsWindowEventLoopResize2DEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.windows.WindowsGraphicsWindowEventLoopFeature
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.windows.WindowsGraphicsWindowEventLoopSystemEvent
 import org.bread_experts_group.api.graphics.feature.window.feature.name.windows.WindowsGraphicsWindowNameFeature
+import org.bread_experts_group.api.graphics.feature.window.feature.status.StandardGraphicsWindowStatus
+import org.bread_experts_group.api.graphics.feature.window.feature.status.windows.WindowsGraphicsWindowStatusFeature
 import org.bread_experts_group.api.graphics.feature.window.icon.Image2D
 import org.bread_experts_group.api.graphics.feature.window.icon.ImagePlaneType
 import org.bread_experts_group.api.graphics.feature.window.icon.IntImagePlane
@@ -29,6 +37,7 @@ class WindowsGraphicsWindow(
 	vararg features: GraphicsWindowOpenFeatureIdentifier
 ) : GraphicsWindow() {
 	lateinit var hWnd: MemorySegment
+	val events: MutableList<GraphicsWindowEventSubscriber<*, *>> = mutableListOf()
 
 	init {
 		// CLASS
@@ -279,16 +288,16 @@ class WindowsGraphicsWindow(
 			helpSet = true
 		}
 		var styleFlags = 0
-		if (features.contains(StandardGraphicsWindowOpenFeatures.VISIBLE)) {
-			data.add(StandardGraphicsWindowOpenFeatures.VISIBLE)
+		if (features.contains(StandardGraphicsWindowStatus.SHOWN)) {
+			data.add(StandardGraphicsWindowStatus.SHOWN)
 			styleFlags = styleFlags or WindowsWindowStyles.WS_VISIBLE.bitI
 		}
-		if (features.contains(StandardGraphicsWindowOpenFeatures.MAXIMIZED)) {
-			data.add(StandardGraphicsWindowOpenFeatures.MAXIMIZED)
+		if (features.contains(StandardGraphicsWindowStatus.MAXIMIZED)) {
+			data.add(StandardGraphicsWindowStatus.MAXIMIZED)
 			styleFlags = styleFlags or WindowsWindowStyles.WS_MAXIMIZE.bitI
 		}
-		if (features.contains(StandardGraphicsWindowOpenFeatures.MINIMIZED)) {
-			data.add(StandardGraphicsWindowOpenFeatures.MINIMIZED)
+		if (features.contains(StandardGraphicsWindowStatus.MINIMIZED)) {
+			data.add(StandardGraphicsWindowStatus.MINIMIZED)
 			styleFlags = styleFlags or WindowsWindowStyles.WS_MINIMIZE.bitI
 		}
 		if (features.contains(StandardGraphicsWindowOpenFeatures.SIZING_BORDER)) {
@@ -357,6 +366,9 @@ class WindowsGraphicsWindow(
 		hWndLock.await()
 		if (creationThrowable != null) throw creationThrowable
 		this.features.add(WindowsGraphicsWindowNameFeature(this))
+		this.features.add(WindowsGraphicsWindowStatusFeature(this.hWnd))
+		this.features.add(WindowsGraphicsWindowDisplayAffinityFeature(this.hWnd))
+		this.features.add(WindowsGraphicsWindowEventLoopFeature(this.events))
 	}
 
 	fun sendMessage(msg: Int, wParam: Long, lParam: Long): Long = nativeSendMessageWide!!.invokeExact(
@@ -364,14 +376,47 @@ class WindowsGraphicsWindow(
 		msg, wParam, lParam
 	) as Long
 
-	fun wndProc(hWnd: MemorySegment, message: Int, wParam: Long, lParam: Long): Long = when (
-		WindowsWindowMessages.entries.id(message).enum
-	) {
-		WindowsWindowMessages.WM_DESTROY -> {
-			nativePostQuitMessage!!.invokeExact(0)
-			0
-		}
+	fun wndProc(hWnd: MemorySegment, message: Int, wParam: Long, lParam: Long): Long {
+		val msgMEnum = WindowsWindowMessages.entries.id(message)
+		for (event in this.events) {
+			val result = when (event.receptiveTo) {
+				StandardGraphicsWindowEventLoopEventTypes.EVERYTHING -> {
+					@Suppress("UNCHECKED_CAST")
+					(event.lambda as
+								(Array<GraphicsWindowEventLoopEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)(
+						arrayOf(WindowsGraphicsWindowEventLoopSystemEvent(hWnd, msgMEnum, wParam, lParam))
+					)
+				}
 
-		else -> nativeDefWindowProcWide!!.invokeExact(hWnd, message, wParam, lParam) as Long
+				StandardGraphicsWindowEventLoopEventTypes.RESIZE_2D
+					if msgMEnum.enum == WindowsWindowMessages.WM_SIZE -> {
+					@Suppress("UNCHECKED_CAST")
+					(event.lambda as
+								(Array<GraphicsWindowEventLoopResize2DEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)(
+						arrayOf(
+							GraphicsWindowEventLoopResize2D32(
+								(lParam and 0xFFFF).toInt(),
+								((lParam ushr 16) and 0xFFFF).toInt()
+							)
+						)
+					)
+				}
+
+				else -> continue
+			}
+			when (result) {
+				StandardGraphicsWindowEventLoopEventResults.DEFAULT -> continue
+			}
+		}
+		return when (msgMEnum.enum) {
+			WindowsWindowMessages.WM_DESTROY -> {
+				nativePostQuitMessage!!.invokeExact(0)
+				0
+			}
+
+			else -> nativeDefWindowProcWide!!.invokeExact(hWnd, message, wParam, lParam) as Long
+		}
 	}
 }

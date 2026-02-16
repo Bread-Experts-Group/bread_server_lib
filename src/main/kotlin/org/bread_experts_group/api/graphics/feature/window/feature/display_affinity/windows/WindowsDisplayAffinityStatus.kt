@@ -1,0 +1,11 @@
+package org.bread_experts_group.api.graphics.feature.window.feature.display_affinity.windows
+
+import org.bread_experts_group.api.graphics.feature.window.feature.display_affinity.GraphicsWindowDisplayAffinityGetData
+import org.bread_experts_group.api.graphics.feature.window.feature.display_affinity.GraphicsWindowDisplayAffinitySetFeature
+
+enum class WindowsDisplayAffinityStatus : GraphicsWindowDisplayAffinityGetData,
+	GraphicsWindowDisplayAffinitySetFeature {
+	NO_RESTRICTION,
+	MONITOR_ONLY_CONTENT,
+	MONITOR_ONLY_WINDOW
+}

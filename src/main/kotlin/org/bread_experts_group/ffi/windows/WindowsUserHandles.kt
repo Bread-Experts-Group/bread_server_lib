@@ -141,3 +141,48 @@ val nativeDestroyIcon: MethodHandle? = user32Lookup.getDowncall(
 	),
 	listOf(gleCapture)
 )
+
+val nativeGetWindowPlacement: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "GetWindowPlacement",
+	arrayOf(
+		BOOL,
+		HWND.withName("hWnd"),
+		PWINDOWPLACEMENT.withName("lpwndpl")
+	),
+	listOf(gleCapture)
+)
+
+val nativeShowWindow: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "ShowWindow",
+	arrayOf(
+		BOOL,
+		HWND.withName("hWnd"),
+		int.withName("nCmdShow")
+	),
+	listOf(gleCapture)
+)
+
+val nativeSetWindowDisplayAffinity: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "SetWindowDisplayAffinity",
+	arrayOf(
+		BOOL,
+		HWND.withName("hWnd"),
+		DWORD.withName("dwAffinity")
+	),
+	listOf(gleCapture)
+)
+
+val nativeGetWindowDisplayAffinity: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "GetWindowDisplayAffinity",
+	arrayOf(
+		BOOL,
+		HWND.withName("hWnd"),
+		`void*`.withName("pdwAffinity")
+	),
+	listOf(gleCapture)
+)
+
+val nativeIsWindowVisible: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "IsWindowVisible", BOOL,
+	HWND.withName("hWnd")
+)

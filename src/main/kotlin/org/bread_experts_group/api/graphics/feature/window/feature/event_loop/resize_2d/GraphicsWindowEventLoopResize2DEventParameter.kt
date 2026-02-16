@@ -1,0 +1,5 @@
+package org.bread_experts_group.api.graphics.feature.window.feature.event_loop.resize_2d
+
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.GraphicsWindowEventLoopEventParameter
+
+interface GraphicsWindowEventLoopResize2DEventParameter : GraphicsWindowEventLoopEventParameter

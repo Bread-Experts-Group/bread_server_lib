@@ -4,15 +4,17 @@ import org.bread_experts_group.api.graphics.GraphicsFeatures
 import org.bread_experts_group.api.graphics.GraphicsProvider
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
 import org.bread_experts_group.api.graphics.feature.window.feature.GraphicsWindowFeatures
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.GraphicsWindowEventSubscriber
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.StandardGraphicsWindowEventLoopEventResults
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.StandardGraphicsWindowEventLoopEventTypes
+import org.bread_experts_group.api.graphics.feature.window.feature.status.StandardGraphicsWindowStatus
 import org.bread_experts_group.api.graphics.feature.window.icon.Image2D
 import org.bread_experts_group.api.graphics.feature.window.icon.ImagePlaneType
 import org.bread_experts_group.api.graphics.feature.window.icon.IntImagePlane
 import org.bread_experts_group.api.graphics.feature.window.open.GraphicsWindowIcon
-import org.bread_experts_group.api.graphics.feature.window.open.GraphicsWindowName
 import org.bread_experts_group.api.graphics.feature.window.open.StandardGraphicsWindowOpenFeatures
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.random.Random
 
 fun main() {
 	val windowing = GraphicsProvider.get(GraphicsFeatures.GUI_WINDOW)
@@ -39,7 +41,7 @@ fun main() {
 		}
 	}
 	val window = windowing.open(
-		StandardGraphicsWindowOpenFeatures.VISIBLE,
+		StandardGraphicsWindowStatus.SHOWN,
 		StandardGraphicsWindowOpenFeatures.SIZING_BORDER,
 		StandardGraphicsWindowOpenFeatures.SYSTEM_MAXIMIZE_BUTTON,
 		StandardGraphicsWindowOpenFeatures.SYSTEM_MINIMIZE_BUTTON,
@@ -56,8 +58,13 @@ fun main() {
 			)
 		)
 	).firstNotNullOf { it as? GraphicsWindow }
-	while (true) {
-		Thread.sleep(1)
-		window.get(GraphicsWindowFeatures.WINDOW_NAME).set(GraphicsWindowName(Random.nextInt().toString()))
-	}
+	window.get(GraphicsWindowFeatures.WINDOW_STATUS).set(
+		StandardGraphicsWindowStatus.MINIMIZED
+	)
+	window.get(GraphicsWindowFeatures.WINDOW_EVENT).add(
+		GraphicsWindowEventSubscriber(
+			StandardGraphicsWindowEventLoopEventTypes.RESIZE_2D,
+			{ println(it[0]); StandardGraphicsWindowEventLoopEventResults.DEFAULT }
+		)
+	)
 }

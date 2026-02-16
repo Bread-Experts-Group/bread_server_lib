@@ -74,6 +74,13 @@ val POINT: StructLayout = MemoryLayout.structLayout(
 	LONG.withName("y"),
 )
 
+val RECT: StructLayout = MemoryLayout.structLayout(
+	LONG.withName("left"),
+	LONG.withName("top"),
+	LONG.withName("right"),
+	LONG.withName("bottom")
+)
+
 val MSG: StructLayout = MemoryLayout.structLayout(
 	HWND.withName("hwnd"),
 	UINT.withName("message"),
