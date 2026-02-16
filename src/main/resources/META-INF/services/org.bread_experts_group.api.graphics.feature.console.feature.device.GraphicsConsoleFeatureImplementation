@@ -1,3 +1,15 @@
 org.bread_experts_group.api.graphics.feature.console.feature.device.windows.WindowsGraphicsConsoleIOFeatureSTDIN
 org.bread_experts_group.api.graphics.feature.console.feature.device.windows.WindowsGraphicsConsoleIOFeatureSTDOUT
 org.bread_experts_group.api.graphics.feature.console.feature.device.windows.WindowsGraphicsConsoleIOFeatureSTDERR
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDIN
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDOUT
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDERR
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDIN
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDOUT
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDERR
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDIN
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDOUT
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDERR
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDIN
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDOUT
+org.bread_experts_group.api.graphics.feature.console.feature.device.macos.MacOSGraphicsConsoleIOFeatureSTDERR

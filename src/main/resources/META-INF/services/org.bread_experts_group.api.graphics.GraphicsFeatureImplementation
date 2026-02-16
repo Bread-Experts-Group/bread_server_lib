@@ -1,2 +1,3 @@
 org.bread_experts_group.api.graphics.feature.window.windows.WindowsGraphicsWindowFeature
 org.bread_experts_group.api.graphics.feature.console.windows.WindowsGraphicsConsoleFeature
+org.bread_experts_group.api.graphics.feature.console.macos.MacOSGraphicsConsoleFeature

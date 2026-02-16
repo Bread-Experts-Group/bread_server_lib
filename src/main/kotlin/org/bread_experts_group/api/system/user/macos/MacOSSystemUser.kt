@@ -5,7 +5,8 @@ import org.bread_experts_group.api.system.user.feature.SystemUserFeatureImplemen
 
 class MacOSSystemUser : SystemUser() {
 	override val features: MutableList<SystemUserFeatureImplementation<*>> = mutableListOf(
-		MacOSSystemUserGetNameFeature(this)
+		MacOSSystemUserGetNameFeature(this),
+		MacOSSystemUserGetLogonTimeFeature(this)
 	)
 	/*
 	init {
