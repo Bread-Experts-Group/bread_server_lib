@@ -30,3 +30,14 @@ val WINDOWPLACEMENT: StructLayout = MemoryLayout.structLayout(
 val PWINDOWPLACEMENT = `void*`
 val WINDOWPLACEMENT_length: VarHandle = WINDOWPLACEMENT.varHandle(groupElement("length"))
 val WINDOWPLACEMENT_showCmd: VarHandle = WINDOWPLACEMENT.varHandle(groupElement("showCmd"))
+
+val PAINTSTRUCT = MemoryLayout.structLayout(
+	HDC.withName("hdc"),
+	BOOL.withName("fErase"),
+	RECT.withName("rcPaint"),
+	BOOL.withName("fRestore"),
+	BOOL.withName("fIncUpdate"),
+	MemoryLayout.sequenceLayout(32, BYTE).withName("rgbReserved")
+)
+val LPPAINTSTRUCT = `void*`
+val PPAINTSTRUCT = `void*`

@@ -519,3 +519,21 @@ val nativeGlobalGetAtomNameWide: MethodHandle? = kernel32Lookup.getDowncall(
 		gleCapture
 	)
 )
+
+val nativeDeviceIoControl: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "DeviceIoControl",
+	arrayOf(
+		BOOL,
+		HANDLE.withName("hDevice"),
+		DWORD.withName("dwIoControlCode"),
+		LPVOID.withName("lpInBuffer"),
+		DWORD.withName("nInBufferSize"),
+		LPVOID.withName("lpOutBuffer"),
+		DWORD.withName("nOutBufferSize"),
+		LPDWORD.withName("lpBytesReturned"),
+		LPOVERLAPPED.withName("lpOverlapped")
+	),
+	listOf(
+		gleCapture
+	)
+)

@@ -186,3 +186,21 @@ val nativeIsWindowVisible: MethodHandle? = user32Lookup.getDowncall(
 	nativeLinker, "IsWindowVisible", BOOL,
 	HWND.withName("hWnd")
 )
+
+val nativeValidateRect: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "ValidateRect", BOOL,
+	HWND.withName("hWnd"),
+	PRECT.withName("lpRect")
+)
+
+val nativeBeginPaint: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "BeginPaint", HDC,
+	HWND.withName("hWnd"),
+	LPPAINTSTRUCT.withName("lpPaint")
+)
+
+val nativeEndPaint: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "EndPaint", BOOL,
+	HWND.withName("hWnd"),
+	PPAINTSTRUCT.withName("lpPaint")
+)

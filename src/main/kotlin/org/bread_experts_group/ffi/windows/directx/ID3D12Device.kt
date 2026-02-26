@@ -16,60 +16,18 @@ import java.util.*
  * [d3d12.h](https://github.com/microsoft/DirectX-Headers/blob/main/include/directx/d3d12.h)
  */
 class ID3D12Device(
-	ptr: MemorySegment,
-	iUnknownQueryInterfaceVTblIndex: Int,
-	iUnknownAddRefVTblIndex: Int,
-	iUnknownReleaseVTblIndex: Int,
-	iD3D12ObjectGetPrivateDataVTblIndex: Int,
-	iD3D12ObjectSetPrivateDataVTblIndex: Int,
-	iD3D12ObjectSetPrivateDataInterfaceVTblIndex: Int,
-	iD3D12ObjectSetNameVTblIndex: Int,
-	getNodeCountVTblIndex: Int,
-	createCommandQueueVTblIndex: Int,
-	createCommandAllocatorVTblIndex: Int,
-	createGraphicsPipelineStateVTblIndex: Int,
-	createComputePipelineStateVTblIndex: Int,
-	createCommandListVTblIndex: Int,
-	checkFeatureSupportVTblIndex: Int,
-	createDescriptorHeapVTblIndex: Int,
-	vTblReinterpretationLength: Int
+	ptr: MemorySegment
 ) : ID3D12Object(
-	ptr,
-	iUnknownQueryInterfaceVTblIndex,
-	iUnknownAddRefVTblIndex,
-	iUnknownReleaseVTblIndex,
-	iD3D12ObjectGetPrivateDataVTblIndex,
-	iD3D12ObjectSetPrivateDataVTblIndex,
-	iD3D12ObjectSetPrivateDataInterfaceVTblIndex,
-	iD3D12ObjectSetNameVTblIndex,
-	vTblReinterpretationLength
+	ptr
 ) {
-	constructor(ptr: MemorySegment) : this(
-		ptr,
-		0,
-		1,
-		2,
-		3,
-		4,
-		5,
-		6,
-		7,
-		8,
-		9,
-		10,
-		11,
-		12,
-		13,
-		14,
-		15
-	)
-
 	var getNodeCount = {
 		TODO("Not yet implemented")
 	}
 
 	var createCommandQueue: (MemorySegment, MemorySegment, MemorySegment) -> Int = { p, r, pp ->
-		val handle = getVTblAddress(createCommandQueueVTblIndex).getDowncall(
+		val handle = getLocalVTblAddress(
+			ID3D12Device::class.java, 1
+		).getDowncall(
 			nativeLinker, HRESULT,
 			ValueLayout.ADDRESS, ValueLayout.ADDRESS, REFIID, ValueLayout.ADDRESS
 		)
@@ -94,7 +52,9 @@ class ID3D12Device(
 	}
 
 	var checkFeatureSupport: (D3D12Feature, MemorySegment) -> Int = { f, s ->
-		val handle = getVTblAddress(checkFeatureSupportVTblIndex).getDowncall(
+		val handle = getLocalVTblAddress(
+			ID3D12Device::class.java, 6
+		).getDowncall(
 			nativeLinker, HRESULT,
 			ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, UINT
 		)
@@ -137,7 +97,9 @@ class ID3D12Device(
 	}
 
 	var createDescriptorHeap: (MemorySegment, MemorySegment, MemorySegment) -> Int = { pD, r, pp ->
-		val handle = getVTblAddress(createDescriptorHeapVTblIndex).getDowncall(
+		val handle = getLocalVTblAddress(
+			ID3D12Device::class.java, 8
+		).getDowncall(
 			nativeLinker, HRESULT,
 			ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS
 		)

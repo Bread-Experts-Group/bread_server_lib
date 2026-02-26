@@ -39,6 +39,10 @@ object SystemFeatures {
 		override val name: String = "Get Current Working Path Device"
 	}
 
+	val GET_PATH_DEVICE_DIRECT = object : FeatureExpression<SystemGetPathDeviceDirectFeature> {
+		override val name: String = "Get Path Device Direct"
+	}
+
 	val GET_TEMPORARY_STORAGE_PATH_DEVICE = object : FeatureExpression<SystemGetPathDeviceFeature> {
 		override val name: String = "Get Temporary Storage Path Device"
 	}

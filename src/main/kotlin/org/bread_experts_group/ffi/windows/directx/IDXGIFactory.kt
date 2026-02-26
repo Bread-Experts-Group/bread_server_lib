@@ -3,30 +3,9 @@ package org.bread_experts_group.ffi.windows.directx
 import java.lang.foreign.MemorySegment
 
 open class IDXGIFactory(
-	ptr: MemorySegment,
-	iUnknownQueryInterfaceVTblIndex: Int,
-	iUnknownAddRefVTblIndex: Int,
-	iUnknownReleaseVTblIndex: Int,
-	iDXGIObjectSetPrivateDataVTblIndex: Int,
-	iDXGIObjectSetPrivateDataInterfaceVTblIndex: Int,
-	iDXGIObjectGetPrivateDataVTblIndex: Int,
-	iDXGIObjectGetParentVTblIndex: Int,
-	enumAdaptersVTblIndex: Int,
-	makeWindowAssociationVTblIndex: Int,
-	getWindowAssociationVTblIndex: Int,
-	createSwapChainVTblIndex: Int,
-	createSoftwareAdapterVTblIndex: Int,
-	vTblReinterpretationLength: Int
+	ptr: MemorySegment
 ) : IDXGIObject(
-	ptr,
-	iUnknownQueryInterfaceVTblIndex,
-	iUnknownAddRefVTblIndex,
-	iUnknownReleaseVTblIndex,
-	iDXGIObjectSetPrivateDataVTblIndex,
-	iDXGIObjectSetPrivateDataInterfaceVTblIndex,
-	iDXGIObjectGetPrivateDataVTblIndex,
-	iDXGIObjectGetParentVTblIndex,
-	vTblReinterpretationLength
+	ptr
 ) {
 	var enumAdapters = {
 		TODO("Not yet implemented")

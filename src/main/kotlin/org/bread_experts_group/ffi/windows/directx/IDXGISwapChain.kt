@@ -1,48 +1,22 @@
 package org.bread_experts_group.ffi.windows.directx
 
-import org.bread_experts_group.generic.Flaggable.Companion.raw
 import org.bread_experts_group.ffi.getDowncall
 import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.windows.HRESULT
+import org.bread_experts_group.generic.Flaggable.Companion.raw
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.util.*
 
 open class IDXGISwapChain(
-	ptr: MemorySegment,
-	iUnknownQueryInterfaceVTblIndex: Int,
-	iUnknownAddRefVTblIndex: Int,
-	iUnknownReleaseVTblIndex: Int,
-	iDXGIObjectSetPrivateDataVTblIndex: Int,
-	iDXGIObjectSetPrivateDataInterfaceVTblIndex: Int,
-	iDXGIObjectGetPrivateDataVTblIndex: Int,
-	iDXGIObjectGetParentVTblIndex: Int,
-	iDXGIDeviceSubObjectGetDeviceVTblIndex: Int,
-	presentVTblIndex: Int,
-	getBufferVTblIndex: Int,
-	setFullscreenStateVTblIndex: Int,
-	getFullscreenStateVTblIndex: Int,
-	getDescVTblIndex: Int,
-	resizeBuffersVTblIndex: Int,
-	resizeTargetVTblIndex: Int,
-	getContainingOutputVTblIndex: Int,
-	getFrameStatisticsVTblIndex: Int,
-	getLastPresentCountVTblIndex: Int,
-	vTblReinterpretationLength: Int
+	ptr: MemorySegment
 ) : IDXGIDeviceSubObject(
-	ptr,
-	iUnknownQueryInterfaceVTblIndex,
-	iUnknownAddRefVTblIndex,
-	iUnknownReleaseVTblIndex,
-	iDXGIObjectSetPrivateDataVTblIndex,
-	iDXGIObjectSetPrivateDataInterfaceVTblIndex,
-	iDXGIObjectGetPrivateDataVTblIndex,
-	iDXGIObjectGetParentVTblIndex,
-	iDXGIDeviceSubObjectGetDeviceVTblIndex,
-	vTblReinterpretationLength
+	ptr
 ) {
 	var present: (Int, EnumSet<DXGIPresent>) -> Int = { s, f ->
-		val handle = getVTblAddress(presentVTblIndex).getDowncall(
+		val handle = getLocalVTblAddress(
+			IDXGISwapChain::class.java, 0
+		).getDowncall(
 			nativeLinker, HRESULT,
 			ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT
 		)

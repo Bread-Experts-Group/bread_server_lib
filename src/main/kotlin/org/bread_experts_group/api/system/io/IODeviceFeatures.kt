@@ -43,4 +43,16 @@ object IODeviceFeatures {
 	val DATA_RANGE_LOCK = object : FeatureExpression<IODeviceDataRangeLockFeature> {
 		override val name: String = "Device Data Range Lock"
 	}
+
+	val GET_DEVICE_GEOMETRY = object : FeatureExpression<IODeviceGetDeviceGeometryFeature> {
+		override val name: String = "Get Device Geometry"
+	}
+
+	val GET_DEVICE_FIRMWARE_INFO = object : FeatureExpression<IODeviceGetDeviceFirmwareInfoFeature> {
+		override val name: String = "Get Device Firmware Information"
+	}
+
+	val BYPASS_FS_DRIVER_BOUNDS_CHECKS = object : FeatureExpression<IODeviceBypassFSDriverBoundsChecksFeature> {
+		override val name: String = "Bypass Filesystem Driver for Boundary Checking on Device Access"
+	}
 }

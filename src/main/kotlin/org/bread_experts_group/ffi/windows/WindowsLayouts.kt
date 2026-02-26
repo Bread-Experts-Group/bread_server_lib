@@ -80,6 +80,7 @@ val RECT: StructLayout = MemoryLayout.structLayout(
 	LONG.withName("right"),
 	LONG.withName("bottom")
 )
+val PRECT = `void*`
 
 val MSG: StructLayout = MemoryLayout.structLayout(
 	HWND.withName("hwnd"),

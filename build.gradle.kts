@@ -3,10 +3,15 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 plugins {
-	kotlin("jvm") version "2.3.0"
+	kotlin("jvm") version "2.3.10"
 	`maven-publish`
 	`java-library`
 	signing
+	application
+}
+
+application {
+	mainClass = "org.bread_experts_group.project_incubator.bpdi.BPDITestKt"
 }
 
 group = "org.bread_experts_group"

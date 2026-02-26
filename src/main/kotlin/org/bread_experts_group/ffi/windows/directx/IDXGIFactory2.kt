@@ -7,50 +7,9 @@ import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
 open class IDXGIFactory2(
-	ptr: MemorySegment,
-	iUnknownQueryInterfaceVTblIndex: Int,
-	iUnknownAddRefVTblIndex: Int,
-	iUnknownReleaseVTblIndex: Int,
-	iDXGIObjectSetPrivateDataVTblIndex: Int,
-	iDXGIObjectSetPrivateDataInterfaceVTblIndex: Int,
-	iDXGIObjectGetPrivateDataVTblIndex: Int,
-	iDXGIObjectGetParentVTblIndex: Int,
-	iDXGIFactoryEnumAdaptersVTblIndex: Int,
-	iDXGIFactoryMakeWindowAssociationVTblIndex: Int,
-	iDXGIFactoryGetWindowAssociationVTblIndex: Int,
-	iDXGIFactoryCreateSwapChainVTblIndex: Int,
-	iDXGIFactoryCreateSoftwareAdapterVTblIndex: Int,
-	iDXGIFactory1EnumAdapters1VTblIndex: Int,
-	iDXGIFactory1IsCurrentVTblIndex: Int,
-	isWindowedStereoEnabledVTblIndex: Int,
-	createSwapChainForHwndVTblIndex: Int,
-	createSwapChainForCoreWindowVTblIndex: Int,
-	getSharedResourceAdapterLuidVTblIndex: Int,
-	registerStereoStatusWindowVTblIndex: Int,
-	registerStereoStatusEventVTblIndex: Int,
-	unregisterStereoStatusVTblIndex: Int,
-	registerOcclusionStatusWindowVTblIndex: Int,
-	registerOcclusionStatusEventVTblIndex: Int,
-	unregisterOcclusionStatusVTblIndex: Int,
-	createSwapChainForCompositionVTblIndex: Int,
-	vTblReinterpretationLength: Int
+	ptr: MemorySegment
 ) : IDXGIFactory1(
-	ptr,
-	iUnknownQueryInterfaceVTblIndex,
-	iUnknownAddRefVTblIndex,
-	iUnknownReleaseVTblIndex,
-	iDXGIObjectSetPrivateDataVTblIndex,
-	iDXGIObjectSetPrivateDataInterfaceVTblIndex,
-	iDXGIObjectGetPrivateDataVTblIndex,
-	iDXGIObjectGetParentVTblIndex,
-	iDXGIFactoryEnumAdaptersVTblIndex,
-	iDXGIFactoryMakeWindowAssociationVTblIndex,
-	iDXGIFactoryGetWindowAssociationVTblIndex,
-	iDXGIFactoryCreateSwapChainVTblIndex,
-	iDXGIFactoryCreateSoftwareAdapterVTblIndex,
-	iDXGIFactory1EnumAdapters1VTblIndex,
-	iDXGIFactory1IsCurrentVTblIndex,
-	vTblReinterpretationLength
+	ptr
 ) {
 	var isWindowedStereoEnabled = {
 		TODO("Not yet implemented")
@@ -59,7 +18,9 @@ open class IDXGIFactory2(
 	var createSwapChainForHwnd: (
 		MemorySegment, MemorySegment, MemorySegment, MemorySegment, MemorySegment, MemorySegment
 	) -> Int = { p, h, pD, pF, pR, pp ->
-		val handle = getVTblAddress(createSwapChainForHwndVTblIndex).getDowncall(
+		val handle = getLocalVTblAddress(
+			IDXGIFactory2::class.java, 1
+		).getDowncall(
 			nativeLinker, HRESULT,
 			ValueLayout.ADDRESS,
 			ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,

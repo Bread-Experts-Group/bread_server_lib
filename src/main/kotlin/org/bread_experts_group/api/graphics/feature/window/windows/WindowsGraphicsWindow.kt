@@ -3,8 +3,12 @@ package org.bread_experts_group.api.graphics.feature.window.windows
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
 import org.bread_experts_group.api.graphics.feature.window.feature.display_affinity.windows.WindowsGraphicsWindowDisplayAffinityFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.*
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse_move_2d.GraphicsWindowEventLoopMouseMove2DEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.redraw.GraphicsWindowEventLoopMouseMove2D32
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.redraw.GraphicsWindowEventLoopRedrawEventParameter
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.resize_2d.GraphicsWindowEventLoopResize2D32
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.resize_2d.GraphicsWindowEventLoopResize2DEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.windows.WindowsGraphicsWindowEventLoopEventResult
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.windows.WindowsGraphicsWindowEventLoopFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.windows.WindowsGraphicsWindowEventLoopSystemEvent
 import org.bread_experts_group.api.graphics.feature.window.feature.name.windows.WindowsGraphicsWindowNameFeature
@@ -78,6 +82,14 @@ class WindowsGraphicsWindow(
 				data.add(StandardGraphicsWindowOpenFeatures.SYSTEM_CLOSE_BUTTON)
 			} else {
 				classStyleFlags = classStyleFlags or WindowsClassStyles.CS_NOCLOSE.bitI
+			}
+			if (features.contains(WindowsGraphicsWindowOpenFeatures.REDRAW_WIDTH_CHANGE)) {
+				data.add(WindowsGraphicsWindowOpenFeatures.REDRAW_WIDTH_CHANGE)
+				classStyleFlags = classStyleFlags or WindowsClassStyles.CS_HREDRAW.bitI
+			}
+			if (features.contains(WindowsGraphicsWindowOpenFeatures.REDRAW_HEIGHT_CHANGE)) {
+				data.add(WindowsGraphicsWindowOpenFeatures.REDRAW_HEIGHT_CHANGE)
+				classStyleFlags = classStyleFlags or WindowsClassStyles.CS_VREDRAW.bitI
 			}
 			WNDCLASSEXW_style.set(wndClassExW, 0, classStyleFlags)
 
@@ -404,10 +416,34 @@ class WindowsGraphicsWindow(
 					)
 				}
 
+				StandardGraphicsWindowEventLoopEventTypes.MOUSE_MOVE_2D
+					if msgMEnum.enum == WindowsWindowMessages.WM_MOUSEMOVE -> {
+					@Suppress("UNCHECKED_CAST")
+					(event.lambda as
+								(Array<GraphicsWindowEventLoopMouseMove2DEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)(
+						arrayOf(
+							GraphicsWindowEventLoopMouseMove2D32(
+								(lParam and 0xFFFF).toShort().toInt(),
+								((lParam ushr 16) and 0xFFFF).toShort().toInt()
+							)
+						)
+					)
+				}
+
+				StandardGraphicsWindowEventLoopEventTypes.REDRAW
+					if msgMEnum.enum == WindowsWindowMessages.WM_PAINT -> {
+					@Suppress("UNCHECKED_CAST")
+					val lambda = (event.lambda as (Array<GraphicsWindowEventLoopRedrawEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)
+					lambda(emptyArray<GraphicsWindowEventLoopRedrawEventParameter>())
+				}
+
 				else -> continue
 			}
 			when (result) {
-				StandardGraphicsWindowEventLoopEventResults.DEFAULT -> continue
+				StandardGraphicsWindowEventLoopEventResults.PASS -> continue
+				is WindowsGraphicsWindowEventLoopEventResult -> return result.result
 			}
 		}
 		return when (msgMEnum.enum) {
@@ -416,7 +452,7 @@ class WindowsGraphicsWindow(
 				0
 			}
 
-			else -> nativeDefWindowProcWide!!.invokeExact(hWnd, message, wParam, lParam) as Long
+			else -> (nativeDefWindowProcWide!!.invokeExact(hWnd, message, wParam, lParam) as Long)
 		}
 	}
 }

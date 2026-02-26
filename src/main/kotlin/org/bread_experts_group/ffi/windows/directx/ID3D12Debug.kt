@@ -10,30 +10,14 @@ import java.lang.foreign.ValueLayout
  * [d3d12sdklayers.h](https://github.com/microsoft/DirectX-Headers/blob/main/include/directx/d3d12sdklayers.h)
  */
 class ID3D12Debug(
-	ptr: MemorySegment,
-	iUnknownQueryInterfaceVTblIndex: Int,
-	iUnknownAddRefVTblIndex: Int,
-	iUnknownReleaseVTblIndex: Int,
-	enableDebugLayerVTblIndex: Int,
-	vTblReinterpretationLength: Int
+	ptr: MemorySegment
 ) : IUnknown(
-	ptr,
-	iUnknownQueryInterfaceVTblIndex,
-	iUnknownAddRefVTblIndex,
-	iUnknownReleaseVTblIndex,
-	vTblReinterpretationLength
+	ptr
 ) {
-	constructor(ptr: MemorySegment) : this(
-		ptr,
-		0,
-		1,
-		2,
-		3,
-		4
-	)
-
 	var enableDebugLayer: () -> Unit = {
-		val handle = getVTblAddress(enableDebugLayerVTblIndex).getDowncallVoid(
+		val handle = getLocalVTblAddress(
+			ID3D12Debug::class.java, 0
+		).getDowncallVoid(
 			nativeLinker, ValueLayout.ADDRESS
 		)
 		this.enableDebugLayer = { handle.invokeExact(ptr) }

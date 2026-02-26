@@ -1,0 +1,3 @@
+package org.bread_experts_group.api.graphics.feature.direct2d.factory.cwrtgt
+
+interface GWD2DCreateWindowRenderTargetFeature : GWD2DCreateWindowRenderTargetData

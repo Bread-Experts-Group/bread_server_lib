@@ -49,6 +49,9 @@ class WindowsIODeviceReopenFeature(private val handle: MemorySegment) : IODevice
 			newDevice.features.add(WindowsIODeviceFlushFeature(handle))
 			newDevice.features.add(WindowsIODeviceSetSizeFeature(handle))
 		}
+		newDevice.features.add(WindowsIOGetDeviceGeometryFeature(handle))
+		newDevice.features.add(WindowsIODeviceBypassFSDriverBoundsChecksFeature(handle))
+		newDevice.features.add(WindowsIODeviceGetDeviceFirmwareInfoFeature(handle))
 		newDevice.features.add(WindowsIODeviceReopenFeature(handle))
 		newDevice.features.add(WindowsIODeviceGetSizeFeature(handle))
 		newDevice.features.add(WindowsIODeviceDataRangeLockFeature(handle))
