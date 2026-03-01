@@ -10,9 +10,7 @@ import org.bread_experts_group.api.system.socket.ipv6.stream.SystemInternetProto
 import org.bread_experts_group.api.system.socket.ipv6.stream.tcp.IPv6TCPFeatures
 import org.bread_experts_group.api.system.socket.resolution.ResolutionDataPart
 import org.bread_experts_group.generic.io.reader.BSLReader
-import org.bread_experts_group.generic.io.reader.BSLReader.Companion.socketReadCheck
 import org.bread_experts_group.generic.io.reader.BSLWriter
-import org.bread_experts_group.generic.io.reader.BSLWriter.Companion.socketWriteCheck
 import org.bread_experts_group.generic.protocol.http.h11.HTTP11ParsingStatus
 import org.bread_experts_group.generic.protocol.http.h11.RequestH11Method
 import org.bread_experts_group.generic.protocol.http.h11.RequestH11Target
@@ -47,8 +45,8 @@ fun main() {
 		val nextData = v6Socket.get(IPv6SocketFeatures.ACCEPT).accept().block()
 		val next = nextData.firstNotNullOf { it as? IPv6Socket }
 		Thread.ofPlatform().start {
-			val reader = BSLReader(next.get(IPv6SocketFeatures.RECEIVE), socketReadCheck)
-			val writer = BSLWriter(next.get(IPv6SocketFeatures.SEND), socketWriteCheck)
+			val reader = BSLReader(next.get(IPv6SocketFeatures.RECEIVE))
+			val writer = BSLWriter(next.get(IPv6SocketFeatures.SEND))
 			val h11Request = h11RequestFrom(reader)
 			val h11Fail = h11Request.firstNotNullOfOrNull { it as? HTTP11ParsingStatus.BadForm.Version.HTTP11 }
 			if (h11Fail == null) {

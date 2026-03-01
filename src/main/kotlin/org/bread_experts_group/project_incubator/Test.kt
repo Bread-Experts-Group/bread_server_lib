@@ -24,7 +24,7 @@ fun main() {
 			FileIOReOpenFeatures.READ
 		)
 		.firstNotNullOf { it as? IODevice }
-	val wr = BSLWriter(az.get(IODeviceFeatures.WRITE), { _, _ -> })
+	val wr = BSLWriter(az.get(IODeviceFeatures.WRITE))
 	wr.writeExtensibleNumeric(
 		BigInteger.valueOf(0xABABAB) or
 				(BigInteger.valueOf(0xBCBCBC) shl (24 * 1)) or

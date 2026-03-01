@@ -57,7 +57,7 @@ class HTTP2ConnectionManager private constructor(
 	private var peerLastConsumedStreamID: Int? = null
 
 	private fun readFrame(): HTTP2ReadFrameData {
-		val i4 = reader.readS32()
+		val i4 = reader.readS32().first!!
 		val length = (i4 and 0xFFFFFF00.toInt()) ushr 8
 		if (length > localSetMaxFrameSize) {
 			reader.skip(6)
@@ -67,8 +67,8 @@ class HTTP2ConnectionManager private constructor(
 		}
 		val frameType =
 			HTTP2StandardFrameTypes.entries.id(i4 and 0xFF)
-		val flags = reader.readU8i()
-		val streamIdentifier = reader.readU32l() and 0b01111111_11111111_11111111_11111111
+		val flags = reader.readU8i().first!!
+		val streamIdentifier = reader.readU32l().first!! and 0b01111111_11111111_11111111_11111111
 		return HTTP2Frame(
 			length,
 			frameType,
@@ -121,9 +121,9 @@ class HTTP2ConnectionManager private constructor(
 		while (lengthRemaining >= 6) {
 			val identifier =
 				HTTP2StandardSettings.entries.id(
-					reader.readU16i()
+					reader.readU16i().first!!
 				)
-			val value = reader.readS32()
+			val value = reader.readS32().first!!
 			when (identifier.enum) {
 				HTTP2StandardSettings.SETTINGS_HEADER_TABLE_SIZE -> {
 					peerMaxHeaderTableSize = value
@@ -272,7 +272,7 @@ class HTTP2ConnectionManager private constructor(
 			)
 			return false
 		}
-		val increment = reader.readS32()
+		val increment = reader.readS32().first!!
 		if (increment == 0) {
 			if (frame.streamIdentifier == 0) {
 				this.logger.log(HTTP2LogIdentifiers.HTTP2_FAILURE_WINDOW_UPDATE_INCREMENT_0_ERROR)
@@ -499,7 +499,7 @@ class HTTP2ConnectionManager private constructor(
 		val padded = (frame.flags and 0b00001000) != 0
 		var endHeaders = (frame.flags and 0b00000100) != 0
 		val endStream = (frame.flags and 0b00000001) != 0
-		val padLength = if (padded) reader.readU8i() else -1
+		val padLength = if (padded) reader.readU8i().first!! else -1
 		if (padLength >= frame.length) {
 			this.logger.log(HTTP2LogIdentifiers.HTTP2_FAILURE_HEADERS_PAD_ERROR)
 			signalGoAway(MappedEnumeration(HTTP2StandardErrorCodes.PROTOCOL_ERROR), byteArrayOf())
@@ -578,7 +578,7 @@ class HTTP2ConnectionManager private constructor(
 				} else if (!getContinuation()) return null
 			}
 			dataLength--
-			return reader.readU8i()
+			return reader.readU8i().first!!
 		}
 
 		fun readNextBytes(n: Int): ByteArray? {
@@ -854,7 +854,7 @@ class HTTP2ConnectionManager private constructor(
 		}
 		var dataLength = frame.length
 		if (frame.flags and 0b00001000 != 0) {
-			val padLength = reader.readU8i()
+			val padLength = reader.readU8i().first!!
 			if (padLength >= dataLength) {
 				signalGoAway(MappedEnumeration(HTTP2StandardErrorCodes.PROTOCOL_ERROR), byteArrayOf())
 				return false
@@ -903,7 +903,7 @@ class HTTP2ConnectionManager private constructor(
 			writer.write32(0x0806)
 			writer.write8(0b00000001)
 			writer.write32(0)
-			writer.write64(reader.readU64k())
+			writer.write64(reader.readU64k().first!!)
 			writer.flush()
 			writeLock.release()
 		} else reader.skip(8)
@@ -1027,7 +1027,7 @@ class HTTP2ConnectionManager private constructor(
 			writer: BSLWriter<*, *>
 		): HTTP2ConnectionManagerCreationData {
 			if (
-				!reader.readN(10).contentEquals(
+				!reader.readN(10).first.contentEquals(
 					byteArrayOf(
 						'\r'.code.toByte(),
 						'\n'.code.toByte(),

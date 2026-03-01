@@ -1,7 +1,6 @@
 package org.bread_experts_group.generic.logging
 
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
+import kotlin.time.Duration
 
 class LevelLogger<T : LogMessage>(
 	var label: String,
@@ -10,17 +9,18 @@ class LevelLogger<T : LogMessage>(
 ) {
 	private val log = mutableListOf<T>()
 	var filter: (T) -> Boolean = { false }
-	var flushLimit = 100
-	var flushDelay = 2.toDuration(DurationUnit.SECONDS)
+	var flushLimit = 0
+	var flushDelay: Duration = Duration.ZERO
 	private var lastFlush = System.currentTimeMillis()
 
 	fun log(message: T) {
 		if (filter(message)) return
 		log.add(message)
-		if (log.size > flushLimit) {
+		if (flushDelay == Duration.ZERO || log.size > flushLimit) {
 			this.flush()
 			return
 		}
+		if (flushDelay == Duration.INFINITE) return
 		val time = System.currentTimeMillis()
 		if (time - lastFlush > flushDelay.inWholeMilliseconds) this.flush()
 		lastFlush = time

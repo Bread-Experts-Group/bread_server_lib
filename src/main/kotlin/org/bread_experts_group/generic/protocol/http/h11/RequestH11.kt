@@ -84,7 +84,7 @@ fun h11RequestFrom(
 	fun nextCharacter(): String? {
 		if (readWaitingNs > totalReadsTimeout) return null
 		val pCall = System.nanoTime()
-		val char = source.readUTF8()
+		val char = source.readUTF8().first!!
 		readWaitingNs += System.nanoTime() - pCall
 		return char
 	}

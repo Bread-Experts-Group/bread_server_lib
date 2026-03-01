@@ -18,7 +18,10 @@ fun readArgs(
 	vararg flags: Flag<*>
 ): ArgumentContainer = readArgs(args, flags.toList(), projectName, projectUsage)
 
-private val logger = LevelLogger("program argument retrieval", bslRootLogger)
+private val logger = LevelLogger("program argument retrieval", bslRootLogger).also {
+	it.flushers.add { _, message -> println(message) }
+	// TODO: pending better flusher
+}
 
 fun readArgs(
 	args: Array<String>,

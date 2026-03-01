@@ -5,11 +5,14 @@ import org.bread_experts_group.api.system.socket.ipv4.receive.IPv4ReceiveDataIde
 import org.bread_experts_group.api.system.socket.ipv4.send.IPv4SendDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.receive.IPv6ReceiveDataIdentifier
 import org.bread_experts_group.api.system.socket.ipv6.send.IPv6SendDataIdentifier
+import org.bread_experts_group.generic.io.reader.ReadingStatus
+import org.bread_experts_group.generic.io.reader.WritingStatus
 
 enum class StandardSocketStatus :
 	IPv4ReceiveDataIdentifier, IPv6ReceiveDataIdentifier,
 	IPv4SendDataIdentifier, IPv6SendDataIdentifier,
-	SocketCloseDataIdentifier {
+	SocketCloseDataIdentifier, ReadingStatus,
+	WritingStatus {
 	CONNECTION_CLOSED,
 	NOT_CONNECTED,
 	OPERATION_TIMEOUT
