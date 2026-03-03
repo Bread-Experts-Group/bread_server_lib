@@ -32,7 +32,7 @@ class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment
 			fun readNext(): MemorySegment {
 				errno = 0
 				val next = nativeReadDir!!.invokeExact(capturedStateSegment, dirHandle) as MemorySegment
-				if (errno != 0) throwLastErrno()
+				if (next == MemorySegment.NULL && errno != 0) throwLastErrno()
 				return next
 			}
 
