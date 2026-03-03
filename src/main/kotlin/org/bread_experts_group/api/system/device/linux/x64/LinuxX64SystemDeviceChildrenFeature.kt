@@ -8,6 +8,7 @@ import org.bread_experts_group.ffi.posix.linux.x64.*
 import org.bread_experts_group.ffi.posix.x64.errno
 import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 import java.lang.foreign.MemorySegment
+import java.lang.foreign.ValueLayout
 import java.lang.ref.Cleaner
 
 class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment) : SystemDeviceChildrenFeature() {
@@ -28,14 +29,33 @@ class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment
 
 			fun readNext(): MemorySegment {
 				errno = 0
-				val next = nativeReadDir!!.invokeExact(capturedStateSegment, dirHandle) as MemorySegment
-				if (next == MemorySegment.NULL && errno != 0) throwLastErrno()
-				return next.reinterpret(dirent.byteSize())
+				while (true) {
+					val next = nativeReadDir!!.invokeExact(capturedStateSegment, dirHandle) as MemorySegment
+					if (next == MemorySegment.NULL) when (errno) {
+						0 -> {}
+						11 -> return MemorySegment.NULL
+						else -> throwLastErrno()
+					}
+					val ent = next.reinterpret(dirent.byteSize())
+					val entName = dirent_d_name.invokeExact(ent, 0L) as MemorySegment
+					if (entName.get(ValueLayout.JAVA_BYTE, 0) == '.'.code.toByte()) {
+						val second = entName.get(ValueLayout.JAVA_BYTE, 1)
+						when (second) {
+							'.'.code.toByte() -> {
+								if (entName.get(ValueLayout.JAVA_BYTE, 2) == 0.toByte())
+									return readNext()
+							}
+
+							0.toByte() -> return readNext()
+							else -> {}
+						}
+					}
+					return ent
+				}
 			}
 
 			override fun hasNext(): Boolean = nextEntry != MemorySegment.NULL
 			override fun next(): SystemDevice {
-				println((dirent_d_name.invokeExact(nextEntry, 0L) as MemorySegment).getString(0, Charsets.UTF_8))
 				val device = linuxX64CreatePathDevice(
 					dirent_d_name.invokeExact(nextEntry, 0L) as MemorySegment
 				)
