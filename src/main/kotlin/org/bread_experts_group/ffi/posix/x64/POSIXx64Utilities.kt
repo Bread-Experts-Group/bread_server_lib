@@ -17,7 +17,7 @@ val nativeErrno: VarHandle by lazy {
 
 var errno: Int
 	get() = nativeErrno.get(capturedStateSegment, 0L) as Int
-	set(value) = nativeErrno.set(capturedStateSegment, value)
+	set(value) = nativeErrno.set(capturedStateSegment, 0L, value)
 
 fun throwLastErrno(): Nothing {
 	TODO("... $errno")
