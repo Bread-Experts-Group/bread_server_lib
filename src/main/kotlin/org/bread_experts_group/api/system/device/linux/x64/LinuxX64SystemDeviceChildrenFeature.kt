@@ -35,6 +35,7 @@ class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment
 
 			override fun hasNext(): Boolean = nextEntry != MemorySegment.NULL
 			override fun next(): SystemDevice {
+				println((dirent_d_name.invokeExact(nextEntry, 0L) as MemorySegment).getString(0, Charsets.UTF_8))
 				val device = linuxX64CreatePathDevice(
 					dirent_d_name.invokeExact(nextEntry, 0L) as MemorySegment
 				)
