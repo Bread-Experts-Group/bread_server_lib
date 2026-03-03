@@ -57,3 +57,30 @@ fun posix64Close(lookup: SymbolLookup?): MethodHandle? = lookup?.getDowncall(
 	),
 	listOf(ernCapture)
 )
+
+fun posix64OpenDir(lookup: SymbolLookup?): MethodHandle? = lookup?.getDowncall(
+	nativeLinker, "opendir",
+	arrayOf(
+		`void*`,
+		`char*`.withName("dirname")
+	),
+	listOf(ernCapture)
+)
+
+fun posix64ReadDir(lookup: SymbolLookup?): MethodHandle? = lookup?.getDowncall(
+	nativeLinker, "readdir",
+	arrayOf(
+		`void*`,
+		`void*`.withName("dirp")
+	),
+	listOf(ernCapture)
+)
+
+fun posix64CloseDir(lookup: SymbolLookup?): MethodHandle? = lookup?.getDowncall(
+	nativeLinker, "closedir",
+	arrayOf(
+		int,
+		`void*`.withName("dirp")
+	),
+	listOf(ernCapture)
+)

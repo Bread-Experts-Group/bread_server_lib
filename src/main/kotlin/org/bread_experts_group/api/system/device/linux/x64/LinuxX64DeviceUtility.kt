@@ -20,4 +20,5 @@ fun linuxX64CreatePathDevice(
 	)
 	it.features.add(LinuxX64SystemDevicePathAppendFeature(safeSegment))
 	it.features.add(LinuxX64SystemDeviceIODeviceFeature(safeSegment))
+	it.features.add(LinuxX64SystemDeviceChildrenFeature(safeSegment))
 }

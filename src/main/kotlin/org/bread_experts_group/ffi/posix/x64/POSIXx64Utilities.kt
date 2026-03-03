@@ -15,8 +15,9 @@ val nativeErrno: VarHandle by lazy {
 	capturedStateLayout.varHandle(groupElement("errno"))
 }
 
-val errno: Int
+var errno: Int
 	get() = nativeErrno.get(capturedStateSegment, 0L) as Int
+	set(value) = nativeErrno.set(capturedStateSegment, value)
 
 fun throwLastErrno(): Nothing {
 	TODO("... $errno")

@@ -2,13 +2,11 @@
 
 package org.bread_experts_group.ffi.posix.linux.x64
 
-import org.bread_experts_group.ffi.posix.x64.int
-import org.bread_experts_group.ffi.posix.x64.int64_t
-import org.bread_experts_group.ffi.posix.x64.size_t
-import org.bread_experts_group.ffi.posix.x64.`void*`
+import org.bread_experts_group.ffi.posix.x64.*
 import java.lang.foreign.MemoryLayout
 import java.lang.foreign.MemoryLayout.PathElement.groupElement
 import java.lang.foreign.StructLayout
+import java.lang.invoke.MethodHandle
 import java.lang.invoke.VarHandle
 
 val __SQUAD_TYPE = int64_t
@@ -56,3 +54,12 @@ val stat: StructLayout = MemoryLayout.structLayout(
 )
 val `stat*` = `void*`
 val stat_st_size: VarHandle = stat.varHandle(groupElement("st_size"))
+
+val dirent: StructLayout = MemoryLayout.structLayout(
+	ino_t.withName("d_ino"),
+	off_t.withName("d_off"),
+	short.withName("d_reclen"),
+	char.withName("d_type"),
+	MemoryLayout.sequenceLayout(256, char).withName("d_name")
+)
+val dirent_d_name: MethodHandle = dirent.sliceHandle(groupElement("d_name"))
