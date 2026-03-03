@@ -4,10 +4,7 @@ import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.feature.SystemDeviceChildrenFeature
 import org.bread_experts_group.ffi.capturedStateSegment
-import org.bread_experts_group.ffi.posix.linux.x64.dirent_d_name
-import org.bread_experts_group.ffi.posix.linux.x64.nativeCloseDir
-import org.bread_experts_group.ffi.posix.linux.x64.nativeOpenDir
-import org.bread_experts_group.ffi.posix.linux.x64.nativeReadDir
+import org.bread_experts_group.ffi.posix.linux.x64.*
 import org.bread_experts_group.ffi.posix.x64.errno
 import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 import java.lang.foreign.MemorySegment
@@ -33,7 +30,7 @@ class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment
 				errno = 0
 				val next = nativeReadDir!!.invokeExact(capturedStateSegment, dirHandle) as MemorySegment
 				if (next == MemorySegment.NULL && errno != 0) throwLastErrno()
-				return next
+				return next.reinterpret(dirent.byteSize())
 			}
 
 			override fun hasNext(): Boolean = nextEntry != MemorySegment.NULL
