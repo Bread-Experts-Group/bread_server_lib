@@ -12,23 +12,11 @@ class LinuxX64SystemDevicePathAppendFeature(
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = true
 
-	override fun append(element: String): SystemDevice {
-		val path = pathSegment.getString(0, Charsets.UTF_8).split('/').toMutableList()
-		if (path.firstOrNull()?.isBlank() == true) path.removeFirst()
-		element.split('/').forEachIndexed { i, pathElement ->
-			val trimmedElement = pathElement.trim()
-			if (trimmedElement.isNotEmpty()) {
-				if (trimmedElement == "..") path.removeLast()
-				else if (trimmedElement != ".") path.add(trimmedElement)
-			} else if (i == 0) {
-				path.clear()
-			}
-		}
-		return linuxX64CreatePathDevice(
-			autoArena.allocateFrom(
-				path.joinToString("/", "/"),
-				Charsets.UTF_8
-			)
+	override fun append(element: String): SystemDevice = linuxX64CreatePathDevice(
+		linuxX64AppendPaths(
+			pathSegment,
+			autoArena.allocateFrom(element, Charsets.UTF_8),
+			autoArena
 		)
-	}
+	)
 }

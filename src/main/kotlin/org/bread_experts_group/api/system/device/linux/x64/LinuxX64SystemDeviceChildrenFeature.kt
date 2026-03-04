@@ -3,6 +3,7 @@ package org.bread_experts_group.api.system.device.linux.x64
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.feature.SystemDeviceChildrenFeature
+import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.posix.linux.x64.*
 import org.bread_experts_group.ffi.posix.x64.errno
@@ -57,7 +58,11 @@ class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment
 			override fun hasNext(): Boolean = nextEntry != MemorySegment.NULL
 			override fun next(): SystemDevice {
 				val device = linuxX64CreatePathDevice(
-					dirent_d_name.invokeExact(nextEntry, 0L) as MemorySegment
+					linuxX64AppendPaths(
+						pathSegment,
+						dirent_d_name.invokeExact(nextEntry, 0L) as MemorySegment,
+						autoArena
+					)
 				)
 				nextEntry = readNext()
 				if (!hasNext()) cleanup()
