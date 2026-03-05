@@ -29,12 +29,11 @@ class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment
 			var nextEntry: MemorySegment = readNext()
 
 			fun readNext(): MemorySegment {
-				errno = 0
 				while (true) {
+					errno = 0
 					val next = nativeReadDir!!.invokeExact(capturedStateSegment, dirHandle) as MemorySegment
 					if (next == MemorySegment.NULL) when (errno) {
-						0 -> {}
-						else -> return MemorySegment.NULL
+						else -> return MemorySegment.NULL // TODO: change to 0 when JDK is fixed
 //						else -> throwLastErrno()
 					}
 					val ent = next.reinterpret(dirent.byteSize())

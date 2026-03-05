@@ -11,7 +11,7 @@ plugins {
 }
 
 application {
-	mainClass = "org.bread_experts_group.project_incubator.bpdi.BPDITestKt"
+	mainClass = "org.bread_experts_group.project_incubator.TestKt"
 }
 
 group = "org.bread_experts_group"
