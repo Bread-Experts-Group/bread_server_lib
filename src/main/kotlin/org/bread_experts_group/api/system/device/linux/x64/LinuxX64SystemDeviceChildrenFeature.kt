@@ -34,8 +34,8 @@ class LinuxX64SystemDeviceChildrenFeature(private val pathSegment: MemorySegment
 					val next = nativeReadDir!!.invokeExact(capturedStateSegment, dirHandle) as MemorySegment
 					if (next == MemorySegment.NULL) when (errno) {
 						0 -> {}
-						11 -> return MemorySegment.NULL
-						else -> throwLastErrno()
+						else -> return MemorySegment.NULL
+//						else -> throwLastErrno()
 					}
 					val ent = next.reinterpret(dirent.byteSize())
 					val entName = dirent_d_name.invokeExact(ent, 0L) as MemorySegment
