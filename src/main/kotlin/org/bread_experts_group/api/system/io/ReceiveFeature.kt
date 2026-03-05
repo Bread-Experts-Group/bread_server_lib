@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.system.io
 
 import org.bread_experts_group.api.system.socket.DeferredOperation
-import java.lang.foreign.Arena
+import org.bread_experts_group.ffi.autoArena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import kotlin.time.Duration
@@ -20,36 +20,38 @@ interface ReceiveFeature<F : D, D> {
 	fun gatherBytes(
 		data: Collection<ByteArray>,
 		vararg features: F
-	): DeferredOperation<D> = object : DeferredOperation<D> {
-		fun action() = Arena.ofConfined().use { tempArena ->
-			val allocated = data.associateWith { tempArena.allocate(it.size.toLong()) }
-			val supported = gatherSegments(allocated.values, *features).block()
-			allocated.forEach { (array, segment) ->
-				MemorySegment.copy(
-					segment, ValueLayout.JAVA_BYTE, 0,
-					array, 0, array.size
-				)
+	): DeferredOperation<D> {
+		val allocated = data.associateWith { autoArena.allocate(it.size.toLong()) }
+		val defer = gatherSegments(allocated.values, *features)
+		return object : DeferredOperation<D> {
+			override fun block(duration: Duration): List<D> {
+				val supported = defer.block(duration)
+				allocated.forEach { (array, segment) ->
+					MemorySegment.copy(
+						segment, ValueLayout.JAVA_BYTE, 0,
+						array, 0, array.size
+					)
+				}
+				return supported
 			}
-			supported
 		}
-
-		override fun block(duration: Duration): List<D> = action()
 	}
 
 	fun receiveBytes(
 		data: ByteArray,
 		vararg features: F
-	): DeferredOperation<D> = object : DeferredOperation<D> {
-		fun action() = Arena.ofConfined().use { tempArena ->
-			val allocated = tempArena.allocate(data.size.toLong())
-			val supported = receiveSegment(allocated, *features).block()
-			MemorySegment.copy(
-				allocated, ValueLayout.JAVA_BYTE, 0,
-				data, 0, data.size
-			)
-			supported
+	): DeferredOperation<D> {
+		val allocated = autoArena.allocate(data.size.toLong())
+		val defer = receiveSegment(allocated, *features)
+		return object : DeferredOperation<D> {
+			override fun block(duration: Duration): List<D> {
+				val supported = defer.block(duration)
+				MemorySegment.copy(
+					allocated, ValueLayout.JAVA_BYTE, 0,
+					data, 0, data.size
+				)
+				return supported
+			}
 		}
-
-		override fun block(duration: Duration): List<D> = action()
 	}
 }

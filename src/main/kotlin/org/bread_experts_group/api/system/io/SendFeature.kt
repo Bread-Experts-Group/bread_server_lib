@@ -1,11 +1,10 @@
 package org.bread_experts_group.api.system.io
 
 import org.bread_experts_group.api.system.socket.DeferredOperation
-import java.lang.foreign.Arena
+import org.bread_experts_group.ffi.autoArena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.charset.Charset
-import kotlin.time.Duration
 
 interface SendFeature<F : D, D> {
 	fun scatterSegments(
@@ -21,40 +20,30 @@ interface SendFeature<F : D, D> {
 	fun scatterBytes(
 		data: Collection<ByteArray>,
 		vararg features: F
-	): DeferredOperation<D> = object : DeferredOperation<D> {
-		fun action() = Arena.ofConfined().use { tempArena ->
-			scatterSegments(
-				data.map {
-					val segment = tempArena.allocate(it.size.toLong())
-					MemorySegment.copy(
-						it, 0,
-						segment, ValueLayout.JAVA_BYTE, 0,
-						it.size
-					)
-					segment
-				},
-				*features
-			).block()
-		}
-
-		override fun block(duration: Duration): List<D> = action()
-	}
+	): DeferredOperation<D> = scatterSegments(
+		data.map {
+			val segment = autoArena.allocate(it.size.toLong())
+			MemorySegment.copy(
+				it, 0,
+				segment, ValueLayout.JAVA_BYTE, 0,
+				it.size
+			)
+			segment
+		},
+		*features
+	)
 
 	fun sendBytes(
 		data: ByteArray,
 		vararg features: F
-	): DeferredOperation<D> = object : DeferredOperation<D> {
-		fun action() = Arena.ofConfined().use { tempArena ->
-			val segment = tempArena.allocate(data.size.toLong())
-			MemorySegment.copy(
-				data, 0,
-				segment, ValueLayout.JAVA_BYTE, 0,
-				data.size
-			)
-			sendSegment(segment, *features).block()
-		}
-
-		override fun block(duration: Duration): List<D> = action()
+	): DeferredOperation<D> {
+		val segment = autoArena.allocate(data.size.toLong())
+		MemorySegment.copy(
+			data, 0,
+			segment, ValueLayout.JAVA_BYTE, 0,
+			data.size
+		)
+		return sendSegment(segment, *features)
 	}
 
 	fun scatterStrings(
