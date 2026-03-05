@@ -2,16 +2,14 @@ package org.bread_experts_group.api.system.device.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceTransparentEncryptionRawIODeviceFeature
-import org.bread_experts_group.api.system.io.IODevice
 import org.bread_experts_group.api.system.io.feature.IODeviceReadCallbackFeature
-import org.bread_experts_group.api.system.io.feature.IODeviceReleaseFeature
+import org.bread_experts_group.api.system.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceDataIdentifier
 import org.bread_experts_group.api.system.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceFeatureIdentifier
 import org.bread_experts_group.api.system.io.transparent_encrpytion.WindowsOpenTransparentEncryptionRawIODeviceFeatures
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.*
-import org.bread_experts_group.ffi.windows.advapi.nativeCloseEncryptedFileRaw
 import org.bread_experts_group.ffi.windows.advapi.nativeOpenEncryptedFileRawWide
 import org.bread_experts_group.ffi.windows.advapi.nativeReadEncryptedFileRaw
 import java.lang.foreign.Arena
@@ -28,11 +26,11 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 
 	override fun open(
 		vararg features: OpenTransparentEncryptionRawIODeviceFeatureIdentifier
-	): Pair<IODevice, List<OpenTransparentEncryptionRawIODeviceFeatureIdentifier>>? {
-		val supportedFeatures = mutableListOf<OpenTransparentEncryptionRawIODeviceFeatureIdentifier>()
+	): List<OpenTransparentEncryptionRawIODeviceDataIdentifier> {
+		val data = mutableListOf<OpenTransparentEncryptionRawIODeviceDataIdentifier>()
 		return when {
 			features.contains(WindowsOpenTransparentEncryptionRawIODeviceFeatures.EXPORT) -> {
-				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.EXPORT)
+				data.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.EXPORT)
 				tryThrowWin32Error(
 					nativeOpenEncryptedFileRawWide!!.invokeExact(
 						capturedStateSegment,
@@ -42,15 +40,7 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 					) as Int
 				)
 				val encHandle = threadLocalPTR.get(PVOID, 0)
-				val ioDevice = IODevice()
-				ioDevice.features.add(
-					object : IODeviceReleaseFeature(
-						ImplementationSource.SYSTEM_NATIVE,
-						{ nativeCloseEncryptedFileRaw!!.invokeExact(encHandle) }
-					) {
-						override fun supported(): Boolean = true
-					}
-				)
+				val ioDevice = WindowsEncryptedIODevice(encHandle)
 				ioDevice.features.add(
 					object : IODeviceReadCallbackFeature() {
 						override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -89,14 +79,15 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 										arena
 									),
 									MemorySegment.NULL,
-									encHandle
+									ioDevice.handle
 								) as Int
 							)
 							arena.close()
 						}
 					}
 				)
-				ioDevice to supportedFeatures
+				data.add(ioDevice)
+				data
 			}
 
 			features.contains(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_FILE) -> {
@@ -109,7 +100,7 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 					) as Int
 				)
 				val encHandle = threadLocalPTR.get(PVOID, 0)
-				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_FILE)
+				data.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_FILE)
 				TODO("!")
 			}
 
@@ -123,7 +114,7 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 					) as Int
 				)
 				val encHandle = threadLocalPTR.get(PVOID, 0)
-				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_DIRECTORY)
+				data.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.IMPORT_DIRECTORY)
 				TODO("!")
 			}
 
@@ -137,11 +128,11 @@ class WindowsSystemDeviceTransparentEncryptionRawIODeviceFeature(
 					) as Int
 				)
 				val encHandle = threadLocalPTR.get(PVOID, 0)
-				supportedFeatures.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.OVERWRITE_HIDDEN)
+				data.add(WindowsOpenTransparentEncryptionRawIODeviceFeatures.OVERWRITE_HIDDEN)
 				TODO("!")
 			}
 
-			else -> IODevice() to emptyList()
+			else -> emptyList()
 		}
 	}
 }

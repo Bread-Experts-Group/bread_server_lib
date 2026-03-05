@@ -15,7 +15,9 @@ import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
-class LinuxX64IODeviceReadFeature(private val fd: Int) : IODeviceReadFeature() {
+class LinuxX64IODeviceReadFeature(
+	private val device: LinuxX64IODevice
+) : IODeviceReadFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeReadV != null
 
@@ -35,7 +37,7 @@ class LinuxX64IODeviceReadFeature(private val fd: Int) : IODeviceReadFeature() {
 			}
 			read = nativeReadV!!.invokeExact(
 				capturedStateSegment,
-				fd,
+				device.fd,
 				iovecs,
 				data.size
 			) as Long

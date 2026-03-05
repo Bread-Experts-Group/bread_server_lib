@@ -16,7 +16,7 @@ import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 class LinuxX64IODeviceWriteFeature(
-	private val fd: Int
+	private val device: LinuxX64IODevice
 ) : IODeviceWriteFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeWriteV != null
@@ -37,7 +37,7 @@ class LinuxX64IODeviceWriteFeature(
 			}
 			read = nativeWriteV!!.invokeExact(
 				capturedStateSegment,
-				fd,
+				device.fd,
 				iovecs,
 				data.size
 			) as Long

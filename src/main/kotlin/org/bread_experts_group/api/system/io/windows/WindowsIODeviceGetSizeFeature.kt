@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.device.windows.WindowsIODevice
 import org.bread_experts_group.api.system.io.feature.IODeviceGetSizeFeature
 import org.bread_experts_group.api.system.io.size.DataSize
 import org.bread_experts_group.api.system.io.size.GetSizeIODeviceDataIdentifier
@@ -11,7 +12,9 @@ import org.bread_experts_group.ffi.windows.ioctl.IOCTL_DISK_GET_LENGTH_INFO
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
-class WindowsIODeviceGetSizeFeature(private val handle: MemorySegment) : IODeviceGetSizeFeature() {
+class WindowsIODeviceGetSizeFeature(
+	private val device: WindowsIODevice
+) : IODeviceGetSizeFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 
 	private var usingIO = false
@@ -19,7 +22,7 @@ class WindowsIODeviceGetSizeFeature(private val handle: MemorySegment) : IODevic
 		if (nativeGetFileSizeEx != null) {
 			val status = nativeGetFileSizeEx.invokeExact(
 				capturedStateSegment,
-				handle,
+				device.handle,
 				threadLocalLARGE_INTEGER0
 			) as Int
 			if (status != 0) return true
@@ -27,7 +30,7 @@ class WindowsIODeviceGetSizeFeature(private val handle: MemorySegment) : IODevic
 		if (nativeDeviceIoControl != null) {
 			val status = nativeDeviceIoControl.invokeExact(
 				capturedStateSegment,
-				handle,
+				device.handle,
 				IOCTL_DISK_GET_LENGTH_INFO,
 				MemorySegment.NULL,
 				0,
@@ -47,11 +50,11 @@ class WindowsIODeviceGetSizeFeature(private val handle: MemorySegment) : IODevic
 	override fun get(vararg features: GetSizeIODeviceFeatureIdentifier): List<GetSizeIODeviceDataIdentifier> {
 		val status = if (!usingIO) nativeGetFileSizeEx!!.invokeExact(
 			capturedStateSegment,
-			handle,
+			device.handle,
 			threadLocalLARGE_INTEGER0
 		) as Int else nativeDeviceIoControl!!.invokeExact(
 			capturedStateSegment,
-			handle,
+			device.handle,
 			IOCTL_DISK_GET_LENGTH_INFO,
 			MemorySegment.NULL,
 			0,

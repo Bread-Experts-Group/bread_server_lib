@@ -13,7 +13,7 @@ import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 import java.lang.foreign.Arena
 
 class LinuxX64IODeviceGetSizeFeature(
-	private val fd: Int
+	private val device: LinuxX64IODevice
 ) : IODeviceGetSizeFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeFStat != null
@@ -24,7 +24,7 @@ class LinuxX64IODeviceGetSizeFeature(
 		val statStruct = tempArena.allocate(stat)
 		val status = nativeFStat!!.invokeExact(
 			capturedStateSegment,
-			fd,
+			device.fd,
 			statStruct
 		) as Int
 		if (status == -1) throwLastErrno()

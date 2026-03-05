@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.device.windows.WindowsIODevice
 import org.bread_experts_group.api.system.io.feature.IODeviceSeekFeature
 import org.bread_experts_group.api.system.io.seek.SeekIODeviceFeatureIdentifier
 import org.bread_experts_group.api.system.io.seek.StandardSeekIODeviceFeatures
@@ -9,9 +10,10 @@ import org.bread_experts_group.ffi.windows.LARGE_INTEGER
 import org.bread_experts_group.ffi.windows.nativeSetFilePointerEx
 import org.bread_experts_group.ffi.windows.threadLocalLARGE_INTEGER0
 import org.bread_experts_group.ffi.windows.throwLastError
-import java.lang.foreign.MemorySegment
 
-class WindowsIODeviceSeekFeature(private val handle: MemorySegment) : IODeviceSeekFeature() {
+class WindowsIODeviceSeekFeature(
+	private val device: WindowsIODevice
+) : IODeviceSeekFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeSetFilePointerEx != null
 
@@ -22,7 +24,7 @@ class WindowsIODeviceSeekFeature(private val handle: MemorySegment) : IODeviceSe
 		val supportedFeatures = mutableListOf<SeekIODeviceFeatureIdentifier>()
 		val status = nativeSetFilePointerEx!!.invokeExact(
 			capturedStateSegment,
-			handle,
+			device.handle,
 			n,
 			threadLocalLARGE_INTEGER0,
 			when {

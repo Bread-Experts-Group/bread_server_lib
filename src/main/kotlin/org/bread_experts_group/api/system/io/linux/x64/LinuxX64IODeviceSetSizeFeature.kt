@@ -12,7 +12,7 @@ import org.bread_experts_group.ffi.posix.linux.x64.nativeFTruncate
 import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 
 class LinuxX64IODeviceSetSizeFeature(
-	private val fd: Int,
+	private val device: LinuxX64IODevice,
 	private val seek: IODeviceSeekFeature
 ) : IODeviceSetSizeFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -22,7 +22,7 @@ class LinuxX64IODeviceSetSizeFeature(
 		if (features.contains(StandardSetSizeFeatures.CURRENT_POSITION)) {
 			val status = nativeFTruncate!!.invokeExact(
 				capturedStateSegment,
-				fd,
+				device.fd,
 				seek.seek(0, StandardSeekIODeviceFeatures.CURRENT).first
 			) as Int
 			if (status == -1) throwLastErrno()

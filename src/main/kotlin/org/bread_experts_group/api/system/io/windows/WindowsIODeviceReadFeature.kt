@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.device.windows.WindowsHandleSupplier
 import org.bread_experts_group.api.system.io.feature.IODeviceReadFeature
 import org.bread_experts_group.api.system.io.receive.IOReceiveDataIdentifier
 import org.bread_experts_group.api.system.io.receive.IOReceiveFeatureIdentifier
@@ -13,7 +14,9 @@ import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
 
-class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceReadFeature() {
+class WindowsIODeviceReadFeature internal constructor(
+	private val device: WindowsHandleSupplier
+) : IODeviceReadFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeReadFile != null
 
@@ -27,7 +30,7 @@ class WindowsIODeviceReadFeature(private val handle: MemorySegment) : IODeviceRe
 			threadLocalDWORD0.set(DWORD, 0, 0)
 			val status = nativeReadFile!!.invokeExact(
 				capturedStateSegment,
-				handle,
+				device.handle,
 				segment,
 				segment.byteSize().coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
 				threadLocalDWORD0,

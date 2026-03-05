@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.device.windows.WindowsIODevice
 import org.bread_experts_group.api.system.io.feature.IODeviceGetDeviceFirmwareInfoFeature
 import org.bread_experts_group.api.system.io.firmware_info.*
 import org.bread_experts_group.ffi.autoArena
@@ -13,7 +14,7 @@ import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
 class WindowsIODeviceGetDeviceFirmwareInfoFeature(
-	val handle: MemorySegment
+	private val device: WindowsIODevice
 ) : IODeviceGetDeviceFirmwareInfoFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeDeviceIoControl != null
@@ -29,7 +30,7 @@ class WindowsIODeviceGetDeviceFirmwareInfoFeature(
 		)
 		val status = nativeDeviceIoControl!!.invokeExact(
 			capturedStateSegment,
-			handle,
+			device.handle,
 			IOCTL_STORAGE_FIRMWARE_GET_INFO,
 			queryBuffer,
 			queryBuffer.byteSize().toInt(),
@@ -44,7 +45,7 @@ class WindowsIODeviceGetDeviceFirmwareInfoFeature(
 			outputBuffer = autoArena.allocate(sizeCheck)
 			val status = nativeDeviceIoControl.invokeExact(
 				capturedStateSegment,
-				handle,
+				device.handle,
 				IOCTL_STORAGE_FIRMWARE_GET_INFO,
 				queryBuffer,
 				queryBuffer.byteSize().toInt(),

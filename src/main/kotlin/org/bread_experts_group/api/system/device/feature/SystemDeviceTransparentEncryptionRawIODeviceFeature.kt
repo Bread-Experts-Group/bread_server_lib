@@ -5,7 +5,7 @@ package org.bread_experts_group.api.system.device.feature
 import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.system.device.SystemDeviceFeatureImplementation
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
-import org.bread_experts_group.api.system.io.IODevice
+import org.bread_experts_group.api.system.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceDataIdentifier
 import org.bread_experts_group.api.system.io.transparent_encrpytion.OpenTransparentEncryptionRawIODeviceFeatureIdentifier
 
 abstract class SystemDeviceTransparentEncryptionRawIODeviceFeature :
@@ -15,5 +15,5 @@ abstract class SystemDeviceTransparentEncryptionRawIODeviceFeature :
 
 	abstract fun open(
 		vararg features: OpenTransparentEncryptionRawIODeviceFeatureIdentifier
-	): Pair<IODevice, List<OpenTransparentEncryptionRawIODeviceFeatureIdentifier>>?
+	): List<OpenTransparentEncryptionRawIODeviceDataIdentifier>
 }

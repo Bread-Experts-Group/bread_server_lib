@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.device.windows.WindowsIODevice
 import org.bread_experts_group.api.system.io.feature.IODeviceGetDeviceGeometryFeature
 import org.bread_experts_group.api.system.io.geometry.*
 import org.bread_experts_group.ffi.autoArena
@@ -12,7 +13,7 @@ import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
 
 class WindowsIOGetDeviceGeometryFeature(
-	private val handle: MemorySegment
+	private val device: WindowsIODevice
 ) : IODeviceGetDeviceGeometryFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeDeviceIoControl != null
@@ -22,7 +23,7 @@ class WindowsIOGetDeviceGeometryFeature(
 		val buffer = autoArena.allocate(DISK_GEOMETRY_EX)
 		val status = nativeDeviceIoControl!!.invokeExact(
 			capturedStateSegment,
-			handle,
+			device.handle,
 			IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
 			MemorySegment.NULL,
 			0,

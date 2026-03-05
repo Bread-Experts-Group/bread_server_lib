@@ -11,7 +11,9 @@ import org.bread_experts_group.ffi.posix.linux.x64.SEEK_SET
 import org.bread_experts_group.ffi.posix.linux.x64.nativeLSeek
 import org.bread_experts_group.ffi.posix.x64.throwLastErrno
 
-class LinuxIODeviceSeekFeature(private val fd: Int) : IODeviceSeekFeature() {
+class LinuxX64IODeviceSeekFeature(
+	private val device: LinuxX64IODevice
+) : IODeviceSeekFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeLSeek != null
 
@@ -22,7 +24,7 @@ class LinuxIODeviceSeekFeature(private val fd: Int) : IODeviceSeekFeature() {
 		val supportedFeatures = mutableListOf<SeekIODeviceFeatureIdentifier>()
 		val position = nativeLSeek!!.invokeExact(
 			capturedStateSegment,
-			fd,
+			device.fd,
 			n,
 			when {
 				features.contains(StandardSeekIODeviceFeatures.BEGIN) -> {

@@ -2,8 +2,6 @@ package org.bread_experts_group.api.system.device.linux.x64
 
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceIODeviceFeature
-import org.bread_experts_group.api.system.io.IODevice
-import org.bread_experts_group.api.system.io.feature.IODeviceReleaseFeature
 import org.bread_experts_group.api.system.io.linux.x64.*
 import org.bread_experts_group.api.system.io.open.*
 import org.bread_experts_group.ffi.capturedStateSegment
@@ -60,23 +58,17 @@ class LinuxX64SystemDeviceIODeviceFeature(
 			) as Int
 		}
 		if (fd == -1) throwLastErrno()
-		val ioDevice = IODevice()
+		val ioDevice = LinuxX64IODevice(fd)
 		val oR = data.contains(FileIOReOpenFeatures.READ)
 		val oW = data.contains(FileIOReOpenFeatures.WRITE)
-		val seek = LinuxIODeviceSeekFeature(fd)
+		val seek = LinuxX64IODeviceSeekFeature(ioDevice)
 		if (oR || oW) ioDevice.features.add(seek)
-		if (oR) ioDevice.features.add(LinuxX64IODeviceReadFeature(fd))
+		if (oR) ioDevice.features.add(LinuxX64IODeviceReadFeature(ioDevice))
 		if (oW) {
-			ioDevice.features.add(LinuxX64IODeviceWriteFeature(fd))
-			ioDevice.features.add(LinuxX64IODeviceSetSizeFeature(fd, seek))
+			ioDevice.features.add(LinuxX64IODeviceWriteFeature(ioDevice))
+			ioDevice.features.add(LinuxX64IODeviceSetSizeFeature(ioDevice, seek))
 		}
-		ioDevice.features.add(LinuxX64IODeviceGetSizeFeature(fd))
-		ioDevice.features.add(
-			IODeviceReleaseFeature(
-				ImplementationSource.SYSTEM_NATIVE,
-				{ nativeClose!!.invokeExact(capturedStateSegment, fd) as Int }
-			) // TODO: Report errors
-		)
+		ioDevice.features.add(LinuxX64IODeviceGetSizeFeature(ioDevice))
 		data.add(ioDevice)
 		return data
 	}

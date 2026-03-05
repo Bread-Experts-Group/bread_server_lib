@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.device.windows.WindowsIODevice
 import org.bread_experts_group.api.system.io.feature.IODeviceDataRangeLockFeature
 import org.bread_experts_group.api.system.io.feature.lock.IODeviceDataRangeLockHandle
 import org.bread_experts_group.api.system.io.lock.IODeviceDataRangeLockFeatureIdentifier
@@ -11,10 +12,9 @@ import org.bread_experts_group.ffi.windows.nativeLockFileEx
 import org.bread_experts_group.ffi.windows.nativeUnlockFileEx
 import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.Arena
-import java.lang.foreign.MemorySegment
 
 class WindowsIODeviceDataRangeLockFeature(
-	private val handle: MemorySegment
+	private val device: WindowsIODevice
 ) : IODeviceDataRangeLockFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeLockFileEx != null && nativeUnlockFileEx != null
@@ -37,7 +37,7 @@ class WindowsIODeviceDataRangeLockFeature(
 		val overlapped = arena.allocate(OVERLAPPED)
 		val status = nativeLockFileEx!!.invokeExact(
 			capturedStateSegment,
-			handle,
+			device.handle,
 			flags,
 			0,
 			(length and 0xFFFFFFFF).toInt(),
@@ -49,7 +49,7 @@ class WindowsIODeviceDataRangeLockFeature(
 			override fun release() {
 				val status = nativeUnlockFileEx!!.invokeExact(
 					capturedStateSegment,
-					handle,
+					device.handle,
 					0,
 					(length and 0xFFFFFFFF).toInt(),
 					(length shr 32).toInt(),

@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.system.io.windows
 
 import org.bread_experts_group.api.feature.ImplementationSource
+import org.bread_experts_group.api.system.device.windows.WindowsHandleSupplier
 import org.bread_experts_group.api.system.io.feature.IODeviceWriteFeature
 import org.bread_experts_group.api.system.io.send.IOSendDataIdentifier
 import org.bread_experts_group.api.system.io.send.IOSendFeatureIdentifier
@@ -13,8 +14,8 @@ import org.bread_experts_group.ffi.windows.threadLocalDWORD0
 import org.bread_experts_group.ffi.windows.throwLastError
 import java.lang.foreign.MemorySegment
 
-class WindowsIODeviceWriteFeature(
-	private val handle: MemorySegment
+class WindowsIODeviceWriteFeature internal constructor(
+	private val device: WindowsHandleSupplier
 ) : IODeviceWriteFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
 	override fun supported(): Boolean = nativeWriteFile != null
@@ -28,7 +29,7 @@ class WindowsIODeviceWriteFeature(
 			threadLocalDWORD0.set(DWORD, 0, 0)
 			val status = nativeWriteFile!!.invokeExact(
 				capturedStateSegment,
-				handle,
+				device.handle,
 				segment,
 				segment.byteSize().coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
 				threadLocalDWORD0,
