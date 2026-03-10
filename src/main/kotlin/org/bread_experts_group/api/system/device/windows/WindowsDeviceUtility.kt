@@ -1,21 +1,25 @@
 package org.bread_experts_group.api.system.device.windows
 
-import org.bread_experts_group.generic.Flaggable.Companion.raw
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
-import org.bread_experts_group.api.system.device.SystemDeviceType
 import org.bread_experts_group.api.system.device.feature.SystemDeviceBasicIdentifierFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceFriendlyNameFeature
 import org.bread_experts_group.api.system.device.feature.SystemDeviceSerialPortNameFeature
-import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature.Companion.getFlags
+import org.bread_experts_group.api.system.device.type.UnknownDeviceType
+import org.bread_experts_group.api.system.device.type.WindowsDeviceTypes
+import org.bread_experts_group.api.system.device.type.WindowsFileDeviceTypes
+import org.bread_experts_group.api.system.device.windows.WindowsSystemDeviceIODeviceFeature3.Companion.getFlags
 import org.bread_experts_group.api.system.io.open.OpenIODeviceDataIdentifier
 import org.bread_experts_group.api.system.io.open.OpenIODeviceFeatureIdentifier
+import org.bread_experts_group.api.system.io.windows.*
 import org.bread_experts_group.ffi.GUID
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.cfgmgr.*
+import org.bread_experts_group.ffi.windows.ioctl.*
 import org.bread_experts_group.ffi.windows.setup.*
+import org.bread_experts_group.generic.Flaggable.Companion.raw
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -45,24 +49,30 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 	val instanceIDString = instanceID.getString(0, winCharsetWide)
 	if (status != 0) TODO("CM Errors b: $status")
 	return deviceCache[instanceIDString] ?: SystemDevice(
-		when (guid.toString()) {
-			"{4D1E55B2-F16F-11CF-88CB-001111000030}" -> SystemDeviceType.HUMAN_INTERFACE
-			"{86E0D1E0-8089-11D0-9CE4-08003E301F73}" -> SystemDeviceType.SERIAL
-			"{53F56307-B6BF-11D0-94F2-00A0C91EFB8B}" -> SystemDeviceType.STORAGE
-			"{53F5630D-B6BF-11D0-94F2-00A0C91EFB8B}" -> SystemDeviceType.VOLUME_STORAGE
-			"{4AFA3D53-74A7-11D0-BE5E-00A0C9062857}" -> SystemDeviceType.ACPI_POWER_BUTTON
-			"{884B96C3-56EF-11D1-BC8C-00A0C91405DD}" -> SystemDeviceType.KEYBOARD
-			"{378DE44C-56EF-11D1-BC8C-00A0C91405DD}" -> SystemDeviceType.MOUSE
-			"{A5DCBF10-6530-11D2-901F-00C04FB951ED}" -> SystemDeviceType.USB
-			"{CAC88484-7515-4C03-82E6-71A87ABAC361}" -> SystemDeviceType.NETWORKED
-			"{0850302A-B344-4FDA-9BE9-90576B8D46F0}" -> SystemDeviceType.BLUETOOTH_RADIO
-			else -> SystemDeviceType.OTHER
+		when (guid) {
+			GUID_DEVINTERFACE_DISK -> WindowsDeviceTypes.DISK
+			GUID_DEVINTERFACE_CDROM -> WindowsDeviceTypes.CDROM
+			GUID_DEVINTERFACE_PARTITION -> WindowsDeviceTypes.PARTITION
+			GUID_DEVINTERFACE_TAPE -> WindowsDeviceTypes.TAPE
+			GUID_DEVINTERFACE_WRITEONCEDISK -> WindowsDeviceTypes.WRITE_ONCE_DISK
+			GUID_DEVINTERFACE_VOLUME -> WindowsDeviceTypes.VOLUME
+			GUID_DEVINTERFACE_MEDIUMCHANGER -> WindowsDeviceTypes.MEDIUM_CHANGER
+			GUID_DEVINTERFACE_FLOPPY -> WindowsDeviceTypes.FLOPPY
+			GUID_DEVINTERFACE_CDCHANGER -> WindowsDeviceTypes.CD_CHANGER
+//			"{4D1E55B2-F16F-11CF-88CB-001111000030}" -> SystemDeviceType.HUMAN_INTERFACE
+//			"{86E0D1E0-8089-11D0-9CE4-08003E301F73}" -> SystemDeviceType.SERIAL
+//			"{4AFA3D53-74A7-11D0-BE5E-00A0C9062857}" -> SystemDeviceType.ACPI_POWER_BUTTON
+//			"{884B96C3-56EF-11D1-BC8C-00A0C91405DD}" -> SystemDeviceType.KEYBOARD
+//			"{378DE44C-56EF-11D1-BC8C-00A0C91405DD}" -> SystemDeviceType.MOUSE
+//			"{A5DCBF10-6530-11D2-901F-00C04FB951ED}" -> SystemDeviceType.USB
+//			"{CAC88484-7515-4C03-82E6-71A87ABAC361}" -> SystemDeviceType.NETWORKED
+//			"{0850302A-B344-4FDA-9BE9-90576B8D46F0}" -> SystemDeviceType.BLUETOOTH_RADIO
+			else -> UnknownDeviceType
 		}
 	).also {
 		deviceCache[instanceIDString] = it
-		it.features.add(
-			WindowsSystemDeviceIODeviceFeature(link)
-		)
+		it.features.add(WindowsSystemDeviceIODeviceFeature3(link))
+		it.features.add(WindowsSystemDeviceIODeviceFeature2(link))
 		it.features.add(
 			SystemDeviceBasicIdentifierFeature(
 				ImplementationSource.SYSTEM_NATIVE,
@@ -100,31 +110,33 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 				devInfoData
 			)
 		)
-		try {
-			nativeSetupDiGetDevicePropertyWide!!.invokeExact(
-				capturedStateSegment,
-				deviceInfoList,
-				devInfoData,
-				DEVPKEY_Device_FriendlyName,
-				threadLocalDWORD0,
-				MemorySegment.NULL,
-				0,
-				threadLocalDWORD1,
-				0
-			) as Int
-			val friendlyNameArea = arena.allocate(threadLocalDWORD1.get(DWORD, 0).toLong())
-			status = nativeSetupDiGetDevicePropertyWide.invokeExact(
-				capturedStateSegment,
-				deviceInfoList,
-				devInfoData,
-				DEVPKEY_Device_FriendlyName,
-				threadLocalDWORD0,
-				friendlyNameArea,
-				friendlyNameArea.byteSize().toInt(),
-				MemorySegment.NULL,
-				0
-			) as Int
-			if (status == 0) throwLastError()
+		status = nativeSetupDiGetDevicePropertyWide!!.invokeExact(
+			capturedStateSegment,
+			deviceInfoList,
+			devInfoData,
+			DEVPKEY_Device_FriendlyName,
+			threadLocalDWORD0,
+			MemorySegment.NULL,
+			0,
+			threadLocalDWORD1,
+			0
+		) as Int
+		if (status == 0 && win32LastError != WindowsLastError.ERROR_INSUFFICIENT_BUFFER.id.toInt()) throwLastError()
+		val friendlyNameArea = arena.allocate(threadLocalDWORD1.get(DWORD, 0).toLong())
+		status = nativeSetupDiGetDevicePropertyWide.invokeExact(
+			capturedStateSegment,
+			deviceInfoList,
+			devInfoData,
+			DEVPKEY_Device_FriendlyName,
+			threadLocalDWORD0,
+			friendlyNameArea,
+			friendlyNameArea.byteSize().toInt(),
+			MemorySegment.NULL,
+			0
+		) as Int
+		if (status == 0) {
+			if (win32LastError != WindowsLastError.ERROR_NOT_FOUND.id.toInt()) throwLastError()
+		} else {
 			val friendlyNameBytes = ByteArray(friendlyNameArea.byteSize().toInt())
 			MemorySegment.copy(
 				friendlyNameArea, ValueLayout.JAVA_BYTE, 0,
@@ -136,8 +148,6 @@ fun decodeDevice(guid: GUID, link: MemorySegment, arena: Arena): SystemDevice {
 					ImplementationSource.SYSTEM_NATIVE
 				)
 			)
-		} catch (e: WindowsLastErrorException) {
-			if (e.error.enum != WindowsLastError.ERROR_NOT_FOUND) throw e
 		}
 		threadLocalDWORD1.set(DWORD, 0, 0)
 		status = nativeCM_Get_Device_Interface_PropertyWide.invokeExact(
@@ -179,7 +189,7 @@ fun decodeDevice(eventData: WindowsCMNotifyEventData, arena: Arena) = when (even
 
 fun winCreatePathDevice(
 	widePathSegment: MemorySegment
-): SystemDevice = SystemDevice(SystemDeviceType.FILE_SYSTEM_ENTRY).also {
+): SystemDevice = SystemDevice(WindowsFileDeviceTypes.FILE).also {
 	val readOnlySegment = widePathSegment.asReadOnly()
 	val status = nativePathCchRemoveBackslash!!.invokeExact(
 		readOnlySegment,
@@ -200,7 +210,8 @@ fun winCreatePathDevice(
 			ImplementationSource.SYSTEM_NATIVE
 		)
 	)
-	it.features.add(WindowsSystemDeviceIODeviceFeature(readOnlySegment))
+	it.features.add(WindowsSystemDeviceIODeviceFeature3(readOnlySegment))
+	it.features.add(WindowsSystemDeviceIODeviceFeature2(readOnlySegment))
 	it.features.add(WindowsSystemDevicePathAppendFeature(readOnlySegment))
 	it.features.add(WindowsSystemDeviceParentFeature(readOnlySegment))
 	it.features.add(WindowsSystemDeviceChildrenFeature(readOnlySegment))
@@ -264,4 +275,25 @@ fun <T> readFileInfo(
 	}
 	if (nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int == 0) throwLastError()
 	return transformed
+}
+
+fun addFileFeatures(
+	device: WindowsIODevice,
+	read: Boolean,
+	write: Boolean
+) {
+	if (read || write) device.features.add(WindowsIODeviceSeekFeature(device))
+	if (read) device.features.add(WindowsIODeviceReadFeature(device))
+	if (write) {
+		device.features.add(WindowsIODeviceWriteFeature(device))
+		device.features.add(WindowsIODeviceFlushFeature(device))
+		device.features.add(WindowsIODeviceSetSizeFeature(device))
+	}
+	device.features.add(WindowsIOGetDeviceGeometryFeature(device))
+	device.features.add(WindowsIODeviceBypassFSDriverBoundsChecksFeature(device))
+	device.features.add(WindowsIODeviceGetDeviceFirmwareInfoFeature(device))
+	device.features.add(WindowsIODeviceGetDevicePartitionLayoutInfoFeature(device))
+	device.features.add(WindowsIODeviceReopenFeature(device))
+	device.features.add(WindowsIODeviceGetSizeFeature(device))
+	device.features.add(WindowsIODeviceDataRangeLockFeature(device))
 }

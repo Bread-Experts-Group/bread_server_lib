@@ -17,7 +17,24 @@ class WindowsIODeviceGetDeviceFirmwareInfoFeature(
 	private val device: WindowsIODevice
 ) : IODeviceGetDeviceFirmwareInfoFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
-	override fun supported(): Boolean = nativeDeviceIoControl != null
+	override fun supported(): Boolean {
+		val queryBuffer = autoArena.allocate(STORAGE_HW_FIRMWARE_INFO_QUERY)
+		STORAGE_HW_FIRMWARE_INFO_QUERY_Version.set(queryBuffer, 0, STORAGE_HW_FIRMWARE_INFO_QUERY.byteSize().toInt())
+		STORAGE_HW_FIRMWARE_INFO_QUERY_Size.set(queryBuffer, 0, queryBuffer.byteSize().toInt())
+		val outputBuffer = autoArena.allocate(
+			STORAGE_HW_FIRMWARE_INFO.byteSize() + STORAGE_HW_FIRMWARE_SLOT_INFO.byteSize()
+		)
+		val status = (nativeDeviceIoControl ?: return false).invokeExact(
+			capturedStateSegment,
+			device.handle,
+			IOCTL_STORAGE_FIRMWARE_GET_INFO,
+			queryBuffer, queryBuffer.byteSize().toInt(),
+			outputBuffer, outputBuffer.byteSize().toInt(),
+			threadLocalDWORD0,
+			MemorySegment.NULL
+		) as Int
+		return status != 0
+	}
 
 	override fun get(
 		vararg features: IODeviceGetFirmwareInfoFeatureIdentifier
@@ -32,10 +49,8 @@ class WindowsIODeviceGetDeviceFirmwareInfoFeature(
 			capturedStateSegment,
 			device.handle,
 			IOCTL_STORAGE_FIRMWARE_GET_INFO,
-			queryBuffer,
-			queryBuffer.byteSize().toInt(),
-			outputBuffer,
-			outputBuffer.byteSize().toInt(),
+			queryBuffer, queryBuffer.byteSize().toInt(),
+			outputBuffer, outputBuffer.byteSize().toInt(),
 			threadLocalDWORD0,
 			MemorySegment.NULL
 		) as Int
@@ -47,10 +62,8 @@ class WindowsIODeviceGetDeviceFirmwareInfoFeature(
 				capturedStateSegment,
 				device.handle,
 				IOCTL_STORAGE_FIRMWARE_GET_INFO,
-				queryBuffer,
-				queryBuffer.byteSize().toInt(),
-				outputBuffer,
-				outputBuffer.byteSize().toInt(),
+				queryBuffer, queryBuffer.byteSize().toInt(),
+				outputBuffer, outputBuffer.byteSize().toInt(),
 				threadLocalDWORD0,
 				MemorySegment.NULL
 			) as Int

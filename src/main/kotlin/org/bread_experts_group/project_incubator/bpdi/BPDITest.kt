@@ -22,7 +22,7 @@ import java.lang.foreign.ValueLayout
 
 fun main() {
 	val disk = SystemProvider.get(SystemFeatures.GET_PATH_DEVICE_DIRECT)
-		.get("\\\\.\\PhysicalDrive4")
+		.get("\\\\.\\F:")
 	val diskIO = disk.get(SystemDeviceFeatures.IO_DEVICE)
 		.open(
 			FileIOReOpenFeatures.READ,
@@ -44,8 +44,8 @@ fun main() {
 	val diskSize = diskIO.get(IODeviceFeatures.GET_SIZE).get()
 		.firstNotNullOf { it as? DataSize }.bytes
 	val diskGeometry = diskIO.get(IODeviceFeatures.GET_DEVICE_GEOMETRY).get()
-	val diskFirmware = diskIO.get(IODeviceFeatures.GET_DEVICE_FIRMWARE_INFO).get()
-	val fileOutput = autoArena.allocate(512)
+	diskIO.get(IODeviceFeatures.BYPASS_FS_DRIVER_BOUNDS_CHECKS).bypass()
+	val diskFirmware = diskIO.getOrNull(IODeviceFeatures.GET_DEVICE_FIRMWARE_INFO)?.get() ?: emptyList()
 	val fileWriter = BSLWriter(outputIO.get(IODeviceFeatures.WRITE))
 	fileWriter.write8(0)
 	var flags = 0
@@ -88,12 +88,12 @@ fun main() {
 			}
 		} else fileWriter.write64(0)
 	}
-	fileWriter.write64((diskGeometryByteCount?.bytes ?: 512).toLong())
+	val bytesPerSector = (diskGeometryByteCount?.bytes ?: 512).toLong()
+	fileWriter.write64(bytesPerSector)
 	fileWriter.write64(diskSize)
 	fileWriter.flush()
-	TODO("!")
 
-	val data = autoArena.allocate(1024)
+	val data = autoArena.allocate(bytesPerSector)
 	println(diskIO.get(IODeviceFeatures.READ).receiveSegment(data).block())
 	println(data.toArray(ValueLayout.JAVA_BYTE).toHexString())
 //	diskIO.get(IODeviceFeatures.READ).receiveSegment(data)

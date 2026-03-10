@@ -83,11 +83,34 @@ val nativeCreateFile3: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
+val nativeCreateFile2: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "CreateFile2",
+	arrayOf(
+		HANDLE,
+		LPCWSTR, DWORD, DWORD, DWORD, ValueLayout.ADDRESS // LPCREATEFILE2_EXTENDED_PARAMETERS
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeCreateDirectory2Wide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "CreateDirectory2W",
 	arrayOf(
 		HANDLE,
 		LPCWSTR, DWORD, DWORD, DWORD, ValueLayout.ADDRESS // LPSECURITY_ATTRIBUTES
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeCreateDirectoryWide: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "CreateDirectoryW",
+	arrayOf(
+		HANDLE,
+		LPCWSTR.withName("lpPathName"),
+		LPSECURITY_ATTRIBUTES.withName("lpSecurityAttributes")
 	),
 	listOf(
 		gleCapture

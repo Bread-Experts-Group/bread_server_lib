@@ -52,6 +52,10 @@ object IODeviceFeatures {
 		override val name: String = "Get Device Firmware Information"
 	}
 
+	val GET_DEVICE_PARTITION_LAYOUT = object : FeatureExpression<IODeviceGetDevicePartitionLayoutInfoFeature> {
+		override val name: String = "Get Device Partition Layout Information"
+	}
+
 	val BYPASS_FS_DRIVER_BOUNDS_CHECKS = object : FeatureExpression<IODeviceBypassFSDriverBoundsChecksFeature> {
 		override val name: String = "Bypass Filesystem Driver for Boundary Checking on Device Access"
 	}

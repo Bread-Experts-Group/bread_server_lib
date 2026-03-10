@@ -1,0 +1,3 @@
+package org.bread_experts_group.api.system.io.partition_layout_info
+
+interface IODeviceGetPartitionLayoutInfoFeatureIdentifier : IODeviceGetPartitionLayoutInfoDataIdentifier

@@ -3,14 +3,14 @@ package org.bread_experts_group.api.system.device.linux.x64
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.SystemDevice
 import org.bread_experts_group.api.system.device.SystemDeviceFeatures
-import org.bread_experts_group.api.system.device.SystemDeviceType
 import org.bread_experts_group.api.system.device.feature.SystemDeviceBasicIdentifierFeature
+import org.bread_experts_group.api.system.device.type.LinuxFileDeviceTypes
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 fun linuxX64CreatePathDevice(
 	segment: MemorySegment
-): SystemDevice = SystemDevice(SystemDeviceType.FILE_SYSTEM_ENTRY).also {
+): SystemDevice = SystemDevice(LinuxFileDeviceTypes.FILE).also {
 	val safeSegment = segment.asReadOnly()
 	it.features.add(
 		SystemDeviceBasicIdentifierFeature(

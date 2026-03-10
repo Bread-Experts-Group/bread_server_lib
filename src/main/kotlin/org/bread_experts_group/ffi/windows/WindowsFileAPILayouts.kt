@@ -26,6 +26,24 @@ val CREATEFILE3_EXTENDED_PARAMETERS_dwFileFlags: VarHandle = CREATEFILE3_EXTENDE
 	groupElement("dwFileFlags")
 )
 
+val CREATEFILE2_EXTENDED_PARAMETERS: StructLayout = MemoryLayout.structLayout(
+	DWORD.withName("dwSize"),
+	DWORD.withName("dwFileAttributes"),
+	DWORD.withName("dwFileFlags"),
+	DWORD.withName("dwSecurityQosFlags"),
+	LPSECURITY_ATTRIBUTES.withName("lpSecurityAttributes"),
+	HANDLE.withName("hTemplateFile")
+)
+val CREATEFILE2_EXTENDED_PARAMETERS_dwSize: VarHandle = CREATEFILE2_EXTENDED_PARAMETERS.varHandle(
+	groupElement("dwSize")
+)
+val CREATEFILE2_EXTENDED_PARAMETERS_dwFileAttributes: VarHandle = CREATEFILE2_EXTENDED_PARAMETERS.varHandle(
+	groupElement("dwFileAttributes")
+)
+val CREATEFILE2_EXTENDED_PARAMETERS_dwFileFlags: VarHandle = CREATEFILE2_EXTENDED_PARAMETERS.varHandle(
+	groupElement("dwFileFlags")
+)
+
 val FILE_BASIC_INFO: StructLayout = MemoryLayout.structLayout(
 	LARGE_INTEGER.withName("CreationTime"),
 	LARGE_INTEGER.withName("LastAccessTime"),

@@ -3,13 +3,12 @@ package org.bread_experts_group.api.system.device.windows
 import org.bread_experts_group.api.feature.ImplementationSource
 import org.bread_experts_group.api.system.device.feature.SystemDeviceIODeviceFeature
 import org.bread_experts_group.api.system.io.open.*
-import org.bread_experts_group.api.system.io.windows.*
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
-class WindowsSystemDeviceIODeviceFeature(
+class WindowsSystemDeviceIODeviceFeature3(
 	private val pathSegment: MemorySegment
 ) : SystemDeviceIODeviceFeature() {
 	override val source: ImplementationSource = ImplementationSource.SYSTEM_NATIVE
@@ -271,19 +270,7 @@ class WindowsSystemDeviceIODeviceFeature(
 			val newDevice = WindowsIODevice(handle)
 			val oR = data.contains(FileIOReOpenFeatures.READ)
 			val oW = data.contains(FileIOReOpenFeatures.WRITE)
-			if (oR || oW) newDevice.features.add(WindowsIODeviceSeekFeature(newDevice))
-			if (oR) newDevice.features.add(WindowsIODeviceReadFeature(newDevice))
-			if (oW) {
-				newDevice.features.add(WindowsIODeviceWriteFeature(newDevice))
-				newDevice.features.add(WindowsIODeviceFlushFeature(newDevice))
-				newDevice.features.add(WindowsIODeviceSetSizeFeature(newDevice))
-			}
-			newDevice.features.add(WindowsIOGetDeviceGeometryFeature(newDevice))
-			newDevice.features.add(WindowsIODeviceBypassFSDriverBoundsChecksFeature(newDevice))
-			newDevice.features.add(WindowsIODeviceGetDeviceFirmwareInfoFeature(newDevice))
-			newDevice.features.add(WindowsIODeviceReopenFeature(newDevice))
-			newDevice.features.add(WindowsIODeviceGetSizeFeature(newDevice))
-			newDevice.features.add(WindowsIODeviceDataRangeLockFeature(newDevice))
+			addFileFeatures(newDevice, oR, oW)
 			data.add(newDevice)
 			return data
 		}

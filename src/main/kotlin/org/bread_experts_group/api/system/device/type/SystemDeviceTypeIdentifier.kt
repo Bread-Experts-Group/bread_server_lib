@@ -1,0 +1,5 @@
+package org.bread_experts_group.api.system.device.type
+
+import org.bread_experts_group.api.system.device.enumerate.SystemDeviceEnumerationFeatureIdentifier
+
+interface SystemDeviceTypeIdentifier : SystemDeviceEnumerationFeatureIdentifier
