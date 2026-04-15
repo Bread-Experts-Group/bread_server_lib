@@ -290,7 +290,7 @@ class WindowsSystemDeviceCopyFeature(private val pathSegment: MemorySegment) : S
 			val supportedFeatures = mutableListOf<CopySystemDeviceFeatureIdentifier>()
 			val arena = Arena.ofConfined()
 			val destinationSegment = arena.allocateFrom(
-				destination.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
+				destination.get(SystemDeviceFeatures.PATH).element,
 				winCharsetWide
 			)
 			val extraParameters = if (features.isNotEmpty()) {

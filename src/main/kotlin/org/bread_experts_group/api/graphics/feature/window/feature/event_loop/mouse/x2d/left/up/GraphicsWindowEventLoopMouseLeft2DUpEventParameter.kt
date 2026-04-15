@@ -1,0 +1,5 @@
+package org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse.x2d.left.up
+
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.GraphicsWindowEventLoopEventParameter
+
+interface GraphicsWindowEventLoopMouseLeft2DUpEventParameter : GraphicsWindowEventLoopEventParameter

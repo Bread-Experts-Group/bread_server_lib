@@ -6,8 +6,8 @@ import org.bread_experts_group.api.system.device.feature.SystemDeviceGetTimeFeat
 import org.bread_experts_group.api.system.device.metadata.MetadataInstant
 import org.bread_experts_group.api.system.device.metadata.MetadataSystemDeviceDataIdentifier
 import org.bread_experts_group.api.system.device.metadata.MetadataSystemDeviceFeatureIdentifier
-import org.bread_experts_group.api.system.io.open.OpenIODeviceDataIdentifier
-import org.bread_experts_group.api.system.io.open.OpenIODeviceFeatureIdentifier
+import org.bread_experts_group.ffi.autoArena
+import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
 import java.lang.foreign.MemorySegment
 import java.time.Instant
@@ -18,25 +18,32 @@ class WindowsSystemDeviceGetLastWriteTime(
 	ImplementationSource.SYSTEM_NATIVE,
 	SystemDeviceFeatures.PATH_GET_LAST_WRITE_TIME
 ) {
-	override fun supported(): Boolean = nativeCreateFile3 != null && nativeCloseHandle != null &&
-			nativeGetFileInformationByHandleEx != null
+	override fun supported(): Boolean = nativeGetFileAttributesExW != null
 
 	override fun getTime(
 		vararg features: MetadataSystemDeviceFeatureIdentifier
 	): List<MetadataSystemDeviceDataIdentifier> {
 		val data = mutableListOf<MetadataSystemDeviceDataIdentifier>()
-
-		@Suppress("UNCHECKED_CAST", "KotlinConstantConditions")
-		val time = readFileInfo(
+		val attributeData = autoArena.allocate(WIN32_FILE_ATTRIBUTE_DATA)
+		val status = nativeGetFileAttributesExW!!.invokeExact(
+			capturedStateSegment,
 			pathSegment,
-			features as Array<OpenIODeviceFeatureIdentifier>,
-			data as MutableList<OpenIODeviceDataIdentifier>
-		) {
-			Instant.ofEpochMilli(
-				FILETIMEToUnixMs(FILE_BASIC_INFO_LastWriteTime.get(it, 0L) as Long)
-			)
+			WindowsGetFileExInfoLevels.GetFileExInfoStandard.id.toInt(),
+			attributeData
+		) as Int
+		if (status == 0) {
+			data.add(getIOStatusForError())
+			return data
 		}
-		data.add(MetadataInstant(time))
+		data.add(
+			MetadataInstant(
+				Instant.ofEpochMilli(
+					FILETIMEToUnixMs(
+						WIN32_FILE_ATTRIBUTE_DATA_ftLastWriteTime.get(attributeData, 0L) as Long
+					)
+				)
+			)
+		)
 		return data
 	}
 }

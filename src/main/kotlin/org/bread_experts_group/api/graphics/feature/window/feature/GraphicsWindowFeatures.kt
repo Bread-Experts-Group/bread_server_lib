@@ -11,6 +11,10 @@ object GraphicsWindowFeatures {
 		override val name: String = "Modify / Read Window Status"
 	}
 
+	val WINDOW_CLIENT_AREA_COORDINATES = object : FeatureExpression<GraphicsWindowClientAreaCoordinatesFeature> {
+		override val name: String = "Read Window Client Area Coordinates"
+	}
+
 	val WINDOW_DISPLAY_AFFINITY = object : FeatureExpression<GraphicsWindowDisplayAffinityFeature> {
 		override val name: String = "Modify / Read Window Display Affinity"
 	}

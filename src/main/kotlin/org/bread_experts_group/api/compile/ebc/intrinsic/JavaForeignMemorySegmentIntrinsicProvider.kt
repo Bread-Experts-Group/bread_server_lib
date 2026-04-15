@@ -108,11 +108,12 @@ class JavaForeignMemorySegmentIntrinsicProvider : KotlinEBCIntrinsicProvider {
 					EBCRegisters.R4, false,
 					EBCRegisters.R5, false, null
 				)
-				procedure.MOVnw(
-					EBCRegisters.R4, true,
-					EBCRegisters.R6, false,
-					null, null
-				)
+				TODO("!")
+//				procedure.MOVnw(
+//					EBCRegisters.R4, true,
+//					EBCRegisters.R6, false,
+//					null, null
+//				)
 			},
 			MethodHandleDesc.ofMethod(
 				DirectMethodHandleDesc.Kind.SPECIAL, owner,

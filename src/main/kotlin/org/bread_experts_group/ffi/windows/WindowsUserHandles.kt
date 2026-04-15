@@ -204,3 +204,13 @@ val nativeEndPaint: MethodHandle? = user32Lookup.getDowncall(
 	HWND.withName("hWnd"),
 	PPAINTSTRUCT.withName("lpPaint")
 )
+
+val nativeGetClientRect: MethodHandle? = user32Lookup.getDowncall(
+	nativeLinker, "GetClientRect",
+	arrayOf(
+		BOOL,
+		HWND.withName("hWnd"),
+		LPRECT.withName("lpRect")
+	),
+	listOf(gleCapture)
+)

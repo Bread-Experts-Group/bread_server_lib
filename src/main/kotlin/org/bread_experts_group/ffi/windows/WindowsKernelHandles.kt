@@ -343,6 +343,17 @@ val nativeGetCurrentDirectoryWide: MethodHandle? = kernel32Lookup.getDowncall(
 	)
 )
 
+val nativeSetCurrentDirectoryWide: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "SetCurrentDirectoryW",
+	arrayOf(
+		BOOL,
+		LPWSTR.withName("lpPathName")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
 val nativeGetTempPath2Wide: MethodHandle? = kernel32Lookup.getDowncall(
 	nativeLinker, "GetTempPath2W",
 	arrayOf(
@@ -555,6 +566,66 @@ val nativeDeviceIoControl: MethodHandle? = kernel32Lookup.getDowncall(
 		DWORD.withName("nOutBufferSize"),
 		LPDWORD.withName("lpBytesReturned"),
 		LPOVERLAPPED.withName("lpOverlapped")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeGetFileAttributesExW: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "GetFileAttributesExW",
+	arrayOf(
+		BOOL,
+		LPCWSTR.withName("lpFileName"),
+		GET_FILEEX_INFO_LEVELS.withName("fInfoLevelId"),
+		LPVOID.withName("lpFileInformation")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeBackupRead: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "BackupRead",
+	arrayOf(
+		BOOL,
+		HANDLE.withName("hFile"),
+		LPBYTE.withName("lpBuffer"),
+		DWORD.withName("nNumberOfBytesToRead"),
+		LPDWORD.withName("lpNumberOfBytesRead"),
+		BOOL.withName("bAbort"),
+		BOOL.withName("bProcessSecurity"),
+		LPVOID.withName("lpContext")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeBackupWrite: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "BackupWrite",
+	arrayOf(
+		BOOL,
+		HANDLE.withName("hFile"),
+		LPBYTE.withName("lpBuffer"),
+		DWORD.withName("nNumberOfBytesToWrite"),
+		LPDWORD.withName("lpNumberOfBytesWritten"),
+		BOOL.withName("bAbort"),
+		BOOL.withName("bProcessSecurity"),
+		LPVOID.withName("lpContext")
+	),
+	listOf(
+		gleCapture
+	)
+)
+
+val nativeSetThreadPreferredUILanguages: MethodHandle? = kernel32Lookup.getDowncall(
+	nativeLinker, "SetThreadPreferredUILanguages",
+	arrayOf(
+		BOOL,
+		DWORD.withName("dwFlags"),
+		PCZZWSTR.withName("pwszLanguagesBuffer"),
+		PULONG.withName("pulNumLanguages")
 	),
 	listOf(
 		gleCapture

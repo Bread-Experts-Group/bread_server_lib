@@ -1,8 +1,8 @@
 package org.bread_experts_group.api.compile.mzdos
 
+import org.bread_experts_group.generic.io.reader.BSLWriter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.SeekableByteChannel
 
 @Suppress("PropertyName")
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -36,7 +36,7 @@ class MZDOSFile private constructor(private val structure: FileStructure) {
 		var e_res2: UShortArray = UShortArray(10)
 	}
 
-	fun build(into: SeekableByteChannel) {
+	fun build(into: BSLWriter<*, *>) {
 		val buffer = ByteBuffer.allocate(60)
 		buffer.order(ByteOrder.LITTLE_ENDIAN)
 		buffer.putShort(structure.e_magic.toShort())
@@ -58,5 +58,6 @@ class MZDOSFile private constructor(private val structure: FileStructure) {
 		buffer.putShort(structure.e_oeminfo.toShort())
 		structure.e_res2.forEach { buffer.putShort(it.toShort()) }
 		into.write(buffer.clear())
+		into.flush()
 	}
 }

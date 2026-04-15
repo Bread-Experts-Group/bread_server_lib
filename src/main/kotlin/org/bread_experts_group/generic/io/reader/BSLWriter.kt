@@ -6,8 +6,10 @@ import org.bread_experts_group.api.system.socket.StandardSocketStatus
 import org.bread_experts_group.ffi.autoArena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.time.Duration
 
 class BSLWriter<F : D, D>(
@@ -97,15 +99,28 @@ class BSLWriter<F : D, D>(
 	override fun write32l(u: Long) = write32(u.toUInt())
 
 	override fun write(b: ByteArray, offset: Int, length: Int): List<WritingStatus>? {
-		if (length > txBuffer.byteSize()) TODO("ALPHA")
-		val status = if (usefulData + length > txBuffer.byteSize()) flush() else null
-		MemorySegment.copy(
-			b, offset,
-			txBuffer, ValueLayout.JAVA_BYTE, usefulData,
-			length
-		)
-		usefulData += length
-		return status
+		var dataOffset = 0
+		while (dataOffset < length) {
+			val movable = min(txBuffer.byteSize() - usefulData, (length - dataOffset).toLong()).toInt()
+			if (movable == 0) {
+				val status = flush()
+				if (status != null) return status
+				continue
+			}
+			MemorySegment.copy(
+				b, offset + dataOffset,
+				txBuffer, ValueLayout.JAVA_BYTE, usefulData,
+				movable
+			)
+			usefulData += movable
+			dataOffset += movable
+		}
+		return null
+	}
+
+	override fun write(b: ByteBuffer): List<WritingStatus>? {
+		return if (b.hasArray()) this.write(b.array(), b.position(), b.remaining())
+		else TODO("!")
 	}
 
 	override fun fill(n: Long, v: Byte): List<WritingStatus>? {

@@ -126,7 +126,7 @@ class WindowsSystemDeviceMoveFeature(private val pathSegment: MemorySegment) : S
 			}
 			val arena = Arena.ofConfined()
 			val destinationSegment = arena.allocateFrom(
-				destination.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
+				destination.get(SystemDeviceFeatures.PATH).element,
 				winCharsetWide
 			)
 			val status = nativeMoveFileWithProgressWide!!.invokeExact(

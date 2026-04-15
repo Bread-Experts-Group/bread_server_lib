@@ -1,9 +1,9 @@
 package org.bread_experts_group.api.compile.pe
 
 import org.bread_experts_group.generic.Flaggable.Companion.raw
+import org.bread_experts_group.generic.io.reader.BSLWriter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.SeekableByteChannel
 import java.util.*
 
 class PESection private constructor(private val structure: Structure) {
@@ -39,13 +39,13 @@ class PESection private constructor(private val structure: Structure) {
 	internal val characteristics: EnumSet<PESectionCharacteristics>
 		get() = structure.characteristics
 
-	fun build(into: SeekableByteChannel) {
+	fun build(into: BSLWriter<*, *>, getPosition: () -> Long) {
 		val buffer = ByteBuffer.allocate(40)
 		buffer.order(ByteOrder.LITTLE_ENDIAN)
 		buffer.put(structure.name)
 		buffer.putInt(structure.virtualSize.toInt())
 		buffer.putInt(structure.virtualAddress.toInt())
-		sizeOfRawDataPosition = into.position() + buffer.position()
+		sizeOfRawDataPosition = getPosition() + buffer.position()
 		buffer.putInt(0)
 		buffer.putInt(0)
 		buffer.putInt(structure.pointerToRelocations.toInt())
@@ -54,5 +54,6 @@ class PESection private constructor(private val structure: Structure) {
 		buffer.putShort(0)
 		buffer.putInt(structure.characteristics.raw().toInt())
 		into.write(buffer.clear())
+		into.flush()
 	}
 }

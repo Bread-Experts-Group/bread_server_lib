@@ -5,8 +5,8 @@ import org.bread_experts_group.generic.Mappable
 enum class WindowsFileInfoByHandleClasses(
 	override val id: UInt
 ) : Mappable<WindowsFileInfoByHandleClasses, UInt> {
-	FileBasicInfo(0u);//,
-//	FileStandardInfo(1u),
+	FileBasicInfo(0u),
+	FileStandardInfo(1u);
 //	FileNameInfo(2u),
 //	FileRenameInfo(3u),
 //	FileDispositionInfo(4u),

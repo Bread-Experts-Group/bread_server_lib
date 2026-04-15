@@ -1,5 +1,6 @@
 package org.bread_experts_group.generic.io.reader
 
+import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.time.Duration
 
@@ -24,5 +25,7 @@ interface SequentialDataSink {
 	fun write32l(u: Long): List<WritingStatus>? = write32(u.toUInt())
 
 	fun write(b: ByteArray, offset: Int = 0, length: Int = b.size): List<WritingStatus>?
+	fun write(b: ByteBuffer): List<WritingStatus>?
+
 	fun fill(n: Long, v: Byte = 0): List<WritingStatus>?
 }

@@ -1,5 +1,3 @@
 package org.bread_experts_group.api.system.io.open
 
-import org.bread_experts_group.api.system.device.metadata.MetadataSystemDeviceFeatureIdentifier
-
-interface OpenIODeviceFeatureIdentifier : OpenIODeviceDataIdentifier, MetadataSystemDeviceFeatureIdentifier
+interface OpenIODeviceFeatureIdentifier : OpenIODeviceDataIdentifier

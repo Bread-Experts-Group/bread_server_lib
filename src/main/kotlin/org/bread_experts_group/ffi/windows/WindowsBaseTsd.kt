@@ -179,6 +179,7 @@ val SHORT = short
 val SIZE_T = ULONG_PTR
 val SSIZE_T = LONG_PTR
 val WCHAR = wchar_t
+val PCZZWSTR = `void*`
 val TBYTE = if (UNICODE) WCHAR else char // unsigned
 val TCHAR = if (UNICODE) WCHAR else char
 val UCHAR = char // unsigned

@@ -23,11 +23,11 @@ class WindowsSystemDeviceReplaceFeature(private val pathSegment: MemorySegment) 
 	): List<SystemDeviceReplaceFeatureIdentifier> {
 		val arena = Arena.ofConfined()
 		val withSegment = arena.allocateFrom(
-			with.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
+			with.get(SystemDeviceFeatures.PATH).element,
 			winCharsetWide
 		)
 		val backupSegment = if (backup != null) arena.allocateFrom(
-			backup.get(SystemDeviceFeatures.SYSTEM_IDENTIFIER).identity as String,
+			backup.get(SystemDeviceFeatures.PATH).element,
 			winCharsetWide
 		) else MemorySegment.NULL
 		val status = nativeReplaceFileWide!!.invokeExact(

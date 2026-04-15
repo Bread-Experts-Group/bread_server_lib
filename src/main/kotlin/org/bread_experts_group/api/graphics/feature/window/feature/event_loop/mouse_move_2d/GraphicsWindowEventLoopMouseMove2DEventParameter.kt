@@ -1,5 +1,0 @@
-package org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse_move_2d
-
-import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.GraphicsWindowEventLoopEventParameter
-
-interface GraphicsWindowEventLoopMouseMove2DEventParameter : GraphicsWindowEventLoopEventParameter

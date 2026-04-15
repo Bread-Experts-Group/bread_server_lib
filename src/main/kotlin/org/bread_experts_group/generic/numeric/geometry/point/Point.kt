@@ -6,8 +6,8 @@ abstract class Point<T>(x: T) {
 	protected val elementSize = when (x) {
 		is Byte -> 1
 		is Short -> 2
-		is Int, Float -> 4
-		is Long, Double -> 8
+		is Int, is Float -> 4
+		is Long, is Double -> 8
 		null -> throw IllegalStateException()
 		else -> throw IllegalArgumentException("Unsupported element ${x::class.qualifiedName}")
 	}

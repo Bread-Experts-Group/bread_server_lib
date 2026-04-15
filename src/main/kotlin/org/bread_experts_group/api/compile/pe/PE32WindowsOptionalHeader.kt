@@ -2,9 +2,9 @@ package org.bread_experts_group.api.compile.pe
 
 import org.bread_experts_group.generic.Flaggable.Companion.raw
 import org.bread_experts_group.generic.MappedEnumeration
+import org.bread_experts_group.generic.io.reader.BSLWriter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.SeekableByteChannel
 import java.util.*
 
 class PE32WindowsOptionalHeader private constructor(private val structure: Structure) {
@@ -42,7 +42,7 @@ class PE32WindowsOptionalHeader private constructor(private val structure: Struc
 	internal val sectionAlignment: UInt
 		get() = structure.sectionAlignment
 
-	fun build(into: SeekableByteChannel) {
+	fun build(into: BSLWriter<*, *>, getPosition: () -> Long) {
 		val buffer = ByteBuffer.allocate(196)
 		buffer.order(ByteOrder.LITTLE_ENDIAN)
 		buffer.putInt(structure.imageBase.toInt())
@@ -55,7 +55,7 @@ class PE32WindowsOptionalHeader private constructor(private val structure: Struc
 		buffer.putShort(structure.majorSubsystemVersion.toShort())
 		buffer.putShort(structure.minorSubsystemVersion.toShort())
 		buffer.putInt(0)
-		sizeOfImagePosition = into.position() + buffer.position()
+		sizeOfImagePosition = getPosition() + buffer.position()
 		buffer.putInt(0)
 		buffer.putInt(0)
 		buffer.putInt(0) // TODO CheckSum
@@ -72,5 +72,6 @@ class PE32WindowsOptionalHeader private constructor(private val structure: Struc
 			buffer.putInt(0)
 		}
 		into.write(buffer.clear())
+		into.flush()
 	}
 }

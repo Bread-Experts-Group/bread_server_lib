@@ -22,6 +22,27 @@ val D2D1_LIGHT_SLATE_GRAY: MemorySegment = globalArena.allocate(D2D1_COLOR_F).al
 	D3DCOLORVALUE_a.set(it, 0, 1f)
 }
 
+val D2D1_LIGHT_GRAY: MemorySegment = globalArena.allocate(D2D1_COLOR_F).also {
+	D3DCOLORVALUE_r.set(it, 0, 0xD3 / 255.0f)
+	D3DCOLORVALUE_g.set(it, 0, 0xD3 / 255.0f)
+	D3DCOLORVALUE_b.set(it, 0, 0xD3 / 255.0f)
+	D3DCOLORVALUE_a.set(it, 0, 1f)
+}
+
+val D2D1_DARK_SLATE_GRAY: MemorySegment = globalArena.allocate(D2D1_COLOR_F).also {
+	D3DCOLORVALUE_r.set(it, 0, 0x2F / 255.0f)
+	D3DCOLORVALUE_g.set(it, 0, 0x4F / 255.0f)
+	D3DCOLORVALUE_b.set(it, 0, 0x4F / 255.0f)
+	D3DCOLORVALUE_a.set(it, 0, 1f)
+}
+
+val D2D1_DARK_GRAY: MemorySegment = globalArena.allocate(D2D1_COLOR_F).also {
+	D3DCOLORVALUE_r.set(it, 0, 0xA9 / 255.0f)
+	D3DCOLORVALUE_g.set(it, 0, 0xA9 / 255.0f)
+	D3DCOLORVALUE_b.set(it, 0, 0xA9 / 255.0f)
+	D3DCOLORVALUE_a.set(it, 0, 1f)
+}
+
 val D2D1_BLACK: MemorySegment = globalArena.allocate(D2D1_COLOR_F).also {
 	D3DCOLORVALUE_a.set(it, 0, 1f)
 }

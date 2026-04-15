@@ -1,0 +1,8 @@
+package org.bread_experts_group.api.graphics.feature.window.feature.event_loop.keyboard
+
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.keyboard.down.GraphicsWindowEventLoopKeyboardKeyDownEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.keyboard.up.GraphicsWindowEventLoopKeyboardKeyUpEventParameter
+
+data class GraphicsWindowEventLoopKeyboardCharacter(val char: Char) :
+	GraphicsWindowEventLoopKeyboardKeyUpEventParameter,
+	GraphicsWindowEventLoopKeyboardKeyDownEventParameter

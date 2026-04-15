@@ -1,0 +1,26 @@
+package org.bread_experts_group.ffi.windows
+
+import org.bread_experts_group.generic.Flaggable
+
+enum class WindowsShellFileInfoFlags : Flaggable {
+	SHGFI_SMALLICON,
+	SHGFI_OPENICON,
+	SHGFI_SHELLICONSIZE,
+	SHGFI_PIDL,
+	SHGFI_USEFILEATTRIBUTES,
+	SHGFI_ADDOVERLAYS,
+	SHGFI_OVERLAYINDEX,
+	RESERVED,
+	SHGFI_ICON,
+	SHGFI_DISPLAYNAME,
+	SHGFI_TYPENAME,
+	SHGFI_ATTRIBUTES,
+	SHGFI_ICONLOCATION,
+	SHGFI_EXETYPE,
+	SHGFI_SYSICONINDEX,
+	SHGFI_LINKOVERLAY,
+	SHGFI_SELECTED,
+	SHGFI_ATTR_SPECIFIED;
+
+	override val position: Long = 1L shl ordinal
+}

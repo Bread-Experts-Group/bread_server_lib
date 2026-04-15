@@ -5,12 +5,14 @@ import org.bread_experts_group.api.graphics.feature.direct2d.Direct2DPoint2Float
 import org.bread_experts_group.api.graphics.feature.direct2d.Direct2DRectangleFloat
 import org.bread_experts_group.api.graphics.feature.direct2d.brush.GraphicsWindowDirect2DSolidColorBrush
 import org.bread_experts_group.api.graphics.feature.directwrite.textformat.DirectWriteTextFormat
+import org.bread_experts_group.api.graphics.feature.directwrite.textlayout.DirectWriteTextLayout
 import org.bread_experts_group.ffi.*
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.ffi.windows.direct2d.*
 import org.bread_experts_group.ffi.windows.directwrite.DWRITE_MEASURING_MODE
 import org.bread_experts_group.ffi.windows.directwrite.DWriteMeasuringMode
 import org.bread_experts_group.ffi.windows.directwrite.PIDWriteTextFormat
+import org.bread_experts_group.ffi.windows.directwrite.PIDWriteTextLayout
 import org.bread_experts_group.generic.FlagSet
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -115,6 +117,29 @@ open class GraphicsWindowDirect2DRenderTarget(
 				nativeFillRectangle.invokeExact(ptr, s, sL, tF, lR, dFB, o, mM)
 			}
 			nativeFillRectangle.invokeExact(ptr, s, sL, tF, lR, dFB, o, mM)
+		}
+
+	private var drawTextLayout: (MemorySegment, MemorySegment, MemorySegment, Int) -> Unit =
+		{ o, tL, dFB, op ->
+			// TODO: Passed-by-value parameters might incur dangerous effects on other platforms
+			val nativeDrawTextLayout: MethodHandle = getLocalVTblAddress(
+				GraphicsWindowDirect2DRenderTarget::class.java, 24
+			).getDowncallVoid(
+				nativeLinker,
+				`void*`.withName("this"),
+				UINT64.withName("origin"),
+				PIDWriteTextLayout.withName("textLayout"),
+				PID2D1Brush.withName("defaultFillBrush"),
+				D2D1_DRAW_TEXT_OPTIONS.withName("options")
+			)
+			drawTextLayout = { o, tL, dFB, op ->
+				var pl = (D2D1_POINT_2F_x.get(o, 0) as Float).toRawBits().toLong() and 0xFFFFFFFF
+				pl = pl or ((D2D1_POINT_2F_y.get(o, 0) as Float).toRawBits().toLong() shl 32)
+				nativeDrawTextLayout.invokeExact(ptr, pl, tL, dFB, op)
+			}
+			var pl = (D2D1_POINT_2F_x.get(o, 0) as Float).toRawBits().toLong() and 0xFFFFFFFF
+			pl = pl or ((D2D1_POINT_2F_y.get(o, 0) as Float).toRawBits().toLong() shl 32)
+			nativeDrawTextLayout.invokeExact(ptr, pl, tL, dFB, op)
 		}
 
 	var setTransform: (MemorySegment) -> Unit = {
@@ -259,13 +284,27 @@ open class GraphicsWindowDirect2DRenderTarget(
 		measuringMode: DWriteMeasuringMode = DWriteMeasuringMode.DWRITE_MEASURING_MODE_NATURAL
 	) = Arena.ofConfined().use { tA ->
 		drawText(
-			tA.allocateFrom(text, Charsets.UTF_16LE),
+			tA.allocateFrom(text, winCharsetWide),
 			text.length,
 			format.ptr,
 			rect.ptr,
 			brush.ptr,
 			options.maskI,
 			measuringMode.id
+		)
+	}
+
+	fun drawTextLayout(
+		origin: Direct2DPoint2Float,
+		textLayout: DirectWriteTextLayout,
+		defaultFillBrush: GraphicsWindowDirect2DSolidColorBrush,
+		options: FlagSet<D2D1DrawTextOptions> = D2D1_DRAW_TEXT_OPTIONS_NONE,
+	) {
+		drawTextLayout(
+			origin.ptr,
+			textLayout.ptr,
+			defaultFillBrush.ptr,
+			options.maskI
 		)
 	}
 }

@@ -12,6 +12,7 @@ import org.bread_experts_group.ffi.windows.direct2d.*
 import org.bread_experts_group.ffi.windows.directx.IUnknown
 import org.bread_experts_group.ffi.windows.tryThrowWin32Error
 import org.bread_experts_group.ffi.windows.`void*`
+import org.bread_experts_group.generic.numeric.geometry.point.Point2
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.invoke.MethodHandle
@@ -39,6 +40,7 @@ class GraphicsWindowDirect2DFactory(
 	}
 
 	fun createWindowRenderTarget(
+		size: Point2<Int>,
 		vararg features: GWD2DCreateWindowRenderTargetFeature
 	): List<GWD2DCreateWindowRenderTargetData> = Arena.ofConfined().use { optionsArena ->
 		val wWindow = features.firstNotNullOfOrNull { it as? WindowsGraphicsWindow } ?: return emptyList()
@@ -47,8 +49,8 @@ class GraphicsWindowDirect2DFactory(
 		val data = mutableListOf<GWD2DCreateWindowRenderTargetData>(wWindow)
 		D2D1_HWND_RENDER_TARGET_PROPERTIES_hwnd.set(hRtp, 0, wWindow.hWnd)
 		val ps = D2D1_HWND_RENDER_TARGET_PROPERTIES_pixelSize.invokeExact(hRtp, 0L) as MemorySegment
-		D2D1_SIZE_U_width.set(ps, 0, 512)
-		D2D1_SIZE_U_height.set(ps, 0, 512)
+		D2D1_SIZE_U_width.set(ps, 0, size.x)
+		D2D1_SIZE_U_height.set(ps, 0, size.y)
 		tryThrowWin32Error(this.createHwndRenderTarget(rtp, hRtp, threadLocalPTR))
 		data.add(GraphicsWindowDirect2DHwndRenderTarget(threadLocalPTR.get(`void*`, 0)))
 		return data

@@ -1,9 +1,17 @@
 package org.bread_experts_group.api.graphics.feature.window.windows
 
 import org.bread_experts_group.api.graphics.feature.window.GraphicsWindow
+import org.bread_experts_group.api.graphics.feature.window.feature.WindowsGraphicsWindowClientAreaCoordinatesFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.display_affinity.windows.WindowsGraphicsWindowDisplayAffinityFeature
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.*
-import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse_move_2d.GraphicsWindowEventLoopMouseMove2DEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.keyboard.GraphicsWindowEventLoopKeyboardCharacter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.keyboard.GraphicsWindowEventLoopKeyboardVirtualKey
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.keyboard.down.GraphicsWindowEventLoopKeyboardKeyDownEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.keyboard.up.GraphicsWindowEventLoopKeyboardKeyUpEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse.x2d.left.StandardAuxiliaryInputs
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse.x2d.left.down.GraphicsWindowEventLoopMouseLeft2DDownEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse.x2d.left.up.GraphicsWindowEventLoopMouseLeft2DUpEventParameter
+import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.mouse.x2d.move.GraphicsWindowEventLoopMouseMove2DEventParameter
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.redraw.GraphicsWindowEventLoopMouseMove2D32
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.redraw.GraphicsWindowEventLoopRedrawEventParameter
 import org.bread_experts_group.api.graphics.feature.window.feature.event_loop.resize_2d.GraphicsWindowEventLoopResize2D32
@@ -27,6 +35,7 @@ import org.bread_experts_group.ffi.nativeLinker
 import org.bread_experts_group.ffi.threadLocalPTR
 import org.bread_experts_group.ffi.windows.*
 import org.bread_experts_group.generic.FlagSetConvertible.Companion.bitI
+import org.bread_experts_group.generic.Flaggable.Companion.from
 import org.bread_experts_group.generic.Mappable.Companion.id
 import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
@@ -381,6 +390,7 @@ class WindowsGraphicsWindow(
 		this.features.add(WindowsGraphicsWindowStatusFeature(this.hWnd))
 		this.features.add(WindowsGraphicsWindowDisplayAffinityFeature(this.hWnd))
 		this.features.add(WindowsGraphicsWindowEventLoopFeature(this.events))
+		this.features.add(WindowsGraphicsWindowClientAreaCoordinatesFeature(this.hWnd))
 	}
 
 	fun sendMessage(msg: Int, wParam: Long, lParam: Long): Long = nativeSendMessageWide!!.invokeExact(
@@ -431,12 +441,98 @@ class WindowsGraphicsWindow(
 					)
 				}
 
+				StandardGraphicsWindowEventLoopEventTypes.MOUSE_LEFT_2D_DOWN
+					if msgMEnum.enum == WindowsWindowMessages.WM_LBUTTONDOWN -> {
+					@Suppress("UNCHECKED_CAST")
+					(event.lambda as
+								(Array<GraphicsWindowEventLoopMouseLeft2DDownEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)(
+						arrayOf(
+							GraphicsWindowEventLoopMouseMove2D32(
+								(lParam and 0xFFFF).toShort().toInt(),
+								((lParam ushr 16) and 0xFFFF).toShort().toInt()
+							),
+							*StandardAuxiliaryInputs.entries.from(wParam).toTypedArray()
+						)
+					)
+				}
+
+				StandardGraphicsWindowEventLoopEventTypes.MOUSE_LEFT_2D_UP
+					if msgMEnum.enum == WindowsWindowMessages.WM_LBUTTONUP -> {
+					@Suppress("UNCHECKED_CAST")
+					(event.lambda as
+								(Array<GraphicsWindowEventLoopMouseLeft2DUpEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)(
+						arrayOf(
+							GraphicsWindowEventLoopMouseMove2D32(
+								(lParam and 0xFFFF).toShort().toInt(),
+								((lParam ushr 16) and 0xFFFF).toShort().toInt()
+							),
+							*StandardAuxiliaryInputs.entries.from(wParam).toTypedArray()
+						)
+					)
+				}
+
 				StandardGraphicsWindowEventLoopEventTypes.REDRAW
 					if msgMEnum.enum == WindowsWindowMessages.WM_PAINT -> {
 					@Suppress("UNCHECKED_CAST")
 					val lambda = (event.lambda as (Array<GraphicsWindowEventLoopRedrawEventParameter>) ->
 					GraphicsWindowEventLoopEventResult)
 					lambda(emptyArray<GraphicsWindowEventLoopRedrawEventParameter>())
+				}
+
+				StandardGraphicsWindowEventLoopEventTypes.KEYBOARD_KEY_DOWN
+					if msgMEnum.enum == WindowsWindowMessages.WM_CHAR -> {
+					@Suppress("UNCHECKED_CAST")
+					val lambda = (event.lambda as (Array<GraphicsWindowEventLoopKeyboardKeyDownEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)
+					lambda(
+						arrayOf(
+							GraphicsWindowEventLoopKeyboardCharacter(Char(wParam.toInt()))
+						)
+					)
+				}
+
+				StandardGraphicsWindowEventLoopEventTypes.KEYBOARD_KEY_DOWN
+					if msgMEnum.enum == WindowsWindowMessages.WM_KEYDOWN -> {
+					@Suppress("UNCHECKED_CAST")
+					val lambda = (event.lambda as (Array<GraphicsWindowEventLoopKeyboardKeyDownEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)
+					lambda(
+						arrayOf(
+							when (wParam) {
+								0x23L -> GraphicsWindowEventLoopKeyboardVirtualKey.END
+								0x24L -> GraphicsWindowEventLoopKeyboardVirtualKey.HOME
+								0x25L -> GraphicsWindowEventLoopKeyboardVirtualKey.LEFT_ARROW
+								0x26L -> GraphicsWindowEventLoopKeyboardVirtualKey.UP_ARROW
+								0x27L -> GraphicsWindowEventLoopKeyboardVirtualKey.RIGHT_ARROW
+								0x28L -> GraphicsWindowEventLoopKeyboardVirtualKey.DOWN_ARROW
+								0x2EL -> GraphicsWindowEventLoopKeyboardVirtualKey.DELETE
+								else -> continue
+							}
+						)
+					)
+				}
+
+				StandardGraphicsWindowEventLoopEventTypes.KEYBOARD_KEY_UP
+					if msgMEnum.enum == WindowsWindowMessages.WM_KEYUP -> {
+					@Suppress("UNCHECKED_CAST")
+					val lambda = (event.lambda as (Array<GraphicsWindowEventLoopKeyboardKeyUpEventParameter>) ->
+					GraphicsWindowEventLoopEventResult)
+					lambda(
+						arrayOf(
+							when (wParam) {
+								0x23L -> GraphicsWindowEventLoopKeyboardVirtualKey.END
+								0x24L -> GraphicsWindowEventLoopKeyboardVirtualKey.HOME
+								0x25L -> GraphicsWindowEventLoopKeyboardVirtualKey.LEFT_ARROW
+								0x26L -> GraphicsWindowEventLoopKeyboardVirtualKey.UP_ARROW
+								0x27L -> GraphicsWindowEventLoopKeyboardVirtualKey.RIGHT_ARROW
+								0x28L -> GraphicsWindowEventLoopKeyboardVirtualKey.DOWN_ARROW
+								0x2EL -> GraphicsWindowEventLoopKeyboardVirtualKey.DELETE
+								else -> continue
+							}
+						)
+					)
 				}
 
 				else -> continue

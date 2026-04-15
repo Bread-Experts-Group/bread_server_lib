@@ -5,9 +5,5 @@ data class EBCCompilerData(
 	val unInitBase: ULong,
 	val initBase: ULong,
 	val instructionSpaceBase: ULong,
-	var allocatorNatural: UInt = 0u,
-	var allocatorConstant: UInt = 0u,
-	var systemTableNatural: UInt = 0u,
-	var systemTableConstant: UInt = 0u,
 	val allocator: EBCVariableAllocator
 )

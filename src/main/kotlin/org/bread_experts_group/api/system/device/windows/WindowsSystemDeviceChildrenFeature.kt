@@ -6,7 +6,6 @@ import org.bread_experts_group.api.system.device.feature.SystemDeviceChildrenFea
 import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.ffi.capturedStateSegment
 import org.bread_experts_group.ffi.windows.*
-import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.lang.ref.Cleaner
@@ -16,12 +15,31 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 	override fun supported(): Boolean = nativeFindFirstFileExWide != null && nativePathCchRemoveBackslash != null &&
 			nativePathCchAppendEx != null && nativeFindNextFileWide != null && nativeFindClose != null
 
-	private val cleaner: Cleaner = Cleaner.create()
+	private companion object {
+		val cleaner: Cleaner = Cleaner.create()
+
+		class SegmentHolder(val segment: MemorySegment) : Runnable {
+			var nextPrepared = false
+			override fun run() {
+				val status = nativeFindClose!!.invokeExact(
+					capturedStateSegment,
+					segment
+				) as Int
+				if (status == 0) throwLastError()
+				nextPrepared = false
+			}
+		}
+	}
+
 	override fun iterator(): Iterator<SystemDevice> = object : Iterator<SystemDevice> {
+		private var searchHolder: SegmentHolder? = null
+		private lateinit var cleanable: Cleaner.Cleanable
 		private val searchHandle: MemorySegment
+			get() = searchHolder!!.segment
+		private val nextPrepared: Boolean
+			get() = searchHolder!!.nextPrepared
+
 		private val searchData: MemorySegment
-		private val searchArena = Arena.ofConfined()
-		private var nextPrepared = false
 
 		private fun advancePastDots() {
 			val fileName = WIN32_FIND_DATAW_cFileName.invokeExact(searchData, 0L) as MemorySegment
@@ -34,54 +52,63 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 		}
 
 		init {
-			var sH: MemorySegment
-			var sD: MemorySegment
-			try {
-				sD = searchArena.allocate(WIN32_FIND_DATAW)
-				Arena.ofConfined().use { tempArena ->
-					val wildcard = tempArena.allocate(pathSegment.byteSize() + 4).copyFrom(pathSegment)
-					val append = tempArena.allocateFrom("\\*", winCharsetWide)
-					tryThrowWin32Error(
-						nativePathCchAppendEx!!.invokeExact(
-							wildcard,
-							wildcard.byteSize() / 2,
-							append,
-							0x00000003 // TODO PathCchAppendEx flags
-						) as Int
-					)
-					sH = nativeFindFirstFileExWide!!.invokeExact(
+			searchData = autoArena.allocate(WIN32_FIND_DATAW)
+			val wildcard = autoArena.allocate(pathSegment.byteSize() + 4).copyFrom(pathSegment)
+			val append = autoArena.allocateFrom("\\*", winCharsetWide)
+			tryThrowWin32Error(
+				nativePathCchAppendEx!!.invokeExact(
+					wildcard,
+					wildcard.byteSize() / 2,
+					append,
+					0x00000003 // TODO PathCchAppendEx flags
+				) as Int
+			)
+			var newSearchHandle = nativeFindFirstFileExWide!!.invokeExact(
+				capturedStateSegment,
+				wildcard,
+				0, // TODO INFO LEVEL
+				searchData,
+				0, // TODO SEARCH OP
+				MemorySegment.NULL,
+				0 // TODO SEARCH FLAGS
+			) as MemorySegment
+
+			fun processStartError() = when (win32LastError) {
+				WindowsLastError.ERROR_DIRECTORY.id.toInt() -> {}
+				else -> throwLastError()
+			}
+
+			fun setupHandle() {
+				val holder = SegmentHolder(newSearchHandle)
+				holder.nextPrepared = true
+				searchHolder = holder
+				cleanable = cleaner.register(this, holder)
+				if (nextPrepared) advancePastDots()
+			}
+
+			if (newSearchHandle == INVALID_HANDLE_VALUE) when (win32LastError) {
+				WindowsLastError.ERROR_PATH_NOT_FOUND.id.toInt() -> {
+					val unc = autoArena.allocate(WCHAR.byteSize() * 4 + wildcard.byteSize())
+					unc[ValueLayout.JAVA_CHAR, 0] = '\\'
+					unc[ValueLayout.JAVA_CHAR, 2] = '\\'
+					unc[ValueLayout.JAVA_CHAR, 4] = '?'
+					unc[ValueLayout.JAVA_CHAR, 6] = '\\'
+					unc.asSlice(8).copyFrom(wildcard)
+					newSearchHandle = nativeFindFirstFileExWide.invokeExact(
 						capturedStateSegment,
-						wildcard,
+						unc,
 						0, // TODO INFO LEVEL
-						sD,
+						searchData,
 						0, // TODO SEARCH OP
 						MemorySegment.NULL,
 						0 // TODO SEARCH FLAGS
 					) as MemorySegment
-					if (sH == INVALID_HANDLE_VALUE) throwLastError()
+					if (newSearchHandle == INVALID_HANDLE_VALUE) processStartError()
+					else setupHandle()
 				}
-				cleaner.register(this) { cleanup() }
-				nextPrepared = true
-			} catch (e: WindowsLastErrorException) {
-				nextPrepared = false
-				searchArena.close()
-				sH = MemorySegment.NULL
-				sD = MemorySegment.NULL
-				if (e.error.enum != WindowsLastError.ERROR_DIRECTORY) throw e
-			}
-			searchHandle = sH
-			searchData = sD
-			if (nextPrepared) advancePastDots()
-		}
 
-		private fun cleanup() {
-			nextPrepared = false
-			searchArena.close()
-			val status = nativeFindClose!!.invokeExact(
-				capturedStateSegment,
-				searchHandle
-			) as Int
-			if (status == 0) throwLastError()
+				else -> processStartError()
+			} else setupHandle()
 		}
 
 		private fun advance() {
@@ -90,13 +117,13 @@ class WindowsSystemDeviceChildrenFeature(private val pathSegment: MemorySegment)
 				searchHandle, searchData
 			) as Int
 			if (status == 0) {
-				if (win32LastError == WindowsLastError.ERROR_NO_MORE_FILES.id.toInt()) return cleanup()
+				if (win32LastError == WindowsLastError.ERROR_NO_MORE_FILES.id.toInt()) return cleanable.clean()
 				else throwLastError()
 			}
 			advancePastDots()
 		}
 
-		override fun hasNext(): Boolean = nextPrepared
+		override fun hasNext(): Boolean = searchHolder != null && nextPrepared
 		override fun next(): SystemDevice {
 			if (!nextPrepared) throw IllegalStateException()
 			val fileName = WIN32_FIND_DATAW_cFileName.invokeExact(searchData, 0L) as MemorySegment

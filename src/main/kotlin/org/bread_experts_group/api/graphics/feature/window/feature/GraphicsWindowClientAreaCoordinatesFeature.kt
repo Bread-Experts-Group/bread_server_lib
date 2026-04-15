@@ -1,0 +1,12 @@
+package org.bread_experts_group.api.graphics.feature.window.feature
+
+import org.bread_experts_group.api.feature.FeatureExpression
+import org.bread_experts_group.api.graphics.feature.window.feature.client_area_coordinates.GraphicsWindowClientAreaCoordinatesDataIdentifier
+
+abstract class GraphicsWindowClientAreaCoordinatesFeature :
+	GraphicsWindowFeatureImplementation<GraphicsWindowClientAreaCoordinatesFeature>() {
+	final override val expresses: FeatureExpression<GraphicsWindowClientAreaCoordinatesFeature> =
+		GraphicsWindowFeatures.WINDOW_CLIENT_AREA_COORDINATES
+
+	abstract fun get(): GraphicsWindowClientAreaCoordinatesDataIdentifier
+}

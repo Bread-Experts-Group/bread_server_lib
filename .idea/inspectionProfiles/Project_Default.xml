@@ -80,6 +80,7 @@
           <option value="ObjectPropertyName" />
           <option value="DANGEROUS_CHARACTERS" />
           <option value="PLATFORM_CLASS_MAPPED_TO_KOTLIN" />
+          <option value="IMPOSSIBLE_IS_CHECK_WARNING" />
         </list>
       </option>
     </inspection_tool>

@@ -15,3 +15,12 @@ val nativeSHGetStockIconInfo: MethodHandle? = shell32Lookup.getDowncall(
 	UINT.withName("uFlags"),
 	PSHSTOCKICONINFO.withName("psii")
 )
+
+val nativeSHGetFileInfoWide: MethodHandle? = shell32Lookup.getDowncall(
+	nativeLinker, "SHGetFileInfoW", DWORD_PTR,
+	LPCWSTR.withName("pszPath"),
+	DWORD.withName("dwFileAttributes"),
+	PSHFILEINFOW.withName("psfi"),
+	UINT.withName("cbFileInfo"),
+	UINT.withName("uFlags")
+)

@@ -4,18 +4,6 @@ import org.bread_experts_group.api.feature.FeatureExpression
 import org.bread_experts_group.api.system.device.feature.*
 
 object SystemDeviceFeatures {
-	val SYSTEM_IDENTIFIER = object : FeatureExpression<SystemDeviceBasicIdentifierFeature> {
-		override val name: String = "Local System Identifier"
-	}
-
-	val SYSTEM_TYPE_IDENTIFIER = object : FeatureExpression<SystemDeviceBasicIdentifierFeature> {
-		override val name: String = "Local System Type Identifier"
-	}
-
-	val FRIENDLY_NAME = object : FeatureExpression<SystemDeviceFriendlyNameFeature> {
-		override val name: String = "Friendly Name"
-	}
-
 	val IO_DEVICE = object : FeatureExpression<SystemDeviceIODeviceFeature> {
 		override val name: String = "I/O Device"
 	}
@@ -26,6 +14,30 @@ object SystemDeviceFeatures {
 
 	// The following features are primarily specific to "Path Devices,"
 	// such as entries on a file system; e.g. "C:\Windows\a.txt"
+
+	val PATH = object : FeatureExpression<SystemDevicePathElementFeature> {
+		override val name: String = "Full Path Device"
+	}
+
+	val PATH_ELEMENT_LAST = object : FeatureExpression<SystemDevicePathElementFeature> {
+		override val name: String = "Get Last Path Device Element"
+	}
+
+	val PATH_ELEMENT_NAME = object : FeatureExpression<SystemDevicePathElementFeature> {
+		override val name: String = "Get Path Device Name"
+	}
+
+	val PATH_ELEMENT_EXTENSION = object : FeatureExpression<SystemDevicePathElementFeature> {
+		override val name: String = "Get Path Device Extension"
+	}
+
+	val PATH_ELEMENT_SHELL_DISPLAY_NAME = object : FeatureExpression<SystemDevicePathElementFeature> {
+		override val name: String = "Get Path Device Shell-Display Name"
+	}
+
+	val PATH_ELEMENT_SHELL_TYPE_DISPLAY_NAME = object : FeatureExpression<SystemDevicePathElementFeature> {
+		override val name: String = "Get Path Device Shell Type Display Name"
+	}
 
 	val PATH_PARENT = object : FeatureExpression<SystemDeviceParentFeature> {
 		override val name: String = "Parent Path Device"

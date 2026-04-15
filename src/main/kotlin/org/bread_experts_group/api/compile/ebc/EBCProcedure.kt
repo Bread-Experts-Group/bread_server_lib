@@ -178,6 +178,38 @@ class EBCProcedure {
 		arithmeticBase(0x54, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
 	}
 
+	fun OR32(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x15, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun OR64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x55, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun SHL32(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x17, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun SHL64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x57, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
 	fun SHR32(
 		operand1: EBCRegisters, operand1Indirect: Boolean,
 		operand2: EBCRegisters, operand2Indirect: Boolean,
@@ -530,6 +562,9 @@ class EBCProcedure {
 		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
 		immediateDataLength: EBCImmediateDataLength, move: EBCMoveTypes
 	) {
+		if (!operand1Indirect && operand1Index != null) throw IllegalArgumentException(
+			"Specifying an index with a direct Operand 1 is an instruction encoding exception."
+		)
 		instructionBuffer.put((0x37 or ((immediateDataLength.ordinal + 1) shl 6)).toByte())
 		instructionBuffer.put(
 			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0) or (move.ordinal shl 4)
@@ -683,9 +718,8 @@ class EBCProcedure {
 	}
 
 	fun MOVnw(
-		operand1: EBCRegisters, operand1Indirect: Boolean,
-		operand2: EBCRegisters, operand2Indirect: Boolean,
-		operand1Index: UShort?, operand2Index: UShort?
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
 	): EBCProcedure = this.also {
 		instructionBuffer.put(
 			(0x32 or (if (operand2Index != null) 0b01000000 else 0) or (if (operand1Index != null) 0b10000000 else 0))
@@ -770,5 +804,53 @@ class EBCProcedure {
 		instructionBuffer.put(0x04)
 		instructionBuffer.put(0x00)
 		addInstruction()
+	}
+
+	fun NEG64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?
+	): EBCProcedure = this.also {
+		instructionBuffer.put((0x4B or (if (operand2Index != null) 0b10000000 else 0)).toByte())
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0)
+					or (operand2.ordinal shl 4) or (if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	private fun writeBranches(pTrue: ByteArray, pFalse: ByteArray) {
+		if (pTrue.isNotEmpty() && pFalse.isNotEmpty()) {
+			val pFalseLength = pFalse.size / 2
+			if (pFalseLength > Byte.MAX_VALUE) TODO("too large")
+			val pSkip = EBCProcedure()
+			pSkip.JMP8(conditional = false, conditionSet = false, wordOffset = pFalseLength.toByte())
+			val pTrueSkipLength = (pTrue.size + pSkip.output.size) / 2
+			if (pTrueSkipLength > Byte.MAX_VALUE) TODO("too large")
+			this.JMP8(conditional = true, conditionSet = false, wordOffset = pTrueSkipLength.toByte())
+			this.output += pTrue + pSkip.output + pFalse
+			return
+		}
+		val p: ByteArray
+		val pIsTrue: Boolean
+		if (pTrue.isEmpty()) {
+			pIsTrue = false
+			p = pFalse
+		} else {
+			pIsTrue = true
+			p = pTrue
+		}
+		val pLength = p.size / 2
+		if (pLength > Byte.MAX_VALUE) TODO("too large")
+		this.JMP8(true, !pIsTrue, pLength.toByte())
+		this.output += p
+	}
+
+	fun branch(bTrue: (EBCProcedure) -> Unit, bFalse: (EBCProcedure) -> Unit) {
+		val pTrue = EBCProcedure()
+		bTrue(pTrue)
+		val pFalse = EBCProcedure()
+		bFalse(pFalse)
+		writeBranches(pTrue.output, pFalse.output)
 	}
 }

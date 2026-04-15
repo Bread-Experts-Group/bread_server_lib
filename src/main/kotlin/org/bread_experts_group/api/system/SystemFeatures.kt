@@ -39,6 +39,10 @@ object SystemFeatures {
 		override val name: String = "Get Current Working Path Device"
 	}
 
+	val SET_CURRENT_WORKING_PATH_DEVICE = object : FeatureExpression<SystemSetPathDeviceFeature> {
+		override val name: String = "Set Current Working Path Device"
+	}
+
 	val GET_PATH_DEVICE_DIRECT = object : FeatureExpression<SystemGetPathDeviceDirectFeature> {
 		override val name: String = "Get Path Device Direct"
 	}

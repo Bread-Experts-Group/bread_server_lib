@@ -7,10 +7,21 @@ import org.bread_experts_group.api.graphics.feature.direct2d.rendertarget.Graphi
 import org.bread_experts_group.api.graphics.feature.direct2d.rendertarget.GraphicsWindowDirect2DRenderTarget
 import org.bread_experts_group.api.graphics.feature.direct2d.rendertarget.GraphicsWindowDirect2DResource
 import org.bread_experts_group.api.graphics.feature.directwrite.factory.GraphicsWindowDirectWriteFactory
+import org.bread_experts_group.api.graphics.feature.directwrite.fontcollection.*
+import org.bread_experts_group.api.graphics.feature.directwrite.textformat.DirectWriteTextFormat
+import org.bread_experts_group.api.graphics.feature.directwrite.textlayout.DirectWriteTextLayout
 import org.bread_experts_group.ffi.windows.directx.*
 
 val vtblFunctionCounts = mapOf<Class<*>, Int>(
 	IUnknown::class.java to 3,
+	DirectWriteLocalizedStrings::class.java to 6,
+	DirectWriteFontFace::class.java to 15,
+	DirectWriteFont::class.java to 11,
+	DirectWriteFontList::class.java to 3,
+	DirectWriteFontFamily::class.java to 3,
+	DirectWriteFontCollection::class.java to 4,
+	DirectWriteTextFormat::class.java to 25,
+	DirectWriteTextLayout::class.java to 39,
 	ID3D12Object::class.java to 4,
 	IDXGIObject::class.java to 4,
 	IDXGIDeviceSubObject::class.java to 1,

@@ -2,10 +2,11 @@ package org.bread_experts_group.api.compile.ebc
 
 data class EBCVariableAllocator(
 	var nextFreeStringPosition: ULong,
-	var nextFreeNatural: UInt = 0u,
+	var nextFreeNatural: UInt = 1u,
 	var nextFreeConstant: UInt = 0u
 ) {
-	private val variables = mutableMapOf<Int, Pair<UInt, UInt>>()
+	private var variables = mutableMapOf<Int, Pair<UInt, UInt>>()
+
 	private val stringMap = mutableMapOf<String, ULong>()
 	var strings: ByteArray = byteArrayOf()
 

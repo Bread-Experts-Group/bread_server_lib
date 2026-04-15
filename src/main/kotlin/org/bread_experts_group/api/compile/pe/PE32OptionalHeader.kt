@@ -1,8 +1,8 @@
 package org.bread_experts_group.api.compile.pe
 
+import org.bread_experts_group.generic.io.reader.BSLWriter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.SeekableByteChannel
 
 class PE32OptionalHeader private constructor(private val structure: Structure) {
 	companion object {
@@ -26,13 +26,13 @@ class PE32OptionalHeader private constructor(private val structure: Structure) {
 	val windowsOptionalHeader: PE32WindowsOptionalHeader?
 		get() = structure.windowsSpecific
 
-	fun build(into: SeekableByteChannel) {
+	fun build(into: BSLWriter<*, *>, getPosition: () -> Long) {
 		val buffer = ByteBuffer.allocate(28)
 		buffer.order(ByteOrder.LITTLE_ENDIAN)
 		buffer.putShort(PE32Magic.PE_32.id.toShort())
 		buffer.put(structure.linkerVersionMajor.toByte())
 		buffer.put(structure.linkerVersionMinor.toByte())
-		codeSizePosition = into.position() + buffer.position()
+		codeSizePosition = getPosition() + buffer.position()
 		buffer.putInt(0)
 		buffer.putInt(0)
 		buffer.putInt(0)
@@ -40,6 +40,7 @@ class PE32OptionalHeader private constructor(private val structure: Structure) {
 		buffer.putInt(structure.codeBase.toInt())
 		buffer.putInt(structure.dataBase.toInt())
 		into.write(buffer.clear())
-		structure.windowsSpecific?.build(into)
+		into.flush()
+		structure.windowsSpecific?.build(into, getPosition)
 	}
 }
