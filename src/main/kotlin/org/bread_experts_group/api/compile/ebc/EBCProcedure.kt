@@ -194,6 +194,22 @@ class EBCProcedure {
 		arithmeticBase(0x55, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
 	}
 
+	fun XOR32(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x16, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun XOR64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x56, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
 	fun SHL32(
 		operand1: EBCRegisters, operand1Indirect: Boolean,
 		operand2: EBCRegisters, operand2Indirect: Boolean,
@@ -224,6 +240,22 @@ class EBCProcedure {
 		operand2Index: UShort?
 	): EBCProcedure = this.also {
 		arithmeticBase(0x58, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun ASHR32(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x19, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
+	}
+
+	fun ASHR64(
+		operand1: EBCRegisters, operand1Indirect: Boolean,
+		operand2: EBCRegisters, operand2Indirect: Boolean,
+		operand2Index: UShort?
+	): EBCProcedure = this.also {
+		arithmeticBase(0x59, operand1, operand1Indirect, operand2, operand2Indirect, operand2Index)
 	}
 
 	private fun cmpIwBase(

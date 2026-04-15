@@ -1,22 +1,22 @@
 package org.bread_experts_group.api.compile.ebc
 
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.Address
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
-import java.lang.classfile.*
-import java.lang.classfile.ClassFile.ACC_PUBLIC
-import java.lang.classfile.ClassFile.ACC_STATIC
+import java.lang.classfile.ClassFile.*
+import java.lang.classfile.CodeModel
+import java.lang.classfile.Label
+import java.lang.classfile.Opcode
+import java.lang.classfile.TypeKind
 import java.lang.classfile.instruction.*
 import java.lang.constant.MethodTypeDesc
-import java.lang.foreign.MemorySegment
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.file.Path
 import kotlin.math.abs
 import kotlin.reflect.KClass
 
 object EBCJVMCompilation {
-	private val cf = ClassFile.of(
-		ClassFile.DebugElementsOption.DROP_DEBUG,
-		ClassFile.LineNumbersOption.DROP_LINE_NUMBERS
+	private val cf = of(
+		DebugElementsOption.DROP_DEBUG,
+		LineNumbersOption.DROP_LINE_NUMBERS
 	)
 
 	fun compileClass(
@@ -30,12 +30,12 @@ object EBCJVMCompilation {
 		val efiMethod = efiMethods.firstOrNull {
 			(it.flags().flagsMask() and (ACC_PUBLIC or ACC_STATIC)) == (ACC_PUBLIC or ACC_STATIC) &&
 					it.methodType().equalsString(
-						"(L${MemorySegment::class.java.name.replace('.', '/')};" +
-								"L${MemorySegment::class.java.name.replace('.', '/')};)J"
+						"(L${Address::class.java.name.replace('.', '/')};" +
+								"L${Address::class.java.name.replace('.', '/')};)J"
 					) && it.methodName().equalsString("efiMain")
 		}
 		if (efiMethod == null) throw IllegalArgumentException(
-			"No public static efiMain(${MemorySegment::class}, ${MemorySegment::class}): Long function " +
+			"No public static efiMain(${Address::class}, ${Address::class}): Long function " +
 					"was found within [$clazz]."
 		)
 		val code = efiMethod.code().orElseThrow { IllegalArgumentException("$efiMethod must contain code.") }
@@ -48,6 +48,27 @@ object EBCJVMCompilation {
 			),
 			true
 		)
+	}
+
+	fun EBCProcedure.popLongsV2V1R2R1() {
+		POP32(EBCRegisters.R2, false, null)
+		POP64(EBCRegisters.R2, false, null)
+		POP32(EBCRegisters.R1, false, null)
+		POP64(EBCRegisters.R1, false, null)
+	}
+
+	fun EBCProcedure.popIntsV2V1R2R1() {
+		POP32(EBCRegisters.R2, false, null)
+		POP32(EBCRegisters.R2, false, null)
+		POP32(EBCRegisters.R1, false, null)
+		POP32(EBCRegisters.R1, false, null)
+	}
+
+	fun EBCProcedure.popIntLongV2V1R2R1() {
+		POP32(EBCRegisters.R2, false, null)
+		POP32(EBCRegisters.R2, false, null)
+		POP32(EBCRegisters.R1, false, null)
+		POP64(EBCRegisters.R1, false, null)
 	}
 
 	fun compileMethod(
@@ -64,7 +85,7 @@ object EBCJVMCompilation {
 		val parameterIndices = Array(parameters.size) {
 			val savedIndex = parameterIndex
 			parameterIndex += when (val kind = TypeKind.from(parameters[it])) {
-				TypeKind.INT, TypeKind.REFERENCE -> 1
+				TypeKind.INT, TypeKind.CHAR, TypeKind.REFERENCE -> 1
 				TypeKind.LONG -> 2
 				else -> throw NotImplementedError("Unsupported parameter kind $kind")
 			}
@@ -108,7 +129,7 @@ object EBCJVMCompilation {
 					)
 				}
 
-				TypeKind.INT -> {
+				TypeKind.INT, TypeKind.CHAR -> {
 					procedure.MOVdw(
 						EBCRegisters.R2, false, null,
 						EBCRegisters.R0, true, naturalIndex16(false, stackNatural, stackConstant)
@@ -255,35 +276,26 @@ object EBCJVMCompilation {
 						)
 					}
 
-					Opcode.IF_ICMPGE -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R2, false, null) // 2
-						procedure.POP32(EBCRegisters.R3, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null) // 1
-						procedure.CMP32gte( // o1 >= o2, 1 >= 2
-							EBCRegisters.R3,
+					Opcode.IF_ICMPGE, Opcode.IF_ICMPLT -> {
+						procedure.popIntsV2V1R2R1()
+						procedure.CMP32gte(
+							EBCRegisters.R1,
 							EBCRegisters.R2, false, null
 						)
 					}
 
-					Opcode.IF_ICMPLE -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
+					Opcode.IF_ICMPLE, Opcode.IF_ICMPGT -> {
+						procedure.popIntsV2V1R2R1()
 						procedure.CMP32lte(
-							EBCRegisters.R3,
+							EBCRegisters.R1,
 							EBCRegisters.R2, false, null
 						)
 					}
 
 					Opcode.IF_ICMPEQ, Opcode.IF_ICMPNE -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
+						procedure.popIntsV2V1R2R1()
 						procedure.CMP32eq(
-							EBCRegisters.R3,
+							EBCRegisters.R1,
 							EBCRegisters.R2, false, null
 						)
 					}
@@ -362,12 +374,19 @@ object EBCJVMCompilation {
 			}
 
 			is OperatorInstruction -> when (val opcode = element.opcode()) {
-				Opcode.LADD -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP64(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP64(EBCRegisters.R1, false, null)
-					procedure.ADD64(
+				Opcode.LADD, Opcode.LSUB, Opcode.LMUL, Opcode.LDIV, Opcode.LREM,
+				Opcode.LOR, Opcode.LAND, Opcode.LXOR -> {
+					procedure.popLongsV2V1R2R1()
+					when (opcode) {
+						Opcode.LADD -> procedure::ADD64
+						Opcode.LSUB -> procedure::SUB64
+						Opcode.LMUL -> procedure::MUL64
+						Opcode.LDIV -> procedure::DIV64
+						Opcode.LREM -> procedure::MOD64
+						Opcode.LOR -> procedure::OR64
+						Opcode.LAND -> procedure::AND64
+						Opcode.LXOR -> procedure::XOR64
+					}(
 						EBCRegisters.R1, false,
 						EBCRegisters.R2, false, null
 					)
@@ -376,96 +395,48 @@ object EBCJVMCompilation {
 					procedure.PUSH32(EBCRegisters.R1, false, null)
 				}
 
-				Opcode.IADD -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.ADD32(
+				Opcode.LSHL, Opcode.LSHR, Opcode.LUSHR -> {
+					procedure.popIntLongV2V1R2R1()
+					when (opcode) {
+						Opcode.LSHL -> procedure::SHL64
+						Opcode.LSHR -> procedure::ASHR64
+						Opcode.LUSHR -> procedure::SHR64
+					}(
 						EBCRegisters.R1, false,
 						EBCRegisters.R2, false, null
 					)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
+					procedure.PUSH64(EBCRegisters.R1, false, null)
 					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
 					procedure.PUSH32(EBCRegisters.R2, false, null)
 				}
 
-				Opcode.LSUB -> {
+				Opcode.LNEG -> {
 					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP64(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
 					procedure.POP64(EBCRegisters.R1, false, null)
-					procedure.SUB64(
+					procedure.NEG64(
 						EBCRegisters.R1, false,
-						EBCRegisters.R2, false, null
+						EBCRegisters.R1, false, null
 					)
 					procedure.PUSH64(EBCRegisters.R1, false, null)
-					procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
-				}
-
-				Opcode.LMUL -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP64(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP64(EBCRegisters.R1, false, null)
-					procedure.MUL64(
-						EBCRegisters.R1, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH64(EBCRegisters.R1, false, null)
-					procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
-				}
-
-				Opcode.IMUL -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.MUL32(
-						EBCRegisters.R1, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
 					procedure.PUSH32(EBCRegisters.R2, false, null)
 				}
 
-				Opcode.LDIV -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP64(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP64(EBCRegisters.R1, false, null)
-					procedure.DIV64(
-						EBCRegisters.R1, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH64(EBCRegisters.R1, false, null)
-					procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
-				}
-
-				Opcode.IDIV -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.DIV32(
-						EBCRegisters.R1, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
-				}
-
-				Opcode.IREM -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.MOD32(
+				Opcode.IADD, Opcode.ISUB, Opcode.IMUL, Opcode.IDIV, Opcode.IREM,
+				Opcode.ISHL, Opcode.ISHR, Opcode.IUSHR, Opcode.IOR, Opcode.IAND, Opcode.IXOR -> {
+					procedure.popIntsV2V1R2R1()
+					when (opcode) {
+						Opcode.IADD -> procedure::ADD32
+						Opcode.ISUB -> procedure::SUB32
+						Opcode.IMUL -> procedure::MUL32
+						Opcode.IDIV -> procedure::DIV32
+						Opcode.IREM -> procedure::MOD32
+						Opcode.ISHL -> procedure::SHL32
+						Opcode.ISHR -> procedure::ASHR32
+						Opcode.IUSHR -> procedure::SHR32
+						Opcode.IOR -> procedure::OR32
+						Opcode.IAND -> procedure::AND32
+						Opcode.IXOR -> procedure::XOR32
+					}(
 						EBCRegisters.R1, false,
 						EBCRegisters.R2, false, null
 					)
@@ -475,10 +446,7 @@ object EBCJVMCompilation {
 				}
 
 				Opcode.LCMP -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP64(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP64(EBCRegisters.R1, false, null)
+					procedure.popLongsV2V1R2R1()
 					procedure.CMP64eq(
 						EBCRegisters.R1,
 						EBCRegisters.R2, false, null
@@ -499,101 +467,6 @@ object EBCJVMCompilation {
 					procedure.PUSH32(EBCRegisters.R1, false, null)
 					procedure.MOVIdw(EBCRegisters.R1, false, null, 0u)
 					procedure.PUSH32(EBCRegisters.R1, false, null)
-				}
-
-				Opcode.LNEG -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP64(EBCRegisters.R1, false, null)
-					procedure.NEG64(
-						EBCRegisters.R1, false,
-						EBCRegisters.R1, false, null
-					)
-					procedure.PUSH64(EBCRegisters.R1, false, null)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
-				}
-
-				Opcode.IUSHR -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.SHR32(
-						EBCRegisters.R3, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH32(EBCRegisters.R3, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
-				}
-
-				Opcode.LUSHR -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.POP64(EBCRegisters.R3, false, null)
-					procedure.SHR64(
-						EBCRegisters.R3, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH64(EBCRegisters.R3, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 1u)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
-				}
-
-				Opcode.LSHL -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.POP64(EBCRegisters.R3, false, null)
-					procedure.SHL64(
-						EBCRegisters.R3, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH64(EBCRegisters.R3, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
-				}
-
-				Opcode.ISHL -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.SHL32(
-						EBCRegisters.R3, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH32(EBCRegisters.R3, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
-				}
-
-				Opcode.LOR -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP64(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.POP64(EBCRegisters.R3, false, null)
-					procedure.OR64(
-						EBCRegisters.R3, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH64(EBCRegisters.R3, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
-				}
-
-				Opcode.IOR -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.POP32(EBCRegisters.R3, false, null)
-					procedure.OR32(
-						EBCRegisters.R3, false,
-						EBCRegisters.R2, false, null
-					)
-					procedure.PUSH32(EBCRegisters.R3, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
-					procedure.PUSH32(EBCRegisters.R2, false, null)
 				}
 
 				else -> throw NotImplementedError("Unknown operator opcode $opcode ($element)")
@@ -623,12 +496,54 @@ object EBCJVMCompilation {
 				val descriptor = "${element.owner().name().stringValue()}." +
 						"${element.name().stringValue()}${element.type().stringValue()}"
 			) {
-				"java/lang/foreign/MemorySegment.address()J" -> {
-					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POPn(EBCRegisters.R2, false, null)
-					procedure.PUSH64(EBCRegisters.R2, false, null)
-					procedure.MOVIdw(EBCRegisters.R2, false, null, 1u)
+				"${EBCIntrinsics.internalName}.access64(L${Address.internalName};)J" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.MOVqw(
+						EBCRegisters.R1, false, null,
+						EBCRegisters.R1, true, null
+					)
+					procedure.PUSH64(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+				}
+
+				"${EBCIntrinsics.internalName}.access32(L${Address.internalName};)I" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.MOVdw(
+						EBCRegisters.R1, false, null,
+						EBCRegisters.R1, true, null
+					)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 0u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+				}
+
+				"${EBCIntrinsics.internalName}.access16(L${Address.internalName};)S" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
+					procedure.MOVww(
+						EBCRegisters.R2, false, null,
+						EBCRegisters.R1, true, null
+					)
 					procedure.PUSH32(EBCRegisters.R2, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 0u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+				}
+
+				"${EBCIntrinsics.internalName}.access8(L${Address.internalName};)B" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
+					procedure.MOVbw(
+						EBCRegisters.R2, false, null,
+						EBCRegisters.R1, true, null
+					)
+					procedure.PUSH32(EBCRegisters.R2, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 0u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
 				}
 
 				else -> {
@@ -642,6 +557,9 @@ object EBCJVMCompilation {
 						).methods().first {
 							it.methodName() == element.name() && it.methodType() == element.type()
 						}.let {
+							if (it.flags().flagsMask() and ACC_NATIVE != 0) throw NotImplementedError(
+								"Native function $descriptor"
+							)
 							compileMethod(
 								it.methodTypeSymbol(),
 								it.code().get(),
@@ -736,7 +654,7 @@ object EBCJVMCompilation {
 					EBCRegisters.R2, false, null
 				)
 
-				Opcode.IFNE, Opcode.IF_ICMPNE -> infill.JMP32(
+				Opcode.IFNE, Opcode.IF_ICMPNE, Opcode.IF_ICMPLT, Opcode.IF_ICMPGT -> infill.JMP32(
 					conditional = true, conditionSet = false, relative = true,
 					EBCRegisters.R2, false, null
 				)
@@ -773,215 +691,7 @@ object EBCJVMCompilation {
 		}
 		// decompilation
 		code.forEach { println(it) }
-		fun decodeIndex(n: Short): String {
-			val n = n.toInt()
-			var string = if ((n ushr 15) != 0) "-(" else "("
-			val naturalBitCount = ((n ushr 12) and 0b111) * 2
-			string += (n and ((1 shl naturalBitCount) - 1)).toString() + ", "
-			string += ((n and ((1 shl 12) - 1)) ushr naturalBitCount).toString() + ")"
-			return string
-		}
-
-		fun decodeIndex(n: Int): String {
-			val n = n
-			var string = if ((n ushr 31) != 0) "-(" else "("
-			val naturalBitCount = ((n ushr 28) and 0b111) * 4
-			string += (n and ((1 shl naturalBitCount) - 1)).toString() + ", "
-			string += ((n and ((1 shl 28) - 1)) ushr naturalBitCount).toString() + ")"
-			return string
-		}
-
-		fun decodeIndex(n: Long): String {
-			val n = n
-			var string = if ((n ushr 63) != 0L) "-(" else "("
-			val naturalBitCount = (((n ushr 60) and 0b111) * 8).toInt()
-			string += (n and ((1L shl naturalBitCount) - 1)).toString() + ", "
-			string += ((n and ((1L shl 60) - 1)) ushr naturalBitCount).toString() + ")"
-			return string
-		}
-
-		val buffer = ByteBuffer.wrap(procedure.output).order(ByteOrder.LITTLE_ENDIAN)
-		while (buffer.hasRemaining()) {
-			val byte1 = buffer.get().toInt() and 0xFF
-			val byte2 = buffer.get().toInt() and 0xFF
-			var description = ""
-			when (val instruction = byte1 and 0b111111) {
-				0x01 -> {
-					val b64 = byte1 and 0b1000000 != 0
-					description += "JMP${if (b64) "64" else "32"}${if (byte2 and 0b10000 != 0) "" else "a"}" +
-							"${if (byte2 and 0b10000000 != 0) (if (byte2 and 0b1000000 != 0) "cs" else "cc") else ""} "
-					if (b64) description += "x${buffer.getLong().toHexString()}"
-					else {
-						description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-						if (byte1 and 0b10000000 != 0) description += ' ' + (if (byte2 and 0b1000 != 0) decodeIndex(
-							buffer.getInt()
-						) else "x${buffer.getInt().toHexString()}")
-					}
-				}
-
-				0x02 -> {
-					description += "JMP8${
-						if (byte1 and 0b10000000 != 0) (if (byte1 and 0b1000000 != 0) "cs" else "cc")
-						else ""
-					} ${byte2.toByte()}"
-				}
-
-				0x03 -> {
-					val b64 = byte1 and 0b1000000 != 0
-					description += "CALL${if (b64) "64" else "32"}${if (byte2 and 0b100000 != 0) "EX" else ""}" +
-							"${if (byte2 and 0b10000 != 0) "" else "a"} "
-					if (b64) description += "x${buffer.getLong().toHexString()}"
-					else {
-						description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-						if (byte1 and 0b10000000 != 0) description += ' ' + (if (byte2 and 0b1000 != 0) decodeIndex(
-							buffer.getInt()
-						) else "x${buffer.getInt().toHexString()}")
-					}
-				}
-
-				0x04 -> description += "RET"
-
-				0x05, 0x06, 0x07, 0x08, 0x09 -> {
-					val b64 = byte1 and 0b1000000 != 0
-					val kind = when (instruction) {
-						0x05 -> "eq"
-						0x06 -> "lte"
-						0x07 -> "gte"
-						0x08 -> "ulte"
-						0x09 -> "ugte"
-						else -> throw InternalError()
-					}
-					description += "CMP${if (b64) 64 else 32}$kind "
-					description += EBCRegisters.entries[byte2 and 0b111]
-					description += ", " + (if (byte2 and 0b10000000 != 0) "@" else "") +
-							EBCRegisters.entries[(byte2 ushr 4) and 0b111]
-				}
-
-				0x2D, 0x2E, 0x2F, 0x30, 0x31 -> {
-					val immediate32 = byte1 and 0b10000000 != 0
-					val b64 = byte1 and 0b1000000 != 0
-					val kind = when (instruction) {
-						0x2D -> "eq"
-						0x2E -> "lte"
-						0x2F -> "gte"
-						0x30 -> "ulte"
-						0x31 -> "ugte"
-						else -> throw InternalError()
-					}
-					description += "CMPI${if (b64) 64 else 32}$kind "
-					description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-					if (byte2 and 0b10000 != 0) description += ' ' + decodeIndex(buffer.getShort())
-					description += ", x" + if (immediate32) buffer.getInt().toHexString()
-					else buffer.getShort().toHexString()
-				}
-
-				0x0C -> {
-					val b64 = byte1 and 0b1000000 != 0
-					description += "ADD${if (b64) 64 else 32} "
-					description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-					description += ", " + (if (byte2 and 0b10000000 != 0) "@" else "") +
-							EBCRegisters.entries[(byte2 ushr 4) and 0b111]
-					if (byte1 and 0b10000000 != 0) description += ' ' + decodeIndex(buffer.getShort())
-				}
-
-				0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x28 -> {
-					val size: EBCMoveTypes
-					val indexSize: EBCMoveTypes
-					if (instruction == 0x28) {
-						size = EBCMoveTypes.BITS_64_QUADWORD
-						indexSize = EBCMoveTypes.BITS_64_QUADWORD
-					} else if (instruction >= 0x21) {
-						size = when (instruction - 0x21) {
-							0 -> EBCMoveTypes.BITS_8_BYTE
-							1 -> EBCMoveTypes.BITS_16_WORD
-							2 -> EBCMoveTypes.BITS_32_DOUBLEWORD
-							3 -> EBCMoveTypes.BITS_64_QUADWORD
-							else -> throw InternalError()
-						}
-						indexSize = EBCMoveTypes.BITS_32_DOUBLEWORD
-					} else {
-						size = when (instruction - 0x1D) {
-							0 -> EBCMoveTypes.BITS_8_BYTE
-							1 -> EBCMoveTypes.BITS_16_WORD
-							2 -> EBCMoveTypes.BITS_32_DOUBLEWORD
-							3 -> EBCMoveTypes.BITS_64_QUADWORD
-							else -> throw InternalError()
-						}
-						indexSize = EBCMoveTypes.BITS_16_WORD
-					}
-					description += "MOV${size.letter}${indexSize.letter} "
-					description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-					if (byte1 and 0b10000000 != 0) description += ' ' + when (indexSize) {
-						EBCMoveTypes.BITS_64_QUADWORD -> decodeIndex(buffer.getLong())
-						EBCMoveTypes.BITS_32_DOUBLEWORD -> decodeIndex(buffer.getInt())
-						EBCMoveTypes.BITS_16_WORD -> decodeIndex(buffer.getShort())
-						else -> throw InternalError()
-					}
-					description += ", " + (if (byte2 and 0b10000000 != 0) "@" else "") +
-							EBCRegisters.entries[(byte2 ushr 4) and 0b111]
-					if (byte1 and 0b1000000 != 0) {
-						description += ' ' + when (indexSize) {
-							EBCMoveTypes.BITS_64_QUADWORD -> decodeIndex(buffer.getLong())
-							EBCMoveTypes.BITS_32_DOUBLEWORD -> decodeIndex(buffer.getInt())
-							EBCMoveTypes.BITS_16_WORD -> decodeIndex(buffer.getShort())
-							else -> throw InternalError()
-						}
-					}
-				}
-
-				0x2B, 0x2C -> {
-					val b64 = byte1 and 0b1000000 != 0
-					description += "${if (instruction == 0x2B) "PUSH" else "POP"}${if (b64) 64 else 32} "
-					description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-					if (byte1 and 0b10000000 != 0) description += ' ' + decodeIndex(buffer.getShort())
-				}
-
-				0x32, 0x33 -> {
-					description += "MOVn${if (instruction == 0x32) 'w' else 'd'} "
-					description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-					if (byte1 and 0b10000000 != 0) description += ' ' + decodeIndex(buffer.getShort())
-					description += ", " + (if (byte2 and 0b10000000 != 0) "@" else "") +
-							EBCRegisters.entries[(byte2 ushr 4) and 0b111]
-					if (byte1 and 0b1000000 != 0) description += ' ' + decodeIndex(buffer.getShort())
-				}
-
-				0x35, 0x36 -> {
-					description += "${if (instruction == 0x35) "PUSH" else "POP"}n "
-					description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-					if (byte1 and 0b10000000 != 0) description += ' ' + decodeIndex(buffer.getShort())
-				}
-
-				0x37 -> {
-					val move: EBCMoveTypes = when ((byte2 ushr 4) and 0b11) {
-						0 -> EBCMoveTypes.BITS_8_BYTE
-						1 -> EBCMoveTypes.BITS_16_WORD
-						2 -> EBCMoveTypes.BITS_32_DOUBLEWORD
-						3 -> EBCMoveTypes.BITS_64_QUADWORD
-						else -> throw InternalError()
-					}
-					val immediateSize: EBCMoveTypes = when (byte1 ushr 6) {
-						1 -> EBCMoveTypes.BITS_16_WORD
-						2 -> EBCMoveTypes.BITS_32_DOUBLEWORD
-						3 -> EBCMoveTypes.BITS_64_QUADWORD
-						else -> throw InternalError()
-					}
-					description += "MOVI${move.letter}${immediateSize.letter} "
-					description += (if (byte2 and 0b1000 != 0) "@" else "") + EBCRegisters.entries[byte2 and 0b111]
-					if (byte2 and 0b1000000 != 0) description += ' ' + decodeIndex(buffer.getShort())
-					description += ", x" + when (immediateSize) {
-						EBCMoveTypes.BITS_16_WORD -> buffer.getShort().toHexString()
-						EBCMoveTypes.BITS_32_DOUBLEWORD -> buffer.getInt().toHexString()
-						EBCMoveTypes.BITS_64_QUADWORD -> buffer.getLong().toHexString()
-						else -> throw InternalError()
-					}
-				}
-
-//				else -> throw NotImplementedError(
-//					"Unknown instruction for decompilation 0x${instruction.toString(16)}"
-//				)
-			}
-			println(description)
-		}
+		EBCDisassembly.diassemble(procedure.output)
 		println()
 		return EBCCompilationOutput(
 			procedure.output,

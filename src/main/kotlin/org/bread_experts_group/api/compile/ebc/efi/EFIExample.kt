@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.compile.ebc.efi
 
-import java.lang.foreign.MemorySegment
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.Address
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.access8
 
 object EFIExample {
 //	@JvmStatic
@@ -455,22 +456,11 @@ object EFIExample {
 //	}
 
 	@JvmStatic
-	fun pack(a: Int, b: Long, c: Int): Long {
-		return a.toLong() * 1000000L + b * 1000L + c.toLong()
-	}
-
-	@JvmStatic
-	fun p2(a: Int, b: Long, c: Int): Long {
-		return if (a > b) pack(a, b, c)
-		else pack(c, b, a)
-	}
-
-	@JvmStatic
 	@OptIn(ExperimentalUnsignedTypes::class)
-	fun efiMain(imageHandle: MemorySegment?, systemTable: MemorySegment?): Long {
+	fun efiMain(imageHandle: Address?, systemTable: Address?): Long {
 		if (imageHandle == null || systemTable == null) return 1
-		return p2(1, p2(2, 3, 4), 5)
-//		return abs(-993L)
+		return access8(systemTable).toLong()
+//		return access64(systemTable)
 //		val a = "dynvar12345"
 //		val b = "dynvarABCD"
 //		systemTable.conOut.outputString("prefix-$a$b-suffix\r\n")
