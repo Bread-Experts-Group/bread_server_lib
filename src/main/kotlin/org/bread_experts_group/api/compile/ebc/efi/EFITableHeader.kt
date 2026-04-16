@@ -7,7 +7,7 @@ import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.plus
 
 object EFITableHeader {
 	@JvmStatic
-	fun signature(at: Address): Long = access64(at)
+	fun signature(at: Address?): Long = if (at != null) access64(at) else 0
 
 	@JvmStatic
 	fun revision(at: Address): Int = access32(at + 8)

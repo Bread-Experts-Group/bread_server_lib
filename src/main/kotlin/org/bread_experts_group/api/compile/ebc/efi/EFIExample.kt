@@ -1,6 +1,11 @@
 package org.bread_experts_group.api.compile.ebc.efi
 
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.Address
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.access32
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.accessN
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.allocate32
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.allocateN
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.naturalSize
 
 object EFIExample {
 //	@JvmStatic
@@ -457,11 +462,35 @@ object EFIExample {
 	@JvmStatic
 	@OptIn(ExperimentalUnsignedTypes::class)
 	fun efiMain(imageHandle: Address?, systemTable: Address?): Long {
-		if (imageHandle == null || systemTable == null) return 1
-		return EFISimpleTextOutputProtocol.reset(
-			EFISystemTable.conOut(systemTable),
-			false
+		if (imageHandle == null || systemTable == null) return 0x1000
+		if (naturalSize() != 8L) return 0x1001
+		val memoryMapSize = allocateN()
+		val mapKey = allocateN()
+		val descriptorSize = allocateN()
+		val descriptorVersion = allocate32()
+		var status = EFIBootServices.getMemoryMap(
+			EFISystemTable.bootServices(systemTable),
+			memoryMapSize, null, null, null, null
 		)
+		if (status != 5) return 0x1002
+		val memoryMapPtr = allocateN()
+		status = EFIBootServices.allocatePool(
+			EFISystemTable.bootServices(systemTable),
+			2, access32(memoryMapSize), memoryMapPtr
+		)
+		if (status != 0) return 0x1003
+		val memoryMap = accessN(memoryMapPtr)
+		status = EFIBootServices.getMemoryMap(
+			EFISystemTable.bootServices(systemTable),
+			memoryMapSize, memoryMap, mapKey, descriptorSize, descriptorVersion
+		)
+		if (status != 0) return 0x1004
+//		status = EFIBootServices.exitBootServices(
+//			EFISystemTable.bootServices(systemTable),
+//			imageHandle, access32(mapKey)
+//		)
+//		if (status != 0) return 0x1005
+		return (access32(memoryMapSize) / access32(descriptorSize)).toLong()
 //		return access64(systemTable)
 //		val a = "dynvar12345"
 //		val b = "dynvarABCD"

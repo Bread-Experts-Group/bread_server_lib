@@ -7,6 +7,9 @@ import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.accessN
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.nat
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.plus
 
+typealias UINTN = Int // TODO: Should be processor sized. Using Int as placeholder.
+typealias EFIStatus = UINTN
+
 object EFISystemTable {
 	const val SIGNATURE: Long = 0x5453595320494249
 	const val REVISION_2_100: Int = ((2 shl 16) or (100))

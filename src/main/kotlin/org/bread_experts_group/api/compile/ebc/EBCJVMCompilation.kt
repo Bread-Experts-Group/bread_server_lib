@@ -10,6 +10,7 @@ import java.lang.classfile.Opcode
 import java.lang.classfile.TypeKind
 import java.lang.classfile.attribute.RuntimeInvisibleAnnotationsAttribute
 import java.lang.classfile.instruction.*
+import java.lang.constant.DynamicConstantDesc
 import java.lang.constant.MethodTypeDesc
 import java.nio.file.Path
 import kotlin.math.abs
@@ -237,6 +238,14 @@ object EBCJVMCompilation {
 						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
+					is DynamicConstantDesc<*> if value.constantName() == "_" -> {
+						procedure.MOVIqw(EBCRegisters.R1, false, null, 0u)
+						// TODO: Unsafe (>64-bits)
+						procedure.PUSHn(EBCRegisters.R1, false, null)
+						procedure.MOVIdw(EBCRegisters.R1, false, null, 2u)
+						procedure.PUSH32(EBCRegisters.R1, false, null)
+					}
+
 					else -> throw NotImplementedError("Unknown reference type $value ($element)")
 				}
 
@@ -361,6 +370,14 @@ object EBCJVMCompilation {
 					)
 					procedure.PUSH64(EBCRegisters.R2, false, null)
 					procedure.MOVIdw(EBCRegisters.R2, false, null, 1u)
+					procedure.PUSH32(EBCRegisters.R2, false, null)
+				}
+
+				Opcode.L2I -> {
+					procedure.POP32(EBCRegisters.R2, false, null)
+					procedure.POP64(EBCRegisters.R2, false, null)
+					procedure.PUSH32(EBCRegisters.R2, false, null)
+					procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
 					procedure.PUSH32(EBCRegisters.R2, false, null)
 				}
 
@@ -496,6 +513,52 @@ object EBCJVMCompilation {
 				val descriptor = "${element.owner().name().stringValue()}." +
 						"${element.name().stringValue()}${element.type().stringValue()}"
 			) {
+				"${EBCIntrinsics.internalName}.allocateN()L${Address.internalName};" -> {
+					procedure.MOVIqq(EBCRegisters.R1, false, null, data.unInitBase)
+					procedure.MOVInw(
+						EBCRegisters.R2, false, null,
+						naturalIndex16(
+							false,
+							data.allocator.nextFreeNatural, data.allocator.nextFreeConstant
+						)
+					)
+					procedure.ADD64(
+						EBCRegisters.R1, false,
+						EBCRegisters.R2, false, null
+					)
+					procedure.PUSHn(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 2u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+					data.allocator.nextFreeNatural++
+				}
+
+				"${EBCIntrinsics.internalName}.allocate32()L${Address.internalName};" -> {
+					procedure.MOVIqq(EBCRegisters.R1, false, null, data.unInitBase)
+					procedure.MOVInw(
+						EBCRegisters.R2, false, null,
+						naturalIndex16(
+							false,
+							data.allocator.nextFreeNatural, data.allocator.nextFreeConstant
+						)
+					)
+					procedure.ADD64(
+						EBCRegisters.R1, false,
+						EBCRegisters.R2, false, null
+					)
+					procedure.PUSHn(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 2u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+					data.allocator.nextFreeConstant += 4u
+				}
+
+				"${EBCIntrinsics.internalName}.toLong(L${Address.internalName};)J" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.PUSH64(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+				}
+
 				"${EBCIntrinsics.internalName}.accessN(L${Address.internalName};)L${Address.internalName};" -> {
 					procedure.POP32(EBCRegisters.R2, false, null)
 					procedure.POPn(EBCRegisters.R1, false, null)
@@ -517,6 +580,17 @@ object EBCJVMCompilation {
 					procedure.PUSH64(EBCRegisters.R1, false, null)
 					procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
 					procedure.PUSH32(EBCRegisters.R1, false, null)
+				}
+
+				"${EBCIntrinsics.internalName}.write64(L${Address.internalName};J)V" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POP64(EBCRegisters.R2, false, null)
+					procedure.POP32(EBCRegisters.R3, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.MOVqw(
+						EBCRegisters.R1, true, null,
+						EBCRegisters.R2, false, null
+					)
 				}
 
 				"${EBCIntrinsics.internalName}.access32(L${Address.internalName};)I" -> {
@@ -591,6 +665,16 @@ object EBCJVMCompilation {
 					procedure.PUSH32(EBCRegisters.R3, false, null)
 				}
 
+				"${EBCIntrinsics.internalName}.naturalSize()J" -> {
+					procedure.MOVInw(
+						EBCRegisters.R1, false, null,
+						naturalIndex16(false, 1u, 0u)
+					)
+					procedure.PUSH64(EBCRegisters.R1, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+				}
+
 				else -> {
 					if (!functions.contains(descriptor)) {
 						val classFile = element.owner().asInternalName().replace('/', '.')
@@ -623,7 +707,7 @@ object EBCJVMCompilation {
 									for (parameterKind in parameters) {
 										procedure.POP32(EBCRegisters.R1, false, null)
 										when (parameterKind) {
-											TypeKind.BOOLEAN -> {
+											TypeKind.INT, TypeKind.BOOLEAN -> {
 												val (n, c) = reversingAllocator.getOrAllocate32(--index)
 												procedure.POP32(
 													EBCRegisters.R2,
@@ -647,18 +731,36 @@ object EBCJVMCompilation {
 									index = parameters.size
 									for (parameterKind in parameters) {
 										val (n, c) = reversingAllocator[--index]
+										val nIndex = naturalIndex16(false, n, c)
 										when (parameterKind) {
-											TypeKind.REFERENCE, TypeKind.BOOLEAN -> {
-												val nIndex = naturalIndex16(false, n, c)
-												if (index == 0) {
-													procedure.MOVnw(
-														EBCRegisters.R1, false, null,
-														EBCRegisters.R2, true, nIndex
-													)
-												} else {
+											TypeKind.REFERENCE if index == 0 -> procedure.MOVnw(
+												EBCRegisters.R1, false, null,
+												EBCRegisters.R2, true, nIndex
+											)
+
+											else if index > 0 -> when (parameterKind) {
+												TypeKind.REFERENCE -> {
 													dropNatural++
 													procedure.PUSHn(EBCRegisters.R2, true, nIndex)
 												}
+
+												TypeKind.LONG -> {
+													dropConstant += 8u
+													procedure.PUSH64(EBCRegisters.R2, true, nIndex)
+												}
+
+												TypeKind.INT -> {
+													dropNatural++
+													procedure.EXTNDD64(
+														EBCRegisters.R3, false,
+														EBCRegisters.R2, true, nIndex
+													)
+													procedure.PUSHn(EBCRegisters.R3, false, null)
+												}
+
+												else -> throw NotImplementedError(
+													"Unknown parameter kind $parameterKind"
+												)
 											}
 
 											else -> throw NotImplementedError("Unknown parameter kind $parameterKind")
@@ -676,6 +778,12 @@ object EBCJVMCompilation {
 										TypeKind.LONG -> {
 											procedure.PUSH64(EBCRegisters.R7, false, null)
 											procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
+											procedure.PUSH32(EBCRegisters.R1, false, null)
+										}
+
+										TypeKind.INT -> {
+											procedure.PUSH32(EBCRegisters.R7, false, null)
+											procedure.MOVIdw(EBCRegisters.R1, false, null, 0u)
 											procedure.PUSH32(EBCRegisters.R1, false, null)
 										}
 
@@ -757,6 +865,29 @@ object EBCJVMCompilation {
 					}, { f ->
 						// Other category 1 computational types (32-bits)
 						f.POP32(EBCRegisters.R2, false, null)
+					})
+				}
+
+				Opcode.DUP -> {
+					procedure.POP32(EBCRegisters.R2, false, null)
+					procedure.CMPI32weq(
+						EBCRegisters.R2, false, null,
+						2u
+					)
+					procedure.branch({ t ->
+						// Reference
+						t.POPn(EBCRegisters.R1, false, null)
+						t.PUSHn(EBCRegisters.R1, false, null)
+						t.PUSH32(EBCRegisters.R2, false, null)
+						t.PUSHn(EBCRegisters.R1, false, null)
+						t.PUSH32(EBCRegisters.R2, false, null)
+					}, { f ->
+						// Other category 1 computational types (32-bits)
+						f.POP32(EBCRegisters.R1, false, null)
+						f.PUSH32(EBCRegisters.R1, false, null)
+						f.PUSH32(EBCRegisters.R2, false, null)
+						f.PUSH32(EBCRegisters.R1, false, null)
+						f.PUSH32(EBCRegisters.R2, false, null)
 					})
 				}
 

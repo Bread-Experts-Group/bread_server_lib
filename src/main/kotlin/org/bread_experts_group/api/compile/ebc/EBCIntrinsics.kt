@@ -14,6 +14,21 @@ object EBCIntrinsics {
 	}
 
 	@JvmStatic
+	external fun Address.toLong(): Long
+
+	@JvmStatic
+	external fun naturalSize(): Long
+
+	@JvmStatic
+	external fun allocateN(): Address
+
+	@JvmStatic
+	external fun allocate64(): Address
+
+	@JvmStatic
+	external fun allocate32(): Address
+
+	@JvmStatic
 	external operator fun Address?.plus(by: Long): Address
 
 	@JvmStatic
@@ -23,14 +38,29 @@ object EBCIntrinsics {
 	external fun accessN(at: Address): Address
 
 	@JvmStatic
+	external fun writeN(at: Address, what: Address)
+
+	@JvmStatic
 	external fun access64(at: Address): Long
+
+	@JvmStatic
+	external fun write64(at: Address, what: Long)
 
 	@JvmStatic
 	external fun access32(at: Address): Int
 
 	@JvmStatic
+	external fun write32(at: Address, what: Int)
+
+	@JvmStatic
 	external fun access16(at: Address): Short
 
 	@JvmStatic
+	external fun write16(at: Address, what: Short)
+
+	@JvmStatic
 	external fun access8(at: Address): Byte
+
+	@JvmStatic
+	external fun write8(at: Address, what: Byte)
 }
