@@ -54,7 +54,7 @@ fun main() {
 		val output = EBCJVMCompilation.compileClass(
 			EFIExample::class,
 			EFIExample::class.java.protectionDomain.codeSource.location.toURI().toPath(),
-			0x00401000u, 0x00408000u, 0x00409000u, 0x00410000u
+			0x00401000u, 0x00408000u, 0x00409000u
 		)
 		sections = listOf(
 			PESection.of {
@@ -83,16 +83,6 @@ fun main() {
 				setName(".uninit")
 				virtualSize = 0x1000u
 				virtualAddress = 0x9000u
-				characteristics = EnumSet.of(
-					PESectionCharacteristics.IMAGE_SCN_MEM_READ,
-					PESectionCharacteristics.IMAGE_SCN_MEM_WRITE,
-					PESectionCharacteristics.IMAGE_SCN_CNT_UNINITIALIZED_DATA
-				)
-			},
-			PESection.of {
-				setName(".insspce")
-				virtualSize = 0x1000u
-				virtualAddress = 0x10000u
 				characteristics = EnumSet.of(
 					PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 					PESectionCharacteristics.IMAGE_SCN_MEM_WRITE,

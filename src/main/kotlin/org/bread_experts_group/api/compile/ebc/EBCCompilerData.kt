@@ -4,6 +4,5 @@ data class EBCCompilerData(
 	val codeBase: ULong,
 	val unInitBase: ULong,
 	val initBase: ULong,
-	val instructionSpaceBase: ULong,
 	val allocator: EBCVariableAllocator
 )

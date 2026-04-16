@@ -24,7 +24,7 @@ object EBCJVMCompilation {
 
 	fun compileClass(
 		clazz: KClass<*>, codeSource: Path,
-		codeBase: ULong, initBase: ULong, unInitBase: ULong, instructionSpaceBase: ULong
+		codeBase: ULong, initBase: ULong, unInitBase: ULong
 	): EBCCompilationOutput {
 		val efiClass = cf.parse(
 			codeSource.resolve(clazz.java.name.replace('.', '/') + ".class")
@@ -46,7 +46,7 @@ object EBCJVMCompilation {
 			efiMethod.methodTypeSymbol(),
 			code,
 			EBCCompilerData(
-				codeBase, unInitBase, initBase, instructionSpaceBase,
+				codeBase, unInitBase, initBase,
 				allocator = EBCVariableAllocator(initBase)
 			),
 			true
@@ -796,7 +796,7 @@ object EBCJVMCompilation {
 								it.methodTypeSymbol(),
 								it.code().get(),
 								EBCCompilerData(
-									data.codeBase, data.unInitBase, data.initBase, data.instructionSpaceBase,
+									data.codeBase, data.unInitBase, data.initBase,
 									EBCVariableAllocator(
 										data.allocator.nextFreeStringPosition,
 										data.allocator.nextFreeNatural,

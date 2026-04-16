@@ -52,6 +52,6 @@ You are free to contribute to Bread Server Library as you wish, but we will turn
 
 Additionally, if you are to write a feature that is to be integrated into Bread Server Library's main
 repository, use the latest APIs for the system/library it is for. "Compatibility" features must be separate,
-unless Miko changes their mind.
+unless I change my mind.
 
 Finally, press [here](https://bayachao.com/devil-connection/) for a game you should play.
