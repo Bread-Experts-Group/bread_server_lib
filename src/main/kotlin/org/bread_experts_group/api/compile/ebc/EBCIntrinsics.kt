@@ -14,6 +14,15 @@ object EBCIntrinsics {
 	}
 
 	@JvmStatic
+	external operator fun Address?.plus(by: Long): Address
+
+	@JvmStatic
+	external infix fun Address?.nat(by: Long): Address
+
+	@JvmStatic
+	external fun accessN(at: Address): Address
+
+	@JvmStatic
 	external fun access64(at: Address): Long
 
 	@JvmStatic

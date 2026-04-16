@@ -2,7 +2,7 @@ package org.bread_experts_group.api.compile.ebc
 
 data class EBCVariableAllocator(
 	var nextFreeStringPosition: ULong,
-	var nextFreeNatural: UInt = 1u,
+	var nextFreeNatural: UInt = 0u,
 	var nextFreeConstant: UInt = 0u
 ) {
 	private var variables = mutableMapOf<Int, Pair<UInt, UInt>>()

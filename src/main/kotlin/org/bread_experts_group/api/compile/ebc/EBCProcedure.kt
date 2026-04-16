@@ -749,6 +749,33 @@ class EBCProcedure {
 		addInstruction()
 	}
 
+	private fun MOVInBase(
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		indexLength: EBCImmediateDataLength
+	) {
+		if (!operand1Indirect && operand1Index != null) throw IllegalArgumentException(
+			"Specifying an index with a direct Operand 1 is an instruction encoding exception."
+		)
+		instructionBuffer.put((0x38 or ((indexLength.ordinal + 1) shl 6)).toByte())
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b1000 else 0)
+					or (if (operand1Index != null) 0b1000000 else 0)).toByte()
+		)
+		if (operand1Index != null) instructionBuffer.putShort(operand1Index.toShort())
+	}
+
+	fun MOVInw(
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
+		index: UShort
+	): EBCProcedure = this.also {
+		MOVInBase(
+			operand1, operand1Indirect, operand1Index,
+			EBCImmediateDataLength.BITS_16_WORD
+		)
+		instructionBuffer.putShort(index.toShort())
+		addInstruction()
+	}
+
 	fun MOVnw(
 		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UShort?,
 		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UShort?

@@ -2,11 +2,13 @@ package org.bread_experts_group.api.compile.ebc
 
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.Address
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex16
+import org.bread_experts_group.api.compile.ebc.efi.ExternalCall
 import java.lang.classfile.ClassFile.*
 import java.lang.classfile.CodeModel
 import java.lang.classfile.Label
 import java.lang.classfile.Opcode
 import java.lang.classfile.TypeKind
+import java.lang.classfile.attribute.RuntimeInvisibleAnnotationsAttribute
 import java.lang.classfile.instruction.*
 import java.lang.constant.MethodTypeDesc
 import java.nio.file.Path
@@ -78,75 +80,67 @@ object EBCJVMCompilation {
 		initialRun: Boolean
 	): EBCCompilationOutput {
 		val procedure = EBCProcedure()
-		val parameters = type.parameterList()
+		val parameters = type.parameterList().map { TypeKind.from(it) }
 		var stackNatural = 0u
 		var stackConstant = 16u
 		var parameterIndex = 0
 		val parameterIndices = Array(parameters.size) {
 			val savedIndex = parameterIndex
-			parameterIndex += when (val kind = TypeKind.from(parameters[it])) {
-				TypeKind.INT, TypeKind.CHAR, TypeKind.REFERENCE -> 1
+			parameterIndex += when (val kind = parameters[it]) {
+				TypeKind.INT, TypeKind.CHAR, TypeKind.BOOLEAN, TypeKind.REFERENCE -> 1
 				TypeKind.LONG -> 2
 				else -> throw NotImplementedError("Unsupported parameter kind $kind")
 			}
 			savedIndex
 		}.let { if (initialRun) it else it.reversedArray() }
 		parameterIndex = 0
-		for (parameter in parameters.asReversed()) {
+		procedure.MOVIqq(
+			EBCRegisters.R2, false, null,
+			data.unInitBase
+		)
+		for (parameterKind in parameters.asReversed()) {
 			if (!initialRun) stackConstant += 4u
-			when (val kind = TypeKind.from(parameter)) {
+			when (parameterKind) {
 				TypeKind.REFERENCE -> {
 					procedure.MOVnw(
-						EBCRegisters.R2, false, null,
+						EBCRegisters.R1, false, null,
 						EBCRegisters.R0, true, naturalIndex16(false, stackNatural, stackConstant)
 					)
 					stackNatural++
 					val (n, c) = data.allocator.getOrAllocateNatural(parameterIndices[parameterIndex])
-					procedure.MOVIqq(
-						EBCRegisters.R3, false, null,
-						data.unInitBase
-					)
 					procedure.MOVnw(
-						EBCRegisters.R3, true, naturalIndex16(false, n, c),
-						EBCRegisters.R2, false, null
+						EBCRegisters.R2, true, naturalIndex16(false, n, c),
+						EBCRegisters.R1, false, null
 					)
 				}
 
 				TypeKind.LONG -> {
 					procedure.MOVqw(
-						EBCRegisters.R2, false, null,
+						EBCRegisters.R1, false, null,
 						EBCRegisters.R0, true, naturalIndex16(false, stackNatural, stackConstant)
 					)
 					stackConstant += 8u
 					val (n, c) = data.allocator.getOrAllocate64(parameterIndices[parameterIndex])
-					procedure.MOVIqq(
-						EBCRegisters.R3, false, null,
-						data.unInitBase
-					)
 					procedure.MOVqw(
-						EBCRegisters.R3, true, naturalIndex16(false, n, c),
-						EBCRegisters.R2, false, null
+						EBCRegisters.R2, true, naturalIndex16(false, n, c),
+						EBCRegisters.R1, false, null
 					)
 				}
 
-				TypeKind.INT, TypeKind.CHAR -> {
+				TypeKind.INT, TypeKind.CHAR, TypeKind.BOOLEAN -> {
 					procedure.MOVdw(
-						EBCRegisters.R2, false, null,
+						EBCRegisters.R1, false, null,
 						EBCRegisters.R0, true, naturalIndex16(false, stackNatural, stackConstant)
 					)
 					stackConstant += 4u
 					val (n, c) = data.allocator.getOrAllocate32(parameterIndices[parameterIndex])
-					procedure.MOVIqq(
-						EBCRegisters.R3, false, null,
-						data.unInitBase
-					)
 					procedure.MOVdw(
-						EBCRegisters.R3, true, naturalIndex16(false, n, c),
-						EBCRegisters.R2, false, null
+						EBCRegisters.R2, true, naturalIndex16(false, n, c),
+						EBCRegisters.R1, false, null
 					)
 				}
 
-				else -> throw NotImplementedError("Unsupported parameter kind $kind")
+				else -> throw NotImplementedError("Unsupported parameter kind $parameterKind")
 			}
 			parameterIndex++
 		}
@@ -475,6 +469,12 @@ object EBCJVMCompilation {
 			is Label -> branchLocations[element] = procedure.output.size
 
 			is ReturnInstruction -> when (val kind = element.typeKind()) {
+				TypeKind.REFERENCE -> {
+					procedure.POP32(EBCRegisters.R2, false, null)
+					procedure.POPn(EBCRegisters.R7, true, null)
+					procedure.RET()
+				}
+
 				TypeKind.LONG -> {
 					procedure.POP32(EBCRegisters.R2, false, null)
 					procedure.POP64(EBCRegisters.R7, false, null)
@@ -496,6 +496,17 @@ object EBCJVMCompilation {
 				val descriptor = "${element.owner().name().stringValue()}." +
 						"${element.name().stringValue()}${element.type().stringValue()}"
 			) {
+				"${EBCIntrinsics.internalName}.accessN(L${Address.internalName};)L${Address.internalName};" -> {
+					procedure.POP32(EBCRegisters.R2, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.MOVnw(
+						EBCRegisters.R1, false, null,
+						EBCRegisters.R1, true, null
+					)
+					procedure.PUSHn(EBCRegisters.R1, false, null)
+					procedure.PUSH32(EBCRegisters.R2, false, null)
+				}
+
 				"${EBCIntrinsics.internalName}.access64(L${Address.internalName};)J" -> {
 					procedure.POP32(EBCRegisters.R1, false, null)
 					procedure.POPn(EBCRegisters.R1, false, null)
@@ -546,6 +557,40 @@ object EBCJVMCompilation {
 					procedure.PUSH32(EBCRegisters.R1, false, null)
 				}
 
+				"${EBCIntrinsics.internalName}.plus(L${Address.internalName};J)L${Address.internalName};" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POP64(EBCRegisters.R2, false, null)
+					procedure.POP32(EBCRegisters.R3, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.ADD64(
+						EBCRegisters.R1, false,
+						EBCRegisters.R2, false, null
+					)
+					procedure.PUSHn(EBCRegisters.R1, false, null)
+					procedure.PUSH32(EBCRegisters.R3, false, null)
+				}
+
+				"${EBCIntrinsics.internalName}.nat(L${Address.internalName};J)L${Address.internalName};" -> {
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POP64(EBCRegisters.R2, false, null)
+					procedure.POP32(EBCRegisters.R3, false, null)
+					procedure.POPn(EBCRegisters.R1, false, null)
+					procedure.MOVInw(
+						EBCRegisters.R4, false, null,
+						naturalIndex16(false, 1u, 0u)
+					)
+					procedure.MUL64(
+						EBCRegisters.R4, false,
+						EBCRegisters.R2, false, null
+					)
+					procedure.ADD64(
+						EBCRegisters.R4, false,
+						EBCRegisters.R1, false, null
+					)
+					procedure.PUSHn(EBCRegisters.R4, false, null)
+					procedure.PUSH32(EBCRegisters.R3, false, null)
+				}
+
 				else -> {
 					if (!functions.contains(descriptor)) {
 						val classFile = element.owner().asInternalName().replace('/', '.')
@@ -557,9 +602,88 @@ object EBCJVMCompilation {
 						).methods().first {
 							it.methodName() == element.name() && it.methodType() == element.type()
 						}.let {
-							if (it.flags().flagsMask() and ACC_NATIVE != 0) throw NotImplementedError(
-								"Native function $descriptor"
-							)
+							if (it.flags().flagsMask() and ACC_NATIVE != 0) {
+								val useExternalCallForm = it.firstNotNullOfOrNull { attribute ->
+									attribute as? RuntimeInvisibleAnnotationsAttribute
+								}?.annotations()?.any { annotation ->
+									annotation.className().equalsString(
+										"L${ExternalCall::class.qualifiedName!!.replace('.', '/')};"
+									)
+								}
+								if (useExternalCallForm == true) {
+									val reversingAllocator = EBCVariableAllocator(
+										data.allocator.nextFreeStringPosition,
+										data.allocator.nextFreeNatural, data.allocator.nextFreeConstant
+									)
+									val parameters = it.methodTypeSymbol().parameterList().map { parameter ->
+										TypeKind.from(parameter)
+									}.asReversed()
+									var index = parameters.size
+									procedure.MOVIqq(EBCRegisters.R2, false, null, data.unInitBase)
+									for (parameterKind in parameters) {
+										procedure.POP32(EBCRegisters.R1, false, null)
+										when (parameterKind) {
+											TypeKind.BOOLEAN -> {
+												val (n, c) = reversingAllocator.getOrAllocate32(--index)
+												procedure.POP32(
+													EBCRegisters.R2,
+													true, naturalIndex16(false, n, c)
+												)
+											}
+
+											TypeKind.REFERENCE -> {
+												val (n, c) = reversingAllocator.getOrAllocateNatural(--index)
+												procedure.POPn(
+													EBCRegisters.R2,
+													true, naturalIndex16(false, n, c)
+												)
+											}
+
+											else -> throw NotImplementedError("Unknown parameter kind $parameterKind")
+										}
+									}
+									var dropNatural = 0u
+									var dropConstant = 0u
+									index = parameters.size
+									for (parameterKind in parameters) {
+										val (n, c) = reversingAllocator[--index]
+										when (parameterKind) {
+											TypeKind.REFERENCE, TypeKind.BOOLEAN -> {
+												val nIndex = naturalIndex16(false, n, c)
+												if (index == 0) {
+													procedure.MOVnw(
+														EBCRegisters.R1, false, null,
+														EBCRegisters.R2, true, nIndex
+													)
+												} else {
+													dropNatural++
+													procedure.PUSHn(EBCRegisters.R2, true, nIndex)
+												}
+											}
+
+											else -> throw NotImplementedError("Unknown parameter kind $parameterKind")
+										}
+									}
+									procedure.CALL32(
+										EBCRegisters.R1, false,
+										relative = false, native = true, null
+									)
+									procedure.MOVnw(
+										EBCRegisters.R0, false, null,
+										EBCRegisters.R0, false, naturalIndex16(false, dropNatural, dropConstant)
+									)
+									when (val kind = TypeKind.from(it.methodTypeSymbol().returnType())) {
+										TypeKind.LONG -> {
+											procedure.PUSH64(EBCRegisters.R7, false, null)
+											procedure.MOVIdw(EBCRegisters.R1, false, null, 1u)
+											procedure.PUSH32(EBCRegisters.R1, false, null)
+										}
+
+										else -> throw NotImplementedError("Unknown return kind $kind")
+									}
+									continue
+								} else throw NotImplementedError("Native function $descriptor")
+							}
 							compileMethod(
 								it.methodTypeSymbol(),
 								it.code().get(),
@@ -584,7 +708,7 @@ object EBCJVMCompilation {
 					for (parameter in element.typeSymbol().parameterList()) {
 						when (val kind = TypeKind.from(parameter)) {
 							TypeKind.REFERENCE -> dropNatural++
-							TypeKind.INT -> dropConstant += 4u
+							TypeKind.INT, TypeKind.BOOLEAN -> dropConstant += 4u
 							TypeKind.LONG -> dropConstant += 8u
 							else -> throw NotImplementedError("Unknown parameter kind $kind")
 						}
@@ -595,6 +719,12 @@ object EBCJVMCompilation {
 						EBCRegisters.R0, false, naturalIndex16(false, dropNatural, dropConstant)
 					)
 					when (val kind = TypeKind.from(element.typeSymbol().returnType())) {
+						TypeKind.REFERENCE -> {
+							procedure.PUSHn(EBCRegisters.R7, true, null)
+							procedure.MOVIdw(EBCRegisters.R2, false, null, 2u)
+							procedure.PUSH32(EBCRegisters.R2, false, null)
+						}
+
 						TypeKind.LONG -> {
 							procedure.PUSH64(EBCRegisters.R7, false, null)
 							procedure.MOVIdw(EBCRegisters.R2, false, null, 1u)
@@ -691,7 +821,7 @@ object EBCJVMCompilation {
 		}
 		// decompilation
 		code.forEach { println(it) }
-		EBCDisassembly.diassemble(procedure.output)
+		println(EBCDisassembly.diassemble(procedure.output))
 		println()
 		return EBCCompilationOutput(
 			procedure.output,

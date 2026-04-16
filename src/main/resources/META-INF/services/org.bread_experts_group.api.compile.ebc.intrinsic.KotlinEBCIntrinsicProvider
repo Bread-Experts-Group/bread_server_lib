@@ -1,7 +1,7 @@
 org.bread_experts_group.api.compile.ebc.intrinsic.KotlinJVMInternalIntrinsicProvider
 org.bread_experts_group.api.compile.ebc.intrinsic.JavaForeignMemorySegmentIntrinsicProvider
 org.bread_experts_group.api.compile.ebc.efi.EFITableHeader$IntrinsicProvider
-org.bread_experts_group.api.compile.ebc.efi.EFISystemTable$IntrinsicProvider
+org.bread_experts_group.api.compile.ebc.efi.EFITableHeader$IntrinsicProvider
 org.bread_experts_group.api.compile.ebc.efi.protocol.EFISimpleTextOutputProtocol$IntrinsicProvider
 org.bread_experts_group.api.compile.ebc.efi.EFIBootServicesTable$IntrinsicProvider
 org.bread_experts_group.api.compile.ebc.efi.protocol.EFIFileSystemInfo$IntrinsicProvider
