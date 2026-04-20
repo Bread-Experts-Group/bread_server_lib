@@ -2,10 +2,15 @@ package org.bread_experts_group.api.compile.ebc.efi
 
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.Address
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.access32
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.access64
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.accessN
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.address
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.allocate32
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.allocateN
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.naturalSize
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.plus
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.write64
+import org.bread_experts_group.api.compile.ebc.efi.EFIExample.plus
 
 object EFIExample {
 //	@JvmStatic
@@ -460,37 +465,142 @@ object EFIExample {
 //	}
 
 	@JvmStatic
+	fun Long.toCharArray(radix: Int): CharArray {
+		var str = charArrayOf()
+		var r = this
+		do {
+			val newStr = CharArray(str.size + 1)
+			var i = 0
+			while (i < str.size) newStr[i + 1] = str[i++]
+			val digit = (r % radix).toInt()
+			val base = if (digit < 10) 0x30 else 0x37
+			newStr[0] = (base + digit).toChar()
+			str = newStr
+			r /= radix
+		} while (r > 0)
+		return str
+	}
+
+	@JvmStatic
+	fun CharArray?.toUTF16LE(): ByteArray {
+		if (this == null) return byteArrayOf()
+		val str = ByteArray((this.size * 2) + 2)
+		var i = 0
+		while (i < this.size) {
+			val code = this[i].code
+			val offset = i * 2
+			str[offset] = (code and 0xFF).toByte()
+			str[offset + 1] = ((code ushr 8) and 0xFF).toByte()
+			i++
+		}
+		str[str.size - 1] = 0
+		str[str.size - 2] = 0
+		return str
+	}
+
+	@JvmStatic
+	operator fun CharArray?.plus(other: CharArray?): CharArray {
+		if (this == null || other == null) return charArrayOf()
+		val newStr = CharArray(this.size + other.size)
+		var i = 0
+		var d = 0
+		while (d < this.size) newStr[i++] = this[d++]
+		d = 0
+		while (d < other.size) newStr[i++] = other[d++]
+		return newStr
+	}
+
+	@JvmStatic
+	fun error(conOut: Address?, label: Long, efiStatus: Int) {
+		if (conOut == null) while (true) {
+		}
+		var error = charArrayOf('E', 'r', 'r', 'o', 'r', '.')
+		error += label.toCharArray(16) + charArrayOf('.')
+		error += efiStatus.toLong().toCharArray(16)
+		EFISimpleTextOutputProtocol.outputString(
+			conOut,
+			error.toUTF16LE().address + 8
+		)
+		while (true) {
+		}
+	}
+
+	@JvmStatic
 	@OptIn(ExperimentalUnsignedTypes::class)
 	fun efiMain(imageHandle: Address?, systemTable: Address?): Long {
 		if (imageHandle == null || systemTable == null) return 0x1000
-		if (naturalSize() != 8L) return 0x1001
-		val memoryMapSize = allocateN()
-		val mapKey = allocateN()
-		val descriptorSize = allocateN()
-		val descriptorVersion = allocate32()
+		val conOut = EFISystemTable.conOut(systemTable)
+		if (naturalSize() != 8L) error(conOut, 0, 0)
+		EFISimpleTextOutputProtocol.outputString(
+			conOut,
+			charArrayOf(
+				'B', 'r', 'e', 'a', 'd', ' ', 'E', 'x', 'p', 'e', 'r', 't', 's', ' ', 'G', 'r', 'o', 'u', 'p',
+				'\r', '\n', 'U', 'E', 'F', 'I', ' ', 'E', 'B', 'C', ' ', 'L', 'o', 'a', 'd', 'e', 'r',
+				'\r', '\n'
+			).address + 8
+		)
+		val memoryMapSizePtr = allocateN()
+		write64(memoryMapSizePtr, 0)
 		var status = EFIBootServices.getMemoryMap(
 			EFISystemTable.bootServices(systemTable),
-			memoryMapSize, null, null, null, null
+			memoryMapSizePtr, null, null, null, null
 		)
-		if (status != 5) return 0x1002
-		val memoryMapPtr = allocateN()
+		if (status != 5) error(conOut, 1, status)
+		val memoryMapPtrPtr = allocateN()
 		status = EFIBootServices.allocatePool(
 			EFISystemTable.bootServices(systemTable),
-			2, access32(memoryMapSize), memoryMapPtr
+			2, access32(memoryMapSizePtr), memoryMapPtrPtr
 		)
-		if (status != 0) return 0x1003
-		val memoryMap = accessN(memoryMapPtr)
+		if (status != 0) error(conOut, 2, status)
+		val memoryMapPtr = accessN(memoryMapPtrPtr)
+		val mapKeyPtr = allocateN()
+		val descriptorSizePtr = allocateN()
+		val descriptorVersionPtr = allocate32()
 		status = EFIBootServices.getMemoryMap(
 			EFISystemTable.bootServices(systemTable),
-			memoryMapSize, memoryMap, mapKey, descriptorSize, descriptorVersion
+			memoryMapSizePtr, memoryMapPtr, mapKeyPtr, descriptorSizePtr, descriptorVersionPtr
 		)
-		if (status != 0) return 0x1004
+		if (status != 0) error(conOut, 3, status)
+		EFISimpleTextOutputProtocol.outputString(
+			conOut,
+			charArrayOf('M', 'e', 'm', 'o', 'r', 'y', ' ', 'M', 'a', 'p', '\r', '\n').toUTF16LE().address + 8
+		)
+		EFISimpleTextOutputProtocol.outputString(
+			conOut,
+			(charArrayOf(' ', 'S', 'i', 'z', 'e', ' ') +
+					access64(memoryMapSizePtr).toCharArray(10) + charArrayOf('\r', '\n')).toUTF16LE().address + 8
+		)
+		EFISimpleTextOutputProtocol.outputString(
+			conOut,
+			(charArrayOf(
+				' ', 'D', 'e', 's', 'c', 'r', 'i', 'p', 't', 'o', 'r',
+				' ', 'S', 'i', 'z', 'e', ' '
+			) + access64(descriptorSizePtr).toCharArray(10) + charArrayOf('\r', '\n')).toUTF16LE().address + 8
+		)
+		EFISimpleTextOutputProtocol.outputString(
+			conOut,
+			(charArrayOf(
+				' ', 'D', 'e', 's', 'c', 'r', 'i', 'p', 't', 'o', 'r',
+				' ', 'V', 'e', 'r', 's', 'i', 'o', 'n', ' '
+			) + access32(descriptorVersionPtr)
+				.toLong().toCharArray(10) + charArrayOf('\r', '\n')).toUTF16LE().address + 8
+		)
+		var remainder = access64(memoryMapSizePtr)
+		while (remainder != 0L) {
+			remainder -= access64(descriptorSizePtr)
+			EFISimpleTextOutputProtocol.outputString(
+				conOut,
+				charArrayOf('A').toUTF16LE().address + 8
+			)
+		}
+		while (true) {
+		}
 //		status = EFIBootServices.exitBootServices(
 //			EFISystemTable.bootServices(systemTable),
 //			imageHandle, access32(mapKey)
 //		)
 //		if (status != 0) return 0x1005
-		return (access32(memoryMapSize) / access32(descriptorSize)).toLong()
+//		return (access32(memoryMapSize) / access32(descriptorSize)).toLong()
 //		return access64(systemTable)
 //		val a = "dynvar12345"
 //		val b = "dynvarABCD"

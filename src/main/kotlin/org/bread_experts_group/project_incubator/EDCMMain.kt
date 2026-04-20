@@ -20,7 +20,7 @@ import kotlin.io.path.toPath
 
 fun main() {
 	val device = SystemProvider.get(SystemFeatures.GET_PATH_DEVICE_DIRECT).get(
-		"J:\\test.pe.efi"
+		"J:\\efi\\boot\\BOOTX64.efi"
 	)
 	val io = device.get(SystemDeviceFeatures.IO_DEVICE).open(
 		StandardIOOpenFeatures.CREATE,
@@ -59,7 +59,7 @@ fun main() {
 		sections = listOf(
 			PESection.of {
 				setName(".text")
-				virtualSize = 0x1000u
+				virtualSize = 0x7000u
 				virtualAddress = 0x1000u
 
 				characteristics = EnumSet.of(

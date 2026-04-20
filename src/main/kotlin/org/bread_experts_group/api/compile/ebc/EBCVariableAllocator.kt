@@ -35,12 +35,4 @@ data class EBCVariableAllocator(
 	fun getOrAllocateNatural(slot: Int): Pair<UInt, UInt> = variables.getOrPut(slot) {
 		nextFreeNatural++ to nextFreeConstant
 	}
-
-	fun bump32() = nextFreeNatural to run {
-		val saved = nextFreeConstant
-		nextFreeConstant += 4u
-		saved
-	}
-
-	fun bumpNatural() = nextFreeNatural++ to nextFreeConstant
 }

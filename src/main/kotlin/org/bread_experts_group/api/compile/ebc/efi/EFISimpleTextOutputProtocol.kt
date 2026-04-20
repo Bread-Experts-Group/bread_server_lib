@@ -20,7 +20,7 @@ object EFISimpleTextOutputProtocol {
 
 	@JvmStatic
 	@ExternalCall
-	private external fun outputString(pPtr: Address, pThis: Address, string: Address): EFIStatus
+	external fun outputString(pPtr: Address, pThis: Address, string: Address): EFIStatus
 
 	@JvmStatic
 	fun outputString(pThis: Address?, string: Address?): EFIStatus {

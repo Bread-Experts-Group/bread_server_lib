@@ -40,6 +40,29 @@ object EFIBootServices {
 	// unloadimage 25
 	// exitbootservices 26
 
+	// getnextmonotoniccount 27
+	// stall 28
+	// setwatchdogtimer 29
+
+	// connectcontroller 30
+	// disconnectcontroller 31
+
+	// openprotocol 32
+	// closeprotocol 33
+	// openprotocolinformation 34
+
+	// protocolsperhandle 35
+	// locatehandlebuffer 36
+	// locateprotocol 37
+	// installmultipleprotocolinterfaces 38
+	// uninstallmultipleprotocolinterfaces 39
+
+	// calculatecrc32 40
+
+	// copymem 41
+	// setmem 42
+	// createventex 43
+
 	@JvmStatic
 	@ExternalCall
 	private external fun getMemoryMapN(
@@ -125,6 +148,25 @@ object EFIBootServices {
 		return this.exitBootServicesN(
 			accessN((bootServices + EFITableHeader.OFFSET) nat 26),
 			imageHandle, mapKey
+		)
+	}
+
+	@JvmStatic
+	@ExternalCall
+	private external fun copyMemN(
+		pPtr: Address,
+		destination: Address, source: Address, length: Int
+	)
+
+	@JvmStatic
+	fun copyMem(
+		bootServices: Address?,
+		destination: Address?, source: Address?, length: Int
+	) {
+		if (bootServices == null || destination == null || source == null) return
+		return this.copyMemN(
+			accessN((bootServices + EFITableHeader.OFFSET) nat 41),
+			destination, source, length
 		)
 	}
 }

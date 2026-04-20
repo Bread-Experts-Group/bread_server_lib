@@ -209,9 +209,7 @@ object EBCDisassembly {
 					}
 				}
 
-//				else -> throw NotImplementedError(
-//					"Unknown instruction for decompilation 0x${instruction.toString(16)}"
-//				)
+				else -> description += "??? $instruction ???"
 			}
 			output += description + "\n"
 		}

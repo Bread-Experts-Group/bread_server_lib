@@ -14,6 +14,10 @@ object EBCIntrinsics {
 	}
 
 	@JvmStatic
+	val Any.address: Address
+		external get
+
+	@JvmStatic
 	external fun Address.toLong(): Long
 
 	@JvmStatic

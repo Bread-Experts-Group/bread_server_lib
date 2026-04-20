@@ -4,5 +4,11 @@ data class EBCCompilerData(
 	val codeBase: ULong,
 	val unInitBase: ULong,
 	val initBase: ULong,
-	val allocator: EBCVariableAllocator
-)
+	val allocator: EBCVariableAllocator,
+	var bootSvcAllocatePool: AllocationEntry? = null
+) {
+	data class AllocationEntry(
+		val natural: UInt,
+		val constant: UInt
+	)
+}
