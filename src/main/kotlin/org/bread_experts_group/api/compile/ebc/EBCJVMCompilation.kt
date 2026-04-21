@@ -273,7 +273,7 @@ object EBCJVMCompilation {
 
 				is ConstantInstruction -> when (val kind = element.typeKind()) {
 					TypeKind.REFERENCE -> @Suppress(
-						"IMPOSSIBLE_IS_CHECK_WARNING", "KotlinConstantConditions"
+						"IMPOSSIBLE_IS_CHECK_WARNING"
 					) when (val value = element.constantValue()) {
 						is String -> {
 							val addr = data.allocator.getOrAllocateString(value)
@@ -655,6 +655,17 @@ object EBCJVMCompilation {
 						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
+					"${EBCIntrinsics.internalName}.writeN(L${Address.internalName};L${Address.internalName};)V" -> {
+						procedure.POP32(EBCRegisters.R1, false, null)
+						procedure.POPn(EBCRegisters.R2, false, null)
+						procedure.POP32(EBCRegisters.R3, false, null)
+						procedure.POPn(EBCRegisters.R1, false, null)
+						procedure.MOVnw(
+							EBCRegisters.R1, true, null,
+							EBCRegisters.R2, false, null
+						)
+					}
+
 					"${EBCIntrinsics.internalName}.write64(L${Address.internalName};J)V" -> {
 						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POP64(EBCRegisters.R2, false, null)
@@ -871,6 +882,11 @@ object EBCJVMCompilation {
 											TypeKind.VOID -> {}
 											else -> throw NotImplementedError("Unknown return kind $kind")
 										}
+										println(
+											EBCDisassembly.diassemble(
+												procedure.output.sliceArray(beforeGen..<procedure.output.size)
+											)
+										)
 										continue
 									} else throw NotImplementedError("Native function $descriptor")
 								}
@@ -974,6 +990,69 @@ object EBCJVMCompilation {
 					else -> throw NotImplementedError("Unknown stack element $element")
 				}
 
+				is NewReferenceArrayInstruction -> {
+					val (apN, apC) = data.bootSvcAllocatePool ?: throw InternalError(
+						"Boot services allocate pool unset"
+					)
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.POP32(EBCRegisters.R1, false, null)
+					procedure.EXTNDD64(
+						EBCRegisters.R1, false,
+						EBCRegisters.R1, false, null
+					)
+
+					procedure.MOVIqq(
+						EBCRegisters.R2, false, null,
+						data.unInitBase
+					)
+					procedure.MOVnw(
+						EBCRegisters.R2, false, null,
+						EBCRegisters.R2, false, naturalIndex16(false, apN + 1u, apC)
+					)
+					procedure.PUSHn(EBCRegisters.R2, false, null)
+					procedure.MOVInw(
+						EBCRegisters.R3, false, null,
+						naturalIndex16(false, 1u, 0u)
+					)
+					procedure.MOVqw(
+						EBCRegisters.R4, false, null,
+						EBCRegisters.R1, false, null
+					)
+					procedure.MUL64(
+						EBCRegisters.R1, false,
+						EBCRegisters.R3, false, null
+					)
+					procedure.MOVIqw(EBCRegisters.R3, false, null, 8u)
+					procedure.ADD64(
+						EBCRegisters.R1, false,
+						EBCRegisters.R3, false, null
+					)
+					procedure.PUSHn(EBCRegisters.R1, false, null)
+					procedure.MOVIqw(EBCRegisters.R1, false, null, 2u)
+					procedure.PUSHn(EBCRegisters.R1, false, null)
+					procedure.CALL32(
+						EBCRegisters.R2, true,
+						relative = false, native = true,
+						naturalIndex32(true, 1u, 0u)
+					)
+					procedure.MOVnw(
+						EBCRegisters.R0, false, null,
+						EBCRegisters.R0, false, naturalIndex16(false, 3u, 0u)
+					)
+					procedure.MOVnw(
+						EBCRegisters.R2, false, null,
+						EBCRegisters.R2, true, null
+					)
+					procedure.MOVdw(
+						EBCRegisters.R2, true, naturalIndex16(false, 0u, 4u),
+						EBCRegisters.R4, false, null
+					)
+					procedure.PUSHn(EBCRegisters.R2, false, null)
+					procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
+					procedure.PUSH32(EBCRegisters.R1, false, null)
+					// TODO: Error checking
+				}
+
 				is NewPrimitiveArrayInstruction -> {
 					val (apN, apC) = data.bootSvcAllocatePool ?: throw InternalError(
 						"Boot services allocate pool unset"
@@ -1055,6 +1134,11 @@ object EBCJVMCompilation {
 							procedure.POP32(EBCRegisters.R1, false, null)
 						}
 
+						TypeKind.REFERENCE -> {
+							procedure.POP32(EBCRegisters.R1, false, null)
+							procedure.POPn(EBCRegisters.R1, false, null)
+						}
+
 						else -> throw NotImplementedError("Unknown array type kind $kind")
 					}
 
@@ -1067,7 +1151,10 @@ object EBCJVMCompilation {
 					procedure.POP32(EBCRegisters.R3, false, null)
 					procedure.POPn(EBCRegisters.R3, false, null)
 
-					procedure.MOVIqw(
+					if (element.typeKind() == TypeKind.REFERENCE) procedure.MOVInw(
+						EBCRegisters.R4, false, null,
+						naturalIndex16(false, 1u, 0u)
+					) else procedure.MOVIqw(
 						EBCRegisters.R4, false, null,
 						when (val kind = element.typeKind()) {
 							TypeKind.LONG -> 8u
@@ -1093,6 +1180,7 @@ object EBCJVMCompilation {
 						TypeKind.LONG -> procedure::MOVqw
 						TypeKind.SHORT, TypeKind.CHAR -> procedure::MOVww
 						TypeKind.BYTE -> procedure::MOVbw
+						TypeKind.REFERENCE -> procedure::MOVnw
 						else -> throw NotImplementedError("Unknown array type kind $kind")
 					}(
 						EBCRegisters.R3, true, null,
@@ -1111,7 +1199,10 @@ object EBCJVMCompilation {
 					)
 					procedure.POP32(EBCRegisters.R2, false, null)
 					procedure.POPn(EBCRegisters.R2, false, null)
-					procedure.MOVIqw(
+					if (element.typeKind() == TypeKind.REFERENCE) procedure.MOVInw(
+						EBCRegisters.R3, false, null,
+						naturalIndex16(false, 1u, 0u)
+					) else procedure.MOVIqw(
 						EBCRegisters.R3, false, null,
 						when (val kind = element.typeKind()) {
 							TypeKind.LONG -> 8u
@@ -1151,12 +1242,18 @@ object EBCJVMCompilation {
 							procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
 						}
 
+						TypeKind.REFERENCE -> {
+							procedure.PUSHn(EBCRegisters.R2, true, null)
+							procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
+						}
+
 						else -> throw NotImplementedError("Unknown array type kind $kind")
 					}
 					procedure.PUSH32(EBCRegisters.R1, false, null)
 					// TODO: Error checking
 				}
 
+				is TypeCheckInstruction -> println("*** TODO: TYPECHECKING")
 				else -> throw NotImplementedError("Unknown compile element $element")
 			}
 			println(EBCDisassembly.diassemble(procedure.output.sliceArray(beforeGen..<procedure.output.size)))

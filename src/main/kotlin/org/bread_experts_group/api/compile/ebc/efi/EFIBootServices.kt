@@ -112,6 +112,56 @@ object EFIBootServices {
 
 	@JvmStatic
 	@ExternalCall
+	private external fun locateHandleN(
+		pPtr: Address,
+		searchType: Int,
+		protocol: Address?,
+		searchKey: Address?,
+		bufferSize: Address?,
+		buffer: Address?
+	): EFIStatus
+
+	@JvmStatic
+	fun locateHandle(
+		bootServices: Address?,
+		searchType: Int,
+		protocol: Address?,
+		searchKey: Address?,
+		bufferSize: Address?,
+		buffer: Address?
+	): EFIStatus {
+		if (bootServices == null) return -1
+		return this.locateHandleN(
+			accessN((bootServices + EFITableHeader.OFFSET) nat 19),
+			searchType, protocol, searchKey, bufferSize, buffer
+		)
+	}
+
+	@JvmStatic
+	@ExternalCall
+	private external fun locateProtocolN(
+		pPtr: Address,
+		protocol: Address?,
+		registration: Address?,
+		iface: Address?
+	): EFIStatus
+
+	@JvmStatic
+	fun locateProtocol(
+		bootServices: Address?,
+		protocol: Address?,
+		registration: Address?,
+		iface: Address?
+	): EFIStatus {
+		if (bootServices == null) return -1
+		return this.locateProtocolN(
+			accessN((bootServices + EFITableHeader.OFFSET) nat 37),
+			protocol, registration, iface
+		)
+	}
+
+	@JvmStatic
+	@ExternalCall
 	private external fun exitN(
 		pPtr: Address,
 		imageHandle: Address, exitStatus: EFIStatus, exitDataSize: UINTN, exitData: Address?
