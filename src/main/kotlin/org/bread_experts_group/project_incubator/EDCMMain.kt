@@ -55,7 +55,7 @@ fun main() {
 		val output = EBCJVMCompilation.compileClass(
 			EFIExample::class,
 			EFIExample::class.java.protectionDomain.codeSource.location.toURI().toPath(),
-			0x00401000u, 0x00406000u, 0x00407000u
+			0x00401000u, 0x0040B000u, 0x0040C000u
 		)
 		val codeSize = normalize(output.code.size, 0x1000).toUInt()
 		println("${(codeSize + 0x1000u).toHexString()} ${(codeSize + 0x2000u).toHexString()}")

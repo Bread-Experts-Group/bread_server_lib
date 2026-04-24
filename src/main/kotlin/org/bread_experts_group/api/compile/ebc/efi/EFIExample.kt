@@ -101,56 +101,56 @@ object EFIExample {
 				'\r', '\n'
 			).address + 8
 		)
-		val novonordisk = ByteArray(16)
+//		val novonordisk = ByteArray(16)
 		// 0x5B1B31A1,0x9562,0x11d2,\
 		//    {0x8E,0x3F,0x00,0xA0,0xC9,0x69,0x72,0x3B}
-		fillGUID(
-			novonordisk.address + 8,
-			0x5B1B31A1u, 0x9562u, 0x11D2u,
-			ubyteArrayOf(0x8Eu, 0x3Fu, 0x00u, 0xA0u, 0xC9u, 0x69u, 0x72u, 0x3Bu)
-		)
+//		fillGUID(
+//			novonordisk.address + 8,
+//			0x5B1B31A1u, 0x9562u, 0x11D2u,
+//			ubyteArrayOf(0x8Eu, 0x3Fu, 0x00u, 0xA0u, 0xC9u, 0x69u, 0x72u, 0x3Bu)
+//		)
 
 		val protocolNames = arrayOf(
 			charArrayOf('L', 'o', 'a', 'd', 'e', 'd', 'I', 'm', 'a', 'g', 'e'),
-//			charArrayOf(
-//				'L', 'o', 'a', 'd', 'e', 'd',
-//				'I', 'm', 'a', 'g', 'e',
-//				'D', 'e', 'v', 'i', 'c', 'e',
-//				'P', 'a', 't', 'h'
-//			),
-//			charArrayOf('D', 'e', 'v', 'i', 'c', 'e', 'P', 'a', 't', 'h'),
-//			charArrayOf('D', 'e', 'v', 'i', 'c', 'e', 'P', 'a', 't', 'h', 'U', 't', 'i', 'l', 'i', 't', 'i', 'e', 's'),
-//			charArrayOf('D', 'r', 'i', 'v', 'e', 'r', 'B', 'i', 'n', 'd', 'i', 'n', 'g'),
-//			charArrayOf(
-//				'P', 'l', 'a', 't', 'f', 'o', 'r', 'm',
-//				'D', 'r', 'i', 'v', 'e', 'r',
-//				'O', 'v', 'e', 'r', 'r', 'i', 'd', 'e'
-//			),
-//			charArrayOf(
-//				'B', 'u', 's',
-//				'S', 'p', 'e', 'c', 'i', 'f', 'i', 'c',
-//				'D', 'r', 'i', 'v', 'e', 'r',
-//				'O', 'v', 'e', 'r', 'r', 'i', 'd', 'e'
-//			),
-//			charArrayOf('D', 'r', 'i', 'v', 'e', 'r', 'D', 'i', 'a', 'g', 'n', 'o', 's', 't', 'i', 'c', 's'),
-//			charArrayOf('C', 'o', 'm', 'p', 'o', 'n', 'e', 'n', 't', 'N', 'a', 'm', 'e'),
-//			charArrayOf(
-//				'P', 'l', 'a', 't', 'f', 'o', 'r', 'm',
-//				'T', 'o',
-//				'D', 'r', 'i', 'v', 'e', 'r',
-//				'C', 'o', 'n', 'f', 'i', 'g', 'u', 'r', 'a', 't', 'i', 'o', 'n'
-//			),
-//			charArrayOf(
-//				'D', 'r', 'i', 'v', 'e', 'r',
-//				'S', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd',
-//				'E', 'F', 'I',
-//				'V', 'e', 'r', 's', 'i', 'o', 'n'
-//			),
-//			charArrayOf(
-//				'D', 'r', 'i', 'v', 'e', 'r',
-//				'F', 'a', 'm', 'i', 'l', 'y',
-//				'O', 'v', 'e', 'r', 'r', 'i', 'd', 'e'
-//			),
+			charArrayOf(
+				'L', 'o', 'a', 'd', 'e', 'd',
+				'I', 'm', 'a', 'g', 'e',
+				'D', 'e', 'v', 'i', 'c', 'e',
+				'P', 'a', 't', 'h'
+			),
+			charArrayOf('D', 'e', 'v', 'i', 'c', 'e', 'P', 'a', 't', 'h'),
+			charArrayOf('D', 'e', 'v', 'i', 'c', 'e', 'P', 'a', 't', 'h', 'U', 't', 'i', 'l', 'i', 't', 'i', 'e', 's'),
+			charArrayOf('D', 'r', 'i', 'v', 'e', 'r', 'B', 'i', 'n', 'd', 'i', 'n', 'g'),
+			charArrayOf(
+				'P', 'l', 'a', 't', 'f', 'o', 'r', 'm',
+				'D', 'r', 'i', 'v', 'e', 'r',
+				'O', 'v', 'e', 'r', 'r', 'i', 'd', 'e'
+			),
+			charArrayOf(
+				'B', 'u', 's',
+				'S', 'p', 'e', 'c', 'i', 'f', 'i', 'c',
+				'D', 'r', 'i', 'v', 'e', 'r',
+				'O', 'v', 'e', 'r', 'r', 'i', 'd', 'e'
+			),
+			charArrayOf('D', 'r', 'i', 'v', 'e', 'r', 'D', 'i', 'a', 'g', 'n', 'o', 's', 't', 'i', 'c', 's'),
+			charArrayOf('C', 'o', 'm', 'p', 'o', 'n', 'e', 'n', 't', 'N', 'a', 'm', 'e'),
+			charArrayOf(
+				'P', 'l', 'a', 't', 'f', 'o', 'r', 'm',
+				'T', 'o',
+				'D', 'r', 'i', 'v', 'e', 'r',
+				'C', 'o', 'n', 'f', 'i', 'g', 'u', 'r', 'a', 't', 'i', 'o', 'n'
+			),
+			charArrayOf(
+				'D', 'r', 'i', 'v', 'e', 'r',
+				'S', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd',
+				'E', 'F', 'I',
+				'V', 'e', 'r', 's', 'i', 'o', 'n'
+			),
+			charArrayOf(
+				'D', 'r', 'i', 'v', 'e', 'r',
+				'F', 'a', 'm', 'i', 'l', 'y',
+				'O', 'v', 'e', 'r', 'r', 'i', 'd', 'e'
+			),
 //			charArrayOf('D', 'r', 'i', 'v', 'e', 'r', 'H', 'e', 'a', 'l', 't', 'h'),
 //			charArrayOf('A', 'd', 'a', 'p', 't', 'e', 'r', 'I', 'n', 'f', 'o', 'r', 'm', 'a', 't', 'i', 'o', 'n'),
 //			charArrayOf('S', 'i', 'm', 'p', 'l', 'e', 'T', 'e', 'x', 't', 'I', 'n', 'p', 'u', 't', 'E', 'x'),
@@ -205,79 +205,79 @@ object EFIExample {
 //			charArrayOf('F', 'i', 'r', 'm', 'w', 'a', 'r', 'e', 'M', 'a', 'n', 'a', 'g', 'e', 'm', 'e', 'n', 't')
 		)
 		val protocolGuids = arrayOf(
-////			byteArrayOf( // Loaded Image
-////				0xA1.toByte(), 0x31, 0x1B, 0x5B,
-////				0x62, 0x95.toByte(),
-////				0xD2.toByte(), 0x11,
-////				0x8E.toByte(), 0x3F, 0x00, 0xA0.toByte(), 0xC9.toByte(), 0x69, 0x72, 0x3B
-////			),
-			novonordisk
-//			byteArrayOf( // Loaded Image Device Path
-//				0x7E, 0x15, 0x62, 0xBC.toByte(),
-//				0x33, 0x3E,
-//				0xEC.toByte(), 0x4F,
-//				0x99.toByte(), 0x20, 0x2D, 0x3B, 0x36, 0xD7.toByte(), 0x50, 0xDF.toByte()
-//			),
-//			byteArrayOf( // Device Path
-//				0x91.toByte(), 0x6E, 0x57, 0x09,
-//				0x3F, 0x6D,
-//				0xD2.toByte(), 0x11,
-//				0x8E.toByte(), 0x39, 0x00, 0xA0.toByte(), 0xC9.toByte(), 0x69, 0x72, 0x3B
-//			),
-//			byteArrayOf( // Device Path Utilities
-//				0x4E, 0xBE.toByte(), 0x79, 0x03,
-//				0x06, 0xD7.toByte(),
-//				0x7D, 0x43,
-//				0xB0.toByte(), 0x37, 0xED.toByte(), 0xB8.toByte(), 0x2F, 0xB7.toByte(), 0x72, 0xA4.toByte()
-//			),
-//			byteArrayOf( // Driver Binding
-//				0xAB.toByte(), 0x31, 0xA0.toByte(), 0x18,
-//				0x43, 0xB4.toByte(),
-//				0x1A, 0x4D,
-//				0xA5.toByte(), 0xC0.toByte(), 0x0C, 0x09, 0x26, 0x1E, 0x9F.toByte(), 0x71
-//			),
-//			byteArrayOf( // Platform Driver Override
-//				0x38, 0xC7.toByte(), 0x30.toByte(), 0x6B,
-//				0x91.toByte(), 0xA3.toByte(),
-//				0xD4.toByte(), 0x11,
-//				0x9A.toByte(), 0x3B, 0x00, 0x90.toByte(), 0x27, 0x3F, 0xC1.toByte(), 0x4D
-//			),
-//			byteArrayOf( // Bus Specific Driver Override
-//				0x85.toByte(), 0xB2.toByte(), 0xC1.toByte(), 0x3B,
-//				0x15, 0x8A.toByte(),
-//				0x82.toByte(), 0x4A,
-//				0xAA.toByte(), 0xBF.toByte(), 0x4D, 0x7D, 0x13, 0xFB.toByte(), 0x32, 0x65
-//			),
-//			byteArrayOf( // Driver Diagnostics
-//				0x21, 0x03, 0x33, 0x4D,
-//				0x5F, 0x02,
-//				0xAC.toByte(), 0x4A,
-//				0x90.toByte(), 0xD8.toByte(), 0x5E, 0xD9.toByte(), 0x00, 0x17, 0x3B, 0x63
-//			),
-//			byteArrayOf( // Component Name
-//				0xFF.toByte(), 0x5C, 0x7A, 0x6A,
-//				0xD9.toByte(), 0xE8.toByte(),
-//				0x70, 0x4F,
-//				0xBA.toByte(), 0xDA.toByte(), 0x75, 0xAB.toByte(), 0x30, 0x25, 0xCE.toByte(), 0x14
-//			),
-//			byteArrayOf( // Platform to Driver Configuration
-//				0x90.toByte(), 0xD5.toByte(), 0x2C, 0x64,
-//				0x59, 0x80.toByte(),
-//				0x0A, 0x4C,
-//				0xA9.toByte(), 0x58, 0xC5.toByte(), 0xEC.toByte(), 0x07, 0xD2.toByte(), 0x3C, 0x4B
-//			),
-//			byteArrayOf( // Driver Supported EFI Version
-//				0x61, 0x87.toByte(), 0x19, 0x5C.toByte(),
-//				0xA8.toByte(), 0x16,
-//				0x69, 0x4E,
-//				0x97.toByte(), 0x2C, 0x89.toByte(), 0xD6.toByte(), 0x79, 0x54, 0xF8.toByte(), 0x1D
-//			),
-//			byteArrayOf( // Driver Family Override
-//				0x9E.toByte(), 0x12, 0xEE.toByte(), 0xB1.toByte(),
-//				0x36, 0xDA.toByte(),
-//				0x81.toByte(), 0x41,
-//				0x91.toByte(), 0xF8.toByte(), 0x04, 0xA4.toByte(), 0x92.toByte(), 0x37, 0x66, 0xA7.toByte()
-//			),
+			byteArrayOf( // Loaded Image
+				0xA1.toByte(), 0x31, 0x1B, 0x5B,
+				0x62, 0x95.toByte(),
+				0xD2.toByte(), 0x11,
+				0x8E.toByte(), 0x3F, 0x00, 0xA0.toByte(), 0xC9.toByte(), 0x69, 0x72, 0x3B
+			),
+//			novonordisk
+			byteArrayOf( // Loaded Image Device Path
+				0x7E, 0x15, 0x62, 0xBC.toByte(),
+				0x33, 0x3E,
+				0xEC.toByte(), 0x4F,
+				0x99.toByte(), 0x20, 0x2D, 0x3B, 0x36, 0xD7.toByte(), 0x50, 0xDF.toByte()
+			),
+			byteArrayOf( // Device Path
+				0x91.toByte(), 0x6E, 0x57, 0x09,
+				0x3F, 0x6D,
+				0xD2.toByte(), 0x11,
+				0x8E.toByte(), 0x39, 0x00, 0xA0.toByte(), 0xC9.toByte(), 0x69, 0x72, 0x3B
+			),
+			byteArrayOf( // Device Path Utilities
+				0x4E, 0xBE.toByte(), 0x79, 0x03,
+				0x06, 0xD7.toByte(),
+				0x7D, 0x43,
+				0xB0.toByte(), 0x37, 0xED.toByte(), 0xB8.toByte(), 0x2F, 0xB7.toByte(), 0x72, 0xA4.toByte()
+			),
+			byteArrayOf( // Driver Binding
+				0xAB.toByte(), 0x31, 0xA0.toByte(), 0x18,
+				0x43, 0xB4.toByte(),
+				0x1A, 0x4D,
+				0xA5.toByte(), 0xC0.toByte(), 0x0C, 0x09, 0x26, 0x1E, 0x9F.toByte(), 0x71
+			),
+			byteArrayOf( // Platform Driver Override
+				0x38, 0xC7.toByte(), 0x30.toByte(), 0x6B,
+				0x91.toByte(), 0xA3.toByte(),
+				0xD4.toByte(), 0x11,
+				0x9A.toByte(), 0x3B, 0x00, 0x90.toByte(), 0x27, 0x3F, 0xC1.toByte(), 0x4D
+			),
+			byteArrayOf( // Bus Specific Driver Override
+				0x85.toByte(), 0xB2.toByte(), 0xC1.toByte(), 0x3B,
+				0x15, 0x8A.toByte(),
+				0x82.toByte(), 0x4A,
+				0xAA.toByte(), 0xBF.toByte(), 0x4D, 0x7D, 0x13, 0xFB.toByte(), 0x32, 0x65
+			),
+			byteArrayOf( // Driver Diagnostics
+				0x21, 0x03, 0x33, 0x4D,
+				0x5F, 0x02,
+				0xAC.toByte(), 0x4A,
+				0x90.toByte(), 0xD8.toByte(), 0x5E, 0xD9.toByte(), 0x00, 0x17, 0x3B, 0x63
+			),
+			byteArrayOf( // Component Name
+				0xFF.toByte(), 0x5C, 0x7A, 0x6A,
+				0xD9.toByte(), 0xE8.toByte(),
+				0x70, 0x4F,
+				0xBA.toByte(), 0xDA.toByte(), 0x75, 0xAB.toByte(), 0x30, 0x25, 0xCE.toByte(), 0x14
+			),
+			byteArrayOf( // Platform to Driver Configuration
+				0x90.toByte(), 0xD5.toByte(), 0x2C, 0x64,
+				0x59, 0x80.toByte(),
+				0x0A, 0x4C,
+				0xA9.toByte(), 0x58, 0xC5.toByte(), 0xEC.toByte(), 0x07, 0xD2.toByte(), 0x3C, 0x4B
+			),
+			byteArrayOf( // Driver Supported EFI Version
+				0x61, 0x87.toByte(), 0x19, 0x5C.toByte(),
+				0xA8.toByte(), 0x16,
+				0x69, 0x4E,
+				0x97.toByte(), 0x2C, 0x89.toByte(), 0xD6.toByte(), 0x79, 0x54, 0xF8.toByte(), 0x1D
+			),
+			byteArrayOf( // Driver Family Override
+				0x9E.toByte(), 0x12, 0xEE.toByte(), 0xB1.toByte(),
+				0x36, 0xDA.toByte(),
+				0x81.toByte(), 0x41,
+				0x91.toByte(), 0xF8.toByte(), 0x04, 0xA4.toByte(), 0x92.toByte(), 0x37, 0x66, 0xA7.toByte()
+			),
 //			byteArrayOf( // Driver Health
 //				0x10, 0x42, 0x53, 0x2A,
 //				0x80.toByte(), 0x92.toByte(),
