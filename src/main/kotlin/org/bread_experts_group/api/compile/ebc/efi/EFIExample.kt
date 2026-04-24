@@ -2,6 +2,7 @@ package org.bread_experts_group.api.compile.ebc.efi
 
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.Address
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.address
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.naturalSize
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.plus
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.write16
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.write32
@@ -88,17 +89,18 @@ object EFIExample {
 	@OptIn(ExperimentalUnsignedTypes::class)
 	fun efiMain(imageHandle: Address?, systemTable: Address?): Long {
 		if (imageHandle == null || systemTable == null) return 0x1000
-		return 0x1234
-//		val conOut = EFISystemTable.conOut(systemTable)
-//		if (naturalSize() != 8L) error(conOut, 0, 0)
-//		EFISimpleTextOutputProtocol.outputString(
-//			conOut,
-//			charArrayOf(
-//				'B', 'r', 'e', 'a', 'd', ' ', 'E', 'x', 'p', 'e', 'r', 't', 's', ' ', 'G', 'r', 'o', 'u', 'p',
-//				'\r', '\n', 'U', 'E', 'F', 'I', ' ', 'E', 'B', 'C', ' ', 'L', 'o', 'a', 'd', 'e', 'r',
-//				'\r', '\n'
-//			).address + 8
-//		)
+		val conOut = EFISystemTable.conOut(systemTable)
+		if (naturalSize() != 8L) error(conOut, 0, 0)
+		EFISimpleTextOutputProtocol.outputString(
+			conOut,
+			charArrayOf(
+				'B', 'r', 'e', 'a', 'd', ' ', 'E', 'x', 'p', 'e', 'r', 't', 's', ' ', 'G', 'r', 'o', 'u', 'p',
+				'\r', '\n', 'U', 'E', 'F', 'I', ' ', 'E', 'B', 'C', ' ', 'L', 'o', 'a', 'd', 'e', 'r',
+				'\r', '\n'
+			).address + 8
+		)
+		while (true) {
+		}
 //		val novonordisk = ByteArray(16)
 //		// 0x5B1B31A1,0x9562,0x11d2,\
 //		//    {0x8E,0x3F,0x00,0xA0,0xC9,0x69,0x72,0x3B}

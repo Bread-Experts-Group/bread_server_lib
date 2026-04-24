@@ -17,18 +17,19 @@ fun analyze(
 	var pI = 0
 	for (parameter in parameters) {
 		val type = when (parameter) {
-			ConstantDescs.CD_long -> StackElement.Primitive.LONG
-			ConstantDescs.CD_double -> StackElement.Primitive.DOUBLE
+			ConstantDescs.CD_long, ConstantDescs.CD_double -> {
+				initialParameters[pI] = if (parameters == ConstantDescs.CD_long) StackElement.Primitive.LONG
+				else StackElement.Primitive.DOUBLE
+				pI += 2
+				continue
+			}
+
 			ConstantDescs.CD_float -> StackElement.Primitive.FLOAT
 			ConstantDescs.CD_int, ConstantDescs.CD_short,
 			ConstantDescs.CD_char, ConstantDescs.CD_byte,
 			ConstantDescs.CD_boolean -> StackElement.Primitive.INT
 
-			else -> LocalVariableElement.Reference(
-				ClassLoader.getSystemClassLoader().loadClass(
-					"${parameter.packageName()}.${parameter.displayName()}"
-				), null
-			)
+			else -> LocalVariableElement.Reference(parameter, null)
 		}
 		initialParameters[pI++] = type
 	}
@@ -43,6 +44,7 @@ fun analyze(
 	val visited = mutableMapOf<Int, MutableList<ExecutionFrame>>()
 	while (workList.isNotEmpty()) {
 		val (bci, frame) = workList.removeFirst()
+		println(instructions[bci]!!)
 		fun frameCopy(): ExecutionFrame {
 			val variables = HashMap(frame.variables)
 			val stack = ArrayList(frame.stack)
@@ -117,12 +119,119 @@ fun analyze(
 				workNextElement()
 			}
 
+			is OperatorInstruction -> when (val opcode = element.opcode()) {
+				Opcode.LADD, Opcode.LSUB, Opcode.LMUL, Opcode.LDIV, Opcode.LREM,
+				Opcode.LAND, Opcode.LOR, Opcode.LXOR -> {
+					addVisited()
+					frame.stack.removeLast()
+					frame.stack.removeLast()
+					frame.stack.add(StackElement.Primitive.LONG)
+					workNextElement()
+				}
+
+				Opcode.IADD, Opcode.ISUB, Opcode.IMUL, Opcode.IDIV, Opcode.IREM,
+				Opcode.IAND, Opcode.IOR, Opcode.IXOR,
+				Opcode.IUSHR, Opcode.ISHR, Opcode.ISHL -> {
+					addVisited()
+					frame.stack.removeLast()
+					frame.stack.removeLast()
+					frame.stack.add(StackElement.Primitive.INT)
+					workNextElement()
+				}
+
+				Opcode.LCMP -> {
+					addVisited()
+					frame.stack.removeLast()
+					frame.stack.removeLast()
+					frame.stack.add(StackElement.Primitive.INT)
+					workNextElement()
+				}
+
+				Opcode.ARRAYLENGTH -> {
+					addVisited()
+					frame.stack.removeLast()
+					frame.stack.add(StackElement.Primitive.INT)
+					workNextElement()
+				}
+
+				else -> throw NotImplementedError("Operator: $opcode")
+			}
+
 			is IncrementInstruction, is NopInstruction -> {
 				addVisited()
 				workNextElement()
 			}
 
+			is NewPrimitiveArrayInstruction, is NewReferenceArrayInstruction -> {
+				addVisited()
+				frame.stack.removeLast()
+				frame.stack.add(StackElement.Primitive.REFERENCE)
+				workNextElement()
+			}
+
+			is ArrayStoreInstruction -> {
+				addVisited()
+				frame.stack.removeLast()
+				frame.stack.removeLast()
+				frame.stack.removeLast()
+				workNextElement()
+			}
+
+			is ArrayLoadInstruction -> {
+				addVisited()
+				frame.stack.removeLast()
+				frame.stack.removeLast()
+				frame.stack.add(
+					when (element.typeKind()) {
+						TypeKind.REFERENCE -> StackElement.Primitive.REFERENCE
+						TypeKind.LONG -> StackElement.Primitive.LONG
+						TypeKind.DOUBLE -> StackElement.Primitive.DOUBLE
+						TypeKind.INT, TypeKind.SHORT,
+						TypeKind.BYTE, TypeKind.CHAR, TypeKind.BOOLEAN -> StackElement.Primitive.INT
+
+						TypeKind.FLOAT -> StackElement.Primitive.FLOAT
+						TypeKind.VOID -> throw InternalError()
+					}
+				)
+				workNextElement()
+			}
+
+			is StackInstruction -> when (val opcode = element.opcode()) {
+				Opcode.POP -> {
+					addVisited()
+					frame.stack.removeLast()
+					workNextElement()
+				}
+
+				else -> throw NotImplementedError("Stack: $opcode")
+			}
+
 			is ReturnInstruction -> addVisited()
+			is ConvertInstruction -> when (val opcode = element.opcode()) {
+				Opcode.I2C, Opcode.I2S, Opcode.I2B -> {
+					addVisited()
+					frame.stack.removeLast()
+					frame.stack.add(StackElement.Primitive.INT)
+					workNextElement()
+				}
+
+				Opcode.I2L -> {
+					addVisited()
+					frame.stack.removeLast()
+					frame.stack.add(StackElement.Primitive.LONG)
+					workNextElement()
+				}
+
+				Opcode.L2I -> {
+					addVisited()
+					frame.stack.removeLast()
+					frame.stack.add(StackElement.Primitive.INT)
+					workNextElement()
+				}
+
+				else -> throw NotImplementedError("Convert: $opcode")
+			}
+
 			is BranchInstruction -> when (val opcode = element.opcode()) {
 				Opcode.IFNULL, Opcode.IFNONNULL -> {
 					addVisited()
@@ -134,7 +243,18 @@ fun analyze(
 					workNextElement()
 				}
 
-				Opcode.IF_ICMPGE -> {
+				Opcode.IFEQ, Opcode.IFNE,
+				Opcode.IFLT, Opcode.IFLE,
+				Opcode.IFGT, Opcode.IFGE -> {
+					addVisited()
+					frame.stack.removeLast()
+					workBranch(element)
+					workNextElement()
+				}
+
+				Opcode.IF_ICMPEQ, Opcode.IF_ICMPNE,
+				Opcode.IF_ICMPLT, Opcode.IF_ICMPLE,
+				Opcode.IF_ICMPGT, Opcode.IF_ICMPGE -> {
 					addVisited()
 					frame.stack.removeLast()
 					frame.stack.removeLast()
@@ -147,7 +267,7 @@ fun analyze(
 					workBranch(element)
 				}
 
-				else -> TODO("Branch: $opcode")
+				else -> throw NotImplementedError("Branch: $opcode")
 			}
 
 			is InvokeInstruction -> when (val opcode = element.opcode()) {
@@ -172,10 +292,10 @@ fun analyze(
 					workList.add(bci + element.sizeInBytes() to frameCopy())
 				}
 
-				else -> TODO("Call: $opcode")
+				else -> throw NotImplementedError("Call: $opcode")
 			}
 
-			else -> TODO("Analyze: $element")
+			else -> throw NotImplementedError("Analyze: $element")
 		}
 	}
 	return visited.toSortedMap { bciA, bciB -> bciA.compareTo(bciB) }.map { (bci, frames) ->

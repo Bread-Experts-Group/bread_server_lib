@@ -113,7 +113,6 @@ object EBCJVMCompilation {
 			data.unInitBase
 		)
 		for (parameterKind in parameters.asReversed()) {
-			if (!initialRun) stackConstant += 4u
 			when (parameterKind) {
 				TypeKind.REFERENCE -> {
 					procedure.MOVnw(
@@ -199,6 +198,7 @@ object EBCJVMCompilation {
 			)
 			data.allocator.nextFreeNatural += 2u
 		}
+		println(EBCDisassembly.diassemble(procedure.output))
 		val branchingLocations = mutableMapOf<Int, BranchInstruction>()
 		val bciToCode = mutableMapOf<Int, Int>()
 		val callingLocations = mutableMapOf<Int, String>()
@@ -841,6 +841,7 @@ object EBCJVMCompilation {
 										continue
 									} else throw NotImplementedError("Native function $descriptor")
 								}
+								println("---")
 								compileMethod(
 									it.methodTypeSymbol(),
 									it.findAttribute(Attributes.code()).get(),
@@ -854,7 +855,7 @@ object EBCJVMCompilation {
 										data.bootSvcAllocatePool
 									),
 									false
-								)
+								).also { println("---") }
 							}
 							if (output.initializedData.isNotEmpty()) TODO("INIT EXTRA")
 							functions[descriptor] = output.code
@@ -894,22 +895,21 @@ object EBCJVMCompilation {
 					}
 				}
 
-//				/* TODO: It may be possible to read the stack map tables to determine the type
-//					of the object being popped */
-//				is StackInstruction -> when (element.opcode()) {
-//					Opcode.POP -> {
-//						procedure.POP32(EBCRegisters.R2, false, null)
-//						procedure.CMPI32weq(
-//							EBCRegisters.R2, false, null,
-//							REFERENCE
-//						)
-//						procedure.branch({ t ->
-//							t.POPn(EBCRegisters.R2, false, null)
-//						}, { f ->
-//							f.POP32(EBCRegisters.R2, false, null)
-//						})
-//					}
-//
+				is StackInstruction -> when (instruction.opcode()) {
+					Opcode.POP -> {
+						when (frame.stack.last()) {
+							StackElement.Primitive.INT, StackElement.Primitive.FLOAT -> procedure.POP32(
+								EBCRegisters.R1, false, null
+							)
+
+							StackElement.Primitive.REFERENCE -> procedure.POPn(
+								EBCRegisters.R1, false, null
+							)
+
+							else -> throw InternalError()
+						}
+					}
+
 //					Opcode.DUP -> {
 //						procedure.POP32(EBCRegisters.R2, false, null)
 //						procedure.CMPI32weq(
@@ -930,9 +930,9 @@ object EBCJVMCompilation {
 //							f.PUSH32(EBCRegisters.R2, false, null)
 //						})
 //					}
-//
-//					else -> throw NotImplementedError("Unknown stack element $element")
-//				}
+
+					else -> throw NotImplementedError("Unknown stack element $instruction")
+				}
 
 				is NewReferenceArrayInstruction -> {
 					val (apN, apC) = data.bootSvcAllocatePool ?: throw InternalError(
