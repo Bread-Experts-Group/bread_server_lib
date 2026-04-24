@@ -15,6 +15,7 @@ import org.bread_experts_group.api.system.io.open.StandardIOOpenFeatures
 import org.bread_experts_group.api.system.io.seek.StandardSeekIODeviceFeatures
 import org.bread_experts_group.generic.MappedEnumeration
 import org.bread_experts_group.generic.io.reader.BSLWriter
+import org.bread_experts_group.generic.normalize
 import java.util.*
 import kotlin.io.path.toPath
 
@@ -54,12 +55,14 @@ fun main() {
 		val output = EBCJVMCompilation.compileClass(
 			EFIExample::class,
 			EFIExample::class.java.protectionDomain.codeSource.location.toURI().toPath(),
-			0x00401000u, 0x00410000u, 0x00411000u
+			0x00401000u, 0x00406000u, 0x00407000u
 		)
+		val codeSize = normalize(output.code.size, 0x1000).toUInt()
+		println("${(codeSize + 0x1000u).toHexString()} ${(codeSize + 0x2000u).toHexString()}")
 		sections = listOf(
 			PESection.of {
 				setName(".text")
-				virtualSize = 0x9000u
+				virtualSize = codeSize
 				virtualAddress = 0x1000u
 
 				characteristics = EnumSet.of(
@@ -72,7 +75,7 @@ fun main() {
 			PESection.of {
 				setName(".init")
 				virtualSize = 0x1000u
-				virtualAddress = 0x10000u
+				virtualAddress = codeSize + 0x1000u
 				characteristics = EnumSet.of(
 					PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 					PESectionCharacteristics.IMAGE_SCN_CNT_INITIALIZED_DATA
@@ -82,7 +85,7 @@ fun main() {
 			PESection.of {
 				setName(".uninit")
 				virtualSize = 0x1000u
-				virtualAddress = 0x11000u
+				virtualAddress = codeSize + 0x2000u
 				characteristics = EnumSet.of(
 					PESectionCharacteristics.IMAGE_SCN_MEM_READ,
 					PESectionCharacteristics.IMAGE_SCN_MEM_WRITE,

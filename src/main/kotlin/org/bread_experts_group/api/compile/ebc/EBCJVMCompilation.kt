@@ -5,11 +5,11 @@ import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalInd
 import org.bread_experts_group.api.compile.ebc.EBCProcedure.Companion.naturalIndex32
 import org.bread_experts_group.api.compile.ebc.efi.EFITableHeader
 import org.bread_experts_group.api.compile.ebc.efi.ExternalCall
+import java.lang.classfile.Attributes
 import java.lang.classfile.ClassFile.*
-import java.lang.classfile.CodeModel
-import java.lang.classfile.Label
 import java.lang.classfile.Opcode
 import java.lang.classfile.TypeKind
+import java.lang.classfile.attribute.CodeAttribute
 import java.lang.classfile.attribute.RuntimeInvisibleAnnotationsAttribute
 import java.lang.classfile.instruction.*
 import java.lang.constant.DynamicConstantDesc
@@ -43,7 +43,9 @@ object EBCJVMCompilation {
 			"No public static efiMain(${Address::class}, ${Address::class}): Long function " +
 					"was found within [$clazz]."
 		)
-		val code = efiMethod.code().orElseThrow { IllegalArgumentException("$efiMethod must contain code.") }
+		val code = efiMethod.findAttribute(Attributes.code()).orElseThrow {
+			IllegalArgumentException("$efiMethod must contain code.")
+		}
 		return compileMethod(
 			efiMethod.methodTypeSymbol(),
 			code,
@@ -56,33 +58,38 @@ object EBCJVMCompilation {
 	}
 
 	fun EBCProcedure.popLongsV2V1R2R1() {
-		POP32(EBCRegisters.R2, false, null)
 		POP64(EBCRegisters.R2, false, null)
-		POP32(EBCRegisters.R1, false, null)
 		POP64(EBCRegisters.R1, false, null)
 	}
 
 	fun EBCProcedure.popIntsV2V1R2R1() {
 		POP32(EBCRegisters.R2, false, null)
-		POP32(EBCRegisters.R2, false, null)
-		POP32(EBCRegisters.R1, false, null)
 		POP32(EBCRegisters.R1, false, null)
 	}
 
 	fun EBCProcedure.popIntLongV2V1R2R1() {
 		POP32(EBCRegisters.R2, false, null)
-		POP32(EBCRegisters.R2, false, null)
-		POP32(EBCRegisters.R1, false, null)
 		POP64(EBCRegisters.R1, false, null)
 	}
 
-	const val REFERENCE: UShort = 2u
-	const val LONG: UShort = 1u
-	const val INT: UShort = 0u
+	// REFERENCE STRUCTURE (STACK)
+	// UINT32 - REFERENCE KIND
+	// NAT    - Kind 0 (null)
+	//            Reserved
+	//          Kind 1 (array)
+	//            Array Address
+	//              UINT32 - Reference PTR Count
+	//              UINT32 - Element Count
+	//              ...... - Elements
+	//          Kind 2 (object)
+	//            Object Address
+	//              Unknown
+	//          Kind 3 (address)
+	//            Address
 
 	fun compileMethod(
 		type: MethodTypeDesc,
-		code: CodeModel,
+		code: CodeAttribute,
 		data: EBCCompilerData,
 		initialRun: Boolean
 	): EBCCompilationOutput {
@@ -94,7 +101,7 @@ object EBCJVMCompilation {
 		val parameterIndices = Array(parameters.size) {
 			val savedIndex = parameterIndex
 			parameterIndex += when (val kind = parameters[it]) {
-				TypeKind.INT, TypeKind.CHAR, TypeKind.BOOLEAN, TypeKind.REFERENCE -> 1
+				TypeKind.INT, TypeKind.CHAR, TypeKind.SHORT, TypeKind.BYTE, TypeKind.BOOLEAN, TypeKind.REFERENCE -> 1
 				TypeKind.LONG -> 2
 				else -> throw NotImplementedError("Unsupported parameter kind $kind")
 			}
@@ -134,7 +141,7 @@ object EBCJVMCompilation {
 					)
 				}
 
-				TypeKind.INT, TypeKind.CHAR, TypeKind.BOOLEAN -> {
+				TypeKind.INT, TypeKind.CHAR, TypeKind.SHORT, TypeKind.BYTE, TypeKind.BOOLEAN -> {
 					procedure.MOVdw(
 						EBCRegisters.R1, false, null,
 						EBCRegisters.R0, true, naturalIndex16(false, stackNatural, stackConstant)
@@ -193,58 +200,53 @@ object EBCJVMCompilation {
 			data.allocator.nextFreeNatural += 2u
 		}
 		val branchingLocations = mutableMapOf<Int, BranchInstruction>()
-		val branchLocations = mutableMapOf<Label, Int>()
+		val bciToCode = mutableMapOf<Int, Int>()
 		val callingLocations = mutableMapOf<Int, String>()
 		val functions = mutableMapOf<String, ByteArray>()
-		for (element in code) {
-			println(element)
+		val codeStream = analyze(type.parameterList(), code)
+		var bci = 0
+		for ((instruction, frames) in codeStream) {
+			val frame = frames.first() // TODO: Merge in analysis
+			// TODO: Use frame to automatically allocate variables
 			val beforeGen = procedure.output.size
-			when (element) {
-				is StoreInstruction -> when (val kind = element.typeKind()) {
-					TypeKind.REFERENCE -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.MOVIqq(
-							EBCRegisters.R2, false, null,
-							data.unInitBase
-						)
-						val (n, c) = data.allocator.getOrAllocateNatural(element.slot())
-						procedure.POPn(EBCRegisters.R2, true, naturalIndex16(false, n, c))
-					}
+			bciToCode[bci] = beforeGen
+			bci += instruction.sizeInBytes()
+			when (instruction) {
+				is StoreInstruction -> {
+					procedure.MOVIqq(
+						EBCRegisters.R1, false, null,
+						data.unInitBase
+					)
+					when (val kind = instruction.typeKind()) {
+						TypeKind.REFERENCE -> {
+							val (n, c) = data.allocator.getOrAllocateNatural(instruction.slot())
+							procedure.POPn(EBCRegisters.R1, true, naturalIndex16(false, n, c))
+						}
 
-					TypeKind.LONG -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.MOVIqq(
-							EBCRegisters.R2, false, null,
-							data.unInitBase
-						)
-						val (n, c) = data.allocator.getOrAllocate64(element.slot())
-						procedure.POP64(EBCRegisters.R2, true, naturalIndex16(false, n, c))
-					}
+						TypeKind.LONG -> {
+							val (n, c) = data.allocator.getOrAllocate64(instruction.slot())
+							procedure.POP64(EBCRegisters.R1, true, naturalIndex16(false, n, c))
+						}
 
-					TypeKind.INT -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.MOVIqq(
-							EBCRegisters.R2, false, null,
-							data.unInitBase
-						)
-						val (n, c) = data.allocator.getOrAllocate32(element.slot())
-						procedure.POP32(EBCRegisters.R2, true, naturalIndex16(false, n, c))
-					}
+						TypeKind.INT -> {
+							val (n, c) = data.allocator.getOrAllocate32(instruction.slot())
+							procedure.POP32(EBCRegisters.R1, true, naturalIndex16(false, n, c))
+						}
 
-					else -> throw NotImplementedError("Unknown type kind $kind ($element)")
+						TypeKind.FLOAT, TypeKind.DOUBLE -> TODO("Floating point")
+						else -> throw InternalError("Illegal kind for store ($kind), ${instruction.opcode()}")
+					}
 				}
 
 				is LoadInstruction -> {
-					val (n, c) = data.allocator[element.slot()]
-					when (val kind = element.typeKind()) {
+					val (n, c) = data.allocator[instruction.slot()]
+					when (val kind = instruction.typeKind()) {
 						TypeKind.REFERENCE -> {
 							procedure.MOVIqq(
 								EBCRegisters.R2, false, null,
 								data.unInitBase
 							)
 							procedure.PUSHn(EBCRegisters.R2, true, naturalIndex16(false, n, c))
-							procedure.MOVIdw(EBCRegisters.R2, false, null, REFERENCE)
-							procedure.PUSH32(EBCRegisters.R2, false, null)
 						}
 
 						TypeKind.LONG -> {
@@ -253,8 +255,6 @@ object EBCJVMCompilation {
 								data.unInitBase
 							)
 							procedure.PUSH64(EBCRegisters.R2, true, naturalIndex16(false, n, c))
-							procedure.MOVIdw(EBCRegisters.R2, false, null, LONG)
-							procedure.PUSH32(EBCRegisters.R2, false, null)
 						}
 
 						TypeKind.INT -> {
@@ -263,60 +263,49 @@ object EBCJVMCompilation {
 								data.unInitBase
 							)
 							procedure.PUSH32(EBCRegisters.R2, true, naturalIndex16(false, n, c))
-							procedure.MOVIdw(EBCRegisters.R2, false, null, INT)
-							procedure.PUSH32(EBCRegisters.R2, false, null)
 						}
 
-						else -> throw NotImplementedError("Unknown type kind $kind ($element)")
+						else -> throw NotImplementedError("Unknown type kind $kind ($instruction)")
 					}
 				}
 
-				is ConstantInstruction -> when (val kind = element.typeKind()) {
+				is ConstantInstruction -> when (val kind = instruction.typeKind()) {
 					TypeKind.REFERENCE -> @Suppress(
 						"IMPOSSIBLE_IS_CHECK_WARNING"
-					) when (val value = element.constantValue()) {
+					) when (val value = instruction.constantValue()) {
 						is String -> {
 							val addr = data.allocator.getOrAllocateString(value)
 							procedure.MOVIqq(EBCRegisters.R2, false, null, addr)
 							procedure.PUSHn(EBCRegisters.R2, false, null)
-							procedure.MOVIdw(EBCRegisters.R2, false, null, REFERENCE)
-							procedure.PUSH32(EBCRegisters.R2, false, null)
 						}
 
 						is DynamicConstantDesc<*> if value.constantName() == "_" -> {
 							procedure.MOVIqw(EBCRegisters.R1, false, null, 0u)
 							// TODO: Unsafe (>64-bits)
 							procedure.PUSHn(EBCRegisters.R1, false, null)
-							procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
-							procedure.PUSH32(EBCRegisters.R1, false, null)
 						}
 
-						else -> throw NotImplementedError("Unknown reference type $value ($element)")
+						else -> throw NotImplementedError("Unknown reference type $value ($instruction)")
 					}
 
 					TypeKind.LONG -> {
 						@Suppress("CAST_NEVER_SUCCEEDS")
-						procedure.MOVIqq(EBCRegisters.R2, false, null, (element.constantValue() as Long).toULong())
+						procedure.MOVIqq(EBCRegisters.R2, false, null, (instruction.constantValue() as Long).toULong())
 						procedure.PUSH64(EBCRegisters.R2, false, null)
-						procedure.MOVIdw(EBCRegisters.R2, false, null, LONG)
-						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
 					TypeKind.INT -> {
 						@Suppress("CAST_NEVER_SUCCEEDS")
-						procedure.MOVIqd(EBCRegisters.R2, false, null, (element.constantValue() as Int).toUInt())
-						procedure.PUSH32(EBCRegisters.R2, false, null)
-						procedure.MOVIdw(EBCRegisters.R2, false, null, INT)
+						procedure.MOVIqd(EBCRegisters.R2, false, null, (instruction.constantValue() as Int).toUInt())
 						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
-					else -> throw NotImplementedError("Unknown type kind $kind ($element)")
+					else -> throw NotImplementedError("Unknown type kind $kind ($instruction)")
 				}
 
 				is BranchInstruction -> {
-					when (element.opcode()) {
+					when (instruction.opcode()) {
 						Opcode.IFNONNULL, Opcode.IFNULL -> {
-							procedure.POP32(EBCRegisters.R2, false, null)
 							procedure.POPn(EBCRegisters.R2, false, null)
 							procedure.CMPI64weq( // TODO: USE BETTER CHECK, WILL NOT WORK FOR >64 BITS
 								EBCRegisters.R2, false, null,
@@ -350,7 +339,6 @@ object EBCJVMCompilation {
 
 						Opcode.IFGE, Opcode.IFLT -> {
 							procedure.POP32(EBCRegisters.R2, false, null)
-							procedure.POP32(EBCRegisters.R2, false, null)
 							procedure.CMPI32wgte(
 								EBCRegisters.R2, false, null,
 								0u
@@ -358,7 +346,6 @@ object EBCJVMCompilation {
 						}
 
 						Opcode.IFLE, Opcode.IFGT -> {
-							procedure.POP32(EBCRegisters.R2, false, null)
 							procedure.POP32(EBCRegisters.R2, false, null)
 							procedure.CMPI32wlte(
 								EBCRegisters.R2, false, null,
@@ -368,7 +355,6 @@ object EBCJVMCompilation {
 
 						Opcode.IFNE, Opcode.IFEQ -> {
 							procedure.POP32(EBCRegisters.R2, false, null)
-							procedure.POP32(EBCRegisters.R2, false, null)
 							procedure.CMPI32weq(
 								EBCRegisters.R2, false, null,
 								0u
@@ -376,15 +362,15 @@ object EBCJVMCompilation {
 						}
 
 						Opcode.GOTO -> {}
-						else -> throw NotImplementedError("Unknown branch element $element")
+						else -> throw NotImplementedError("Unknown branch element $instruction")
 					}
 
-					branchingLocations[procedure.output.size] = element
+					branchingLocations[procedure.output.size] = instruction
 					procedure.output += ByteArray(8) // TODO: Use a JMP8 optimization where possible
 				}
 
 				is IncrementInstruction -> {
-					val (n, c) = data.allocator[element.slot()]
+					val (n, c) = data.allocator[instruction.slot()]
 					procedure.MOVIqq(
 						EBCRegisters.R3, false, null,
 						data.unInitBase
@@ -393,7 +379,7 @@ object EBCJVMCompilation {
 						EBCRegisters.R2, false, null,
 						EBCRegisters.R3, true, naturalIndex16(false, n, c)
 					)
-					val a = element.constant()
+					val a = instruction.constant()
 					procedure.MOVdw(
 						EBCRegisters.R2, false, null,
 						EBCRegisters.R2, false,
@@ -405,51 +391,41 @@ object EBCJVMCompilation {
 					)
 				}
 
-				is ConvertInstruction -> when (val opcode = element.opcode()) {
+				is ConvertInstruction -> when (val opcode = instruction.opcode()) {
 					Opcode.I2B -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.EXTNDB32(
 							EBCRegisters.R2, false,
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSH32(EBCRegisters.R2, false, null)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					Opcode.I2C -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.MOVIdw(EBCRegisters.R3, false, null, 0u)
 						procedure.MOVww(EBCRegisters.R3, false, null, EBCRegisters.R2, false, null)
 						procedure.PUSH32(EBCRegisters.R3, false, null)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					Opcode.I2L -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.EXTNDD64(
 							EBCRegisters.R2, false,
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSH64(EBCRegisters.R2, false, null)
-						procedure.MOVIdw(EBCRegisters.R2, false, null, LONG)
-						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
 					Opcode.L2I -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.POP64(EBCRegisters.R2, false, null)
-						procedure.PUSH32(EBCRegisters.R2, false, null)
-						procedure.MOVIdw(EBCRegisters.R2, false, null, INT)
 						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
-					else -> throw NotImplementedError("Unknown conversion opcode $opcode ($element)")
+					else -> throw NotImplementedError("Unknown conversion opcode $opcode ($instruction)")
 				}
 
-				is OperatorInstruction -> when (val opcode = element.opcode()) {
+				is OperatorInstruction -> when (val opcode = instruction.opcode()) {
 					Opcode.LADD, Opcode.LSUB, Opcode.LMUL, Opcode.LDIV, Opcode.LREM,
 					Opcode.LOR, Opcode.LAND, Opcode.LXOR -> {
 						procedure.popLongsV2V1R2R1()
@@ -467,8 +443,6 @@ object EBCJVMCompilation {
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSH64(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, LONG)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					Opcode.LSHL, Opcode.LSHR, Opcode.LUSHR -> {
@@ -482,19 +456,15 @@ object EBCJVMCompilation {
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSH64(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R2, false, null, INT)
-						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
 					Opcode.LNEG -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.POP64(EBCRegisters.R1, false, null)
 						procedure.NEG64(
 							EBCRegisters.R1, false,
 							EBCRegisters.R1, false, null
 						)
 						procedure.PUSH64(EBCRegisters.R1, false, null)
-						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
 					Opcode.IADD, Opcode.ISUB, Opcode.IMUL, Opcode.IDIV, Opcode.IREM,
@@ -517,8 +487,6 @@ object EBCJVMCompilation {
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSH32(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R2, false, null, INT)
-						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
 					Opcode.LCMP -> {
@@ -541,50 +509,40 @@ object EBCJVMCompilation {
 							})
 						})
 						procedure.PUSH32(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					Opcode.ARRAYLENGTH -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.PUSH32(EBCRegisters.R1, true, naturalIndex16(false, 0u, 4u))
-						procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
-					else -> throw NotImplementedError("Unknown operator opcode $opcode ($element)")
+					else -> throw NotImplementedError("Unknown operator opcode $opcode ($instruction)")
 				}
 
-				is Label -> branchLocations[element] = procedure.output.size
-
-				is ReturnInstruction -> when (val kind = element.typeKind()) {
+				is ReturnInstruction -> when (val kind = instruction.typeKind()) {
 					TypeKind.REFERENCE -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.POPn(EBCRegisters.R7, false, null)
 						procedure.RET()
 					}
 
 					TypeKind.LONG -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.POP64(EBCRegisters.R7, false, null)
 						procedure.RET()
 					}
 
 					TypeKind.INT -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.POP32(EBCRegisters.R7, false, null)
 						procedure.RET()
 					}
 
 					TypeKind.VOID -> procedure.RET()
 
-					else -> throw NotImplementedError("Unknown return kind $kind ($element)")
+					else -> throw NotImplementedError("Unknown return kind $kind ($instruction)")
 				}
 
 				is InvokeInstruction -> when (
-					val descriptor = "${element.owner().name().stringValue()}." +
-							"${element.name().stringValue()}${element.type().stringValue()}"
+					val descriptor = "${instruction.owner().name().stringValue()}." +
+							"${instruction.name().stringValue()}${instruction.type().stringValue()}"
 				) {
 					"${EBCIntrinsics.internalName}.allocateN()L${Address.internalName};" -> {
 						procedure.MOVIqq(EBCRegisters.R1, false, null, data.unInitBase)
@@ -600,8 +558,6 @@ object EBCJVMCompilation {
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSHn(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 						data.allocator.nextFreeNatural++
 					}
 
@@ -619,46 +575,34 @@ object EBCJVMCompilation {
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSHn(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 						data.allocator.nextFreeConstant += 4u
 					}
 
 					"${EBCIntrinsics.internalName}.toLong(L${Address.internalName};)J" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.PUSH64(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, LONG)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.accessN(L${Address.internalName};)L${Address.internalName};" -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.MOVnw(
 							EBCRegisters.R1, false, null,
 							EBCRegisters.R1, true, null
 						)
 						procedure.PUSHn(EBCRegisters.R1, false, null)
-						procedure.PUSH32(EBCRegisters.R2, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.access64(L${Address.internalName};)J" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.MOVqw(
 							EBCRegisters.R1, false, null,
 							EBCRegisters.R1, true, null
 						)
 						procedure.PUSH64(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, LONG)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.writeN(L${Address.internalName};L${Address.internalName};)V" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POPn(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.MOVnw(
 							EBCRegisters.R1, true, null,
@@ -667,9 +611,7 @@ object EBCJVMCompilation {
 					}
 
 					"${EBCIntrinsics.internalName}.write64(L${Address.internalName};J)V" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POP64(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.MOVqw(
 							EBCRegisters.R1, true, null,
@@ -677,33 +619,53 @@ object EBCJVMCompilation {
 						)
 					}
 
+					"${EBCIntrinsics.internalName}.write32(L${Address.internalName};I)V" -> {
+						procedure.POP32(EBCRegisters.R2, false, null)
+						procedure.POPn(EBCRegisters.R1, false, null)
+						procedure.MOVdw(
+							EBCRegisters.R1, true, null,
+							EBCRegisters.R2, false, null
+						)
+					}
+
+					"${EBCIntrinsics.internalName}.write16(L${Address.internalName};S)V" -> {
+						procedure.POP32(EBCRegisters.R2, false, null)
+						procedure.POPn(EBCRegisters.R1, false, null)
+						procedure.MOVww(
+							EBCRegisters.R1, true, null,
+							EBCRegisters.R2, false, null
+						)
+					}
+
+					"${EBCIntrinsics.internalName}.write8(L${Address.internalName};B)V" -> {
+						procedure.POP32(EBCRegisters.R2, false, null)
+						procedure.POPn(EBCRegisters.R1, false, null)
+						procedure.MOVbw(
+							EBCRegisters.R1, true, null,
+							EBCRegisters.R2, false, null
+						)
+					}
+
 					"${EBCIntrinsics.internalName}.access32(L${Address.internalName};)I" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.MOVdw(
 							EBCRegisters.R1, false, null,
 							EBCRegisters.R1, true, null
 						)
 						procedure.PUSH32(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.access16(L${Address.internalName};)S" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R2, false, null, INT)
+						procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
 						procedure.MOVww(
 							EBCRegisters.R2, false, null,
 							EBCRegisters.R1, true, null
 						)
 						procedure.PUSH32(EBCRegisters.R2, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.access8(L${Address.internalName};)B" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.MOVIdw(EBCRegisters.R2, false, null, 0u)
 						procedure.MOVbw(
@@ -711,27 +673,20 @@ object EBCJVMCompilation {
 							EBCRegisters.R1, true, null
 						)
 						procedure.PUSH32(EBCRegisters.R2, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.plus(L${Address.internalName};J)L${Address.internalName};" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POP64(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.ADD64(
 							EBCRegisters.R1, false,
 							EBCRegisters.R2, false, null
 						)
 						procedure.PUSHn(EBCRegisters.R1, false, null)
-						procedure.PUSH32(EBCRegisters.R3, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.nat(L${Address.internalName};J)L${Address.internalName};" -> {
-						procedure.POP32(EBCRegisters.R1, false, null)
 						procedure.POP64(EBCRegisters.R2, false, null)
-						procedure.POP32(EBCRegisters.R3, false, null)
 						procedure.POPn(EBCRegisters.R1, false, null)
 						procedure.MOVInw(
 							EBCRegisters.R4, false, null,
@@ -746,7 +701,6 @@ object EBCJVMCompilation {
 							EBCRegisters.R1, false, null
 						)
 						procedure.PUSHn(EBCRegisters.R4, false, null)
-						procedure.PUSH32(EBCRegisters.R3, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.naturalSize()J" -> {
@@ -755,8 +709,6 @@ object EBCJVMCompilation {
 							naturalIndex16(false, 1u, 0u)
 						)
 						procedure.PUSH64(EBCRegisters.R1, false, null)
-						procedure.MOVIdw(EBCRegisters.R1, false, null, LONG)
-						procedure.PUSH32(EBCRegisters.R1, false, null)
 					}
 
 					"${EBCIntrinsics.internalName}.getAddress(Ljava/lang/Object;)L${Address.internalName};" -> {
@@ -769,14 +721,14 @@ object EBCJVMCompilation {
 					else -> {
 						// TODO: BETTER LINKING
 						if (true || !functions.contains(descriptor)) {
-							val classFile = element.owner().asInternalName().replace('/', '.')
+							val classFile = instruction.owner().asInternalName().replace('/', '.')
 							val output = cf.parse(
 								ClassLoader.getSystemClassLoader()
 									.loadClass(classFile)
 									.getResource(classFile.substringAfterLast('.') + ".class")
 								!!.readBytes()
 							).methods().first {
-								it.methodName() == element.name() && it.methodType() == element.type()
+								it.methodName() == instruction.name() && it.methodType() == instruction.type()
 							}.let {
 								if (it.flags().flagsMask() and ACC_NATIVE != 0) {
 									val useExternalCallForm = it.firstNotNullOfOrNull { attribute ->
@@ -796,30 +748,32 @@ object EBCJVMCompilation {
 										}.asReversed()
 										var index = parameters.size
 										procedure.MOVIqq(EBCRegisters.R2, false, null, data.unInitBase)
-										for (parameterKind in parameters) {
-											procedure.POP32(EBCRegisters.R1, false, null)
-											when (parameterKind) {
-												TypeKind.INT, TypeKind.BOOLEAN -> {
-													val (n, c) = reversingAllocator.getOrAllocate32(--index)
-													procedure.POP32(
-														EBCRegisters.R2,
-														true, naturalIndex16(false, n, c)
-													)
-												}
-
-												TypeKind.REFERENCE -> {
-													val (n, c) = reversingAllocator.getOrAllocateNatural(--index)
-													procedure.POPn(
-														EBCRegisters.R2,
-														true, naturalIndex16(false, n, c)
-													)
-												}
-
-												else -> throw NotImplementedError("Unknown parameter kind $parameterKind")
+										for (parameterKind in parameters) when (parameterKind) {
+											TypeKind.INT, TypeKind.BOOLEAN -> {
+												val (n, c) = reversingAllocator.getOrAllocate32(--index)
+												procedure.POP32(
+													EBCRegisters.R2,
+													true, naturalIndex16(false, n, c)
+												)
 											}
+
+											TypeKind.REFERENCE -> {
+												val (n, c) = reversingAllocator.getOrAllocateNatural(--index)
+												procedure.POPn(
+													EBCRegisters.R2,
+													true, naturalIndex16(false, n, c)
+												)
+											}
+
+											else -> throw NotImplementedError("Unknown parameter kind $parameterKind")
 										}
+//										procedure.MOVnw(
+//											EBCRegisters.R0, false, null,
+//											EBCRegisters.R0, false,
+//											naturalIndex16(true, 0u, 32u)
+//										)
 										var dropNatural = 0u
-										var dropConstant = 0u
+										var dropConstant = 0u //32u
 										index = parameters.size
 										for (parameterKind in parameters) {
 											val (n, c) = reversingAllocator[--index]
@@ -864,19 +818,16 @@ object EBCJVMCompilation {
 										)
 										procedure.MOVnw(
 											EBCRegisters.R0, false, null,
-											EBCRegisters.R0, false, naturalIndex16(false, dropNatural, dropConstant)
+											EBCRegisters.R0, false,
+											naturalIndex16(false, dropNatural, dropConstant)
 										)
 										when (val kind = TypeKind.from(it.methodTypeSymbol().returnType())) {
 											TypeKind.LONG -> {
 												procedure.PUSH64(EBCRegisters.R7, false, null)
-												procedure.MOVIdw(EBCRegisters.R1, false, null, LONG)
-												procedure.PUSH32(EBCRegisters.R1, false, null)
 											}
 
 											TypeKind.INT -> {
 												procedure.PUSH32(EBCRegisters.R7, false, null)
-												procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
-												procedure.PUSH32(EBCRegisters.R1, false, null)
 											}
 
 											TypeKind.VOID -> {}
@@ -892,7 +843,7 @@ object EBCJVMCompilation {
 								}
 								compileMethod(
 									it.methodTypeSymbol(),
-									it.code().get(),
+									it.findAttribute(Attributes.code()).get(),
 									EBCCompilerData(
 										data.codeBase, data.unInitBase, data.initBase,
 										EBCVariableAllocator(
@@ -912,89 +863,81 @@ object EBCJVMCompilation {
 						procedure.output += ByteArray(8)
 						var dropNatural = 0u
 						var dropConstant = 0u
-						for (parameter in element.typeSymbol().parameterList()) {
+						for (parameter in instruction.typeSymbol().parameterList()) {
 							when (val kind = TypeKind.from(parameter)) {
 								TypeKind.REFERENCE -> dropNatural++
-								TypeKind.INT, TypeKind.BOOLEAN -> dropConstant += 4u
+								TypeKind.INT, TypeKind.SHORT, TypeKind.BYTE, TypeKind.BOOLEAN -> dropConstant += 4u
 								TypeKind.LONG -> dropConstant += 8u
 								else -> throw NotImplementedError("Unknown parameter kind $kind")
 							}
-							dropConstant += 4u
 						}
 						procedure.MOVnw(
 							EBCRegisters.R0, false, null,
 							EBCRegisters.R0, false, naturalIndex16(false, dropNatural, dropConstant)
 						)
-						when (val kind = TypeKind.from(element.typeSymbol().returnType())) {
+						when (val kind = TypeKind.from(instruction.typeSymbol().returnType())) {
 							TypeKind.REFERENCE -> {
 								procedure.PUSHn(EBCRegisters.R7, false, null)
-								procedure.MOVIdw(EBCRegisters.R2, false, null, REFERENCE)
-								procedure.PUSH32(EBCRegisters.R2, false, null)
 							}
 
 							TypeKind.LONG -> {
 								procedure.PUSH64(EBCRegisters.R7, false, null)
-								procedure.MOVIdw(EBCRegisters.R2, false, null, LONG)
-								procedure.PUSH32(EBCRegisters.R2, false, null)
 							}
 
-							TypeKind.INT -> {
+							TypeKind.INT, TypeKind.BYTE -> {
 								procedure.PUSH32(EBCRegisters.R7, false, null)
-								procedure.MOVIdw(EBCRegisters.R2, false, null, INT)
-								procedure.PUSH32(EBCRegisters.R2, false, null)
 							}
 
 							TypeKind.VOID -> {}
-							else -> throw NotImplementedError("Unknown return type $kind ($element)")
+							else -> throw NotImplementedError("Unknown return type $kind ($instruction)")
 						}
 					}
 				}
 
-				/* TODO: It may be possible to read the stack map tables to determine the type
-					of the object being popped */
-				is StackInstruction -> when (element.opcode()) {
-					Opcode.POP -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.CMPI32weq(
-							EBCRegisters.R2, false, null,
-							REFERENCE
-						)
-						procedure.branch({ t ->
-							t.POPn(EBCRegisters.R2, false, null)
-						}, { f ->
-							f.POP32(EBCRegisters.R2, false, null)
-						})
-					}
-
-					Opcode.DUP -> {
-						procedure.POP32(EBCRegisters.R2, false, null)
-						procedure.CMPI32weq(
-							EBCRegisters.R2, false, null,
-							REFERENCE
-						)
-						procedure.branch({ t ->
-							t.POPn(EBCRegisters.R1, false, null)
-							t.PUSHn(EBCRegisters.R1, false, null)
-							t.PUSH32(EBCRegisters.R2, false, null)
-							t.PUSHn(EBCRegisters.R1, false, null)
-							t.PUSH32(EBCRegisters.R2, false, null)
-						}, { f ->
-							f.POP32(EBCRegisters.R1, false, null)
-							f.PUSH32(EBCRegisters.R1, false, null)
-							f.PUSH32(EBCRegisters.R2, false, null)
-							f.PUSH32(EBCRegisters.R1, false, null)
-							f.PUSH32(EBCRegisters.R2, false, null)
-						})
-					}
-
-					else -> throw NotImplementedError("Unknown stack element $element")
-				}
+//				/* TODO: It may be possible to read the stack map tables to determine the type
+//					of the object being popped */
+//				is StackInstruction -> when (element.opcode()) {
+//					Opcode.POP -> {
+//						procedure.POP32(EBCRegisters.R2, false, null)
+//						procedure.CMPI32weq(
+//							EBCRegisters.R2, false, null,
+//							REFERENCE
+//						)
+//						procedure.branch({ t ->
+//							t.POPn(EBCRegisters.R2, false, null)
+//						}, { f ->
+//							f.POP32(EBCRegisters.R2, false, null)
+//						})
+//					}
+//
+//					Opcode.DUP -> {
+//						procedure.POP32(EBCRegisters.R2, false, null)
+//						procedure.CMPI32weq(
+//							EBCRegisters.R2, false, null,
+//							REFERENCE
+//						)
+//						procedure.branch({ t ->
+//							t.POPn(EBCRegisters.R1, false, null)
+//							t.PUSHn(EBCRegisters.R1, false, null)
+//							t.PUSH32(EBCRegisters.R2, false, null)
+//							t.PUSHn(EBCRegisters.R1, false, null)
+//							t.PUSH32(EBCRegisters.R2, false, null)
+//						}, { f ->
+//							f.POP32(EBCRegisters.R1, false, null)
+//							f.PUSH32(EBCRegisters.R1, false, null)
+//							f.PUSH32(EBCRegisters.R2, false, null)
+//							f.PUSH32(EBCRegisters.R1, false, null)
+//							f.PUSH32(EBCRegisters.R2, false, null)
+//						})
+//					}
+//
+//					else -> throw NotImplementedError("Unknown stack element $element")
+//				}
 
 				is NewReferenceArrayInstruction -> {
 					val (apN, apC) = data.bootSvcAllocatePool ?: throw InternalError(
 						"Boot services allocate pool unset"
 					)
-					procedure.POP32(EBCRegisters.R1, false, null)
 					procedure.POP32(EBCRegisters.R1, false, null)
 					procedure.EXTNDD64(
 						EBCRegisters.R1, false,
@@ -1048,8 +991,6 @@ object EBCJVMCompilation {
 						EBCRegisters.R4, false, null
 					)
 					procedure.PUSHn(EBCRegisters.R2, false, null)
-					procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
 					// TODO: Error checking
 				}
 
@@ -1057,7 +998,6 @@ object EBCJVMCompilation {
 					val (apN, apC) = data.bootSvcAllocatePool ?: throw InternalError(
 						"Boot services allocate pool unset"
 					)
-					procedure.POP32(EBCRegisters.R1, false, null)
 					procedure.POP32(EBCRegisters.R1, false, null)
 					procedure.EXTNDD64(
 						EBCRegisters.R1, false,
@@ -1075,7 +1015,7 @@ object EBCJVMCompilation {
 					procedure.PUSHn(EBCRegisters.R2, false, null)
 					procedure.MOVIqw(
 						EBCRegisters.R3, false, null,
-						when (val kind = element.typeKind()) {
+						when (val kind = instruction.typeKind()) {
 							TypeKind.LONG -> 8u
 							TypeKind.SHORT, TypeKind.CHAR -> 2u
 							TypeKind.BYTE -> 1u
@@ -1116,26 +1056,21 @@ object EBCJVMCompilation {
 						EBCRegisters.R4, false, null
 					)
 					procedure.PUSHn(EBCRegisters.R2, false, null)
-					procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
-					procedure.PUSH32(EBCRegisters.R1, false, null)
 					// TODO: Error checking
 				}
 
 				// Value, Index, Array
 				is ArrayStoreInstruction -> {
-					when (val kind = element.typeKind()) {
+					when (val kind = instruction.typeKind()) {
 						TypeKind.LONG -> {
-							procedure.POP32(EBCRegisters.R1, false, null)
 							procedure.POP64(EBCRegisters.R1, false, null)
 						}
 
 						TypeKind.SHORT, TypeKind.CHAR, TypeKind.BYTE -> {
 							procedure.POP32(EBCRegisters.R1, false, null)
-							procedure.POP32(EBCRegisters.R1, false, null)
 						}
 
 						TypeKind.REFERENCE -> {
-							procedure.POP32(EBCRegisters.R1, false, null)
 							procedure.POPn(EBCRegisters.R1, false, null)
 						}
 
@@ -1143,20 +1078,18 @@ object EBCJVMCompilation {
 					}
 
 					procedure.POP32(EBCRegisters.R2, false, null)
-					procedure.POP32(EBCRegisters.R2, false, null)
 					procedure.EXTNDD64(
 						EBCRegisters.R2, false,
 						EBCRegisters.R2, false, null
 					)
-					procedure.POP32(EBCRegisters.R3, false, null)
 					procedure.POPn(EBCRegisters.R3, false, null)
 
-					if (element.typeKind() == TypeKind.REFERENCE) procedure.MOVInw(
+					if (instruction.typeKind() == TypeKind.REFERENCE) procedure.MOVInw(
 						EBCRegisters.R4, false, null,
 						naturalIndex16(false, 1u, 0u)
 					) else procedure.MOVIqw(
 						EBCRegisters.R4, false, null,
-						when (val kind = element.typeKind()) {
+						when (val kind = instruction.typeKind()) {
 							TypeKind.LONG -> 8u
 							TypeKind.SHORT, TypeKind.CHAR -> 2u
 							TypeKind.BYTE -> 1u
@@ -1176,7 +1109,7 @@ object EBCJVMCompilation {
 						EBCRegisters.R3, false,
 						EBCRegisters.R2, false, null
 					)
-					when (val kind = element.typeKind()) {
+					when (val kind = instruction.typeKind()) {
 						TypeKind.LONG -> procedure::MOVqw
 						TypeKind.SHORT, TypeKind.CHAR -> procedure::MOVww
 						TypeKind.BYTE -> procedure::MOVbw
@@ -1192,19 +1125,17 @@ object EBCJVMCompilation {
 				// Index, Array -> Value
 				is ArrayLoadInstruction -> {
 					procedure.POP32(EBCRegisters.R1, false, null)
-					procedure.POP32(EBCRegisters.R1, false, null)
 					procedure.EXTNDD64(
 						EBCRegisters.R1, false,
 						EBCRegisters.R1, false, null
 					)
-					procedure.POP32(EBCRegisters.R2, false, null)
 					procedure.POPn(EBCRegisters.R2, false, null)
-					if (element.typeKind() == TypeKind.REFERENCE) procedure.MOVInw(
+					if (instruction.typeKind() == TypeKind.REFERENCE) procedure.MOVInw(
 						EBCRegisters.R3, false, null,
 						naturalIndex16(false, 1u, 0u)
 					) else procedure.MOVIqw(
 						EBCRegisters.R3, false, null,
-						when (val kind = element.typeKind()) {
+						when (val kind = instruction.typeKind()) {
 							TypeKind.LONG -> 8u
 							TypeKind.SHORT, TypeKind.CHAR -> 2u
 							TypeKind.BYTE -> 1u
@@ -1224,10 +1155,9 @@ object EBCJVMCompilation {
 						EBCRegisters.R2, false,
 						EBCRegisters.R1, false, null
 					)
-					when (val kind = element.typeKind()) {
+					when (val kind = instruction.typeKind()) {
 						TypeKind.LONG -> {
 							procedure.PUSH64(EBCRegisters.R2, true, null)
-							procedure.MOVIdw(EBCRegisters.R1, false, null, LONG)
 						}
 
 						TypeKind.SHORT, TypeKind.CHAR, TypeKind.BYTE -> {
@@ -1239,27 +1169,24 @@ object EBCJVMCompilation {
 								EBCRegisters.R2, true, null
 							)
 							procedure.PUSH32(EBCRegisters.R2, false, null)
-							procedure.MOVIdw(EBCRegisters.R1, false, null, INT)
 						}
 
 						TypeKind.REFERENCE -> {
 							procedure.PUSHn(EBCRegisters.R2, true, null)
-							procedure.MOVIdw(EBCRegisters.R1, false, null, REFERENCE)
 						}
 
 						else -> throw NotImplementedError("Unknown array type kind $kind")
 					}
-					procedure.PUSH32(EBCRegisters.R1, false, null)
 					// TODO: Error checking
 				}
 
 				is TypeCheckInstruction -> println("*** TODO: TYPECHECKING")
-				else -> throw NotImplementedError("Unknown compile element $element")
+				else -> throw NotImplementedError("Unknown compile element $instruction")
 			}
 			println(EBCDisassembly.diassemble(procedure.output.sliceArray(beforeGen..<procedure.output.size)))
 		}
 		for ((location, instruction) in branchingLocations) {
-			val jumpLocation = branchLocations[instruction.target()]!!
+			val jumpLocation = bciToCode[code.labelToBci(instruction.target())]!!
 			val infill = EBCProcedure()
 			infill.MOVIqd(
 				EBCRegisters.R2, false, null,

@@ -102,7 +102,7 @@ class PEFile private constructor(private val structure: FileStructure) {
 				}
 				buffer.clear()
 				setPosition(windowsHeader.sizeOfImagePosition)
-				buffer.putInt(normalize(0x10000, windowsHeader.sectionAlignment.toInt()))
+				buffer.putInt(normalize(0x30000, windowsHeader.sectionAlignment.toInt()))
 				buffer.putInt(normalize(headerEnd.toInt(), windowsHeader.fileAlignment.toInt()))
 				into.write(buffer.clear())
 				into.flush()
