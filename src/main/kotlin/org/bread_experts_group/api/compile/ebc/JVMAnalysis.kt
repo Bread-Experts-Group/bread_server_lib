@@ -295,6 +295,12 @@ fun analyze(
 				else -> throw NotImplementedError("Call: $opcode")
 			}
 
+			is TypeCheckInstruction -> {
+				addVisited()
+				println("*** TODO: TYPECHECK")
+				workNextElement()
+			}
+
 			else -> throw NotImplementedError("Analyze: $element")
 		}
 	}

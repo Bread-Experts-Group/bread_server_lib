@@ -2,10 +2,12 @@ package org.bread_experts_group.api.compile.ebc.efi
 
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.Address
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.address
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.allocateN
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.naturalSize
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.plus
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.write16
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.write32
+import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.write64
 import org.bread_experts_group.api.compile.ebc.EBCIntrinsics.write8
 import org.bread_experts_group.api.compile.ebc.efi.EFIExample.plus
 
@@ -99,18 +101,17 @@ object EFIExample {
 				'\r', '\n'
 			).address + 8
 		)
-		while (true) {
-		}
-//		val novonordisk = ByteArray(16)
-//		// 0x5B1B31A1,0x9562,0x11d2,\
-//		//    {0x8E,0x3F,0x00,0xA0,0xC9,0x69,0x72,0x3B}
-//		fillGUID(
-//			novonordisk.address + 8,
-//			0x5B1B31A1u, 0x9562u, 0x11D2u,
-//			ubyteArrayOf(0x8Eu, 0x3Fu, 0x00u, 0xA0u, 0xC9u, 0x69u, 0x72u, 0x3Bu)
-//		)
-//		val protocolNames = arrayOf(
-//			charArrayOf('L', 'o', 'a', 'd', 'e', 'd', 'I', 'm', 'a', 'g', 'e'),
+		val novonordisk = ByteArray(16)
+		// 0x5B1B31A1,0x9562,0x11d2,\
+		//    {0x8E,0x3F,0x00,0xA0,0xC9,0x69,0x72,0x3B}
+		fillGUID(
+			novonordisk.address + 8,
+			0x5B1B31A1u, 0x9562u, 0x11D2u,
+			ubyteArrayOf(0x8Eu, 0x3Fu, 0x00u, 0xA0u, 0xC9u, 0x69u, 0x72u, 0x3Bu)
+		)
+
+		val protocolNames = arrayOf(
+			charArrayOf('L', 'o', 'a', 'd', 'e', 'd', 'I', 'm', 'a', 'g', 'e'),
 //			charArrayOf(
 //				'L', 'o', 'a', 'd', 'e', 'd',
 //				'I', 'm', 'a', 'g', 'e',
@@ -202,15 +203,15 @@ object EFIExample {
 //			charArrayOf('U', 'n', 'i', 'c', 'o', 'd', 'e', 'C', 'o', 'l', 'l', 'a', 't', 'i', 'o', 'n'),
 //			charArrayOf('R', 'e', 'g', 'u', 'l', 'a', 'r', 'E', 'x', 'p', 'r', 'e', 's', 's', 'i', 'o', 'n'),
 //			charArrayOf('F', 'i', 'r', 'm', 'w', 'a', 'r', 'e', 'M', 'a', 'n', 'a', 'g', 'e', 'm', 'e', 'n', 't')
-//		)
-//		val protocolGuids = arrayOf(
+		)
+		val protocolGuids = arrayOf(
 ////			byteArrayOf( // Loaded Image
 ////				0xA1.toByte(), 0x31, 0x1B, 0x5B,
 ////				0x62, 0x95.toByte(),
 ////				0xD2.toByte(), 0x11,
 ////				0x8E.toByte(), 0x3F, 0x00, 0xA0.toByte(), 0xC9.toByte(), 0x69, 0x72, 0x3B
 ////			),
-//			novonordisk
+			novonordisk
 //			byteArrayOf( // Loaded Image Device Path
 //				0x7E, 0x15, 0x62, 0xBC.toByte(),
 //				0x33, 0x3E,
@@ -526,42 +527,42 @@ object EFIExample {
 //				0x33, 0x46,
 //				0xA1.toByte(), 0x87.toByte(), 0x49, 0x10, 0x4D, 0x06, 0x85.toByte(), 0xC7.toByte()
 //			)
-//		)
-//		var i = 0
-//		var longestNameLength = 0
-//		while (i < protocolNames.size) {
-//			val size = protocolNames[i].size
-//			if (size > longestNameLength) longestNameLength = size
-//			i++
-//		}
-//		i = 0
-//		val okC = charArrayOf('O', 'K', '\r', '\n')
-//		val unsupportedC = charArrayOf('U', 'n', 's', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd', '\r', '\n')
-//		val divider = charArrayOf('.').toUTF16LE()
-//		val bootServices = EFISystemTable.bootServices(systemTable)
-//		val ptr = allocateN()
-//		write64(ptr, 0)
-//		while (i < protocolNames.size) {
-//			val name = protocolNames[i]
-//			EFISimpleTextOutputProtocol.outputString(conOut, name.toUTF16LE().address + 8)
-//			var s = 0
-//			while (s < (longestNameLength - name.size) + 3) {
-//				EFISimpleTextOutputProtocol.outputString(conOut, divider.address + 8)
-//				s++
-//			}
-//
-//			val status = EFIBootServices.locateProtocol(
-//				bootServices,
-//				protocolGuids[i].address + 8, null, ptr
-//			)
-//			EFISimpleTextOutputProtocol.outputString(
-//				conOut,
-//				(status.toLong().toCharArray(10) + charArrayOf('\r', '\n')).toUTF16LE().address + 8
-//			)
-//			i++
-//		}
-//		while (true) {
-//		}
+		)
+		var i = 0
+		var longestNameLength = 0
+		while (i < protocolNames.size) {
+			val size = protocolNames[i].size
+			if (size > longestNameLength) longestNameLength = size
+			i++
+		}
+		i = 0
+		val okC = charArrayOf('O', 'K', '\r', '\n')
+		val unsupportedC = charArrayOf('U', 'n', 's', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd', '\r', '\n')
+		val divider = charArrayOf('.').toUTF16LE()
+		val bootServices = EFISystemTable.bootServices(systemTable)
+		val ptr = allocateN()
+		write64(ptr, 0)
+		while (i < protocolNames.size) {
+			val name = protocolNames[i]
+			EFISimpleTextOutputProtocol.outputString(conOut, name.toUTF16LE().address + 8)
+			var s = 0
+			while (s < (longestNameLength - name.size) + 3) {
+				EFISimpleTextOutputProtocol.outputString(conOut, divider.address + 8)
+				s++
+			}
+
+			val status = EFIBootServices.locateProtocol(
+				bootServices,
+				protocolGuids[i].address + 8, null, ptr
+			)
+			EFISimpleTextOutputProtocol.outputString(
+				conOut,
+				(status.toLong().toCharArray(10) + charArrayOf('\r', '\n')).toUTF16LE().address + 8
+			)
+			i++
+		}
+		while (true) {
+		}
 //		flash_EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID(guid)
 //		val simpleFileSystemProtocol = systemTable.bootServices.locateProtocol(
 //			guid, MemorySegment.NULL
