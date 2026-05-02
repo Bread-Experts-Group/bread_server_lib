@@ -2,7 +2,7 @@ package org.bread_experts_group.api.secure.blob
 
 import org.bread_experts_group.api.feature.CheckedImplementation
 import org.bread_experts_group.api.feature.NoFeatureAvailableException
-import java.util.*
+import org.bread_experts_group.api.secure.blob.windows.WindowsSecureDataBlobProvider
 
 abstract class SecureDataBlobProvider : CheckedImplementation {
 	companion object {
@@ -12,9 +12,8 @@ abstract class SecureDataBlobProvider : CheckedImplementation {
 		 * @since D0F0N0P0
 		 */
 		fun open(): SecureDataBlob {
-			val blob = ServiceLoader.load(
-				SecureDataBlobProvider::class.java,
-				SecureDataBlobProvider::class.java.classLoader
+			val blob = mutableListOf(
+				WindowsSecureDataBlobProvider()
 			).filter {
 				try {
 					it.supported()

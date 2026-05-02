@@ -6,7 +6,6 @@ import org.bread_experts_group.api.secure.cryptography.feature.CryptographySyste
 import org.bread_experts_group.api.system.SystemProvider
 import org.bread_experts_group.generic.logging.LevelLogger
 import java.lang.ref.Cleaner
-import java.util.*
 
 abstract class CryptographySystem : FeatureProvider<CryptographySystemFeatureImplementation<*>>, AutoCloseable {
 	private companion object {
@@ -14,10 +13,7 @@ abstract class CryptographySystem : FeatureProvider<CryptographySystemFeatureImp
 	}
 
 	override val logger = LevelLogger("crypto", SystemProvider.logger)
-	override val features: MutableList<CryptographySystemFeatureImplementation<*>> = ServiceLoader.load(
-		CryptographySystemFeatureImplementation::class.java,
-		CryptographySystemFeatureImplementation::class.java.classLoader
-	).toMutableList()
+	override val features: MutableList<CryptographySystemFeatureImplementation<*>> = mutableListOf()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out CryptographySystemFeatureImplementation<*>>,
 			MutableList<CryptographySystemFeatureImplementation<*>>

@@ -7,7 +7,6 @@ import org.bread_experts_group.api.system.SystemProvider
 import org.bread_experts_group.generic.logging.LevelLogger
 import java.lang.AutoCloseable
 import java.lang.ref.Cleaner
-import java.util.*
 
 /**
  * [SecureDataBlob]s allow the secure storage of data in-memory by encrypting / decrypting it during use.
@@ -27,10 +26,7 @@ abstract class SecureDataBlob : FeatureProvider<SecureDataBlobFeatureImplementat
 	}
 
 	override val logger = LevelLogger("sdb", SystemProvider.logger)
-	override val features: MutableList<SecureDataBlobFeatureImplementation<*>> = ServiceLoader.load(
-		SecureDataBlobFeatureImplementation::class.java,
-		SecureDataBlob::class.java.classLoader
-	).toMutableList()
+	override val features: MutableList<SecureDataBlobFeatureImplementation<*>> = mutableListOf()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out SecureDataBlobFeatureImplementation<*>>,
 			MutableList<SecureDataBlobFeatureImplementation<*>>
