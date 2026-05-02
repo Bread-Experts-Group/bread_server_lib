@@ -6,7 +6,6 @@ plugins {
 	kotlin("jvm") version "2.3.10"
 	`maven-publish`
 	`java-library`
-	signing
 	application
 }
 
@@ -87,10 +86,6 @@ publishing {
 			}
 		}
 	}
-}
-signing {
-	useGpgCmd()
-	sign(publishing.publications["mavenKotlin"])
 }
 
 val projectVersion = providers.provider { project.version.toString() }
