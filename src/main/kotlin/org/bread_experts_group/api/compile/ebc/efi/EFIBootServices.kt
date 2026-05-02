@@ -203,6 +203,35 @@ object EFIBootServices {
 
 	@JvmStatic
 	@ExternalCall
+	private external fun openProtocolN(
+		pPtr: Address,
+		handle: Address,
+		protocol: Address,
+		iface: Address?,
+		agentHandle: Address,
+		controllerHandle: Address?,
+		attributes: Int
+	): EFIStatus
+
+	@JvmStatic
+	fun openProtocol(
+		bootServices: Address?,
+		handle: Address?,
+		protocol: Address?,
+		iface: Address?,
+		agentHandle: Address?,
+		controllerHandle: Address?,
+		attributes: Int
+	): EFIStatus {
+		if (bootServices == null || handle == null || protocol == null || agentHandle == null) return -1
+		return this.openProtocolN(
+			accessN((bootServices + EFITableHeader.OFFSET) nat 32),
+			handle, protocol, iface, agentHandle, controllerHandle, attributes
+		)
+	}
+
+	@JvmStatic
+	@ExternalCall
 	private external fun copyMemN(
 		pPtr: Address,
 		destination: Address, source: Address, length: Int

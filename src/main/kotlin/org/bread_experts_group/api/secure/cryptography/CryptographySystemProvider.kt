@@ -12,15 +12,16 @@ abstract class CryptographySystemProvider : CheckedImplementation {
 		 * @since D0F0N0P0
 		 */
 		fun open(): CryptographySystem {
-			val system = ServiceLoader.load(CryptographySystemProvider::class.java)
-				.filter {
-					try {
-						it.supported()
-					} catch (_: NoFeatureAvailableException) {
-						false
-					}
+			val system = ServiceLoader.load(
+				CryptographySystemProvider::class.java,
+				CryptographySystemProvider::class.java.classLoader
+			).filter {
+				try {
+					it.supported()
+				} catch (_: NoFeatureAvailableException) {
+					false
 				}
-				.minByOrNull { it.source } ?: throw NoFeatureAvailableException("Cryptographic Operations")
+			}.minByOrNull { it.source } ?: throw NoFeatureAvailableException("Cryptographic Operations")
 			return system.new()
 		}
 	}

@@ -15,7 +15,8 @@ abstract class CryptographySystem : FeatureProvider<CryptographySystemFeatureImp
 
 	override val logger = LevelLogger("crypto", SystemProvider.logger)
 	override val features: MutableList<CryptographySystemFeatureImplementation<*>> = ServiceLoader.load(
-		CryptographySystemFeatureImplementation::class.java
+		CryptographySystemFeatureImplementation::class.java,
+		CryptographySystemFeatureImplementation::class.java.classLoader
 	).toMutableList()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out CryptographySystemFeatureImplementation<*>>,

@@ -1,6 +1,7 @@
 package org.bread_experts_group.api.compile.ebc
 
 import java.lang.classfile.Instruction
+import java.lang.classfile.Label
 import java.lang.classfile.Opcode
 import java.lang.classfile.TypeKind
 import java.lang.classfile.attribute.CodeAttribute
@@ -44,7 +45,6 @@ fun analyze(
 	val visited = mutableMapOf<Int, MutableList<ExecutionFrame>>()
 	while (workList.isNotEmpty()) {
 		val (bci, frame) = workList.removeFirst()
-		println(instructions[bci]!!)
 		fun frameCopy(): ExecutionFrame {
 			val variables = HashMap(frame.variables)
 			val stack = ArrayList(frame.stack)
@@ -73,8 +73,8 @@ fun analyze(
 
 		val element = instructions[bci]!!
 		fun workNextElement() = workList.add(bci + element.sizeInBytes() to frameCopy())
-		fun workBranch(element: BranchInstruction) {
-			val target = code.labelToBci(element.target())
+		fun workBranch(target: Label) {
+			val target = code.labelToBci(target)
 			val frame = frameCopy()
 			if (visited[target]?.any { it == frame } == true) return
 			workList.add(target to frame)
@@ -238,7 +238,7 @@ fun analyze(
 					val reference = frame.stack.removeLast()
 					val isNull = opcode == Opcode.IFNULL
 					if (reference is StackElement.VariableReference) reference.ref.isNull = isNull
-					workBranch(element)
+					workBranch(element.target())
 					if (reference is StackElement.VariableReference) reference.ref.isNull = !isNull
 					workNextElement()
 				}
@@ -248,7 +248,7 @@ fun analyze(
 				Opcode.IFGT, Opcode.IFGE -> {
 					addVisited()
 					frame.stack.removeLast()
-					workBranch(element)
+					workBranch(element.target())
 					workNextElement()
 				}
 
@@ -258,16 +258,25 @@ fun analyze(
 					addVisited()
 					frame.stack.removeLast()
 					frame.stack.removeLast()
-					workBranch(element)
+					workBranch(element.target())
 					workNextElement()
 				}
 
 				Opcode.GOTO -> {
 					addVisited()
-					workBranch(element)
+					workBranch(element.target())
 				}
 
 				else -> throw NotImplementedError("Branch: $opcode")
+			}
+
+			is TableSwitchInstruction -> {
+				addVisited()
+				frame.stack.removeLast()
+				element.cases().forEach {
+					workBranch(it.target())
+				}
+				workBranch(element.defaultTarget())
 			}
 
 			is InvokeInstruction -> when (val opcode = element.opcode()) {
@@ -296,8 +305,7 @@ fun analyze(
 			}
 
 			is TypeCheckInstruction -> {
-				addVisited()
-				println("*** TODO: TYPECHECK")
+				addVisited() // TODO: TYPECHECK
 				workNextElement()
 			}
 

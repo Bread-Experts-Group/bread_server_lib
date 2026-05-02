@@ -24,15 +24,6 @@ object EBCIntrinsics {
 	external fun naturalSize(): Long
 
 	@JvmStatic
-	external fun allocateN(): Address
-
-	@JvmStatic
-	external fun allocate64(): Address
-
-	@JvmStatic
-	external fun allocate32(): Address
-
-	@JvmStatic
 	external operator fun Address?.plus(by: Long): Address
 
 	@JvmStatic

@@ -14,7 +14,8 @@ abstract class GraphicsConsoleFeature : GraphicsFeatureImplementation<GraphicsCo
 	override val expresses: FeatureExpression<GraphicsConsoleFeature> = GraphicsFeatures.CUI_CONSOLE
 	override val logger = LevelLogger("console", GraphicsProvider.logger)
 	override val features: MutableList<GraphicsConsoleFeatureImplementation<*>> = ServiceLoader.load(
-		GraphicsConsoleFeatureImplementation::class.java
+		GraphicsConsoleFeatureImplementation::class.java,
+		GraphicsConsoleFeatureImplementation::class.java.classLoader
 	).toMutableList()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out GraphicsConsoleFeatureImplementation<*>>,

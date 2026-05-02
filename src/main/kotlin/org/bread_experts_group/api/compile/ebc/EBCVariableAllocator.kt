@@ -32,7 +32,10 @@ data class EBCVariableAllocator(
 		nextFreeNatural to savedConstant
 	}
 
-	fun getOrAllocateNatural(slot: Int): Pair<UInt, UInt> = variables.getOrPut(slot) {
-		nextFreeNatural++ to nextFreeConstant
+	fun getOrAllocateReference(slot: Int): Pair<UInt, UInt> = variables.getOrPut(slot) {
+		val savedNatural = nextFreeNatural++
+		val savedConstant = nextFreeConstant
+		nextFreeConstant += 4u
+		savedNatural to savedConstant
 	}
 }

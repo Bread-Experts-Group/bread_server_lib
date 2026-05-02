@@ -28,7 +28,8 @@ abstract class SecureDataBlob : FeatureProvider<SecureDataBlobFeatureImplementat
 
 	override val logger = LevelLogger("sdb", SystemProvider.logger)
 	override val features: MutableList<SecureDataBlobFeatureImplementation<*>> = ServiceLoader.load(
-		SecureDataBlobFeatureImplementation::class.java
+		SecureDataBlobFeatureImplementation::class.java,
+		SecureDataBlob::class.java.classLoader
 	).toMutableList()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out SecureDataBlobFeatureImplementation<*>>,

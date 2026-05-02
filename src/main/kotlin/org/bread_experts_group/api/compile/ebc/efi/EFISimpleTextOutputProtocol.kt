@@ -30,4 +30,56 @@ object EFISimpleTextOutputProtocol {
 			pThis, string
 		)
 	}
+
+	@JvmStatic
+	@ExternalCall
+	external fun queryMode(pPtr: Address, pThis: Address, modeNumber: UINTN, columns: Address, rows: Address): EFIStatus
+
+	@JvmStatic
+	fun queryMode(pThis: Address?, modeNumber: UINTN, columns: Address?, rows: Address?): EFIStatus {
+		if (pThis == null || columns == null || rows == null) return -1
+		return this.queryMode(
+			accessN(pThis nat 3),
+			pThis, modeNumber, columns, rows
+		)
+	}
+
+	@JvmStatic
+	@ExternalCall
+	external fun setMode(pPtr: Address, pThis: Address, modeNumber: UINTN): EFIStatus
+
+	@JvmStatic
+	fun setMode(pThis: Address?, modeNumber: UINTN): EFIStatus {
+		if (pThis == null) return -1
+		return this.setMode(
+			accessN(pThis nat 4),
+			pThis, modeNumber
+		)
+	}
+
+	@JvmStatic
+	@ExternalCall
+	external fun clearScreen(pPtr: Address, pThis: Address): EFIStatus
+
+	@JvmStatic
+	fun clearScreen(pThis: Address?): EFIStatus {
+		if (pThis == null) return -1
+		return this.clearScreen(
+			accessN(pThis nat 6),
+			pThis
+		)
+	}
+
+	@JvmStatic
+	@ExternalCall
+	external fun setCursorPosition(pPtr: Address, pThis: Address, column: UINTN, row: UINTN): EFIStatus
+
+	@JvmStatic
+	fun setCursorPosition(pThis: Address?, column: UINTN, row: UINTN): EFIStatus {
+		if (pThis == null) return -1
+		return this.setCursorPosition(
+			accessN(pThis nat 7),
+			pThis, column, row
+		)
+	}
 }

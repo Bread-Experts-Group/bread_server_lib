@@ -18,7 +18,7 @@ class EBCProcedure {
 			negative: Boolean,
 			naturalUnits: UInt,
 			constantUnits: UInt
-		): UShort {
+		): UShort? {
 			val encoded = if (negative) 1u shl 15 else 0u
 			var naturalRemainder = naturalUnits
 			var naturalBits = 0u
@@ -33,8 +33,7 @@ class EBCProcedure {
 				constantRemainder = constantRemainder shr 1
 				constantBits++
 			}
-			if (constantBits.toUInt() + naturalBits > 12u)
-				throw IllegalArgumentException("Natural / constant indices not encodable")
+			if (constantBits.toUInt() + naturalBits > 12u) return null
 			return (encoded or (((naturalBits + 1u) / 2u) shl 12) or
 					(constantUnits shl naturalBits.toInt()) or naturalUnits).toUShort()
 		}
@@ -43,7 +42,7 @@ class EBCProcedure {
 			negative: Boolean,
 			naturalUnits: UInt,
 			constantUnits: UInt
-		): UInt {
+		): UInt? {
 			val encoded = if (negative) 1u shl 31 else 0u
 			var naturalRemainder = naturalUnits
 			var naturalBits = 0u
@@ -58,8 +57,7 @@ class EBCProcedure {
 				constantRemainder = constantRemainder shr 1
 				constantBits++
 			}
-			if (constantBits.toUInt() + naturalBits > 28u)
-				throw IllegalArgumentException("Natural / constant indices not encodable")
+			if (constantBits.toUInt() + naturalBits > 28u) return null
 			return (encoded or ((naturalBits / 4u) shl 28) or
 					(constantUnits shl naturalBits.toInt()) or naturalUnits)
 		}
@@ -790,6 +788,23 @@ class EBCProcedure {
 		)
 		if (operand1Index != null) instructionBuffer.putShort(operand1Index.toShort())
 		if (operand2Index != null) instructionBuffer.putShort(operand2Index.toShort())
+		addInstruction()
+	}
+
+	fun MOVnd(
+		operand1: EBCRegisters, operand1Indirect: Boolean, operand1Index: UInt?,
+		operand2: EBCRegisters, operand2Indirect: Boolean, operand2Index: UInt?
+	): EBCProcedure = this.also {
+		instructionBuffer.put(
+			(0x33 or (if (operand2Index != null) 0b01000000 else 0) or (if (operand1Index != null) 0b10000000 else 0))
+				.toByte()
+		)
+		instructionBuffer.put(
+			(operand1.ordinal or (if (operand1Indirect) 0b00001000 else 0) or
+					(operand2.ordinal shl 4) or (if (operand2Indirect) 0b10000000 else 0)).toByte()
+		)
+		if (operand1Index != null) instructionBuffer.putInt(operand1Index.toInt())
+		if (operand2Index != null) instructionBuffer.putInt(operand2Index.toInt())
 		addInstruction()
 	}
 

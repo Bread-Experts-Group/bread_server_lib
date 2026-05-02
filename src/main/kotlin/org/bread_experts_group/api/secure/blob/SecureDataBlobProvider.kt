@@ -12,15 +12,16 @@ abstract class SecureDataBlobProvider : CheckedImplementation {
 		 * @since D0F0N0P0
 		 */
 		fun open(): SecureDataBlob {
-			val blob = ServiceLoader.load(SecureDataBlobProvider::class.java)
-				.filter {
-					try {
-						it.supported()
-					} catch (_: NoFeatureAvailableException) {
-						false
-					}
+			val blob = ServiceLoader.load(
+				SecureDataBlobProvider::class.java,
+				SecureDataBlobProvider::class.java.classLoader
+			).filter {
+				try {
+					it.supported()
+				} catch (_: NoFeatureAvailableException) {
+					false
 				}
-				.minByOrNull { it.source } ?: throw NoFeatureAvailableException("Secure In-Memory Data")
+			}.minByOrNull { it.source } ?: throw NoFeatureAvailableException("Secure In-Memory Data")
 			return blob.new()
 		}
 	}

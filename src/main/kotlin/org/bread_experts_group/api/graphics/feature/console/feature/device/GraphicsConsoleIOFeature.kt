@@ -14,6 +14,7 @@ abstract class GraphicsConsoleIOFeature : GraphicsConsoleFeatureImplementation<G
 			FeatureExpression<out GraphicsConsoleIOFeatureImplementation<*>>,
 			MutableList<GraphicsConsoleIOFeatureImplementation<*>>> = mutableMapOf()
 	override val features: MutableList<GraphicsConsoleIOFeatureImplementation<*>> = ServiceLoader.load(
-		GraphicsConsoleIOFeatureImplementation::class.java
+		GraphicsConsoleIOFeatureImplementation::class.java,
+		GraphicsConsoleIOFeatureImplementation::class.java.classLoader
 	).toMutableList()
 }

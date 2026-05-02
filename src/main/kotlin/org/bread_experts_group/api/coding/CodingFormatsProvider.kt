@@ -12,7 +12,12 @@ object CodingFormatsProvider : FeatureProvider<CodingFeatureImplementation<*>> {
 	override val features = mutableListOf<CodingFeatureImplementation<*>>(
 		JVMPortableNetworkGraphicsCodingFeature()
 	).also {
-		it.addAll(ServiceLoader.load(CodingFeatureImplementation::class.java).toList())
+		it.addAll(
+			ServiceLoader.load(
+				CodingFeatureImplementation::class.java,
+				CodingFeatureImplementation::class.java.classLoader
+			).toList()
+		)
 	}
 
 	override val supportedFeatures: MutableMap<

@@ -9,7 +9,8 @@ import java.util.*
 object GraphicsProvider : FeatureProvider<GraphicsFeatureImplementation<*>> {
 	override val logger = LevelLogger("graphics", apiRootLogger)
 	override val features: MutableList<GraphicsFeatureImplementation<*>> = ServiceLoader.load(
-		GraphicsFeatureImplementation::class.java
+		GraphicsFeatureImplementation::class.java,
+		GraphicsFeatureImplementation::class.java.classLoader
 	).toMutableList()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out GraphicsFeatureImplementation<*>>,

@@ -10,7 +10,8 @@ import java.util.*
 object SystemProvider : FeatureProvider<SystemFeatureImplementation<*>> {
 	override val logger = LevelLogger("system", apiRootLogger)
 	override val features: MutableList<SystemFeatureImplementation<*>> = ServiceLoader.load(
-		SystemFeatureImplementation::class.java
+		SystemFeatureImplementation::class.java,
+		SystemFeatureImplementation::class.java.classLoader
 	).toMutableList()
 	override val supportedFeatures: MutableMap<
 			FeatureExpression<out SystemFeatureImplementation<*>>,
