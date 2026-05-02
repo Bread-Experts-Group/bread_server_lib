@@ -299,6 +299,7 @@ fun addFileFeatures(
 
 fun getIOStatusForError(): StandardIOStatus = when (win32LastError) {
 	WindowsLastError.ERROR_FILE_NOT_FOUND.id.toInt() -> StandardIOStatus.DEVICE_NOT_FOUND
+	WindowsLastError.ERROR_PATH_NOT_FOUND.id.toInt() -> StandardIOStatus.PATH_DEVICE_NOT_FOUND
 	WindowsLastError.ERROR_ACCESS_DENIED.id.toInt() -> StandardIOStatus.ACCESS_DENIED
 	WindowsLastError.ERROR_SHARING_VIOLATION.id.toInt() -> StandardIOStatus.DEVICE_IN_USE
 

@@ -154,7 +154,7 @@ class WindowsSystemDeviceIODeviceFeature3(
 
 	override fun open(
 		vararg features: OpenIODeviceFeatureIdentifier
-	): List<OpenIODeviceDataIdentifier> = Arena.ofConfined().use { tempArena ->
+	): List<OpenIODeviceDataIdentifier> {
 		val data = mutableListOf<OpenIODeviceDataIdentifier>()
 
 		@Suppress("UNCHECKED_CAST")
@@ -253,7 +253,10 @@ class WindowsSystemDeviceIODeviceFeature3(
 						directoryFlags,
 						MemorySegment.NULL
 					) as MemorySegment
-					if (handle == INVALID_HANDLE_VALUE) throwLastError()
+					if (handle == INVALID_HANDLE_VALUE) {
+						data.add(getIOStatusForError())
+						return data
+					}
 					val status = nativeCloseHandle!!.invokeExact(capturedStateSegment, handle) as Int
 					if (status == 0) throwLastError()
 					handle = nativeCreateFile3.invokeExact(
@@ -264,7 +267,10 @@ class WindowsSystemDeviceIODeviceFeature3(
 						creationDisposition.id.toInt(),
 						extendedParameters
 					) as MemorySegment
-					if (handle == INVALID_HANDLE_VALUE) throwLastError()
+					if (handle == INVALID_HANDLE_VALUE) {
+						data.add(getIOStatusForError())
+						return data
+					}
 				}
 
 				else -> {
