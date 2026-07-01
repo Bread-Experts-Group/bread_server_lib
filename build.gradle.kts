@@ -1,16 +1,20 @@
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 plugins {
-	kotlin("jvm") version "2.3.10"
+	kotlin("jvm") version "2.4.0"
 	`maven-publish`
 	`java-library`
 	application
 }
 
 application {
-	mainClass = "org.bread_experts_group.project_incubator.mmui.TestKt"
+	mainModule = "bread.server.lib.main"
+	mainClass = "org.bread_experts_group.project_incubator.TestKt"
+	applicationDefaultJvmArgs = listOf("--enable-native-access=bread.server.lib.main")
+}
+
+java {
+	modularity.inferModulePath.set(true)
 }
 
 group = "org.bread_experts_group"
@@ -37,11 +41,7 @@ tasks.test {
 	maxHeapSize = "20G"
 }
 kotlin {
-	jvmToolchain(25)
-	compilerOptions {
-		freeCompilerArgs.add("-Xcontext-parameters")
-		freeCompilerArgs.add("-Xannotations-in-metadata")
-	}
+	jvmToolchain(26)
 }
 val localProperties: Properties = Properties().apply {
 	rootProject.file("local.properties").reader().use(::load)
@@ -88,28 +88,6 @@ publishing {
 	}
 }
 
-val projectVersion = providers.provider { project.version.toString() }
-val generateBuildInfo: TaskProvider<Task> by tasks.registering {
-	val generatedDir = project.layout.buildDirectory.get().asFile.resolve("generated")
-	outputs.dir(generatedDir)
-	doFirst {
-		generatedDir.mkdirs()
-		val file = File("$generatedDir/BuildInfo.kt")
-		val compileTime: String = ZonedDateTime.now().format(
-			DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss.SSSSSS xxxxx")
-		)
-		file.writeText(
-			"""package org.bread_experts_group
-
-internal object BuildInfo {
-	const val COMPILE_DATE = "$compileTime"
-	const val VERSION = "${project.findProperty("libVersion") as String}"
-}
-"""
-		)
-	}
-}
-
 sourceSets {
 	main {
 		kotlin.srcDirs(
@@ -120,6 +98,3 @@ sourceSets {
 }
 
 tasks.publishToMavenLocal { dependsOn(tasks.jar) }
-tasks.kotlinSourcesJar { dependsOn(tasks.compileJava, generateBuildInfo) }
-tasks.compileKotlin { dependsOn(generateBuildInfo) }
-tasks.jar { dependsOn(generateBuildInfo) }

@@ -3,7 +3,7 @@ package org.bread_experts_group.generic.io.reader
 import org.bread_experts_group.api.system.io.SendFeature
 import org.bread_experts_group.api.system.io.send.SendSizeData
 import org.bread_experts_group.api.system.socket.StandardSocketStatus
-import org.bread_experts_group.ffi.autoArena
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.ByteBuffer
@@ -27,7 +27,7 @@ class BSLWriter<F : D, D>(
 	}
 
 	override var timeout: Duration = Duration.INFINITE
-	private val txBuffer = autoArena.allocate(bufferSize)
+	private val txBuffer = Arena.ofAuto().allocate(bufferSize)
 	private var usefulData = 0L
 	override var order: ByteOrder = ByteOrder.nativeOrder()
 
@@ -44,7 +44,7 @@ class BSLWriter<F : D, D>(
 				StandardSocketStatus.OPERATION_TIMEOUT,
 				StandardSocketStatus.CONNECTION_CLOSED -> {
 					exit = true
-					status.add(data)
+					status.add(data as WritingStatus)
 				}
 
 				else -> {}

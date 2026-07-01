@@ -1,6 +1,6 @@
 package org.bread_experts_group.api.compile.ebc
 
-import org.bread_experts_group.generic.normalize
+import org.bread_experts_group.generic.align
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -26,7 +26,7 @@ class EBCProcedure {
 				naturalRemainder = naturalRemainder shr 1
 				naturalBits++
 			}
-			naturalBits = normalize(naturalBits, 2u)
+			naturalBits = align(naturalBits, 2u)
 			var constantRemainder = constantUnits
 			var constantBits = 0
 			while (constantRemainder > 0u) {
@@ -50,7 +50,7 @@ class EBCProcedure {
 				naturalRemainder = naturalRemainder shr 1
 				naturalBits++
 			}
-			naturalBits = normalize(naturalBits, 4u)
+			naturalBits = align(naturalBits, 4u)
 			var constantRemainder = constantUnits
 			var constantBits = 0
 			while (constantRemainder > 0u) {

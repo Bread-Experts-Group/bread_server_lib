@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.system.io
 
 import org.bread_experts_group.api.system.socket.DeferredOperation
-import org.bread_experts_group.ffi.autoArena
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.charset.Charset
@@ -22,7 +22,7 @@ interface SendFeature<F : D, D> {
 		vararg features: F
 	): DeferredOperation<D> = scatterSegments(
 		data.map {
-			val segment = autoArena.allocate(it.size.toLong())
+			val segment = Arena.ofAuto().allocate(it.size.toLong())
 			MemorySegment.copy(
 				it, 0,
 				segment, ValueLayout.JAVA_BYTE, 0,
@@ -37,7 +37,7 @@ interface SendFeature<F : D, D> {
 		data: ByteArray,
 		vararg features: F
 	): DeferredOperation<D> {
-		val segment = autoArena.allocate(data.size.toLong())
+		val segment = Arena.ofAuto().allocate(data.size.toLong())
 		MemorySegment.copy(
 			data, 0,
 			segment, ValueLayout.JAVA_BYTE, 0,

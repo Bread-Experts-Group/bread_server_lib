@@ -14,8 +14,8 @@ import org.bread_experts_group.api.system.io.open.FileIOReOpenFeatures
 import org.bread_experts_group.api.system.io.open.StandardIOOpenFeatures
 import org.bread_experts_group.api.system.io.seek.StandardSeekIODeviceFeatures
 import org.bread_experts_group.generic.MappedEnumeration
+import org.bread_experts_group.generic.align
 import org.bread_experts_group.generic.io.reader.BSLWriter
-import org.bread_experts_group.generic.normalize
 import java.util.*
 import kotlin.io.path.toPath
 
@@ -57,7 +57,7 @@ fun main() {
 			EFIExample::class.java.protectionDomain.codeSource.location.toURI().toPath(),
 			0x00401000u, 0x0040B000u, 0x0040C000u
 		)
-		val codeSize = normalize(output.code.size, 0x1000).toUInt()
+		val codeSize = align(output.code.size, 0x1000).toUInt()
 		println("${(codeSize + 0x1000u).toHexString()} ${(codeSize + 0x2000u).toHexString()}")
 		sections = listOf(
 			PESection.of {

@@ -1,13 +1,12 @@
 package org.bread_experts_group.generic.io
 
 open class PrimitiveIOLayout<O>(
-	protected val readImpl: PrimitiveIOLayout<O>.(org.bread_experts_group.generic.io.BaseReadingIO) -> O,
-	protected val writeImpl: PrimitiveIOLayout<O>.(org.bread_experts_group.generic.io.BaseWritingIO, O) -> Unit
-) : org.bread_experts_group.generic.io.IOLayout<O>() {
-	override fun read(from: org.bread_experts_group.generic.io.BaseReadingIO): O = readImpl(from)
-	override fun write(to: org.bread_experts_group.generic.io.BaseWritingIO, of: O) = writeImpl(to, of)
-	fun sequence(n: Int): org.bread_experts_group.generic.io.SequencedIOLayout<O> =
-		_root_ide_package_.org.bread_experts_group.generic.io.SequencedIOLayout(n, this)
+	protected val readImpl: PrimitiveIOLayout<O>.(BaseReadingIO) -> O,
+	protected val writeImpl: PrimitiveIOLayout<O>.(BaseWritingIO, O) -> Unit
+) : IOLayout<O>() {
+	override fun read(from: BaseReadingIO): O = readImpl(from)
+	override fun write(to: BaseWritingIO, of: O) = writeImpl(to, of)
+	fun sequence(n: Int): SequencedIOLayout<O> = SequencedIOLayout(n, this)
 
 	override fun padding(): PrimitiveIOLayout<O> {
 		val layout = PrimitiveIOLayout<O>(this.readImpl, this.writeImpl)
@@ -34,7 +33,7 @@ open class PrimitiveIOLayout<O>(
 	}
 
 	@Suppress("RemoveExplicitTypeArguments")
-	override fun nullable(): org.bread_experts_group.generic.io.IOLayout<O?> {
+	override fun nullable(): IOLayout<O?> {
 		val mainImpl = this.readImpl
 		val layout = PrimitiveIOLayout<O?>(
 			{ r ->

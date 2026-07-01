@@ -1,7 +1,7 @@
 package org.bread_experts_group.api.system.io
 
 import org.bread_experts_group.api.system.socket.DeferredOperation
-import org.bread_experts_group.ffi.autoArena
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import kotlin.time.Duration
@@ -21,7 +21,7 @@ interface ReceiveFeature<F : D, D> {
 		data: Collection<ByteArray>,
 		vararg features: F
 	): DeferredOperation<D> {
-		val allocated = data.associateWith { autoArena.allocate(it.size.toLong()) }
+		val allocated = data.associateWith { Arena.ofAuto().allocate(it.size.toLong()) }
 		val defer = gatherSegments(allocated.values, *features)
 		return object : DeferredOperation<D> {
 			override fun block(duration: Duration): List<D> {
@@ -41,7 +41,7 @@ interface ReceiveFeature<F : D, D> {
 		data: ByteArray,
 		vararg features: F
 	): DeferredOperation<D> {
-		val allocated = autoArena.allocate(data.size.toLong())
+		val allocated = Arena.ofAuto().allocate(data.size.toLong())
 		val defer = receiveSegment(allocated, *features)
 		return object : DeferredOperation<D> {
 			override fun block(duration: Duration): List<D> {

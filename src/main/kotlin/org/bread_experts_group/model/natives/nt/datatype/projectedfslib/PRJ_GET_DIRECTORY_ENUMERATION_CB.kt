@@ -1,0 +1,3 @@
+package org.bread_experts_group.model.natives.nt.datatype.projectedfslib
+
+typealias PRJ_GET_DIRECTORY_ENUMERATION_CB = PrjGetDirectoryEnumerationCb

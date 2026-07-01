@@ -1,0 +1,3 @@
+package org.bread_experts_group.model.natives.nt.datatype.winrt.windowsGraphicsCapture
+
+const val RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem = "Windows.Graphics.Capture.GraphicsCaptureItem"

@@ -312,7 +312,7 @@ object EBCJVMCompilation {
 				is ConstantInstruction -> when (val kind = instruction.typeKind()) {
 					TypeKind.REFERENCE -> @Suppress(
 						"IMPOSSIBLE_IS_CHECK_WARNING"
-					) when (val value = instruction.constantValue()) {
+					) when (val value = instruction.constantValue() as Any) {
 						is String -> {
 							val addr = data.allocator.getOrAllocateString(value)
 							procedure.MOVIqq(EBCRegisters.R2, false, null, addr)

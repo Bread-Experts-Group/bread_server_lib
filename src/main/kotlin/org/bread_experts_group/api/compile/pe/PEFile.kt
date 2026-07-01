@@ -3,8 +3,8 @@ package org.bread_experts_group.api.compile.pe
 import org.bread_experts_group.api.compile.mzdos.MZDOSFile
 import org.bread_experts_group.generic.Flaggable.Companion.raw
 import org.bread_experts_group.generic.MappedEnumeration
+import org.bread_experts_group.generic.align
 import org.bread_experts_group.generic.io.reader.BSLWriter
-import org.bread_experts_group.generic.normalize
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.time.ZonedDateTime
@@ -75,13 +75,13 @@ class PEFile private constructor(private val structure: FileStructure) {
 				var sizeOfUnInitData = 0
 				structure.sections.forEach { section ->
 					val rawData = section.rawData ?: return@forEach
-					val dataPosition = normalize(getPosition().toInt(), windowsHeader.fileAlignment.toInt())
+					val dataPosition = align(getPosition().toInt(), windowsHeader.fileAlignment.toInt())
 					setPosition(dataPosition.toLong())
 					into.write(ByteBuffer.wrap(rawData))
 					into.flush()
 					val afterWrite = getPosition()
 					setPosition(section.sizeOfRawDataPosition)
-					val sizeOfRawData = normalize(rawData.size, windowsHeader.fileAlignment.toInt())
+					val sizeOfRawData = align(rawData.size, windowsHeader.fileAlignment.toInt())
 					buffer.putInt(sizeOfRawData)
 					buffer.putInt(dataPosition)
 					into.write(buffer.clear())
@@ -94,16 +94,16 @@ class PEFile private constructor(private val structure: FileStructure) {
 					}
 					setPosition(afterWrite)
 					if (section.characteristics.contains(PESectionCharacteristics.IMAGE_SCN_CNT_CODE))
-						sizeOfCode += normalize(rawData.size, windowsHeader.fileAlignment.toInt())
+						sizeOfCode += align(rawData.size, windowsHeader.fileAlignment.toInt())
 					if (section.characteristics.contains(PESectionCharacteristics.IMAGE_SCN_CNT_INITIALIZED_DATA))
-						sizeOfInitData += normalize(rawData.size, windowsHeader.fileAlignment.toInt())
+						sizeOfInitData += align(rawData.size, windowsHeader.fileAlignment.toInt())
 					if (section.characteristics.contains(PESectionCharacteristics.IMAGE_SCN_CNT_UNINITIALIZED_DATA))
-						sizeOfUnInitData += normalize(rawData.size, windowsHeader.fileAlignment.toInt())
+						sizeOfUnInitData += align(rawData.size, windowsHeader.fileAlignment.toInt())
 				}
 				buffer.clear()
 				setPosition(windowsHeader.sizeOfImagePosition)
-				buffer.putInt(normalize(0x30000, windowsHeader.sectionAlignment.toInt()))
-				buffer.putInt(normalize(headerEnd.toInt(), windowsHeader.fileAlignment.toInt()))
+				buffer.putInt(align(0x30000, windowsHeader.sectionAlignment.toInt()))
+				buffer.putInt(align(headerEnd.toInt(), windowsHeader.fileAlignment.toInt()))
 				into.write(buffer.clear())
 				into.flush()
 				setPosition(optionalHeader.codeSizePosition)

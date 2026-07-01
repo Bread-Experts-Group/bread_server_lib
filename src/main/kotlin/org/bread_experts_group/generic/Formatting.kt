@@ -42,8 +42,9 @@ val si: List<Pair<String, Double>> = listOf(
 	"q" to 10.0.pow(-30.0)
 )
 
-fun normalize(n: Int, to: Int): Int = ((n / to) + (if ((n % to) != 0) 1 else 0)) * to
-fun normalize(n: UInt, to: UInt): UInt = ((n / to) + (if ((n % to) != 0u) 1u else 0u)) * to
+fun align(n: Int, to: Int): Int = ((n / to) + (if ((n % to) != 0) 1 else 0)) * to
+fun align(n: UInt, to: UInt): UInt = ((n / to) + (if ((n % to) != 0u) 1u else 0u)) * to
+fun align(n: Long, to: Long): Long = ((n / to) + (if ((n % to) != 0L) 1 else 0)) * to
 
 fun Double.formatMetric(decimals: Int = 2): String {
 	val (sign, divisor) = si.firstOrNull { this >= it.second } ?: si.last()

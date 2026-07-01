@@ -16,8 +16,8 @@ import org.bread_experts_group.api.system.io.open.FileIOOpenFeatures
 import org.bread_experts_group.api.system.io.open.FileIOReOpenFeatures
 import org.bread_experts_group.api.system.io.open.StandardIOOpenFeatures
 import org.bread_experts_group.api.system.io.size.DataSize
-import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.generic.io.reader.BSLWriter
+import java.lang.foreign.Arena
 import java.lang.foreign.ValueLayout
 
 fun main() {
@@ -93,7 +93,7 @@ fun main() {
 	fileWriter.write64(diskSize)
 	fileWriter.flush()
 
-	val data = autoArena.allocate(bytesPerSector)
+	val data = Arena.ofAuto().allocate(bytesPerSector)
 	println(diskIO.get(IODeviceFeatures.READ).receiveSegment(data).block())
 	println(data.toArray(ValueLayout.JAVA_BYTE).toHexString())
 //	diskIO.get(IODeviceFeatures.READ).receiveSegment(data)

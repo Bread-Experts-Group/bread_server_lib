@@ -3,8 +3,8 @@ package org.bread_experts_group.generic.io.reader
 import org.bread_experts_group.api.system.io.ReceiveFeature
 import org.bread_experts_group.api.system.io.receive.ReceiveSizeData
 import org.bread_experts_group.api.system.socket.StandardSocketStatus
-import org.bread_experts_group.ffi.autoArena
 import org.bread_experts_group.generic.io.reader.BSLWriter.Companion.reverse
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 import java.nio.ByteBuffer
@@ -18,7 +18,7 @@ class BSLReader<F : D, D>(
 	private vararg val features: F
 ) : SequentialDataSource {
 	override var timeout: Duration = Duration.INFINITE
-	private val rxBuffer = autoArena.allocate(bufferSize)
+	private val rxBuffer = Arena.ofAuto().allocate(bufferSize)
 	private var remainingData = 0L
 	private var dataPointer = 0L
 	private fun prepLength(n: Long): List<ReadingStatus>? {
@@ -47,7 +47,7 @@ class BSLReader<F : D, D>(
 				StandardSocketStatus.OPERATION_TIMEOUT,
 				StandardSocketStatus.CONNECTION_CLOSED -> {
 					exit = true
-					status.add(data)
+					status.add(data as ReadingStatus)
 				}
 
 				else -> {}

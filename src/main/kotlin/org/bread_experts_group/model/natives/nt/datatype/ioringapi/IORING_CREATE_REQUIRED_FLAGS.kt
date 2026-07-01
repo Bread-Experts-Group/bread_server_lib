@@ -1,0 +1,9 @@
+@file:Suppress("ClassName")
+
+package org.bread_experts_group.model.natives.nt.datatype.ioringapi
+
+import org.bread_experts_group.generic.Flaggable
+import org.bread_experts_group.model.natives.DatatypeBacked
+
+@DatatypeBacked("int")
+enum class IORING_CREATE_REQUIRED_FLAGS : Flaggable

@@ -1,13 +1,14 @@
 package org.bread_experts_group.generic.io
 
-class PrimitiveEndianIOLayout<O>(
-	readImpl: org.bread_experts_group.generic.io.PrimitiveIOLayout<O>.(org.bread_experts_group.generic.io.BaseReadingIO) -> O,
-	writeImpl: org.bread_experts_group.generic.io.PrimitiveIOLayout<O>.(org.bread_experts_group.generic.io.BaseWritingIO, O) -> Unit
-) : org.bread_experts_group.generic.io.PrimitiveIOLayout<O>(readImpl, writeImpl) {
-	var order: org.bread_experts_group.generic.io.IOEndian =
-		_root_ide_package_.org.bread_experts_group.generic.io.IOEndian.NATIVE
+import org.bread_experts_group.generic.io.IOEndian.Companion.NATIVE
 
-	fun order(o: org.bread_experts_group.generic.io.IOEndian): PrimitiveEndianIOLayout<O> {
+class PrimitiveEndianIOLayout<O>(
+	readImpl: PrimitiveIOLayout<O>.(BaseReadingIO) -> O,
+	writeImpl: PrimitiveIOLayout<O>.(BaseWritingIO, O) -> Unit
+) : PrimitiveIOLayout<O>(readImpl, writeImpl) {
+	var order: IOEndian = NATIVE
+
+	fun order(o: IOEndian): PrimitiveEndianIOLayout<O> {
 		val newLayout = PrimitiveEndianIOLayout(
 			this.readImpl,
 			this.writeImpl
@@ -16,7 +17,7 @@ class PrimitiveEndianIOLayout<O>(
 		return newLayout
 	}
 
-	override fun read(from: org.bread_experts_group.generic.io.BaseReadingIO): O {
+	override fun read(from: BaseReadingIO): O {
 		val save = from.order
 		from.order = this.order
 		val read = this.readImpl(from)
@@ -24,7 +25,7 @@ class PrimitiveEndianIOLayout<O>(
 		return read
 	}
 
-	override fun write(to: org.bread_experts_group.generic.io.BaseWritingIO, of: O) {
+	override fun write(to: BaseWritingIO, of: O) {
 		writeImpl(to, of)
 	}
 
@@ -38,7 +39,7 @@ class PrimitiveEndianIOLayout<O>(
 		return newLayout
 	}
 
-	override fun nullable(): org.bread_experts_group.generic.io.IOLayout<O?> {
+	override fun nullable(): IOLayout<O?> {
 		TODO("Not yet implemented")
 	}
 }
