@@ -91,8 +91,7 @@ publishing {
 sourceSets {
 	main {
 		kotlin.srcDirs(
-			"src/main/kotlin",
-			project.layout.buildDirectory.get().asFile.resolve("generated").canonicalPath
+			"src/main/kotlin"
 		)
 	}
 }
