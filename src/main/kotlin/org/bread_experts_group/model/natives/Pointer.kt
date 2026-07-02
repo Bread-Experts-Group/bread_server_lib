@@ -1,9 +1,8 @@
 package org.bread_experts_group.model.natives
 
-import java.lang.foreign.Arena
-import java.lang.foreign.Linker
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout
+import org.bread_experts_group.model.natives.Datatype.Companion.invoke
+import java.lang.foreign.*
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSuperclassOf
@@ -14,16 +13,20 @@ interface Pointer<T> : BackingSegment {
 		@Suppress("UNCHECKED_CAST")
 		inline fun <reified T : Any> of(linker: Linker): Pointer<T> = this.of(linker, typeOf<T>()) as Pointer<T>
 
-		@Suppress("LocalVariableName")
+		@Suppress("LocalVariableName", "UNCHECKED_CAST")
 		@JvmStatic
 		fun of(linker: Linker, type: KType): Pointer<*> {
 			val Tclass = type.clazz
 			val datatype = Tclass.findAnnotation<DatatypeBacked>()
-			val segment = if (datatype != null) Arena.ofAuto().allocate(linker.canonicalLayouts()[datatype.datatype]!!)
-			else if (Pointer::class.isSuperclassOf(Tclass) || Tclass == MemorySegment::class)
-				Arena.ofAuto().allocate(ValueLayout.ADDRESS)
+			return if (datatype != null) linker.canonicalLayouts().let {
+				DatatypePointerImpl<Any>(
+					Arena.ofAuto().allocate(it[datatype.datatype]!!),
+					Datatype.getDatatype(it, type.clazz as KClass<Datatype>),
+					Datatype.getLayout(it, type.clazz)
+				)
+			} else if (Pointer::class.isSuperclassOf(Tclass) || Tclass == MemorySegment::class)
+				PointerImpl<Any>(Arena.ofAuto().allocate(ValueLayout.ADDRESS), type)
 			else TODO("ALPHA")
-			return PointerImpl<Any>(segment, type)
 		}
 	}
 
@@ -43,6 +46,20 @@ interface Pointer<T> : BackingSegment {
 
 				else -> TODO("$type")
 			}
+		}
+	}
+
+	class DatatypePointerImpl<T>(
+		private val pointer: MemorySegment,
+		private val datatype: Class<*>,
+		private val layout: MemoryLayout
+	) : Pointer<T> {
+		override fun getSegment(): MemorySegment = pointer
+
+		@Suppress("UNCHECKED_CAST")
+		override fun deref(): T = when (layout) {
+			ValueLayout.JAVA_INT -> datatype(pointer.get(ValueLayout.JAVA_INT, 0)) as T
+			else -> TODO("$layout")
 		}
 	}
 }

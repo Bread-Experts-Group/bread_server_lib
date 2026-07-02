@@ -1,0 +1,5 @@
+package org.bread_experts_group.project_incubator.maven2.networking.ip
+
+import org.bread_experts_group.project_incubator.maven2.networking.NetworkingDevice
+
+interface InternetProtocolDevice : NetworkingDevice

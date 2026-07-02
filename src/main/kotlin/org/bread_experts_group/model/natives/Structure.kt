@@ -96,17 +96,20 @@ interface Structure<T : Structure<T>> : Pointer<T> {
 				group.forEach { fieldMap[it] = offset }
 				offset += groupMaxSize
 			}
+			val distance = offset % alignment
+			if (distance > 0) offset += alignment - distance
 			return Triple(offset, alignment, fieldMap)
 		}
 
-		val loaded: MutableMap<KType, Class<*>> = mutableMapOf<KType, Class<*>>()
+		private var i = 0
+		val loaded: MutableMap<KType, Class<*>> = mutableMapOf()
 		fun getStructureOfType(linker: Linker, type: KType): Class<*> {
 			this.loaded[type]?.let { return it }
 			val forClass = type.classifier as KClass<*>
 			val layouts = linker.canonicalLayouts()
 			val (size, alignment, fieldMap) = layoutParameters(layouts, type)
 			val thisDesc = ClassDesc.of(
-				Structure::class.qualifiedName!!.substringBeforeLast('.') + ".$" + forClass.simpleName
+				Structure::class.qualifiedName!!.substringBeforeLast('.') + ".$${i++}" + forClass.simpleName
 			)
 			val bytes = this.classFile.build(thisDesc) { classBuilder ->
 				classBuilder.withSuperclass(forClass.desc)
@@ -403,9 +406,10 @@ interface Structure<T : Structure<T>> : Pointer<T> {
 									)
 									.areturn()
 							} else if (Structure::class.isSuperclassOf(pointedClass)) {
-								val structure = getStructureOfType(linker, pointedType)
+								val structure = if (pointedType == type) thisDesc
+								else getStructureOfType(linker, pointedType).desc
 								codeBuilder
-									.ldc(structure.desc)
+									.ldc(structure)
 									.iconst_1()
 									.anewarray(ConstantDescs.CD_Class)
 									.dup()
@@ -440,7 +444,10 @@ interface Structure<T : Structure<T>> : Pointer<T> {
 									.checkcast(propertyClass.desc)
 									.areturn()
 							} else {
-								TODO("$pointedClass")
+								codeBuilder
+									.aconst_null()
+									.areturn()
+								println("PTR ${property.getter.returnType} in $type")
 							}
 						} else if (propertyClass == NativeArray::class) {
 							val clazz = property.getter.returnType.arguments.first().type!!.classifier as KClass<*>

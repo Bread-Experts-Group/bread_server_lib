@@ -1,5 +1,6 @@
 package org.bread_experts_group.model.natives
 
+import java.lang.classfile.ClassBuilder
 import java.lang.classfile.CodeBuilder
 import java.lang.classfile.Opcode
 import java.lang.classfile.TypeKind
@@ -15,7 +16,45 @@ import kotlin.reflect.*
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaMethod
+
+fun ClassBuilder.property(property: KProperty<*>, getter: (CodeBuilder) -> Unit) {
+	withMethodBody(
+		property.getter.javaMethod!!.name,
+		MethodTypeDesc.of(property.returnType.clazz.desc),
+		property.getter.javaMethod!!.modifiers and (AccessFlag.ABSTRACT.mask().inv())
+	) { methodBuilder -> getter(methodBuilder) }
+}
+
+fun ClassBuilder.property(
+	property: KMutableProperty<*>,
+	getter: CodeBuilder.() -> Unit, setter: (CodeBuilder) -> Unit
+) {
+	this.property(property as KProperty<*>, getter)
+	withMethodBody(
+		property.setter.javaMethod!!.name,
+		MethodTypeDesc.of(ConstantDescs.CD_void, property.returnType.clazz.desc),
+		property.setter.javaMethod!!.modifiers and (AccessFlag.ABSTRACT.mask().inv())
+	) { methodBuilder -> setter(methodBuilder) }
+}
+
+fun CodeBuilder.get(field: KProperty<*>): CodeBuilder {
+	val jField = field.javaField
+	if (jField != null) TODO("F")
+	val jMethod = field.getter.javaMethod!!
+	return if (jMethod.modifiers and AccessFlag.STATIC.mask() != 0) this.invokestatic(
+		jMethod.declaringClass.desc, jMethod.name,
+		MethodTypeDesc.of(field.returnType.clazz.desc),
+		jMethod.declaringClass.isInterface
+	) else if (jMethod.declaringClass.isInterface) this.invokeinterface(
+		jMethod.declaringClass.desc, jMethod.name,
+		MethodTypeDesc.of(field.returnType.clazz.desc)
+	) else this.invokevirtual(
+		jMethod.declaringClass.desc, jMethod.name,
+		MethodTypeDesc.of(field.returnType.clazz.desc)
+	)
+}
 
 fun CodeBuilder.invoke(method: Method): CodeBuilder {
 	val access = method.accessFlags()

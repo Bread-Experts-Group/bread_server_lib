@@ -11,11 +11,6 @@ interface Mappable<E, T> where E : Enum<E>, E : Mappable<E, T> {
 	companion object {
 		inline fun <reified E, T> EnumEntries<E>.id(
 			n: T
-		): MappedEnumeration<T, E> where E : Enum<E>, E : Mappable<E, T> = MappedEnumeration(
-			this.firstOrNull {
-				it.id == n
-			},
-			n
-		)
+		): MappedEnumeration<T, E> where E : Enum<E>, E : Mappable<E, T> = MappedEnumeration.raw(n)
 	}
 }
